@@ -1,11 +1,11 @@
 .game-root {
-  max-width: 480px;
+  max-width: 1000px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 12px;
-  gap: 12px;
+  padding: 16px 24px 40px;
+  gap: 16px;
 }
 
 .game-header {
@@ -13,7 +13,7 @@
 }
 
 .game-header h1 {
-  font-size: 1.4rem;
+  font-size: 2rem;
   margin: 0;
   letter-spacing: 1px;
   color: #ffd166;
@@ -24,62 +24,224 @@
   color: #aaa;
 }
 
-/* ---------- Phone screen ---------- */
+/* ---------- Phone screen (WhatsApp mockup) ---------- */
 .phone-wrap {
   display: flex;
-  justify-content: center;
-  padding: 16px 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 0;
 }
 
-.phone {
+.phone-frame {
+  position: relative;
   width: 100%;
-  max-width: 320px;
-  background: #0d0d1a;
-  border: 3px solid #444;
-  border-radius: 18px;
-  padding: 12px;
+  max-width: 360px;
+  aspect-ratio: 9 / 18.5;
+  background: #000;
+  border-radius: 40px;
+  padding: 10px;
+  box-shadow:
+    0 0 0 2px #333,
+    0 20px 40px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 22px;
+  background: #000;
+  border-radius: 0 0 14px 14px;
+  z-index: 5;
+}
+
+.phone-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 20px 2px;
+  font-size: 0.7rem;
+  color: #fff;
+  background: #075e54;
+  font-family: -apple-system, sans-serif;
+}
+
+.status-icons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 0.65rem;
+}
+
+.battery-low {
+  color: #ffd166;
+}
+
+.ios-banner {
+  position: absolute;
+  top: 88px;
+  left: 8px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(30, 30, 35, 0.92);
+  backdrop-filter: blur(4px);
+  border-radius: 14px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
   gap: 8px;
-  min-height: 320px;
+  font-size: 0.68rem;
+  color: #f0f0f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  animation: banner-drop 0.3s ease-out, banner-fade 0.4s ease-in 2.2s forwards;
 }
 
-.phone-header {
-  text-align: center;
-  font-size: 0.8rem;
-  color: #888;
-  border-bottom: 1px solid #333;
-  padding-bottom: 6px;
+.ios-banner-icon {
+  font-size: 0.9rem;
 }
 
-.phone-body {
+@keyframes banner-drop {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes banner-fade {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.whatsapp-header {
+  background: #075e54;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-family: -apple-system, sans-serif;
+}
+
+.wa-back {
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.wa-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #128c7e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.wa-title {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-width: 0;
+}
+
+.wa-name {
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.wa-status {
+  color: #d4f0ea;
+  font-size: 0.65rem;
+}
+
+.wa-icons {
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 4px;
+}
+
+.whatsapp-body {
+  flex: 1;
+  background-color: #e5ddd5;
+  background-image: radial-gradient(#d9d0c5 1px, transparent 1px);
+  background-size: 14px 14px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  overflow-y: auto;
 }
 
-.bubble {
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  max-width: 85%;
+.wa-bubble {
+  position: relative;
+  background: #fff;
+  align-self: flex-start;
+  max-width: 82%;
+  padding: 6px 8px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #1a1a1a;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
   animation: pop-in 0.2s ease-out;
 }
 
-.bubble.incoming {
-  background: #26264d;
-  align-self: flex-start;
-  border-bottom-left-radius: 2px;
+.wa-bubble.incoming::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -6px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid #fff;
+  border-left: 8px solid transparent;
 }
 
-.bubble.thought {
-  background: transparent;
-  border: 1px dashed #666;
-  color: #aaa;
-  font-style: italic;
+.wa-bubble .wa-time {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 0.58rem;
+  color: #999;
+}
+
+.wa-bubble.thought {
   align-self: center;
+  background: #fff9c4;
+  border: 1px dashed #d4c86a;
+  font-style: italic;
+  color: #6b6320;
   text-align: center;
+  padding: 8px 10px;
+}
+
+.phone-home-indicator {
+  height: 4px;
+  width: 34%;
+  background: #444;
+  border-radius: 4px;
+  margin: 6px auto 4px;
+}
+
+.phone-continue {
+  align-self: center;
 }
 
 @keyframes pop-in {
@@ -144,12 +306,32 @@
 .dialogue-scene {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .dialogue-scene {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .scene-stage {
+    flex: 1;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    position: sticky;
+    top: 16px;
+  }
+
+  .dialogue-box {
+    flex: 1;
+    min-height: 420px;
+  }
 }
 
 .scene-stage {
   position: relative;
-  height: 180px;
+  height: 260px;
   border: 3px solid #444;
   border-radius: 8px;
   overflow: hidden;
@@ -199,20 +381,20 @@
   background: #14142b;
   border: 3px solid #444;
   border-radius: 8px;
-  padding: 12px;
-  min-height: 160px;
+  padding: 18px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
 }
 
 .dialogue-line {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  gap: 3px;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .speaker-name {
@@ -246,8 +428,8 @@
   background: #26264d;
   border: 2px solid #444;
   color: #f0f0f0;
-  padding: 8px 10px;
-  font-size: 0.8rem;
+  padding: 10px 14px;
+  font-size: 0.88rem;
   text-align: left;
   border-radius: 6px;
   cursor: pointer;

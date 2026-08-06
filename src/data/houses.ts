@@ -8,26 +8,26 @@ export const houseKokuluStudyo: HouseScene = {
   background: "placeholder-house-1",
   startNode: "start",
   nodes: {
+    // 1) Karşılama — küçük bir seçim
     start: {
       id: "start",
       lines: [
         { speaker: "customer1", name: "Selin", text: "Merhaba, ben Selin. Eşim biraz gecikecek, trafikte kalmış." },
-        { speaker: "emlah", text: "Sorun değil, ben başta genel bir tur attırayım, o gelince detaylara girer." },
-        { speaker: "customer1", name: "Selin", text: "Olur, açıkçası çok heyecanlıyım. İlk evimiz olacak bu." },
-        { speaker: "thought", text: "Harika, tam da heyecanını kırmak isteyeceğim bir an geliyor." },
-        { speaker: "customer1", name: "Selin", text: "Fotoğraflarda çok ferah görünüyordu, umarım gerçekte de öyledir." },
-        { speaker: "emlah", text: "Merak etmeyin, girer girmez göreceksiniz." },
+        { speaker: "customer1", name: "Selin", text: "İlk evimiz olacak bu, çok heyecanlıyım açıkçası. Nereden başlayalım?" },
       ],
-      next: "enter",
+      choices: [
+        { id: "a", text: "\"Hemen genel bir tur atalım, merak ettiğiniz yerde durabiliriz.\"", next: "enter", effects: { interest: 5 } },
+        { id: "b", text: "\"Eşinizi bekleyelim isterseniz, birlikte gezmeniz daha iyi olur.\"", next: "enter", effects: { fun: 5 } },
+        { id: "c", text: "\"Bu evi neden beğendiniz, önce onu anlatın.\"", next: "enter", effects: { interest: 10 } },
+      ],
     },
+
+    // 2) Koku sorunu — ana seçim
     enter: {
       id: "enter",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(burnunu çeker) Bu koku... nedir?" },
-        { speaker: "customer1", name: "Selin", text: "Yani girer girmez fark ettim, çok belirgin." },
-        { speaker: "customer1", name: "Selin", text: "Fotoğraflarda böyle bir şey yoktu tabii, koku hissettirmiyor ki." },
-        { speaker: "thought", text: "Şimdi ya dürüst olacağım ya da çok yaratıcı olacağım." },
-        { speaker: "customer1", name: "Selin", text: "Yoksa bir sorun mu var, su falan mı kaçırıyor?" },
+        { speaker: "customer1", name: "Selin", text: "(kapı açılır, burnunu çeker) Bu koku... nedir?" },
+        { speaker: "customer1", name: "Selin", text: "Girer girmez fark ettim, hiç hoş değil." },
       ],
       choices: [
         { id: "a", text: "\"O... karakter kokusu. Bina eski, kendine özgü bir hikayesi var.\"", next: "q1_a", effects: { suspicion: 15, interest: 10 } },
@@ -38,101 +38,138 @@ export const houseKokuluStudyo: HouseScene = {
     q1_a: {
       id: "q1_a",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Karakterli... İlginç bir tabir doğrusu." },
-        { speaker: "customer1", name: "Selin", text: "Yani bunu satış cümlesi olarak mı söylüyorsunuz, yoksa gerçekten mi öyle düşünüyorsunuz?" },
-        { speaker: "emlah", text: "İkisi de olabilir." },
-        { speaker: "thought", text: "Aslında hiçbiri, ama devam et." },
-        { speaker: "customer1", name: "Selin", text: "Eşim gelince o da fark edecektir muhtemelen, ona da mı aynı şeyi söyleyeceksiniz?" },
-        { speaker: "emlah", text: "Gerekirse söylerim, tutarlı olmak önemli." },
-        { speaker: "customer1", name: "Selin", text: "(hafifçe güler) İlginç bir taktik." },
+        { speaker: "customer1", name: "Selin", text: "Karakterli... ilginç bir tabir doğrusu." },
+        { speaker: "customer1", name: "Selin", text: "Eşim gelince o da fark edecek, ona da mı aynısını söyleyeceksiniz?" },
       ],
-      next: "q2",
+      next: "kitchen",
     },
     q1_b: {
       id: "q1_b",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Hı, en azından bunu söylediniz." },
-        { speaker: "customer1", name: "Selin", text: "Yani gizlemeye çalışmadınız, bunu takdir ediyorum aslında." },
-        { speaker: "emlah", text: "Gizlesem zaten fark ederdiniz, boşuna uğraşmayayım dedim." },
-        { speaker: "customer1", name: "Selin", text: "Doğru ama... alt kattan sürekli koku gelmesi biraz rahatsız edici olur uzun vadede." },
-        { speaker: "emlah", text: "Pencereyi açık tutarsanız çok azalıyor, ben de öyle duydum." },
-        { speaker: "customer1", name: "Selin", text: "Eşimle konuşurum bunu." },
+        { speaker: "customer1", name: "Selin", text: "Hı, en azından gizlemediniz, bunu takdir ediyorum." },
+        { speaker: "customer1", name: "Selin", text: "Yine de her gün bu kokuyu solumak biraz zor olur sanki." },
       ],
-      next: "closing_thinking",
+      next: "kitchen",
     },
     q1_c: {
       id: "q1_c",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(pencereye bakar, biraz tereddütlü) Işık güzelmiş aslında, itiraf edeyim." },
-        { speaker: "customer1", name: "Selin", text: "Ama konuyu değiştirdiğinizi de fark ettim, kokuyla ilgili bir sorun mu var yani?" },
-        { speaker: "emlah", text: "Sorun demeyelim, küçük bir detay diyelim." },
-        { speaker: "customer1", name: "Selin", text: "Küçük detaylar büyür bazen, özellikle her gün yaşayacağınız bir yerde." },
-        { speaker: "emlah", text: "Haklısınız, ama manzara da gerçek bir avantaj, onu göz ardı etmeyelim." },
-        { speaker: "customer1", name: "Selin", text: "(gülümser) Pes etmiyorsunuz." },
+        { speaker: "customer1", name: "Selin", text: "(pencereye bakar) Işık güzelmiş, itiraf edeyim." },
+        { speaker: "customer1", name: "Selin", text: "Ama konuyu değiştirdiğinizi de fark ettim." },
       ],
-      next: "closing_thinking",
+      next: "kitchen",
     },
-    q2: {
-      id: "q2",
+
+    // 3) Mutfak sorusu — ikinci seçim
+    kitchen: {
+      id: "kitchen",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Peki bu koku sağlığa zararlı değil mi? Yani uzun vadede." },
-        { speaker: "customer1", name: "Selin", text: "Çünkü burada yaşayacaksak, her gün bu kokuyu solumuş olacağız." },
-        { speaker: "thought", text: "Buna cevap verirken bir sınır var, geçersem iş biter." },
-        { speaker: "customer1", name: "Selin", text: "Doktorumla da konuşmam gerekebilir belki, ne düşünüyorsunuz?" },
+        { speaker: "customer1", name: "Selin", text: "Mutfak da bayağı küçük duruyor. Burada gerçekten yemek yapılabilir mi?" },
       ],
       choices: [
-        { id: "a", text: "\"Kesinlikle değil, hatta bazı doktorlar deterjan kokusunun rahatlatıcı olduğunu söylüyor.\"", next: "q2_a", effects: { suspicion: 25 } },
-        { id: "b", text: "\"Açıkçası emin değilim ama pencereyi açık tutabilirsiniz.\"", next: "q2_b", effects: { suspicion: 5 } },
-        { id: "c", text: "\"Sağlığa zararlı olsa satışta olmazdı herhalde.\"", next: "q2_c", effects: { suspicion: 0, fun: 15 } },
+        { id: "a", text: "\"Küçük ama fonksiyonel, İstanbul'da stüdyo dairelerde standart bu boyut.\"", next: "kitchen_a", effects: { suspicion: 0 } },
+        { id: "b", text: "\"Açıkçası dışarıdan yemek sipariş etmeyi teşvik ediyor, pratik düşünürsek.\"", next: "kitchen_b", effects: { fun: 10, suspicion: 5 } },
+        { id: "c", text: "\"Ocağı hiç kullanmayan biri için resmen ideal.\"", next: "kitchen_c", effects: { fun: 15, suspicion: 10 } },
       ],
     },
-    q2_a: {
-      id: "q2_a",
+    kitchen_a: {
+      id: "kitchen_a",
+      lines: [
+        { speaker: "customer1", name: "Selin", text: "Mantıklı, belki de beklentim yanlıştı." },
+        { speaker: "emlah", text: "Çoğu müşteri ilk başta öyle düşünüyor, sonra alışıyor." },
+      ],
+      next: "health",
+    },
+    kitchen_b: {
+      id: "kitchen_b",
+      lines: [
+        { speaker: "customer1", name: "Selin", text: "(gülümser) Yani siz de burada yemek yapmazdınız diyorsunuz." },
+        { speaker: "emlah", text: "Ben hiçbir yerde yemek yapmam ama bu ayrı bir konu." },
+      ],
+      next: "health",
+    },
+    kitchen_c: {
+      id: "kitchen_c",
+      lines: [
+        { speaker: "customer1", name: "Selin", text: "(kahkaha atar) En azından dürüst bir satış taktiği." },
+        { speaker: "emlah", text: "Bazen gerçeği komikleştirmek satmaktan daha kolay." },
+      ],
+      next: "health",
+    },
+
+    // 4) Sağlık sorusu — üçüncü seçim
+    health: {
+      id: "health",
+      lines: [
+        { speaker: "customer1", name: "Selin", text: "Peki bu koku sağlığa zararlı değil mi, uzun vadede?" },
+        { speaker: "customer1", name: "Selin", text: "Burada yaşayacaksak her gün bunu soluyacağız çünkü." },
+      ],
+      choices: [
+        { id: "a", text: "\"Kesinlikle değil, hatta bazı doktorlar deterjan kokusunun rahatlatıcı olduğunu söylüyor.\"", next: "health_a", effects: { suspicion: 25 } },
+        { id: "b", text: "\"Açıkçası emin değilim ama pencereyi açık tutabilirsiniz.\"", next: "health_b", effects: { suspicion: 5 } },
+        { id: "c", text: "\"Sağlığa zararlı olsa satışta olmazdı herhalde.\"", next: "health_c", effects: { suspicion: 0, fun: 15 } },
+      ],
+    },
+    health_a: {
+      id: "health_a",
       lines: [
         { speaker: "customer1", name: "Selin", text: "(şüpheyle bakar) Doktorlar mı demiştiniz, hangi doktorlar?" },
-        { speaker: "customer1", name: "Selin", text: "Çünkü bu ilk defa duyduğum bir bilgi, biraz araştırmam lazım galiba." },
-        { speaker: "emlah", text: "Genel bir bilgi aslında, spesifik bir isim veremem şu an." },
-        { speaker: "customer1", name: "Selin", text: "Anladım... (not alır gibi yapar) Bunu bir de eşime sorayım." },
         { speaker: "thought", text: "O not defterini hiç sevmedim." },
       ],
-      next: "closing_lost",
+      next: "price",
     },
-    q2_b: {
-      id: "q2_b",
+    health_b: {
+      id: "health_b",
       lines: [
         { speaker: "customer1", name: "Selin", text: "Mantıklı, en azından bir çözüm öneriyorsunuz." },
-        { speaker: "customer1", name: "Selin", text: "Pencereyi hep açık tutmak kışın biraz zor olur ama düşünürüz." },
-        { speaker: "emlah", text: "Doğru, ama alt kattaki dükkan da akşam 7'de kapanıyor, geceleri sorun olmaz." },
-        { speaker: "customer1", name: "Selin", text: "O bilgi işe yarar aslında, teşekkürler." },
+        { speaker: "emlah", text: "Alt kattaki dükkan da akşam 7'de kapanıyor, geceleri sorun olmaz zaten." },
       ],
-      next: "closing_thinking",
+      next: "price",
     },
-    q2_c: {
-      id: "q2_c",
+    health_c: {
+      id: "health_c",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(gülümser) Sizde de bir mantık var, itiraf edeyim." },
-        { speaker: "customer1", name: "Selin", text: "Ama bu mantığı biraz fazla kullanıyorsunuz gibi hissettim açıkçası." },
+        { speaker: "customer1", name: "Selin", text: "(gülümser) Sizde bir mantık var, itiraf edeyim." },
         { speaker: "emlah", text: "İşin doğası böyle, ben de bazen kendime inanmakta zorlanıyorum." },
-        { speaker: "customer1", name: "Selin", text: "(kahkaha atar) En azından dürüstsünüz bu konuda." },
       ],
-      next: "closing_thinking",
+      next: "price",
+    },
+
+    // 5) Fiyat pazarlığı — kapanış seçimi
+    price: {
+      id: "price",
+      lines: [
+        { speaker: "customer1", name: "Selin", text: "Peki fiyat konusunda pazarlık payınız var mı?" },
+        { speaker: "customer1", name: "Selin", text: "Çünkü bu haliyle tam istediğim fiyat değil açıkçası." },
+      ],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup biraz esneklik sağlayabilirim.\"", next: "closing_sold", effects: { suspicion: -10 } },
+        { id: "b", text: "\"Fiyat zaten piyasa değerinin altında, çok payı yok ama düşünebilirim.\"", next: "closing_thinking", effects: { suspicion: 0 } },
+        { id: "c", text: "\"Bu fiyata bu evi başka kimse bulamazsınız, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { suspicion: 20 } },
+      ],
+    },
+
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", name: "Selin", text: "Bu iyi bir haber. Eşimle konuşup bugün dönüş yapayım o zaman." },
+        { speaker: "customer1", name: "Selin", text: "Aslında ilk izlenimim kadar kötü değilmiş burası." },
+        { speaker: "emlah", text: "Memnun olacağınızdan eminim, hayırlısı olsun." },
+      ],
+      end: "sold",
     },
     closing_thinking: {
       id: "closing_thinking",
       lines: [
         { speaker: "customer1", name: "Selin", text: "Eşimle konuşup size dönerim, düşüneceğiz." },
-        { speaker: "customer1", name: "Selin", text: "Aslında ilk izlenimim kadar kötü değilmiş burası, koku dışında güzel bir yer." },
-        { speaker: "emlah", text: "Ne zaman isterseniz arayabilirsiniz, elimde birkaç seçenek daha var ama bu da fena değil." },
-        { speaker: "customer1", name: "Selin", text: "Teşekkürler, haber veririm." },
+        { speaker: "emlah", text: "Ne zaman isterseniz arayabilirsiniz, elimde birkaç seçenek daha var." },
       ],
       end: "thinking",
     },
     closing_lost: {
       id: "closing_lost",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Biliyor musunuz, bu koku beni gerçekten rahatsız etti." },
-        { speaker: "customer1", name: "Selin", text: "Ve doktorlar konusunda da pek ikna olmadım açıkçası." },
-        { speaker: "emlah", text: "Anlıyorum, herkes için doğru ev farklı olabilir." },
+        { speaker: "customer1", name: "Selin", text: "Beni aceleye getirmeye çalıştığınızı fark ettim şimdi." },
         { speaker: "customer1", name: "Selin", text: "Sanırım burası bize göre değil, vaktinizi aldım kusura bakmayın." },
       ],
       end: "lost",
@@ -148,15 +185,12 @@ export const houseHayaletliDaire: HouseScene = {
   background: "placeholder-house-2",
   startNode: "start",
   nodes: {
+    // 1) İlk enerji yorumu — seçim
     start: {
       id: "start",
       lines: [
         { speaker: "customer1", name: "Nermin Hanım", text: "(girer girmez durur) Buranın enerjisi... ağır." },
         { speaker: "customer2", name: "Kaan", text: "Anne, daha bakmadık bile, en azından bir tur atalım." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Ben hissediyorum böyle şeyleri, sen gençsin daha anlamazsın." },
-        { speaker: "thought", text: "Enerji mi? Daha kapıdan girmedik, hızlı başladık." },
-        { speaker: "customer2", name: "Kaan", text: "Emlah Bey, siz de mi hissediyorsunuz bir şey?" },
-        { speaker: "emlah", text: "Açıkçası hemen bir yorum yapmak istemem, önce görelim istiyorum." },
       ],
       choices: [
         { id: "a", text: "\"Haklısınız aslında, bu binanın geçmişi çok eski, bir hikayesi var.\"", next: "q1_a", effects: { suspicion: 5, interest: 20 } },
@@ -168,132 +202,141 @@ export const houseHayaletliDaire: HouseScene = {
       id: "q1_a",
       lines: [
         { speaker: "customer1", name: "Nermin Hanım", text: "(dikkatle bakar) Ne tür bir hikaye? Anlatın bana." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Çünkü ben böyle şeylere karşı hassasımdır, boşuna değildir bu hislerim." },
-        { speaker: "customer2", name: "Kaan", text: "Anne yine mi başlıyoruz..." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Sus Kaan, adam bir şey söylemeye çalışıyor." },
         { speaker: "thought", text: "Şimdi bir hikaye uydurmam lazım, hem de iyi bir tane." },
       ],
-      next: "q2",
+      next: "rooms",
     },
     q1_b: {
       id: "q1_b",
       lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "Siz gençler hiçbir şeye inanmıyorsunuz, hep mantıkla açıklıyorsunuz." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Ama bazı şeyler mantığın ötesinde, bunu bir gün anlarsınız." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Siz gençler hep mantıkla açıklıyorsunuz her şeyi." },
         { speaker: "customer2", name: "Kaan", text: "(gülümser) Bence de biraz eski boya kokusu var sadece anne." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Sen de mi onun tarafını tutuyorsun şimdi?" },
-        { speaker: "thought", text: "Aile içi tartışmaya karışmayayım en iyisi." },
       ],
-      next: "closing_neutral",
+      next: "rooms",
     },
     q1_c: {
       id: "q1_c",
       lines: [
         { speaker: "customer2", name: "Kaan", text: "Anne bak, o bile hissediyor, sana söylemiştim!" },
-        { speaker: "customer1", name: "Nermin Hanım", text: "(Emlah'a döner) Demek siz de duyarlısınız bu konularda." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "İyi, en azından beni anlayan biri var burada." },
-        { speaker: "emlah", text: "Evler gerçekten çok şey görür, insanların hayatlarına tanık olur." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Tam da düşündüğüm gibi." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Demek siz de duyarlısınız bu konularda." },
       ],
-      next: "closing_warm",
+      next: "rooms",
     },
-    q2: {
-      id: "q2",
+
+    // 2) Odalar / komşu dedikodusu — seçim
+    rooms: {
+      id: "rooms",
       lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "Anlatın bakalım, merakla bekliyorum." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kimler yaşamış burada, ne olmuş, hepsini duymak istiyorum." },
-        { speaker: "customer2", name: "Kaan", text: "(Emlah'a fısıldar gibi) Anneme bir şey anlatırken dikkatli olun, her detayı sorgular." },
-        { speaker: "thought", text: "Şimdi ya bir hikaye uydururum ya da bu satış burada biter." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Bekliyorum, konuşun." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Komşulardan biri internete 'gece kapı kendi kendine açıldı' diye yazmış." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Bunu nasıl açıklıyorsunuz?" },
       ],
       choices: [
-        { id: "a", text: "\"Eskiden burada bir ressam yaşarmış, çok mutlu bir hayat sürmüş, evine aşıkmış.\"", next: "q2_a", effects: { suspicion: -10 } },
-        { id: "b", text: "\"Açıkçası internette 'gece kapı kendi kendine açıldı' diye bir yorum gördüm ama muhtemelen rüzgardır.\"", next: "q2_b", effects: { interest: 30 } },
-        { id: "c", text: "\"Detayları bilmiyorum ama binanın enerjisi olumlu, hissediyorum.\"", next: "q2_c", effects: { suspicion: 15, fun: 10 } },
+        { id: "a", text: "\"Muhtemelen rüzgardır, kapı menteşeleri gevşek olabilir.\"", next: "rooms_a", effects: { suspicion: 10 } },
+        { id: "b", text: "\"Belki de ev size bir şey söylemeye çalışıyordur.\"", next: "rooms_b", effects: { interest: 25 } },
+        { id: "c", text: "\"İnternete yazılan her şeye inanmamak lazım.\"", next: "rooms_c", effects: { suspicion: 5, fun: 10 } },
       ],
     },
-    q2_a: {
-      id: "q2_a",
+    rooms_a: {
+      id: "rooms_a",
       lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "(gülümser) Bir ressam... ne güzel, sanatçı ruhu kalmış demek buraya." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan, duydun mu, bu ev sanata aşık birinden kalma." },
-        { speaker: "customer2", name: "Kaan", text: "Duydum anne, güzelmiş gerçekten." },
-        { speaker: "emlah", text: "Evet, hatta bazı komşular hâlâ ondan bahsediyor, çok sevilen biriymiş." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Bu ev bize uyar sanırım, hissediyorum artık daha net." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Menteşe mi... belki. Ama içim pek rahat etmedi açıkçası." },
+        { speaker: "customer2", name: "Kaan", text: "Anne, mantıklı bir açıklama bu." },
       ],
-      next: "closing_sold_ressam",
+      next: "kaan",
     },
-    q2_b: {
-      id: "q2_b",
+    rooms_b: {
+      id: "rooms_b",
       lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "(gözleri parlar) Kapı kendi kendine mi açılmış? Bunu neden hemen söylemediniz?" },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan bak, burası özel bir yer, tam da aradığımız gibi bir şey bu!" },
-        { speaker: "customer2", name: "Kaan", text: "Anne, bu iyi bir şey mi şimdi kötü bir şey mi?" },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Tabii ki iyi, buranın bir ruhu var demek, sıradan bir daire değil bu." },
-        { speaker: "thought", text: "Bazı insanlar için hayalet bir eksi değil, bir artı oluyormuş meğer." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "(gözleri parlar) Aynen öyle düşünüyorum ben de!" },
+        { speaker: "customer2", name: "Kaan", text: "(Emlah'a bakar) Siz de mi bu işe girdiniz şimdi..." },
       ],
-      next: "closing_sold_hayalet",
+      next: "kaan",
     },
-    q2_c: {
-      id: "q2_c",
+    rooms_c: {
+      id: "rooms_c",
       lines: [
-        { speaker: "customer2", name: "Kaan", text: "(Emlah'a fısıldar) Siz de biraz saçmalıyorsunuz galiba, farkındasınız değil mi?" },
-        { speaker: "thought", text: "Farkındayım ama işim bu, ne yapayım." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan, saygısız olma, adam elinden geleni yapıyor." },
-        { speaker: "customer2", name: "Kaan", text: "Tamam anne, özür dilerim Emlah Bey." },
-        { speaker: "emlah", text: "Sorun değil, herkesin bakış açısı farklı olabilir." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Belki haklısınız, herkes bir şey uyduruyor bu aralar." },
+        { speaker: "customer2", name: "Kaan", text: "(gülümser) İlk defa anneme mantıklı bir şey söyleyen biri çıktı." },
       ],
-      next: "closing_thinking_c",
+      next: "kaan",
     },
-    closing_sold_ressam: {
-      id: "closing_sold_ressam",
+
+    // 3) Kaan'ın kendi sorusu — seçim
+    kaan: {
+      id: "kaan",
+      lines: [
+        { speaker: "customer2", name: "Kaan", text: "Emlah Bey, açıkçası ben bu hikayelere pek inanmıyorum." },
+        { speaker: "customer2", name: "Kaan", text: "Siz gerçekten burada oturur muydunuz?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Açıkçası oturmam ama bu benim tercihim, ev kötü değil.\"", next: "kaan_a", effects: { suspicion: 5, fun: 10 } },
+        { id: "b", text: "\"Elbette, hiç tereddüt etmem.\"", next: "kaan_b", effects: { suspicion: 15 } },
+        { id: "c", text: "\"Onu bana değil, kalbinize sorun.\"", next: "kaan_c", effects: { fun: 20, interest: 10 } },
+      ],
+    },
+    kaan_a: {
+      id: "kaan_a",
+      lines: [
+        { speaker: "customer2", name: "Kaan", text: "(gülümser) En azından dürüstsünüz, bunu takdir ederim." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan, dürüstlük her zaman en iyi cevap değildir." },
+      ],
+      next: "price",
+    },
+    kaan_b: {
+      id: "kaan_b",
+      lines: [
+        { speaker: "customer2", name: "Kaan", text: "Hiç ikna olmadım ama tamam, devam edelim." },
+        { speaker: "thought", text: "İnanmadığını gözlerinden anladım." },
+      ],
+      next: "price",
+    },
+    kaan_c: {
+      id: "kaan_c",
+      lines: [
+        { speaker: "customer2", name: "Kaan", text: "(şaşırır) Bu güzel bir cevaptı doğrusu." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Görüyor musun Kaan, adam felsefe de biliyor." },
+      ],
+      next: "price",
+    },
+
+    // 4) Kapanış seçimi
+    price: {
+      id: "price",
+      lines: [
+        { speaker: "customer1", name: "Nermin Hanım", text: "Peki bu evi almamız için bize ne söylersiniz?" },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Son bir cümle, karar vermeden önce." },
+      ],
+      choices: [
+        { id: "a", text: "\"Bu evin bir ruhu var, Kaan burada kendini gerçekten bulabilir.\"", next: "closing_sold_ruh", effects: { interest: 20 } },
+        { id: "b", text: "\"Rasyonel konuşayım: konum, metrekare ve fiyat gerçekten uygun.\"", next: "closing_thinking", effects: { suspicion: 0 } },
+        { id: "c", text: "\"Bugün karar vermezseniz başka bir aile alır, söyleyeyim.\"", next: "closing_lost", effects: { suspicion: 20 } },
+      ],
+    },
+
+    closing_sold_ruh: {
+      id: "closing_sold_ruh",
       lines: [
         { speaker: "customer1", name: "Nermin Hanım", text: "Biz bu daireyi alıyoruz, kararımı verdim." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan'ın burada resim yapmasını istiyorum, tam ona göre bir yer burası." },
         { speaker: "customer2", name: "Kaan", text: "(Emlah'a göz kırpar) Sağ olun, annemi mutlu ettiniz." },
         { speaker: "emlah", text: "Ben teşekkür ederim, hayırlı olsun." },
       ],
       end: "sold",
     },
-    closing_sold_hayalet: {
-      id: "closing_sold_hayalet",
+    closing_thinking: {
+      id: "closing_thinking",
       lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "Biz bu daireyi alıyoruz, kararımı verdim." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan'ın burada meditasyon yapmasını istiyorum, enerjisi tam ona göre." },
-        { speaker: "customer2", name: "Kaan", text: "(Emlah'a göz kırpar) Sağ olun, annemi mutlu ettiniz." },
-        { speaker: "emlah", text: "Ben teşekkür ederim, hayırlı olsun." },
-      ],
-      end: "sold",
-    },
-    closing_thinking_c: {
-      id: "closing_thinking_c",
-      lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "Biraz daha düşünmemiz lazım sanırım, aceleye getirmeyelim." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Kaan'la konuşup size dönerim, bu önemli bir karar." },
-        { speaker: "customer2", name: "Kaan", text: "Teşekkürler Emlah Bey, vaktiniz için." },
-        { speaker: "emlah", text: "Ne zaman isterseniz, ben buradayım." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Mantıklı konuştunuz, biraz daha düşünmemiz lazım yine de." },
+        { speaker: "customer2", name: "Kaan", text: "Teşekkürler Emlah Bey, size döneriz." },
       ],
       end: "thinking",
     },
-    closing_neutral: {
-      id: "closing_neutral",
+    closing_lost: {
+      id: "closing_lost",
       lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "Bu evle ilgili içim pek rahat değil açıkçası." },
-        { speaker: "customer2", name: "Kaan", text: "Anne, düşünelim biraz, hemen karar vermeyelim." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "İyi, düşünürüz. Ararız sizi." },
-        { speaker: "emlah", text: "Tabii, acele etmeyin." },
+        { speaker: "customer1", name: "Nermin Hanım", text: "Bu şekilde bastırılmayı hiç sevmem açıkçası." },
+        { speaker: "customer2", name: "Kaan", text: "Anne haklı, biz düşünelim önce." },
       ],
-      end: "thinking",
-    },
-    closing_warm: {
-      id: "closing_warm",
-      lines: [
-        { speaker: "customer1", name: "Nermin Hanım", text: "İçim rahatladı sizinle konuşunca, iyi ki geldik bugün." },
-        { speaker: "customer2", name: "Kaan", text: "Anne resmen arkadaş oldunuz." },
-        { speaker: "customer1", name: "Nermin Hanım", text: "Eve dönüp aileyle konuşurum, ama olumlu düşünüyorum." },
-        { speaker: "emlah", text: "Ne zaman isterseniz buradayım." },
-      ],
-      end: "thinking",
+      end: "lost",
     },
   },
 };
