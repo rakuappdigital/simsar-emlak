@@ -318,7 +318,7 @@
   .scene-stage {
     flex: 1;
     height: auto;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 9;
     position: sticky;
     top: 16px;
   }
@@ -331,7 +331,8 @@
 
 .scene-stage {
   position: relative;
-  height: 260px;
+  height: auto;
+  aspect-ratio: 16 / 9;
   border: 3px solid #444;
   border-radius: 8px;
   overflow: hidden;
@@ -348,6 +349,9 @@
     #2a2a4a 10px,
     #2a2a4a 20px
   );
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   image-rendering: pixelated;
 }
 
@@ -391,10 +395,46 @@
 
 .dialogue-line {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+.dialogue-line.speaker-thought {
+  justify-content: center;
+}
+
+.dialogue-line-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dialogue-line.speaker-thought .dialogue-line-body {
+  flex: none;
+  max-width: 90%;
+  text-align: center;
+}
+
+.portrait-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  border: 2px solid #444;
+  flex-shrink: 0;
+  background: #26264d;
+  image-rendering: pixelated;
+}
+
+.portrait-placeholder {
+  background: #26264d;
+  border-style: dashed;
 }
 
 .speaker-name {

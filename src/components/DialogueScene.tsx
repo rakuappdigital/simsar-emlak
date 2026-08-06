@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ChoiceEffects, HouseScene, SceneOutcome } from "../types";
+import { houseImages } from "../data/houseImages";
+import { characterImages } from "../data/characterImages";
 
 interface DialogueSceneProps {
   house: HouseScene;
@@ -46,22 +48,48 @@ export default function DialogueScene({ house, onChoiceEffects, onSceneEnd }: Di
     setLineIndex(0);
   }
 
+  const image = houseImages[house.id];
+
   return (
     <div className="dialogue-scene">
       <div className="scene-stage">
-        <div className={`pixel-bg ${house.background}`} />
+        <div
+          className={`pixel-bg ${image ? "" : house.background}`}
+          style={image ? { backgroundImage: `url(${image})` } : undefined}
+        />
         <div className="scene-title">
           {house.title} — {house.location}
         </div>
       </div>
 
       <div className="dialogue-box" onClick={atLastLine ? undefined : advanceLine}>
-        {linesShown.map((line, i) => (
-          <div key={i} className={`dialogue-line speaker-${line.speaker}`}>
-            <span className="speaker-name">{line.name ?? speakerLabel[line.speaker] ?? ""}</span>
-            <span className="line-text">{line.text}</span>
-          </div>
-        ))}
+        {linesShown.map((line, i) => {
+          const displayName = line.name ?? speakerLabel[line.speaker] ?? "";
+          if (line.speaker === "thought") {
+            return (
+              <div key={i} className="dialogue-line speaker-thought">
+                <div className="dialogue-line-body">
+                  <span className="speaker-name">{displayName}</span>
+                  <span className="line-text">{line.text}</span>
+                </div>
+              </div>
+            );
+          }
+          const portrait = characterImages[displayName];
+          return (
+            <div key={i} className={`dialogue-line speaker-${line.speaker}`}>
+              {portrait ? (
+                <img className="portrait-avatar" src={portrait} alt={displayName} />
+              ) : (
+                <div className="portrait-avatar portrait-placeholder" aria-hidden />
+              )}
+              <div className="dialogue-line-body">
+                <span className="speaker-name">{displayName}</span>
+                <span className="line-text">{line.text}</span>
+              </div>
+            </div>
+          );
+        })}
 
         {!atLastLine && (
           <button className="pixel-btn small" onClick={advanceLine}>

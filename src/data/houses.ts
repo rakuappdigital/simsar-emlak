@@ -4,7 +4,7 @@ export const houseKokuluStudyo: HouseScene = {
   id: "kokulu-studyo",
   title: "Kokulu Stüdyo",
   location: "Nişantaşı, 3. kat",
-  customerNames: ["Selin"],
+  customerNames: ["Ceylin"],
   background: "placeholder-house-1",
   startNode: "start",
   nodes: {
@@ -12,8 +12,8 @@ export const houseKokuluStudyo: HouseScene = {
     start: {
       id: "start",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Merhaba, ben Selin. Eşim biraz gecikecek, trafikte kalmış." },
-        { speaker: "customer1", name: "Selin", text: "İlk evimiz olacak bu, çok heyecanlıyım açıkçası. Nereden başlayalım?" },
+        { speaker: "customer1", name: "Ceylin", text: "Merhaba, ben Ceylin. Eşim biraz gecikecek, trafikte kalmış." },
+        { speaker: "customer1", name: "Ceylin", text: "İlk evimiz olacak bu, çok heyecanlıyım açıkçası. Nereden başlayalım?" },
       ],
       choices: [
         { id: "a", text: "\"Hemen genel bir tur atalım, merak ettiğiniz yerde durabiliriz.\"", next: "enter", effects: { interest: 5 } },
@@ -26,8 +26,8 @@ export const houseKokuluStudyo: HouseScene = {
     enter: {
       id: "enter",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(kapı açılır, burnunu çeker) Bu koku... nedir?" },
-        { speaker: "customer1", name: "Selin", text: "Girer girmez fark ettim, hiç hoş değil." },
+        { speaker: "customer1", name: "Ceylin", text: "(kapı açılır, burnunu çeker) Bu koku... nedir?" },
+        { speaker: "customer1", name: "Ceylin", text: "Girer girmez fark ettim, hiç hoş değil." },
       ],
       choices: [
         { id: "a", text: "\"O... karakter kokusu. Bina eski, kendine özgü bir hikayesi var.\"", next: "q1_a", effects: { suspicion: 15, interest: 10 } },
@@ -38,24 +38,24 @@ export const houseKokuluStudyo: HouseScene = {
     q1_a: {
       id: "q1_a",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Karakterli... ilginç bir tabir doğrusu." },
-        { speaker: "customer1", name: "Selin", text: "Eşim gelince o da fark edecek, ona da mı aynısını söyleyeceksiniz?" },
+        { speaker: "customer1", name: "Ceylin", text: "Karakterli... ilginç bir tabir doğrusu." },
+        { speaker: "customer1", name: "Ceylin", text: "Eşim gelince o da fark edecek, ona da mı aynısını söyleyeceksiniz?" },
       ],
       next: "kitchen",
     },
     q1_b: {
       id: "q1_b",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Hı, en azından gizlemediniz, bunu takdir ediyorum." },
-        { speaker: "customer1", name: "Selin", text: "Yine de her gün bu kokuyu solumak biraz zor olur sanki." },
+        { speaker: "customer1", name: "Ceylin", text: "Hı, en azından gizlemediniz, bunu takdir ediyorum." },
+        { speaker: "customer1", name: "Ceylin", text: "Yine de her gün bu kokuyu solumak biraz zor olur sanki." },
       ],
       next: "kitchen",
     },
     q1_c: {
       id: "q1_c",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(pencereye bakar) Işık güzelmiş, itiraf edeyim." },
-        { speaker: "customer1", name: "Selin", text: "Ama konuyu değiştirdiğinizi de fark ettim." },
+        { speaker: "customer1", name: "Ceylin", text: "(pencereye bakar) Işık güzelmiş, itiraf edeyim." },
+        { speaker: "customer1", name: "Ceylin", text: "Ama konuyu değiştirdiğinizi de fark ettim." },
       ],
       next: "kitchen",
     },
@@ -64,7 +64,7 @@ export const houseKokuluStudyo: HouseScene = {
     kitchen: {
       id: "kitchen",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Mutfak da bayağı küçük duruyor. Burada gerçekten yemek yapılabilir mi?" },
+        { speaker: "customer1", name: "Ceylin", text: "Mutfak da bayağı küçük duruyor. Burada gerçekten yemek yapılabilir mi?" },
       ],
       choices: [
         { id: "a", text: "\"Küçük ama fonksiyonel, İstanbul'da stüdyo dairelerde standart bu boyut.\"", next: "kitchen_a", effects: { suspicion: 0 } },
@@ -75,7 +75,7 @@ export const houseKokuluStudyo: HouseScene = {
     kitchen_a: {
       id: "kitchen_a",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Mantıklı, belki de beklentim yanlıştı." },
+        { speaker: "customer1", name: "Ceylin", text: "Mantıklı, belki de beklentim yanlıştı." },
         { speaker: "emlah", text: "Çoğu müşteri ilk başta öyle düşünüyor, sonra alışıyor." },
       ],
       next: "health",
@@ -83,7 +83,7 @@ export const houseKokuluStudyo: HouseScene = {
     kitchen_b: {
       id: "kitchen_b",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(gülümser) Yani siz de burada yemek yapmazdınız diyorsunuz." },
+        { speaker: "customer1", name: "Ceylin", text: "(gülümser) Yani siz de burada yemek yapmazdınız diyorsunuz." },
         { speaker: "emlah", text: "Ben hiçbir yerde yemek yapmam ama bu ayrı bir konu." },
       ],
       next: "health",
@@ -91,7 +91,7 @@ export const houseKokuluStudyo: HouseScene = {
     kitchen_c: {
       id: "kitchen_c",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(kahkaha atar) En azından dürüst bir satış taktiği." },
+        { speaker: "customer1", name: "Ceylin", text: "(kahkaha atar) En azından dürüst bir satış taktiği." },
         { speaker: "emlah", text: "Bazen gerçeği komikleştirmek satmaktan daha kolay." },
       ],
       next: "health",
@@ -101,8 +101,8 @@ export const houseKokuluStudyo: HouseScene = {
     health: {
       id: "health",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Peki bu koku sağlığa zararlı değil mi, uzun vadede?" },
-        { speaker: "customer1", name: "Selin", text: "Burada yaşayacaksak her gün bunu soluyacağız çünkü." },
+        { speaker: "customer1", name: "Ceylin", text: "Peki bu koku sağlığa zararlı değil mi, uzun vadede?" },
+        { speaker: "customer1", name: "Ceylin", text: "Burada yaşayacaksak her gün bunu soluyacağız çünkü." },
       ],
       choices: [
         { id: "a", text: "\"Kesinlikle değil, hatta bazı doktorlar deterjan kokusunun rahatlatıcı olduğunu söylüyor.\"", next: "health_a", effects: { suspicion: 25 } },
@@ -113,7 +113,7 @@ export const houseKokuluStudyo: HouseScene = {
     health_a: {
       id: "health_a",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(şüpheyle bakar) Doktorlar mı demiştiniz, hangi doktorlar?" },
+        { speaker: "customer1", name: "Ceylin", text: "(şüpheyle bakar) Doktorlar mı demiştiniz, hangi doktorlar?" },
         { speaker: "thought", text: "O not defterini hiç sevmedim." },
       ],
       next: "price",
@@ -121,7 +121,7 @@ export const houseKokuluStudyo: HouseScene = {
     health_b: {
       id: "health_b",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Mantıklı, en azından bir çözüm öneriyorsunuz." },
+        { speaker: "customer1", name: "Ceylin", text: "Mantıklı, en azından bir çözüm öneriyorsunuz." },
         { speaker: "emlah", text: "Alt kattaki dükkan da akşam 7'de kapanıyor, geceleri sorun olmaz zaten." },
       ],
       next: "price",
@@ -129,7 +129,7 @@ export const houseKokuluStudyo: HouseScene = {
     health_c: {
       id: "health_c",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "(gülümser) Sizde bir mantık var, itiraf edeyim." },
+        { speaker: "customer1", name: "Ceylin", text: "(gülümser) Sizde bir mantık var, itiraf edeyim." },
         { speaker: "emlah", text: "İşin doğası böyle, ben de bazen kendime inanmakta zorlanıyorum." },
       ],
       next: "price",
@@ -139,8 +139,8 @@ export const houseKokuluStudyo: HouseScene = {
     price: {
       id: "price",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Peki fiyat konusunda pazarlık payınız var mı?" },
-        { speaker: "customer1", name: "Selin", text: "Çünkü bu haliyle tam istediğim fiyat değil açıkçası." },
+        { speaker: "customer1", name: "Ceylin", text: "Peki fiyat konusunda pazarlık payınız var mı?" },
+        { speaker: "customer1", name: "Ceylin", text: "Çünkü bu haliyle tam istediğim fiyat değil açıkçası." },
       ],
       choices: [
         { id: "a", text: "\"Sahibiyle konuşup biraz esneklik sağlayabilirim.\"", next: "closing_sold", effects: { suspicion: -10 } },
@@ -152,8 +152,8 @@ export const houseKokuluStudyo: HouseScene = {
     closing_sold: {
       id: "closing_sold",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Bu iyi bir haber. Eşimle konuşup bugün dönüş yapayım o zaman." },
-        { speaker: "customer1", name: "Selin", text: "Aslında ilk izlenimim kadar kötü değilmiş burası." },
+        { speaker: "customer1", name: "Ceylin", text: "Bu iyi bir haber. Eşimle konuşup bugün dönüş yapayım o zaman." },
+        { speaker: "customer1", name: "Ceylin", text: "Aslında ilk izlenimim kadar kötü değilmiş burası." },
         { speaker: "emlah", text: "Memnun olacağınızdan eminim, hayırlısı olsun." },
       ],
       end: "sold",
@@ -161,7 +161,7 @@ export const houseKokuluStudyo: HouseScene = {
     closing_thinking: {
       id: "closing_thinking",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Eşimle konuşup size dönerim, düşüneceğiz." },
+        { speaker: "customer1", name: "Ceylin", text: "Eşimle konuşup size dönerim, düşüneceğiz." },
         { speaker: "emlah", text: "Ne zaman isterseniz arayabilirsiniz, elimde birkaç seçenek daha var." },
       ],
       end: "thinking",
@@ -169,8 +169,8 @@ export const houseKokuluStudyo: HouseScene = {
     closing_lost: {
       id: "closing_lost",
       lines: [
-        { speaker: "customer1", name: "Selin", text: "Beni aceleye getirmeye çalıştığınızı fark ettim şimdi." },
-        { speaker: "customer1", name: "Selin", text: "Sanırım burası bize göre değil, vaktinizi aldım kusura bakmayın." },
+        { speaker: "customer1", name: "Ceylin", text: "Beni aceleye getirmeye çalıştığınızı fark ettim şimdi." },
+        { speaker: "customer1", name: "Ceylin", text: "Sanırım burası bize göre değil, vaktinizi aldım kusura bakmayın." },
       ],
       end: "lost",
     },
