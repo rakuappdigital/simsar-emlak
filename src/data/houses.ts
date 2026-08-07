@@ -7,6 +7,7 @@ export const houseKokuluStudyo: HouseScene = {
   customerNames: ["Ceylin"],
   background: "placeholder-house-1",
   askingPrice: 3200000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     // 1) Karşılama — küçük bir seçim
@@ -144,9 +145,9 @@ export const houseKokuluStudyo: HouseScene = {
         { speaker: "customer1", name: "Ceylin", text: "Çünkü bu haliyle tam istediğim fiyat değil açıkçası." },
       ],
       choices: [
-        { id: "a", text: "\"Sahibiyle konuşup %8 indirim sağlayabilirim.\"", next: "closing_sold", effects: { suspicion: -10, discountPercent: 8 } },
-        { id: "b", text: "\"Fiyat zaten piyasa değerinin altında, indirim payı yok ama düşünebilirim.\"", next: "closing_thinking", effects: { suspicion: 0 } },
-        { id: "c", text: "\"Bu fiyata bu evi başka kimse bulamazsınız, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Sahibiyle konuşup %8 indirim sağlayabilirim.\"", next: "closing_sold", effects: { closingBias: 35,  suspicion: -10, discountPercent: 8 } },
+        { id: "b", text: "\"Fiyat zaten piyasa değerinin altında, indirim payı yok ama düşünebilirim.\"", next: "closing_thinking", effects: { closingBias: 0,  suspicion: 0 } },
+        { id: "c", text: "\"Bu fiyata bu evi başka kimse bulamazsınız, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
 
@@ -185,6 +186,7 @@ export const houseHayaletliDaire: HouseScene = {
   customerNames: ["Nermin Hanım", "Kaan"],
   background: "placeholder-house-2",
   askingPrice: 4750000,
+  closingNodes: { sold: "closing_sold_ruh", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     // 1) İlk enerji yorumu — seçim
@@ -309,9 +311,9 @@ export const houseHayaletliDaire: HouseScene = {
         { speaker: "customer1", name: "Nermin Hanım", text: "Son bir cümle, karar vermeden önce." },
       ],
       choices: [
-        { id: "a", text: "\"Bu evin bir ruhu var, Kaan burada kendini gerçekten bulabilir — üstüne %5 de indirim ayarlarım.\"", next: "closing_sold_ruh", effects: { interest: 20, discountPercent: 5 } },
-        { id: "b", text: "\"Rasyonel konuşayım: konum, metrekare ve fiyat gerçekten uygun, indirime gerek yok.\"", next: "closing_thinking", effects: { suspicion: 0 } },
-        { id: "c", text: "\"Bugün karar vermezseniz başka bir aile alır, söyleyeyim.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Bu evin bir ruhu var, Kaan burada kendini gerçekten bulabilir — üstüne %5 de indirim ayarlarım.\"", next: "closing_sold_ruh", effects: { closingBias: 35,  interest: 20, discountPercent: 5 } },
+        { id: "b", text: "\"Rasyonel konuşayım: konum, metrekare ve fiyat gerçekten uygun, indirime gerek yok.\"", next: "closing_thinking", effects: { closingBias: 0,  suspicion: 0 } },
+        { id: "c", text: "\"Bugün karar vermezseniz başka bir aile alır, söyleyeyim.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
 
@@ -350,6 +352,7 @@ export const houseDenizeSifir: HouseScene = {
   customerNames: ["Orhan Bey"],
   background: "placeholder-house-3",
   askingPrice: 2600000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -437,9 +440,9 @@ export const houseDenizeSifir: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Orhan Bey", text: "Son olarak, gerçekten mutlu olur muyum burada?" }],
       choices: [
-        { id: "a", text: "\"Deniz hayaliniz için başka bir seçeneğe bakmanızı öneririm, dürüst olayım.\"", next: "closing_thinking" },
-        { id: "b", text: "\"Kesinlikle, hem de sahibiyle konuşup %6 indirim ayarlarım.\"", next: "closing_sold", effects: { discountPercent: 6 } },
-        { id: "c", text: "\"Bu fiyata bu manzarayı bulamazsınız, karar vermelisiniz.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Deniz hayaliniz için başka bir seçeneğe bakmanızı öneririm, dürüst olayım.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "b", text: "\"Kesinlikle, hem de sahibiyle konuşup %6 indirim ayarlarım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 6 } },
+        { id: "c", text: "\"Bu fiyata bu manzarayı bulamazsınız, karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_thinking: {
@@ -476,6 +479,7 @@ export const houseKamburBalkon: HouseScene = {
   customerNames: ["Ela", "Barış"],
   background: "placeholder-house-4",
   askingPrice: 3000000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -566,9 +570,9 @@ export const houseKamburBalkon: HouseScene = {
         { speaker: "customer2", name: "Barış", text: "Emin değilim ama... Emlah Bey, siz ne dersiniz?" },
       ],
       choices: [
-        { id: "a", text: "\"Ustaya baktırıp güvenli olduğunu belgeleterek ilerleyelim, üstüne %5 indirim de ayarlarım.\"", next: "closing_sold", effects: { discountPercent: 5 } },
-        { id: "b", text: "\"Karar sizin, ben baskı yapmam.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu fiyata, bu semtte başka seçenek bulamazsınız.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Ustaya baktırıp güvenli olduğunu belgeleterek ilerleyelim, üstüne %5 indirim de ayarlarım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
+        { id: "b", text: "\"Karar sizin, ben baskı yapmam.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu fiyata, bu semtte başka seçenek bulamazsınız.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -605,6 +609,7 @@ export const houseKediCenneti: HouseScene = {
   customerNames: ["Gül Hanım"],
   background: "placeholder-house-5",
   askingPrice: 2900000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -650,9 +655,9 @@ export const houseKediCenneti: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Gül Hanım", text: "Açıkçası ben bu evle bir bağ kurdum galiba." }],
       choices: [
-        { id: "a", text: "\"O zaman bu ev tam size göre — üstüne %4 indirim de ekleyelim.\"", next: "closing_sold", effects: { discountPercent: 4 } },
-        { id: "b", text: "\"Bir düşünün, acele etmeyin, önemli bir karar.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bugün karar vermezseniz başka bir hayvansever kapar.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"O zaman bu ev tam size göre — üstüne %4 indirim de ekleyelim.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 4 } },
+        { id: "b", text: "\"Bir düşünün, acele etmeyin, önemli bir karar.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bugün karar vermezseniz başka bir hayvansever kapar.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -689,6 +694,7 @@ export const houseAsansorsuzZirve: HouseScene = {
   customerNames: ["Nadir Bey", "Sevim Teyze"],
   background: "placeholder-house-6",
   askingPrice: 3400000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -740,9 +746,9 @@ export const houseAsansorsuzZirve: HouseScene = {
         { speaker: "customer1", name: "Nadir Bey", text: "Bilmiyorum ki... nefesim daha yeni düzeldi." },
       ],
       choices: [
-        { id: "a", text: "\"Sağlığınız önemli, belki alt katlardan bir seçeneğe bakalım.\"", next: "closing_thinking" },
-        { id: "b", text: "\"Bu manzara bir daha çıkmaz karşınıza — üstüne %5 indirim de yaparım.\"", next: "closing_sold", effects: { discountPercent: 5 } },
-        { id: "c", text: "\"Merdiven diyet gibi düşünün, alın gitsin.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Sağlığınız önemli, belki alt katlardan bir seçeneğe bakalım.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "b", text: "\"Bu manzara bir daha çıkmaz karşınıza — üstüne %5 indirim de yaparım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
+        { id: "c", text: "\"Merdiven diyet gibi düşünün, alın gitsin.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -779,6 +785,7 @@ export const houseNemGalerisi: HouseScene = {
   customerNames: ["Deniz"],
   background: "placeholder-house-7",
   askingPrice: 2100000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -824,9 +831,9 @@ export const houseNemGalerisi: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Deniz", text: "Burada yaşayıp bu duvarları resmedebilirim sanki." }],
       choices: [
-        { id: "a", text: "\"Tam da sizin gibi bir sanatçıya ihtiyacı vardı bu evin.\"", next: "closing_sold", effects: { discountPercent: 3 } },
-        { id: "b", text: "\"Nem sorununu çözdürüp öyle taşınmanızı öneririm.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Başka bir sanatçı bu ilhamı kaçırmadan karar verin.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Tam da sizin gibi bir sanatçıya ihtiyacı vardı bu evin.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 3 } },
+        { id: "b", text: "\"Nem sorununu çözdürüp öyle taşınmanızı öneririm.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Başka bir sanatçı bu ilhamı kaçırmadan karar verin.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -863,6 +870,7 @@ export const houseDavulcuKomsu: HouseScene = {
   customerNames: ["Sinan Bey"],
   background: "placeholder-house-8",
   askingPrice: 4100000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -908,9 +916,9 @@ export const houseDavulcuKomsu: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Sinan Bey", text: "Sessizlik olmadan yazamam ben, bu ciddi bir sorun." }],
       choices: [
-        { id: "a", text: "\"Kulaklık önerebilirim ama bu ev size göre olmayabilir.\"", next: "closing_thinking" },
-        { id: "b", text: "\"Komşuyla konuşup saatleri ayarlayabiliriz, üstüne %5 indirim de yaparım.\"", next: "closing_sold", effects: { discountPercent: 5 } },
-        { id: "c", text: "\"Alışırsınız, hatta ritim ilham verir belki.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Kulaklık önerebilirim ama bu ev size göre olmayabilir.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "b", text: "\"Komşuyla konuşup saatleri ayarlayabiliriz, üstüne %5 indirim de yaparım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
+        { id: "c", text: "\"Alışırsınız, hatta ritim ilham verir belki.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -947,6 +955,7 @@ export const houseTapuSorunlu: HouseScene = {
   customerNames: ["Cavidan Hanım"],
   background: "placeholder-house-9",
   askingPrice: 8500000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -992,9 +1001,9 @@ export const houseTapuSorunlu: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Cavidan Hanım", text: "Avukatımla konuşup net bir cevap isteyeceğim." }],
       choices: [
-        { id: "a", text: "\"Tabii, tüm belgeleri paylaşırım, şeffaflık önemli.\"", next: "closing_thinking" },
-        { id: "b", text: "\"Süreç hızlanabilir, sizi bekletmem — üstüne %3 indirim de düşünürüm.\"", next: "closing_sold", effects: { discountPercent: 3 } },
-        { id: "c", text: "\"Bu fiyata Bebek'te başka seçenek yok, hemen karar verin.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Tabii, tüm belgeleri paylaşırım, şeffaflık önemli.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "b", text: "\"Süreç hızlanabilir, sizi bekletmem — üstüne %3 indirim de düşünürüm.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 3 } },
+        { id: "c", text: "\"Bu fiyata Bebek'te başka seçenek yok, hemen karar verin.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1031,6 +1040,7 @@ export const houseMinicik: HouseScene = {
   customerNames: ["Toprak"],
   background: "placeholder-house-10",
   askingPrice: 1650000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1076,9 +1086,9 @@ export const houseMinicik: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Toprak", text: "Bu ev bir yaşam felsefesi aslında, katılıyor musunuz?" }],
       choices: [
-        { id: "a", text: "\"Kesinlikle, siz bu evin ruhuna tam uyuyorsunuz — üstüne %6 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 6 } },
-        { id: "b", text: "\"Felsefe güzel ama pratik detayları da düşünün.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu felsefeyi yaşamak isteyen çok kişi var, acele edin.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Kesinlikle, siz bu evin ruhuna tam uyuyorsunuz — üstüne %6 indirim de yapalım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 6 } },
+        { id: "b", text: "\"Felsefe güzel ama pratik detayları da düşünün.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu felsefeyi yaşamak isteyen çok kişi var, acele edin.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1115,6 +1125,7 @@ export const houseAidatSuprizi: HouseScene = {
   customerNames: ["Derya", "Onur"],
   background: "placeholder-house-11",
   askingPrice: 3700000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1160,9 +1171,9 @@ export const houseAidatSuprizi: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer2", name: "Onur", text: "(Derya'ya bakar) Bütçemize göre biraz zorlar sanki bu." }],
       choices: [
-        { id: "a", text: "\"Yönetimle konuşup fiyatta da bir esneklik olur mu bakarım, %5 indirim düşünürüm.\"", next: "closing_sold", effects: { discountPercent: 5 } },
-        { id: "b", text: "\"Bu site bu fiyata nadir bulunur, düşünmeyin.\"", next: "closing_lost", effects: { suspicion: 20 } },
-        { id: "c", text: "\"Uzun vadede değer kazanır, iyi bir yatırım.\"", next: "closing_thinking" },
+        { id: "a", text: "\"Yönetimle konuşup fiyatta da bir esneklik olur mu bakarım, %5 indirim düşünürüm.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
+        { id: "b", text: "\"Bu site bu fiyata nadir bulunur, düşünmeyin.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
+        { id: "c", text: "\"Uzun vadede değer kazanır, iyi bir yatırım.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
       ],
     },
     closing_sold: {
@@ -1199,6 +1210,7 @@ export const houseEskiFirin: HouseScene = {
   customerNames: ["Melis"],
   background: "placeholder-house-12",
   askingPrice: 2300000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1244,9 +1256,9 @@ export const houseEskiFirin: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Melis", text: "Açıkçası bu koku beni hiç rahatsız etmedi, tam tersine..." }],
       choices: [
-        { id: "a", text: "\"O zaman bu ev tam size göre yapılmış — üstüne %5 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 5 } },
-        { id: "b", text: "\"Birkaç gün daha düşünüp karar verin isterseniz.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Böyle bir yeri kaçırmayın, nadir bulunur.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"O zaman bu ev tam size göre yapılmış — üstüne %5 indirim de yapalım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
+        { id: "b", text: "\"Birkaç gün daha düşünüp karar verin isterseniz.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Böyle bir yeri kaçırmayın, nadir bulunur.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1283,6 +1295,7 @@ export const houseManzaraOmurluk: HouseScene = {
   customerNames: ["Kerem Bey"],
   background: "placeholder-house-13",
   askingPrice: 5200000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1328,9 +1341,9 @@ export const houseManzaraOmurluk: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Kerem Bey", text: "Ben yine de bu manzarayı şimdi yaşamak istiyorum." }],
       choices: [
-        { id: "a", text: "\"O zaman kararınız doğru — üstüne %3 indirim de ekleyelim.\"", next: "closing_sold", effects: { discountPercent: 3 } },
-        { id: "b", text: "\"Uzun vadeli düşünmenizi öneririm yine de.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu kat bu fiyata bir daha çıkmaz piyasaya.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"O zaman kararınız doğru — üstüne %3 indirim de ekleyelim.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 3 } },
+        { id: "b", text: "\"Uzun vadeli düşünmenizi öneririm yine de.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu kat bu fiyata bir daha çıkmaz piyasaya.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1367,6 +1380,7 @@ export const houseGeceKlubu: HouseScene = {
   customerNames: ["Aslı"],
   background: "placeholder-house-14",
   askingPrice: 3900000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1412,9 +1426,9 @@ export const houseGeceKlubu: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Aslı", text: "Bence burası tam bana göre, enerjisi çok iyi." }],
       choices: [
-        { id: "a", text: "\"Enerjinize gerçekten uygun bir yer — üstüne %4 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 4 } },
-        { id: "b", text: "\"Bir gece deneyip öyle karar vermenizi öneririm.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu konumda ev nadir çıkıyor, kaçırmayın.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Enerjinize gerçekten uygun bir yer — üstüne %4 indirim de yapalım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 4 } },
+        { id: "b", text: "\"Bir gece deneyip öyle karar vermenizi öneririm.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu konumda ev nadir çıkıyor, kaçırmayın.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1451,6 +1465,7 @@ export const houseGuvercin: HouseScene = {
   customerNames: ["Feridun Bey"],
   background: "placeholder-house-15",
   askingPrice: 3300000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1496,9 +1511,9 @@ export const houseGuvercin: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Feridun Bey", text: "Ben bu güvercinlerle iyi anlaşırım galiba, emekliliğe uygun." }],
       choices: [
-        { id: "a", text: "\"Kesinlikle, huzurlu bir emeklilik sizi bekliyor — üstüne %5 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 5 } },
-        { id: "b", text: "\"Terası kontrol altına alıp sonra taşınmanızı öneririm.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu manzara ve terasla bir daha bulamazsınız.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Kesinlikle, huzurlu bir emeklilik sizi bekliyor — üstüne %5 indirim de yapalım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
+        { id: "b", text: "\"Terası kontrol altına alıp sonra taşınmanızı öneririm.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu manzara ve terasla bir daha bulamazsınız.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1535,6 +1550,7 @@ export const houseKaptanRutubet: HouseScene = {
   customerNames: ["Kaptan Yusuf"],
   background: "placeholder-house-16",
   askingPrice: 2800000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1580,9 +1596,9 @@ export const houseKaptanRutubet: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "Ben bu evle deniz arasında bir bağ hissediyorum." }],
       choices: [
-        { id: "a", text: "\"O bağ çok değerli — üstüne %4 indirim de ekleyelim.\"", next: "closing_sold", effects: { discountPercent: 4 } },
-        { id: "b", text: "\"Yalıtım yaptırıp öyle taşınmanızı öneririm.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu sahil şeridinde böyle fırsat az bulunur.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"O bağ çok değerli — üstüne %4 indirim de ekleyelim.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 4 } },
+        { id: "b", text: "\"Yalıtım yaptırıp öyle taşınmanızı öneririm.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu sahil şeridinde böyle fırsat az bulunur.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1619,6 +1635,7 @@ export const houseMirasKavgasi: HouseScene = {
   customerNames: ["Pınar Hanım"],
   background: "placeholder-house-17",
   askingPrice: 3100000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1664,9 +1681,9 @@ export const houseMirasKavgasi: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Pınar Hanım", text: "Kendi avukatımla süreci bir gözden geçireceğim." }],
       choices: [
-        { id: "a", text: "\"Elbette, tüm belgeleri paylaşırım — süreç hızlanırsa %3 indirim de düşünürüm.\"", next: "closing_sold", effects: { discountPercent: 3 } },
-        { id: "b", text: "\"Bu tarihi doku bu fiyata bir daha çıkmaz.\"", next: "closing_lost", effects: { suspicion: 20 } },
-        { id: "c", text: "\"Süreç hızlıca netleşecek, endişelenmeyin.\"", next: "closing_thinking" },
+        { id: "a", text: "\"Elbette, tüm belgeleri paylaşırım — süreç hızlanırsa %3 indirim de düşünürüm.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 3 } },
+        { id: "b", text: "\"Bu tarihi doku bu fiyata bir daha çıkmaz.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
+        { id: "c", text: "\"Süreç hızlıca netleşecek, endişelenmeyin.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
       ],
     },
     closing_sold: {
@@ -1703,6 +1720,7 @@ export const houseOgrenciEvi: HouseScene = {
   customerNames: ["Ayten Hanım", "Ozan"],
   background: "placeholder-house-18",
   askingPrice: 2750000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1754,9 +1772,9 @@ export const houseOgrenciEvi: HouseScene = {
         { speaker: "customer2", name: "Ozan", text: "Kesinlikle anne, tam bana göre." },
       ],
       choices: [
-        { id: "a", text: "\"Görüyorsunuz, oğlunuz zaten karar vermiş — üstüne %4 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 4 } },
-        { id: "b", text: "\"Bir hafta düşünüp öyle karar vermenizi öneririm.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu fiyata bu konumda başka seçenek bulamazsınız.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Görüyorsunuz, oğlunuz zaten karar vermiş — üstüne %4 indirim de yapalım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 4 } },
+        { id: "b", text: "\"Bir hafta düşünüp öyle karar vermenizi öneririm.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu fiyata bu konumda başka seçenek bulamazsınız.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1793,6 +1811,7 @@ export const houseKapiciHayvan: HouseScene = {
   customerNames: ["Zeynep"],
   background: "placeholder-house-19",
   askingPrice: 3150000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1838,9 +1857,9 @@ export const houseKapiciHayvan: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Zeynep", text: "Alerjim ciddi, bu konuda net bir cevaba ihtiyacım var." }],
       choices: [
-        { id: "a", text: "\"Kapıcıyla konuşup düzenlemeyi hemen ayarlarım — üstüne %4 indirim de yaparım.\"", next: "closing_sold", effects: { discountPercent: 4 } },
-        { id: "b", text: "\"Dürüst olmak gerekirse, bu ev sizin için riskli olabilir.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Merak etmeyin, hiç sorun yaşamazsınız.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Kapıcıyla konuşup düzenlemeyi hemen ayarlarım — üstüne %4 indirim de yaparım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 4 } },
+        { id: "b", text: "\"Dürüst olmak gerekirse, bu ev sizin için riskli olabilir.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Merak etmeyin, hiç sorun yaşamazsınız.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {
@@ -1877,6 +1896,7 @@ export const houseZeminVitrin: HouseScene = {
   customerNames: ["Derin"],
   background: "placeholder-house-20",
   askingPrice: 4400000,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
   startNode: "start",
   nodes: {
     start: {
@@ -1922,9 +1942,9 @@ export const houseZeminVitrin: HouseScene = {
       id: "kapanis",
       lines: [{ speaker: "customer1", name: "Derin", text: "Sosyal medyada da harika içerik çıkar buradan aslında." }],
       choices: [
-        { id: "a", text: "\"Kesinlikle, hem yaşam hem içerik alanı bir arada — üstüne %3 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 3 } },
-        { id: "b", text: "\"Perde/folyo çözümünü halledip öyle karar verin.\"", next: "closing_thinking" },
-        { id: "c", text: "\"Bu vitrin konsepti bu fiyata bir daha çıkmaz.\"", next: "closing_lost", effects: { suspicion: 20 } },
+        { id: "a", text: "\"Kesinlikle, hem yaşam hem içerik alanı bir arada — üstüne %3 indirim de yapalım.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 3 } },
+        { id: "b", text: "\"Perde/folyo çözümünü halledip öyle karar verin.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu vitrin konsepti bu fiyata bir daha çıkmaz.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
       ],
     },
     closing_sold: {

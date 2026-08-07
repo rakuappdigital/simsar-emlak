@@ -534,3 +534,142 @@
   flex-direction: column;
   gap: 4px;
 }
+
+/* ---------- Menu screens ---------- */
+.menu-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 16px;
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 70vh;
+  justify-content: center;
+}
+
+.menu-title-block {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.menu-title {
+  font-size: 2.4rem;
+  color: #ffd166;
+  margin: 0 0 8px;
+  letter-spacing: 1px;
+}
+
+.menu-subtitle {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.menu-section-title {
+  color: #ffd166;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.menu-btn {
+  background: #26264d;
+  border: 2px solid #444;
+  color: #f0f0f0;
+  padding: 14px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.menu-btn:hover:not(:disabled) {
+  border-color: #ffd166;
+}
+
+.menu-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menu-btn.ghost {
+  background: transparent;
+  border-style: dashed;
+  font-weight: normal;
+}
+
+.menu-empty {
+  color: #999;
+  font-style: italic;
+}
+
+.save-slot {
+  background: #14142b;
+  border: 2px solid #444;
+  border-radius: 8px;
+  padding: 14px 18px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.save-slot-date {
+  color: #888;
+  font-size: 0.75rem;
+}
+
+.save-slot-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pixel-btn.danger {
+  background: #ef476f;
+  color: #fff;
+}
+
+.sound-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.sound-row input[type="range"] {
+  flex: 1;
+  max-width: 200px;
+}
+
+/* ---------- Week goal + badges ---------- */
+.week-result-title {
+  font-size: 1.2rem;
+  color: #ffd166;
+  font-weight: bold;
+}
+
+.week-bonus {
+  color: #ffd166;
+  font-weight: bold;
+}
+
+.badge-popup {
+  background: #14142b;
+  border: 2px solid #ffd166;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #ffd166;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

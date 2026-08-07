@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import type { ChoiceEffects, HouseScene, SceneOutcome } from "../types";
+import type { Choice, ChoiceEffects, GameStats, HouseScene, SceneOutcome } from "../types";
 import { houseImages } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
+import { resolveOutcome } from "../data/scoring";
 
 interface DialogueSceneProps {
   house: HouseScene;
+  stats: GameStats;
   onChoiceEffects: (effects: ChoiceEffects) => void;
   onSceneEnd: (outcome: SceneOutcome) => void;
 }
@@ -15,7 +17,7 @@ const speakerLabel: Record<string, string> = {
   thought: "Emlah (içinden)",
 };
 
-export default function DialogueScene({ house, onChoiceEffects, onSceneEnd }: DialogueSceneProps) {
+export default function DialogueScene({ house, stats, onChoiceEffects, onSceneEnd }: DialogueSceneProps) {
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
 
@@ -43,9 +45,21 @@ export default function DialogueScene({ house, onChoiceEffects, onSceneEnd }: Di
     }
   }
 
-  function pickChoice(next: string, effects?: ChoiceEffects) {
-    if (effects) onChoiceEffects(effects);
-    setNodeId(next);
+  function pickChoice(choice: Choice) {
+    if (choice.effects) onChoiceEffects(choice.effects);
+
+    if (choice.effects?.closingBias !== undefined) {
+      const projected: GameStats = {
+        suspicion: stats.suspicion + (choice.effects.suspicion ?? 0),
+        interest: stats.interest + (choice.effects.interest ?? 0),
+        fun: stats.fun + (choice.effects.fun ?? 0),
+        discountPercent: stats.discountPercent + (choice.effects.discountPercent ?? 0),
+      };
+      const outcome = resolveOutcome(projected, choice.effects.closingBias);
+      setNodeId(house.closingNodes[outcome]);
+    } else {
+      setNodeId(choice.next);
+    }
     setLineIndex(0);
   }
 
@@ -105,7 +119,7 @@ export default function DialogueScene({ house, onChoiceEffects, onSceneEnd }: Di
               <button
                 key={c.id}
                 className="choice-btn"
-                onClick={() => pickChoice(c.next, c.effects)}
+                onClick={() => pickChoice(c)}
               >
                 {c.text}
               </button>

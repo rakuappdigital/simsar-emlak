@@ -5,6 +5,8 @@ interface PhoneScreenProps {
   messages: PhoneMessage[];
   thought?: string;
   onContinue: () => void;
+  contactName?: string;
+  statusText?: string;
 }
 
 const funnyBanner = [
@@ -14,7 +16,13 @@ const funnyBanner = [
   "📢 Kirve İnşaat: Havuzlu villa, peşinatsız, hemen ara!",
 ];
 
-export default function PhoneScreen({ messages, thought, onContinue }: PhoneScreenProps) {
+export default function PhoneScreen({
+  messages,
+  thought,
+  onContinue,
+  contactName = "Muzaffer Bey",
+  statusText = "yazıyor...",
+}: PhoneScreenProps) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [banner] = useState(() => funnyBanner[Math.floor(Math.random() * funnyBanner.length)]);
   const [showBanner, setShowBanner] = useState(true);
@@ -63,10 +71,10 @@ export default function PhoneScreen({ messages, thought, onContinue }: PhoneScre
 
         <div className="whatsapp-header">
           <span className="wa-back">‹</span>
-          <div className="wa-avatar">M</div>
+          <div className="wa-avatar">{contactName.charAt(0)}</div>
           <div className="wa-title">
-            <span className="wa-name">Muzaffer Bey</span>
-            <span className="wa-status">yazıyor...</span>
+            <span className="wa-name">{contactName}</span>
+            <span className="wa-status">{statusText}</span>
           </div>
           <span className="wa-icons">📹 📞</span>
         </div>
