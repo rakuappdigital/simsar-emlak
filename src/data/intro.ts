@@ -40,6 +40,54 @@ export const houseIntros: Record<string, HouseIntro> = {
     ],
     thought: "Balkon konusu derken tam olarak neyi kastetti acaba.",
   },
+  "kedi-cenneti": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Üsküdar'daki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Müşteri hayvansever biri, çok sevecek" },
+      { from: "Muzaffer Bey", text: "Önceki sahibi biraz fazla hayvan severmiş 😅" },
+    ],
+    thought: "Fazla derken ne kadar fazla acaba.",
+  },
+  "asansorsuz-zirve": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Şişli'deki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Emekli bir çift geliyor, manzaraya bayılacaklar" },
+      { from: "Muzaffer Bey", text: "7. kat ama merak etme, spor gibi düşün 💪" },
+    ],
+    thought: "Spor derken merdiven kastediyor sanırım.",
+  },
+  "nem-galerisi": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Balat'taki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Sanatçı bir müşteri geliyor, sanatsal bak olaya" },
+      { from: "Muzaffer Bey", text: "Duvarlardaki desenler de bir tür eser sayılır 🎨" },
+    ],
+    thought: "Sanatsal bakış açısı derken nemi mi kastediyor.",
+  },
+  "davulcu-komsu": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Beşiktaş'taki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Yazar bir müşteri, sessizlik istiyor" },
+      { from: "Muzaffer Bey", text: "Alt komşu biraz müzikle ilgileniyor, önemli değil 🎵" },
+    ],
+    thought: "Önemli değil derken davul çaldığını mı kastediyor acaba.",
+  },
+  "tapu-sorunlu": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Bebek'teki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Müşteri çok detaycı, iş kadını" },
+      { from: "Muzaffer Bey", text: "Tapuyla ilgili küçük bir formalite var, dert etme 📄" },
+    ],
+    thought: "Küçük formalite derken tam olarak ne kadar küçük.",
+  },
+  minicik: {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Tarlabaşı'ndaki stüdyoyu göstereceksin" },
+      { from: "Muzaffer Bey", text: "Minimalist bir müşteri geliyor, küçük yerleri seviyor" },
+      { from: "Muzaffer Bey", text: "18 metrekare ama 'öz' bir 18 metrekare 😊" },
+    ],
+    thought: "Öz derken küçük demek istiyor sanırım.",
+  },
 };
 
 export function defaultIntro(house: HouseScene): HouseIntro {

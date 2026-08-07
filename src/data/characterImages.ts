@@ -5,6 +5,13 @@ import nermin from "../assets/portraits/nermin.webp";
 import orhan from "../assets/portraits/orhan.webp";
 import ela from "../assets/portraits/ela.webp";
 import baris from "../assets/portraits/baris.webp";
+import gul from "../assets/portraits/gul.webp";
+import nadir from "../assets/portraits/nadir.webp";
+import sevim from "../assets/portraits/sevim.webp";
+import deniz from "../assets/portraits/deniz.webp";
+import sinan from "../assets/portraits/sinan.webp";
+import cavidan from "../assets/portraits/cavidan.webp";
+import toprak from "../assets/portraits/toprak.webp";
 
 export const characterImages: Record<string, string> = {
   Emlah: emlah,
@@ -14,4 +21,11 @@ export const characterImages: Record<string, string> = {
   "Orhan Bey": orhan,
   Ela: ela,
   Barış: baris,
+  "Gül Hanım": gul,
+  "Nadir Bey": nadir,
+  "Sevim Teyze": sevim,
+  Deniz: deniz,
+  "Sinan Bey": sinan,
+  "Cavidan Hanım": cavidan,
+  Toprak: toprak,
 };
