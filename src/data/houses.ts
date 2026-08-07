@@ -1696,6 +1696,264 @@ export const houseMirasKavgasi: HouseScene = {
   },
 };
 
+export const houseOgrenciEvi: HouseScene = {
+  id: "ogrenci-evi",
+  title: "Öğrenci Evi Kalıntısı",
+  location: "Levent, eski öğrenci evi",
+  customerNames: ["Ayten Hanım", "Ozan"],
+  background: "placeholder-house-18",
+  askingPrice: 2750000,
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", name: "Ayten Hanım", text: "(duvara bakar) Bu yazılar da ne böyle, silinir mi bunlar?" },
+        { speaker: "customer2", name: "Ozan", text: "Anne bence havalı duruyor bu şekilde." },
+      ],
+      choices: [
+        { id: "a", text: "\"Bir kat boyayla kolayca kapanır, sorun değil.\"", next: "start_a" },
+        { id: "b", text: "\"Aslında bu evin bir tarihi var, korunabilir de.\"", next: "start_b", effects: { fun: 15 } },
+        { id: "c", text: "\"Öğrenci enerjisi hâlâ duvarlardan hissediliyor.\"", next: "start_c", effects: { fun: 10, suspicion: 5 } },
+      ],
+    },
+    start_a: { id: "start_a", lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "İyi, boyayla hallederiz o zaman." }], next: "temizlik" },
+    start_b: { id: "start_b", lines: [{ speaker: "customer2", name: "Ozan", text: "(heyecanla) Korunsun anne, lütfen!" }], next: "temizlik" },
+    start_c: { id: "start_c", lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "Enerji mi... temizlik daha önemli bence." }], next: "temizlik" },
+
+    temizlik: {
+      id: "temizlik",
+      lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "Peki bu koku, enerji içeceği kokusu mu bu?" }],
+      choices: [
+        { id: "a", text: "\"Derin temizlikle tamamen geçer, garanti.\"", next: "temizlik_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Biraz havalandırma ve temizlikle azalır.\"", next: "temizlik_b" },
+        { id: "c", text: "\"Gençlik kokusu diyelim buna.\"", next: "temizlik_c", effects: { fun: 15 } },
+      ],
+    },
+    temizlik_a: { id: "temizlik_a", lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "Garanti ediyorsanız güzel." }], next: "ozan_soru" },
+    temizlik_b: { id: "temizlik_b", lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "Mantıklı, biraz zaman alır demek." }], next: "ozan_soru" },
+    temizlik_c: { id: "temizlik_c", lines: [{ speaker: "customer2", name: "Ozan", text: "(güler) Gençlik kokusu, bunu beğendim." }], next: "ozan_soru" },
+
+    ozan_soru: {
+      id: "ozan_soru",
+      lines: [{ speaker: "customer2", name: "Ozan", text: "Bence burası zaten harika, neden değiştirelim ki her şeyi anne?" }],
+      choices: [
+        { id: "a", text: "\"Ozan haklı, karakterini korumak güzel olabilir.\"", next: "ozan_a", effects: { fun: 15 } },
+        { id: "b", text: "\"Biraz düzenleme herkesin işine yarar aslında.\"", next: "ozan_b" },
+        { id: "c", text: "\"İkinizin de haklı olduğu noktalar var.\"", next: "ozan_c", effects: { suspicion: 5 } },
+      ],
+    },
+    ozan_a: { id: "ozan_a", lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "(kaşlarını çatar) Siz de mi Ozan'ın tarafındasınız?" }], next: "kapanis" },
+    ozan_b: { id: "ozan_b", lines: [{ speaker: "customer2", name: "Ozan", text: "(hayal kırıklığı) Herkes anneme katılıyor tabii." }], next: "kapanis" },
+    ozan_c: { id: "ozan_c", lines: [{ speaker: "customer1", name: "Ayten Hanım", text: "Diplomatik bir cevap, teşekkürler." }], next: "kapanis" },
+
+    kapanis: {
+      id: "kapanis",
+      lines: [
+        { speaker: "customer1", name: "Ayten Hanım", text: "Ozan, sen burada mutlu olur musun gerçekten?" },
+        { speaker: "customer2", name: "Ozan", text: "Kesinlikle anne, tam bana göre." },
+      ],
+      choices: [
+        { id: "a", text: "\"Görüyorsunuz, oğlunuz zaten karar vermiş — üstüne %4 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 4 } },
+        { id: "b", text: "\"Bir hafta düşünüp öyle karar vermenizi öneririm.\"", next: "closing_thinking" },
+        { id: "c", text: "\"Bu fiyata bu konumda başka seçenek bulamazsınız.\"", next: "closing_lost", effects: { suspicion: 20 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", name: "Ayten Hanım", text: "İndirim de olunca, tamam, alalım Ozan." },
+        { speaker: "customer2", name: "Ozan", text: "(sevinir) Teşekkürler anne!" },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", name: "Ayten Hanım", text: "İyi fikir, bir hafta düşünelim." },
+        { speaker: "customer2", name: "Ozan", text: "Tamam anne, umarım evet dersin." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", name: "Ayten Hanım", text: "Bu acele bize hiç uymuyor." },
+        { speaker: "customer2", name: "Ozan", text: "Anne haklı, başka yerlere de bakalım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const houseKapiciHayvan: HouseScene = {
+  id: "kapici-hayvan",
+  title: "Kapıcının Hayvan Şubesi",
+  location: "Kadıköy, 1. kat",
+  customerNames: ["Zeynep"],
+  background: "placeholder-house-19",
+  askingPrice: 3150000,
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [{ speaker: "customer1", name: "Zeynep", text: "(hapşırır) Pardon, alerjim var da, burada hayvan var mı?" }],
+      choices: [
+        { id: "a", text: "\"Hayır, hiç hayvan yok, merak etmeyin.\"", next: "start_a", effects: { suspicion: 20 } },
+        { id: "b", text: "\"Açıkçası kapıcı bodrumda birkaç sokak hayvanına bakıyor.\"", next: "start_b" },
+        { id: "c", text: "\"Sadece bina dışında, içeriyi etkilemez.\"", next: "start_c", effects: { suspicion: 10 } },
+      ],
+    },
+    start_a: { id: "start_a", lines: [{ speaker: "customer1", name: "Zeynep", text: "Umarım gerçekten yoktur, alerjim ciddi." }], next: "mesafe" },
+    start_b: { id: "start_b", lines: [{ speaker: "customer1", name: "Zeynep", text: "Bodrumda mı... bu beni endişelendiriyor." }], next: "mesafe" },
+    start_c: { id: "start_c", lines: [{ speaker: "customer1", name: "Zeynep", text: "Etkilemediğinden emin misiniz?" }], next: "mesafe" },
+
+    mesafe: {
+      id: "mesafe",
+      lines: [{ speaker: "customer1", name: "Zeynep", text: "Bodrum buraya ne kadar yakın, kokusu ya da tüyleri gelir mi?" }],
+      choices: [
+        { id: "a", text: "\"Hiç gelmez, tamamen ayrı bir alan.\"", next: "mesafe_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Bazen hafif gelebilir, pencereleri kapalı tutmanız iyi olur.\"", next: "mesafe_b" },
+        { id: "c", text: "\"Belki biraz alışkanlık meselesidir.\"", next: "mesafe_c", effects: { suspicion: 10 } },
+      ],
+    },
+    mesafe_a: { id: "mesafe_a", lines: [{ speaker: "customer1", name: "Zeynep", text: "Umarım öyledir gerçekten." }], next: "kapici" },
+    mesafe_b: { id: "mesafe_b", lines: [{ speaker: "customer1", name: "Zeynep", text: "Pencere kapalı tutmak mantıklı bir öneri." }], next: "kapici" },
+    mesafe_c: { id: "mesafe_c", lines: [{ speaker: "customer1", name: "Zeynep", text: "Alerji alışkanlıkla geçmez maalesef." }], next: "kapici" },
+
+    kapici: {
+      id: "kapici",
+      lines: [{ speaker: "customer1", name: "Zeynep", text: "Kapıcıyla konuşup bunu azaltması mümkün mü?" }],
+      choices: [
+        { id: "a", text: "\"Kesinlikle, o konuda çok esnek biridir.\"", next: "kapici_a", effects: { suspicion: 10 } },
+        { id: "b", text: "\"Konuşabiliriz ama kesin söz veremem.\"", next: "kapici_b" },
+        { id: "c", text: "\"O hayvanları kendi çocuğu gibi seviyor açıkçası, zor olabilir.\"", next: "kapici_c", effects: { fun: 15 } },
+      ],
+    },
+    kapici_a: { id: "kapici_a", lines: [{ speaker: "customer1", name: "Zeynep", text: "Esnekse belki bir çözüm buluruz." }], next: "kapanis" },
+    kapici_b: { id: "kapici_b", lines: [{ speaker: "customer1", name: "Zeynep", text: "Dürüstlüğünüzü takdir ederim." }], next: "kapanis" },
+    kapici_c: { id: "kapici_c", lines: [{ speaker: "customer1", name: "Zeynep", text: "(gülümser) Sevimli ama benim için zor bir durum." }], next: "kapanis" },
+
+    kapanis: {
+      id: "kapanis",
+      lines: [{ speaker: "customer1", name: "Zeynep", text: "Alerjim ciddi, bu konuda net bir cevaba ihtiyacım var." }],
+      choices: [
+        { id: "a", text: "\"Kapıcıyla konuşup düzenlemeyi hemen ayarlarım — üstüne %4 indirim de yaparım.\"", next: "closing_sold", effects: { discountPercent: 4 } },
+        { id: "b", text: "\"Dürüst olmak gerekirse, bu ev sizin için riskli olabilir.\"", next: "closing_thinking" },
+        { id: "c", text: "\"Merak etmeyin, hiç sorun yaşamazsınız.\"", next: "closing_lost", effects: { suspicion: 20 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", name: "Zeynep", text: "Düzenleme ve indirimle birlikte içim rahat etti, alıyorum." },
+        { speaker: "emlah", text: "Hayırlı olsun, kapıcıyla hemen konuşurum." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", name: "Zeynep", text: "Dürüstlüğünüzü takdir ediyorum, biraz düşüneyim." },
+        { speaker: "emlah", text: "Sağlığınız önemli, acele etmeyin." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", name: "Zeynep", text: "\"Hiç sorun yaşamazsınız\" cümlesi beni ikna etmedi." },
+        { speaker: "customer1", name: "Zeynep", text: "Başka seçeneklere bakacağım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const houseZeminVitrin: HouseScene = {
+  id: "zemin-vitrin",
+  title: "Zemin Kat Vitrin",
+  location: "Nişantaşı, eski dükkân",
+  customerNames: ["Derin"],
+  background: "placeholder-house-20",
+  askingPrice: 4400000,
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [{ speaker: "customer1", name: "Derin", text: "(pencereye bakar) Dur, bu cam hiç perde falan yok mu?" }],
+      choices: [
+        { id: "a", text: "\"Şu an yok ama takılabilir tabii.\"", next: "start_a" },
+        { id: "b", text: "\"Doğal ışık için harika, değil mi?\"", next: "start_b", effects: { suspicion: 15 } },
+        { id: "c", text: "\"Vitrin ruhu hâlâ evin karakterinde.\"", next: "start_c", effects: { fun: 15 } },
+      ],
+    },
+    start_a: { id: "start_a", lines: [{ speaker: "customer1", name: "Derin", text: "Takılabilirse rahatladım biraz." }], next: "mahremiyet" },
+    start_b: { id: "start_b", lines: [{ speaker: "customer1", name: "Derin", text: "Işık güzel ama mahremiyet daha önemli benim için." }], next: "mahremiyet" },
+    start_c: { id: "start_c", lines: [{ speaker: "customer1", name: "Derin", text: "(gülümser) Vitrin ruhu ilginç bir tabir." }], next: "mahremiyet" },
+
+    mahremiyet: {
+      id: "mahremiyet",
+      lines: [{ speaker: "customer1", name: "Derin", text: "Ben biraz tanınan biriyim, insanlar içeri bakar mı sizce?" }],
+      choices: [
+        { id: "a", text: "\"Muhtemelen bakarlar ama alışırsınız.\"", next: "mahremiyet_a", effects: { suspicion: 20 } },
+        { id: "b", text: "\"Perde veya folyo ile tamamen çözülür bu.\"", next: "mahremiyet_b" },
+        { id: "c", text: "\"Belki de hayranlarınızla daha yakın olursunuz.\"", next: "mahremiyet_c", effects: { fun: 20 } },
+      ],
+    },
+    mahremiyet_a: { id: "mahremiyet_a", lines: [{ speaker: "customer1", name: "Derin", text: "Alışmak istediğim bir şey değil bu açıkçası." }], next: "guvenlik" },
+    mahremiyet_b: { id: "mahremiyet_b", lines: [{ speaker: "customer1", name: "Derin", text: "Folyo fikri işime gelir." }], next: "guvenlik" },
+    mahremiyet_c: { id: "mahremiyet_c", lines: [{ speaker: "customer1", name: "Derin", text: "(güler) Bu kadar yakın olmak istemem doğrusu." }], next: "guvenlik" },
+
+    guvenlik: {
+      id: "guvenlik",
+      lines: [{ speaker: "customer1", name: "Derin", text: "Peki güvenlik açısından sorun olur mu, biri içeri bakabilir mi?" }],
+      choices: [
+        { id: "a", text: "\"Hiç sorun olmaz, merak etmeyin.\"", next: "guvenlik_a", effects: { suspicion: 20 } },
+        { id: "b", text: "\"Güvenlik filmi ve kalın perdeyle ciddi oranda azaltılır.\"", next: "guvenlik_b" },
+        { id: "c", text: "\"Ünlü olmanın küçük bedelleri var tabii.\"", next: "guvenlik_c", effects: { fun: 15 } },
+      ],
+    },
+    guvenlik_a: { id: "guvenlik_a", lines: [{ speaker: "customer1", name: "Derin", text: "\"Hiç sorun olmaz\" cümlesine güvenmem açıkçası." }], next: "kapanis" },
+    guvenlik_b: { id: "guvenlik_b", lines: [{ speaker: "customer1", name: "Derin", text: "Güvenlik filmi mantıklı bir çözüm." }], next: "kapanis" },
+    guvenlik_c: { id: "guvenlik_c", lines: [{ speaker: "customer1", name: "Derin", text: "(gülümser) Bu bedeli zaten ödüyorum sürekli." }], next: "kapanis" },
+
+    kapanis: {
+      id: "kapanis",
+      lines: [{ speaker: "customer1", name: "Derin", text: "Sosyal medyada da harika içerik çıkar buradan aslında." }],
+      choices: [
+        { id: "a", text: "\"Kesinlikle, hem yaşam hem içerik alanı bir arada — üstüne %3 indirim de yapalım.\"", next: "closing_sold", effects: { discountPercent: 3 } },
+        { id: "b", text: "\"Perde/folyo çözümünü halledip öyle karar verin.\"", next: "closing_thinking" },
+        { id: "c", text: "\"Bu vitrin konsepti bu fiyata bir daha çıkmaz.\"", next: "closing_lost", effects: { suspicion: 20 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", name: "Derin", text: "İndirim de güzel oldu, içerik ve ev bir arada, alıyorum." },
+        { speaker: "emlah", text: "Hayırlı olsun, takipçileriniz bayılacak." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", name: "Derin", text: "İyi fikir, önce folyo çözümünü halledeyim." },
+        { speaker: "emlah", text: "Elbette, acele etmeyin." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", name: "Derin", text: "Bu baskı taktiği hoşuma gitmedi doğrusu." },
+        { speaker: "customer1", name: "Derin", text: "Başka seçeneklere bakacağım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
 export const allHouses: HouseScene[] = [
   houseKokuluStudyo,
   houseHayaletliDaire,
@@ -1714,4 +1972,7 @@ export const allHouses: HouseScene[] = [
   houseGuvercin,
   houseKaptanRutubet,
   houseMirasKavgasi,
+  houseOgrenciEvi,
+  houseKapiciHayvan,
+  houseZeminVitrin,
 ];

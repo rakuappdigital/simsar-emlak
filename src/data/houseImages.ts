@@ -15,6 +15,9 @@ import geceklubu from "../assets/houses/geceklubu.webp";
 import guvercin from "../assets/houses/guvercin.webp";
 import kaptanrutubet from "../assets/houses/kaptanrutubet.webp";
 import miraskavgasi from "../assets/houses/miraskavgasi.webp";
+import ogrencievi from "../assets/houses/ogrencievi.webp";
+import kapicihayvan from "../assets/houses/kapicihayvan.webp";
+import zeminvitrin from "../assets/houses/zeminvitrin.webp";
 
 export const houseImages: Record<string, string> = {
   "kokulu-studyo": kokulu,
@@ -34,4 +37,7 @@ export const houseImages: Record<string, string> = {
   guvercin: guvercin,
   "kaptan-rutubet": kaptanrutubet,
   "miras-kavgasi": miraskavgasi,
+  "ogrenci-evi": ogrencievi,
+  "kapici-hayvan": kapicihayvan,
+  "zemin-vitrin": zeminvitrin,
 };

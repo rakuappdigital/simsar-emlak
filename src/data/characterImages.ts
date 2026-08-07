@@ -20,6 +20,10 @@ import asli from "../assets/portraits/asli.webp";
 import feridun from "../assets/portraits/feridun.webp";
 import yusuf from "../assets/portraits/yusuf.webp";
 import pinar from "../assets/portraits/pinar.webp";
+import ayten from "../assets/portraits/ayten.webp";
+import ozan from "../assets/portraits/ozan.webp";
+import zeynep from "../assets/portraits/zeynep.webp";
+import derin from "../assets/portraits/derin.webp";
 
 export const characterImages: Record<string, string> = {
   Emlah: emlah,
@@ -44,4 +48,8 @@ export const characterImages: Record<string, string> = {
   "Feridun Bey": feridun,
   "Kaptan Yusuf": yusuf,
   "Pınar Hanım": pinar,
+  "Ayten Hanım": ayten,
+  Ozan: ozan,
+  Zeynep: zeynep,
+  Derin: derin,
 };

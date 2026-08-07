@@ -144,6 +144,30 @@ export const houseIntros: Record<string, HouseIntro> = {
     ],
     thought: "Miras konusunu bilmemi istiyorsa keşke biraz bilgi verseydi.",
   },
+  "ogrenci-evi": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Levent'teki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Anne-oğul geliyor, anne biraz titiz" },
+      { from: "Muzaffer Bey", text: "Duvarlardaki yazılar da bir tür sanat sayılır 🎨" },
+    ],
+    thought: "Anne titizse bu duvarlar hiç iyi gitmeyecek.",
+  },
+  "kapici-hayvan": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Kadıköy'deki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Genç bir profesyonel geliyor, çok düzenli biri" },
+      { from: "Muzaffer Bey", text: "Bodrumdaki küçük dostları hiç gündeme getirme 🐾" },
+    ],
+    thought: "Küçük dostlar derken alerjisi olan biri için hiç iyi değil bu.",
+  },
+  "zemin-vitrin": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Nişantaşı'ndaki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Tanınmış bir müşteri geliyor, dikkatli ol" },
+      { from: "Muzaffer Bey", text: "Cam vitrin küçük bir detay, önemli değil 🪟" },
+    ],
+    thought: "Önemli değil derken mahremiyeti mi kastediyor.",
+  },
 };
 
 export function defaultIntro(house: HouseScene): HouseIntro {
