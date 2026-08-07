@@ -6,20 +6,24 @@ import MainMenu from "./components/MainMenu";
 import SavedGames from "./components/SavedGames";
 import SoundSettings from "./components/SoundSettings";
 import WeekResult from "./components/WeekResult";
+import ContractModal from "./components/ContractModal";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { allHouses } from "./data/houses";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
-import { streakMultiplier } from "./data/scoring";
+import { resolveOutcome, streakMultiplier } from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
-import { maybeGenerateCallback } from "./data/callbacks";
+import { maybeGenerateCallback, negotiationChoices, type CallbackEvent } from "./data/callbacks";
 import { loadSave, writeSave, clearSave } from "./data/save";
+import { generateContract } from "./data/contract";
+import { perks, hasPerk } from "./data/perks";
+import { shuffledRange } from "./data/shuffle";
 import type {
   Badge,
   ChoiceEffects,
+  ContractClause,
   GameStats,
   HouseResult,
-  HouseScene,
   PhoneMessage,
   SaleResult,
   SaveGame,
@@ -35,11 +39,10 @@ type Stage =
   | "callback"
   | "phone"
   | "house"
+  | "contract"
   | "result"
   | "weekGoal"
   | "summary";
-
-const emptyStats: GameStats = { suspicion: 0, interest: 0, fun: 0, discountPercent: 0 };
 
 const outcomeText: Record<SceneOutcome, string> = {
   sold: "Satış tamamlandı! 🎉",
@@ -47,12 +50,17 @@ const outcomeText: Record<SceneOutcome, string> = {
   lost: "Satış kaybedildi.",
 };
 
-function computeSale(house: HouseScene, discountPercent: number, priorStreak: number): SaleResult {
-  const finalPrice = house.askingPrice * (1 - discountPercent / 100);
+function computeSale(
+  askingPrice: number,
+  discountPercent: number,
+  priorStreak: number,
+  contractModifier: number,
+): SaleResult {
+  const finalPrice = askingPrice * (1 - discountPercent / 100);
   const baseCommission = finalPrice * COMMISSION_RATE;
   const streakBonus = streakMultiplier(priorStreak);
-  const commission = baseCommission * (1 + streakBonus);
-  return { finalPrice, commission, discountPercent, streakBonus };
+  const commission = baseCommission * (1 + streakBonus + contractModifier);
+  return { finalPrice, commission, discountPercent, streakBonus, contractModifier };
 }
 
 function reputationLabel(results: HouseResult[]): string {
@@ -66,14 +74,19 @@ function reputationLabel(results: HouseResult[]): string {
 function App() {
   const [stage, setStage] = useState<Stage>("menu");
   const [index, setIndex] = useState(0);
-  const [stats, setStats] = useState<GameStats>(emptyStats);
+  const [houseOrder, setHouseOrder] = useState<number[]>(() => shuffledRange(allHouses.length));
+  const [stats, setStats] = useState<GameStats>({ suspicion: 0, interest: 0, fun: 0, discountPercent: 0 });
   const [results, setResults] = useState<HouseResult[]>([]);
   const [badges, setBadges] = useState<string[]>([]);
   const [weekOutcomes, setWeekOutcomes] = useState<WeekOutcome[]>([]);
+  const [ownedPerks, setOwnedPerks] = useState<string[]>([]);
+  const [spent, setSpent] = useState(0);
   const [pendingNewBadges, setPendingNewBadges] = useState<Badge[]>([]);
   const [pendingWeekOutcome, setPendingWeekOutcome] = useState<WeekOutcome | null>(null);
-  const [extraMessages, setExtraMessages] = useState<PhoneMessage[]>([]);
-  const [callbackContact, setCallbackContact] = useState<string>("");
+  const [activeCallback, setActiveCallback] = useState<
+    (CallbackEvent & { sessionKey: string }) | null
+  >(null);
+  const [contractClauses, setContractClauses] = useState<ContractClause[]>([]);
   const [savedGame, setSavedGame] = useState<SaveGame | null>(null);
   const [hasSave, setHasSave] = useState(false);
 
@@ -81,62 +94,60 @@ function App() {
     setHasSave(loadSave() !== null);
   }, []);
 
-  const house = allHouses[index];
+  const house = allHouses[houseOrder[index] ?? index];
   const intro = house ? (houseIntros[house.id] ?? defaultIntro(house)) : null;
   const isLastHouse = index === allHouses.length - 1;
   const lastResult = results[results.length - 1];
 
-  function applyEffects(effects: ChoiceEffects) {
-    setStats((s) => ({
-      suspicion: s.suspicion + (effects.suspicion ?? 0),
-      interest: s.interest + (effects.interest ?? 0),
-      fun: s.fun + (effects.fun ?? 0),
-      discountPercent: s.discountPercent + (effects.discountPercent ?? 0),
-    }));
+  function freshStats(): GameStats {
+    return { suspicion: 0, interest: 0, fun: hasPerk(ownedPerks, "sansli-nal") ? 10 : 0, discountPercent: 0 };
   }
 
-  function enterPhone(newIndex: number, currentResults: HouseResult[]) {
-    let workingResults = currentResults;
-    let extra: PhoneMessage[] = [];
-    let contact = "";
+  function applyEffects(effects: ChoiceEffects) {
+    const dampenSuspicion = hasPerk(ownedPerks, "ikna-kartviziti");
+    setStats((s) => {
+      const rawSuspicion = effects.suspicion ?? 0;
+      const suspicionDelta = dampenSuspicion && rawSuspicion > 0 ? rawSuspicion * 0.8 : rawSuspicion;
+      return {
+        suspicion: s.suspicion + suspicionDelta,
+        interest: s.interest + (effects.interest ?? 0),
+        fun: s.fun + (effects.fun ?? 0),
+        discountPercent: s.discountPercent + (effects.discountPercent ?? 0),
+      };
+    });
+  }
 
+  function enterPhone(newIndex: number, currentResults: HouseResult[], perksForChance: string[]) {
     if (newIndex > 0 && currentResults.length > 0) {
-      const callback = maybeGenerateCallback(currentResults, allHouses);
+      const chanceBoost = hasPerk(perksForChance, "referans-agi");
+      const callback = maybeGenerateCallback(currentResults, allHouses, chanceBoost);
       if (callback) {
-        extra = callback.messages;
-        const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
-        contact = callbackHouse?.customerNames[0] ?? "";
-        if (callback.converts) {
-          workingResults = currentResults.map((r, i) =>
-            i === callback.resultIndex
-              ? {
-                  ...r,
-                  outcome: "sold" as SceneOutcome,
-                  converted: true,
-                  sale: { finalPrice: callbackHouse!.askingPrice, commission: callback.bonusCommission, discountPercent: 0, streakBonus: 0 },
-                }
-              : r,
-          );
-          setResults(workingResults);
-        }
+        setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
+        setIndex(newIndex);
+        setStage("callback");
+        return;
       }
     }
-
-    setExtraMessages(extra);
-    setCallbackContact(contact);
+    setActiveCallback(null);
     setIndex(newIndex);
-    setStage(extra.length > 0 ? "callback" : "phone");
+    setStage("phone");
   }
 
   function startNewGame() {
+    const order = shuffledRange(allHouses.length);
+    setHouseOrder(order);
     setIndex(0);
     setResults([]);
     setBadges([]);
     setWeekOutcomes([]);
-    setStats(emptyStats);
+    setOwnedPerks([]);
+    setSpent(0);
+    setStats(freshStats());
     clearSave();
     setHasSave(false);
-    enterPhone(0, []);
+    setActiveCallback(null);
+    setIndex(0);
+    setStage("phone");
   }
 
   function openSaved() {
@@ -146,11 +157,14 @@ function App() {
 
   function continueSaved() {
     if (!savedGame) return;
+    setHouseOrder(savedGame.houseOrder);
     setResults(savedGame.results);
     setBadges(savedGame.badges);
     setWeekOutcomes(savedGame.weekOutcomes);
-    setStats(emptyStats);
-    enterPhone(savedGame.index, savedGame.results);
+    setOwnedPerks(savedGame.ownedPerks);
+    setSpent(savedGame.spent);
+    setStats({ suspicion: 0, interest: 0, fun: hasPerk(savedGame.ownedPerks, "sansli-nal") ? 10 : 0, discountPercent: 0 });
+    enterPhone(savedGame.index, savedGame.results, savedGame.ownedPerks);
   }
 
   function deleteSaved() {
@@ -159,10 +173,41 @@ function App() {
     setHasSave(false);
   }
 
+  function persist(newResults: HouseResult[], newWeekOutcomes: WeekOutcome[], newBadges: string[], newIndex: number, newOwnedPerks: string[], newSpent: number) {
+    writeSave({
+      version: 2,
+      index: newIndex,
+      houseOrder,
+      results: newResults,
+      weekOutcomes: newWeekOutcomes,
+      badges: newBadges,
+      ownedPerks: newOwnedPerks,
+      spent: newSpent,
+      savedAt: new Date().toISOString(),
+    });
+    setHasSave(true);
+  }
+
   function handleSceneEnd(outcome: SceneOutcome) {
+    if (outcome === "sold") {
+      setContractClauses(generateContract());
+      setStage("contract");
+    } else {
+      finalizeResult(outcome, 0);
+    }
+  }
+
+  function finalizeResult(outcome: SceneOutcome, contractModifier: number) {
     const priorStreak = computeStreak(results);
-    const sale = outcome === "sold" ? computeSale(house, stats.discountPercent, priorStreak) : null;
-    const newResult: HouseResult = { houseId: house.id, outcome, sale, finalSuspicion: stats.suspicion };
+    const sale =
+      outcome === "sold" ? computeSale(house.askingPrice, stats.discountPercent, priorStreak, contractModifier) : null;
+    const newResult: HouseResult = {
+      houseId: house.id,
+      outcome,
+      sale,
+      finalStats: stats,
+      finalSuspicion: stats.suspicion,
+    };
     const newResults = [...results, newResult];
     setResults(newResults);
 
@@ -185,21 +230,12 @@ function App() {
       setPendingWeekOutcome(null);
     }
 
-    writeSave({
-      version: 1,
-      index: index + 1,
-      results: newResults,
-      weekOutcomes: newWeekOutcomes,
-      badges: newBadgesState,
-      savedAt: new Date().toISOString(),
-    });
-    setHasSave(true);
-
+    persist(newResults, newWeekOutcomes, newBadgesState, index + 1, ownedPerks, spent);
     setStage("result");
   }
 
   function proceedAfterResult() {
-    setStats(emptyStats);
+    setStats(freshStats());
     if (pendingWeekOutcome) {
       setStage("weekGoal");
       return;
@@ -207,7 +243,7 @@ function App() {
     if (isLastHouse) {
       setStage("summary");
     } else {
-      enterPhone(index + 1, results);
+      enterPhone(index + 1, results, ownedPerks);
     }
   }
 
@@ -216,13 +252,69 @@ function App() {
     if (isLastHouse) {
       setStage("summary");
     } else {
-      enterPhone(index + 1, results);
+      enterPhone(index + 1, results, ownedPerks);
     }
   }
 
-  const totalCommission =
+  function buyPerk(perkId: string) {
+    const perk = perks.find((p) => p.id === perkId);
+    if (!perk || ownedPerks.includes(perkId)) return;
+    if (balance < perk.cost) return;
+    const newOwned = [...ownedPerks, perkId];
+    const newSpent = spent + perk.cost;
+    setOwnedPerks(newOwned);
+    setSpent(newSpent);
+    persist(results, weekOutcomes, badges, index + 1, newOwned, newSpent);
+  }
+
+  function handleNegotiationChoice(choiceId: string) {
+    if (!activeCallback) return;
+    const choice = negotiationChoices.find((c) => c.id === choiceId);
+    if (!choice) return;
+
+    const original = results[activeCallback.resultIndex];
+    const projected: GameStats = {
+      suspicion: original.finalStats.suspicion + choice.suspicionDelta,
+      interest: original.finalStats.interest + choice.interestDelta,
+      fun: original.finalStats.fun + choice.funDelta,
+      discountPercent: original.finalStats.discountPercent,
+    };
+    const outcome2: SceneOutcome = resolveOutcome(projected, choice.closingBias);
+
+    let confirmText: string;
+    let updatedResult: HouseResult = { ...original, finalStats: projected, finalSuspicion: projected.suspicion };
+
+    if (outcome2 === "sold") {
+      const targetHouse = allHouses.find((h) => h.id === original.houseId)!;
+      const sale = computeSale(targetHouse.askingPrice, original.finalStats.discountPercent, 0, 0);
+      updatedResult = { ...updatedResult, outcome: "sold", converted: true, sale };
+      confirmText = "Harika, süreci hemen başlatıyorum! 🎉";
+    } else if (outcome2 === "lost") {
+      updatedResult = { ...updatedResult, outcome: "lost" };
+      confirmText = "Anlıyorum, sanırım başka bir seçeneğe bakacağız.";
+    } else {
+      confirmText = "Anlaşıldı, biraz daha düşünelim, haber veririz.";
+    }
+
+    const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
+    setResults(newResults);
+    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent);
+
+    setActiveCallback((prev) =>
+      prev
+        ? {
+            ...prev,
+            messages: [...prev.messages, { from: prev.contactName, text: confirmText }] as PhoneMessage[],
+            choices: undefined,
+          }
+        : prev,
+    );
+  }
+
+  const earned =
     results.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) +
     weekOutcomes.reduce((sum, w) => sum + w.bonus, 0);
+  const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
 
   return (
@@ -230,45 +322,40 @@ function App() {
       {stage !== "menu" && stage !== "saved" && stage !== "sounds" && (
         <header className="game-header">
           <h1>Simsar Emlak</h1>
-          <span className="subtitle">Emlah'ın günü — Ev {index + 1}/{allHouses.length}</span>
+          <span className="subtitle">
+            Emlah'ın günü — Ev {index + 1}/{allHouses.length}
+          </span>
+          <span className="wallet-pill">💰 {formatTL(balance)}</span>
         </header>
       )}
 
       {stage === "menu" && (
-        <MainMenu
-          hasSave={hasSave}
-          onNewGame={startNewGame}
-          onOpenSaved={openSaved}
-          onSounds={() => setStage("sounds")}
-        />
+        <MainMenu hasSave={hasSave} onNewGame={startNewGame} onOpenSaved={openSaved} onSounds={() => setStage("sounds")} />
       )}
 
       {stage === "saved" && (
-        <SavedGames
-          save={savedGame}
-          onContinue={continueSaved}
-          onDelete={deleteSaved}
-          onBack={() => setStage("menu")}
-        />
+        <SavedGames save={savedGame} onContinue={continueSaved} onDelete={deleteSaved} onBack={() => setStage("menu")} />
       )}
 
       {stage === "sounds" && <SoundSettings onBack={() => setStage("menu")} />}
 
-      {stage === "callback" && (
+      {stage === "callback" && activeCallback && (
         <PhoneScreen
-          messages={extraMessages}
-          contactName={callbackContact}
+          key={activeCallback.sessionKey}
+          messages={activeCallback.messages}
+          contactName={activeCallback.contactName}
           statusText="mesaj yazdı"
-          onContinue={() => setStage("phone")}
+          choices={activeCallback.choices?.map((c) => ({ id: c.id, text: c.text }))}
+          onChoice={handleNegotiationChoice}
+          onContinue={() => {
+            setActiveCallback(null);
+            setStage("phone");
+          }}
         />
       )}
 
       {stage === "phone" && intro && (
-        <PhoneScreen
-          messages={intro.messages}
-          thought={intro.thought}
-          onContinue={() => setStage("house")}
-        />
+        <PhoneScreen key={house.id} messages={intro.messages} thought={intro.thought} onContinue={() => setStage("house")} />
       )}
 
       {stage === "house" && (
@@ -276,6 +363,14 @@ function App() {
           <StatsBar stats={stats} />
           <DialogueScene house={house} stats={stats} onChoiceEffects={applyEffects} onSceneEnd={handleSceneEnd} />
         </>
+      )}
+
+      {stage === "contract" && (
+        <ContractModal
+          clauses={contractClauses}
+          customerName={house.customerNames[0]}
+          onFinish={(modifier) => finalizeResult("sold", modifier)}
+        />
       )}
 
       {stage === "result" && lastResult && (
@@ -287,8 +382,9 @@ function App() {
                 Satış Fiyatı: {formatTL(lastResult.sale.finalPrice)}
                 {lastResult.sale.discountPercent > 0 && ` (%${lastResult.sale.discountPercent} indirimli)`}
               </p>
-              {lastResult.sale.streakBonus > 0 && (
-                <p>Seri bonusu: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥</p>
+              {lastResult.sale.streakBonus > 0 && <p>Seri bonusu: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥</p>}
+              {lastResult.sale.contractModifier !== 0 && (
+                <p>Sözleşme etkisi: {lastResult.sale.contractModifier > 0 ? "+" : ""}%{Math.round(lastResult.sale.contractModifier * 100)}</p>
               )}
               <p>Komisyonunuz: {formatTL(lastResult.sale.commission)}</p>
             </div>
@@ -307,19 +403,30 @@ function App() {
       )}
 
       {stage === "weekGoal" && pendingWeekOutcome && (
-        <WeekResult outcome={pendingWeekOutcome} onContinue={proceedAfterWeek} />
+        <WeekResult
+          outcome={pendingWeekOutcome}
+          balance={balance}
+          ownedPerks={ownedPerks}
+          onBuyPerk={buyPerk}
+          onContinue={proceedAfterWeek}
+        />
       )}
 
       {stage === "summary" && (
         <div className="result-screen">
           <p>Bugünün özeti:</p>
-          {allHouses.map((h, i) => (
-            <p key={h.id}>
-              {h.title}: {results[i] ? outcomeText[results[i].outcome] : "—"}
-              {results[i]?.converted ? " (sonradan ikna oldu)" : ""}
-            </p>
-          ))}
-          <p className="sale-summary">Toplam Komisyon: {formatTL(totalCommission)}</p>
+          {allHouses.map((h) => {
+            const playedIdx = houseOrder.indexOf(allHouses.indexOf(h));
+            const r = results[playedIdx];
+            return (
+              <p key={h.id}>
+                {h.title}: {r ? outcomeText[r.outcome] : "—"}
+                {r?.converted ? " (sonradan ikna oldu)" : ""}
+              </p>
+            );
+          })}
+          <p className="sale-summary">Toplam Kazanç: {formatTL(earned)}</p>
+          <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
           <p className="sale-summary">Unvan: {reputationLabel(results)}</p>
           {badges.length > 0 && (
             <div className="badge-popup">
@@ -329,9 +436,7 @@ function App() {
               ))}
             </div>
           )}
-          <p className="muzaffer-note">
-            Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"
-          </p>
+          <p className="muzaffer-note">Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"</p>
           <button className="menu-btn" onClick={() => setStage("menu")}>
             Ana Menü
           </button>

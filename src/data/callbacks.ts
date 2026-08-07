@@ -1,37 +1,74 @@
 import type { HouseResult, HouseScene, PhoneMessage } from "../types";
-import { COMMISSION_RATE } from "./economy";
+
+export interface NegotiationChoice {
+  id: string;
+  text: string;
+  suspicionDelta: number;
+  interestDelta: number;
+  funDelta: number;
+  closingBias: number;
+}
+
+export const negotiationChoices: NegotiationChoice[] = [
+  {
+    id: "empathetic",
+    text: '"Elinizde ne gibi tereddütler var, konuşalım."',
+    suspicionDelta: -5,
+    interestDelta: 10,
+    funDelta: 0,
+    closingBias: 15,
+  },
+  {
+    id: "pushy",
+    text: '"Bu fırsatı kaçırmayın, başkaları da ilgileniyor."',
+    suspicionDelta: 15,
+    interestDelta: 0,
+    funDelta: 0,
+    closingBias: 10,
+  },
+  {
+    id: "patient",
+    text: '"Sizi hiç zorlamam, ne zaman hazır olursanız buradayım."',
+    suspicionDelta: -10,
+    interestDelta: 5,
+    funDelta: 5,
+    closingBias: -5,
+  },
+];
 
 export interface CallbackEvent {
   resultIndex: number;
+  contactName: string;
   messages: PhoneMessage[];
-  converts: boolean;
-  bonusCommission: number;
+  /** Present only when the original outcome was "thinking" — a real negotiation. */
+  choices?: NegotiationChoice[];
 }
 
-const CALLBACK_CHANCE = 0.3;
-const CONVERT_CHANCE = 0.5;
+const BASE_CHANCE = 0.3;
+const BOOSTED_CHANCE = 0.45;
 
 export function maybeGenerateCallback(
   results: HouseResult[],
   allHouses: HouseScene[],
+  chanceBoost = false,
 ): CallbackEvent | null {
   if (results.length === 0) return null;
-  if (Math.random() > CALLBACK_CHANCE) return null;
+  const chance = chanceBoost ? BOOSTED_CHANCE : BASE_CHANCE;
+  if (Math.random() > chance) return null;
 
   const resultIndex = Math.floor(Math.random() * results.length);
   const result = results[resultIndex];
   const house = allHouses.find((h) => h.id === result.houseId);
   if (!house) return null;
-  const customerName = house.customerNames[0];
+  const contactName = house.customerNames[0];
 
   if (result.outcome === "sold") {
     return {
       resultIndex,
-      converts: false,
-      bonusCommission: 0,
+      contactName,
       messages: [
-        { from: customerName, text: `Merhaba, ${house.title} için tekrar teşekkür etmek istedim, çok mutluyuz!` },
-        { from: customerName, text: "Bu arada bir arkadaşıma da sizi önerdim, belki o da arar." },
+        { from: contactName, text: `Merhaba, ${house.title} için tekrar teşekkür etmek istedim, çok mutluyuz!` },
+        { from: contactName, text: "Bu arada bir arkadaşıma da sizi önerdim, belki o da arar." },
       ],
     };
   }
@@ -39,36 +76,22 @@ export function maybeGenerateCallback(
   if (result.outcome === "lost") {
     return {
       resultIndex,
-      converts: false,
-      bonusCommission: 0,
+      contactName,
       messages: [
-        { from: customerName, text: `Merhaba, ${house.title} hâlâ satılık mı acaba?` },
-        { from: customerName, text: "Geçen sefer biraz aceleye getirilmiş hissetmiştim ama tekrar düşünüyorum." },
+        { from: contactName, text: `Merhaba, ${house.title} hâlâ satılık mı acaba?` },
+        { from: contactName, text: "Geçen sefer biraz aceleye getirilmiş hissetmiştim ama tekrar düşünüyorum." },
       ],
     };
   }
 
-  // outcome === "thinking"
-  const converts = Math.random() < CONVERT_CHANCE;
-  if (converts) {
-    const commission = house.askingPrice * COMMISSION_RATE;
-    return {
-      resultIndex,
-      converts: true,
-      bonusCommission: commission,
-      messages: [
-        { from: customerName, text: `Merhaba, ${house.title} konusunda düşündük...` },
-        { from: customerName, text: "Karar verdik, alıyoruz! Süreci başlatabilir misiniz? 🎉" },
-      ],
-    };
-  }
+  // outcome === "thinking" — a real negotiation with consequences
   return {
     resultIndex,
-    converts: false,
-    bonusCommission: 0,
+    contactName,
     messages: [
-      { from: customerName, text: `Merhaba, ${house.title} hakkında hâlâ düşünüyoruz.` },
-      { from: customerName, text: "Biraz daha zamana ihtiyacımız var, haber veririz." },
+      { from: contactName, text: `Merhaba, ${house.title} konusunda tekrar düşündük...` },
+      { from: contactName, text: "Hâlâ tam kararsızız açıkçası, biraz daha yardımcı olur musunuz?" },
     ],
+    choices: negotiationChoices,
   };
 }

@@ -68,12 +68,16 @@ export interface SaleResult {
   commission: number;
   discountPercent: number;
   streakBonus: number;
+  /** From the post-sale contract signing (-0.05..+0.05 typically). */
+  contractModifier: number;
 }
 
 export interface HouseResult {
   houseId: string;
   outcome: SceneOutcome;
   sale: SaleResult | null;
+  /** Full stats snapshot at the moment this house's outcome resolved. */
+  finalStats: GameStats;
   /** Suspicion value accumulated by the time this house's outcome resolved. */
   finalSuspicion: number;
   /** Set to true if this "thinking" result later converted into a sale via a callback. */
@@ -103,11 +107,34 @@ export interface Badge {
   description: string;
 }
 
+export interface Perk {
+  id: string;
+  title: string;
+  description: string;
+  cost: number;
+}
+
 export interface SaveGame {
-  version: 1;
+  version: 2;
   index: number;
+  houseOrder: number[];
   results: HouseResult[];
   weekOutcomes: WeekOutcome[];
   badges: string[];
+  ownedPerks: string[];
+  spent: number;
   savedAt: string;
+}
+
+export interface ContractClauseOption {
+  id: string;
+  label: string;
+}
+
+export interface ContractClause {
+  id: string;
+  title: string;
+  options: ContractClauseOption[];
+  /** id of the option this particular customer secretly prefers. */
+  preferredOptionId: string;
 }

@@ -6,11 +6,16 @@ import type { GameStats, SceneOutcome } from "../types";
  * high suspicion drags it toward "lost" even if the closing choice was
  * generous — so early dishonesty has a real, felt cost instead of being
  * cosmetic.
+ *
+ * Thresholds are tuned so an outright "sold" on the first visit is a real
+ * accomplishment, not the default outcome — most decent playthroughs land
+ * on "thinking" and get resolved later through a WhatsApp follow-up
+ * negotiation (see callbacks.ts) instead.
  */
 export function resolveOutcome(stats: GameStats, closingBias: number): SceneOutcome {
   const score = stats.interest + stats.fun - stats.suspicion * 1.1 + closingBias;
-  if (score >= 35) return "sold";
-  if (score >= -15) return "thinking";
+  if (score >= 50) return "sold";
+  if (score >= -20) return "thinking";
   return "lost";
 }
 

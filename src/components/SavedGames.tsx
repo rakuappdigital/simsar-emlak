@@ -10,7 +10,10 @@ interface SavedGamesProps {
 }
 
 export default function SavedGames({ save, onContinue, onDelete, onBack }: SavedGamesProps) {
-  const totalCommission = save?.results.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) ?? 0;
+  const earned =
+    (save?.results.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) ?? 0) +
+    (save?.weekOutcomes.reduce((sum, w) => sum + w.bonus, 0) ?? 0);
+  const balance = earned - (save?.spent ?? 0);
   const soldCount = save?.results.filter((r) => r.outcome === "sold").length ?? 0;
 
   return (
@@ -21,7 +24,8 @@ export default function SavedGames({ save, onContinue, onDelete, onBack }: Saved
         <div className="save-slot">
           <p>İlerleme: Ev {save.index + 1}/{allHouses.length}</p>
           <p>Satış: {soldCount}</p>
-          <p>Toplam Komisyon: {formatTL(totalCommission)}</p>
+          <p>Toplam Kazanç: {formatTL(earned)}</p>
+          <p>Bakiye: {formatTL(balance)}</p>
           <p>Rozet: {save.badges.length}</p>
           <p className="save-slot-date">Son kayıt: {new Date(save.savedAt).toLocaleString("tr-TR")}</p>
           <div className="save-slot-actions">

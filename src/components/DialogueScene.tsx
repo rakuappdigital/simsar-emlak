@@ -1,9 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Choice, ChoiceEffects, GameStats, HouseScene, SceneOutcome } from "../types";
 import { houseImages } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
 import { resolveOutcome } from "../data/scoring";
+import { shuffle } from "../data/shuffle";
+
+const FUN_BONUS_THRESHOLD = 30;
+
+const bonusChoice: Choice = {
+  id: "bonus-fun",
+  text: "(Şakalaşarak) Görüyorum ki iyi anlaşıyoruz, hadi imzalayalım o zaman!",
+  next: "",
+  effects: { closingBias: 20, fun: 5 },
+};
 
 interface DialogueSceneProps {
   house: HouseScene;
@@ -29,6 +39,16 @@ export default function DialogueScene({ house, stats, onChoiceEffects, onSceneEn
   const node = house.nodes[nodeId];
   const linesShown = node.lines.slice(0, lineIndex + 1);
   const atLastLine = lineIndex >= node.lines.length - 1;
+
+  const isClosingNode = node.choices?.some((c) => c.effects?.closingBias !== undefined) ?? false;
+  const bonusUnlocked = isClosingNode && stats.fun >= FUN_BONUS_THRESHOLD;
+
+  const displayChoices = useMemo(() => {
+    if (!node.choices) return undefined;
+    const list = bonusUnlocked ? [...node.choices, bonusChoice] : node.choices;
+    return shuffle(list);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, bonusUnlocked]);
 
   function advanceLine() {
     if (!atLastLine) {
@@ -113,9 +133,9 @@ export default function DialogueScene({ house, stats, onChoiceEffects, onSceneEn
           </button>
         )}
 
-        {atLastLine && node.choices && (
+        {atLastLine && displayChoices && (
           <div className="choices">
-            {node.choices.map((c) => (
+            {displayChoices.map((c) => (
               <button
                 key={c.id}
                 className="choice-btn"

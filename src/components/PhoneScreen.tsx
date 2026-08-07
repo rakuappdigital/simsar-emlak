@@ -7,6 +7,8 @@ interface PhoneScreenProps {
   onContinue: () => void;
   contactName?: string;
   statusText?: string;
+  choices?: { id: string; text: string }[];
+  onChoice?: (id: string) => void;
 }
 
 const funnyBanner = [
@@ -22,6 +24,8 @@ export default function PhoneScreen({
   onContinue,
   contactName = "Muzaffer Bey",
   statusText = "yazıyor...",
+  choices,
+  onChoice,
 }: PhoneScreenProps) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [banner] = useState(() => funnyBanner[Math.floor(Math.random() * funnyBanner.length)]);
@@ -94,7 +98,17 @@ export default function PhoneScreen({
         <div className="phone-home-indicator" />
       </div>
 
-      {allShown && (
+      {allShown && choices && choices.length > 0 && (
+        <div className="phone-choices">
+          {choices.map((c) => (
+            <button key={c.id} className="choice-btn" onClick={() => onChoice?.(c.id)}>
+              {c.text}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {allShown && (!choices || choices.length === 0) && (
         <button className="pixel-btn phone-continue" onClick={onContinue}>
           Devam Et
         </button>
