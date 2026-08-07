@@ -88,6 +88,62 @@ export const houseIntros: Record<string, HouseIntro> = {
     ],
     thought: "Öz derken küçük demek istiyor sanırım.",
   },
+  "aidat-surprizi": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Moda'daki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Genç ve bütçesine dikkat eden bir çift geliyor" },
+      { from: "Muzaffer Bey", text: "Aidat konusunu fazla detaylandırma 😅" },
+    ],
+    thought: "Aidatı detaylandırmayınca ne anlatacağım ki zaten.",
+  },
+  "eski-firin": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Balat'taki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Bir şef geliyor, mutfağı çok merak edecek" },
+      { from: "Muzaffer Bey", text: "Alt kat eskiden fırınmış, güzel bir hikaye 🍞" },
+    ],
+    thought: "Güzel hikaye derken un kokusunu mu kastediyor.",
+  },
+  "manzara-omurluk": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Ataşehir'deki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "İş insanı bir müşteri, manzaraya bayılacak" },
+      { from: "Muzaffer Bey", text: "Uzaktaki inşaatı hiç gündeme getirme 🙊" },
+    ],
+    thought: "Gündeme getirmeyince manzara sonsuza dek kalıcı mı oluyor.",
+  },
+  "gece-klubu": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Taksim'deki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Enerjik genç bir müşteri geliyor, tam yerine göre" },
+      { from: "Muzaffer Bey", text: "Gece hayatı derken kastı büyük galiba 🎶" },
+    ],
+    thought: "Kastı büyükse ben kulaklık tavsiye ederim.",
+  },
+  guvercin: {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Cihangir'deki çatı katını göstereceksin" },
+      { from: "Muzaffer Bey", text: "Emekli bir öğretmen geliyor, doğaya düşkün" },
+      { from: "Muzaffer Bey", text: "Terasta biraz kalabalık olabilir, önemli değil 🕊️" },
+    ],
+    thought: "Kalabalık derken kaç güvercinden bahsediyor acaba.",
+  },
+  "kaptan-rutubet": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah aslanım bugün Moda sahilindeki daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Emekli bir kaptan geliyor, denizi çok seviyor" },
+      { from: "Muzaffer Bey", text: "Duvarlardaki iz de denizin bir hediyesi say 🌊" },
+    ],
+    thought: "Hediye derken rutubeti mi kastediyor yoksa.",
+  },
+  "miras-kavgasi": {
+    messages: [
+      { from: "Muzaffer Bey", text: "Emlah'ım bugün Fatih'teki tarihi daireyi göstereceksin" },
+      { from: "Muzaffer Bey", text: "Müşteri avukat, çok detaycı olacaktır" },
+      { from: "Muzaffer Bey", text: "Miras konusunu sen bilirsin, ben bir şey demedim 📜" },
+    ],
+    thought: "Miras konusunu bilmemi istiyorsa keşke biraz bilgi verseydi.",
+  },
 };
 
 export function defaultIntro(house: HouseScene): HouseIntro {

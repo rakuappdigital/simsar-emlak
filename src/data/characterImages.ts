@@ -12,6 +12,14 @@ import deniz from "../assets/portraits/deniz.webp";
 import sinan from "../assets/portraits/sinan.webp";
 import cavidan from "../assets/portraits/cavidan.webp";
 import toprak from "../assets/portraits/toprak.webp";
+import derya from "../assets/portraits/derya.webp";
+import onur from "../assets/portraits/onur.webp";
+import melis from "../assets/portraits/melis.webp";
+import kerem from "../assets/portraits/kerem.webp";
+import asli from "../assets/portraits/asli.webp";
+import feridun from "../assets/portraits/feridun.webp";
+import yusuf from "../assets/portraits/yusuf.webp";
+import pinar from "../assets/portraits/pinar.webp";
 
 export const characterImages: Record<string, string> = {
   Emlah: emlah,
@@ -28,4 +36,12 @@ export const characterImages: Record<string, string> = {
   "Sinan Bey": sinan,
   "Cavidan Hanım": cavidan,
   Toprak: toprak,
+  Derya: derya,
+  Onur: onur,
+  Melis: melis,
+  "Kerem Bey": kerem,
+  Aslı: asli,
+  "Feridun Bey": feridun,
+  "Kaptan Yusuf": yusuf,
+  "Pınar Hanım": pinar,
 };
