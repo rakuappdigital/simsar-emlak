@@ -10,6 +10,8 @@ export interface ChoiceEffects {
   suspicion?: number;
   interest?: number;
   fun?: number;
+  /** Negotiated discount, as a percentage of asking price (positive = price drops). */
+  discountPercent?: number;
 }
 
 export interface Choice {
@@ -33,6 +35,8 @@ export interface HouseScene {
   location: string;
   customerNames: string[];
   background: string;
+  /** Asking price in TL, shown to the player before negotiation. */
+  askingPrice: number;
   startNode: string;
   nodes: Record<string, DialogueNode>;
 }
@@ -46,6 +50,7 @@ export type GameStats = {
   suspicion: number;
   interest: number;
   fun: number;
+  discountPercent: number;
 };
 
 export type SceneOutcome = "sold" | "thinking" | "lost";

@@ -6,6 +6,7 @@ export const houseKokuluStudyo: HouseScene = {
   location: "Nişantaşı, 3. kat",
   customerNames: ["Ceylin"],
   background: "placeholder-house-1",
+  askingPrice: 3200000,
   startNode: "start",
   nodes: {
     // 1) Karşılama — küçük bir seçim
@@ -143,8 +144,8 @@ export const houseKokuluStudyo: HouseScene = {
         { speaker: "customer1", name: "Ceylin", text: "Çünkü bu haliyle tam istediğim fiyat değil açıkçası." },
       ],
       choices: [
-        { id: "a", text: "\"Sahibiyle konuşup biraz esneklik sağlayabilirim.\"", next: "closing_sold", effects: { suspicion: -10 } },
-        { id: "b", text: "\"Fiyat zaten piyasa değerinin altında, çok payı yok ama düşünebilirim.\"", next: "closing_thinking", effects: { suspicion: 0 } },
+        { id: "a", text: "\"Sahibiyle konuşup %8 indirim sağlayabilirim.\"", next: "closing_sold", effects: { suspicion: -10, discountPercent: 8 } },
+        { id: "b", text: "\"Fiyat zaten piyasa değerinin altında, indirim payı yok ama düşünebilirim.\"", next: "closing_thinking", effects: { suspicion: 0 } },
         { id: "c", text: "\"Bu fiyata bu evi başka kimse bulamazsınız, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { suspicion: 20 } },
       ],
     },
@@ -183,6 +184,7 @@ export const houseHayaletliDaire: HouseScene = {
   location: "Cihangir, 2. kat",
   customerNames: ["Nermin Hanım", "Kaan"],
   background: "placeholder-house-2",
+  askingPrice: 4750000,
   startNode: "start",
   nodes: {
     // 1) İlk enerji yorumu — seçim
@@ -307,8 +309,8 @@ export const houseHayaletliDaire: HouseScene = {
         { speaker: "customer1", name: "Nermin Hanım", text: "Son bir cümle, karar vermeden önce." },
       ],
       choices: [
-        { id: "a", text: "\"Bu evin bir ruhu var, Kaan burada kendini gerçekten bulabilir.\"", next: "closing_sold_ruh", effects: { interest: 20 } },
-        { id: "b", text: "\"Rasyonel konuşayım: konum, metrekare ve fiyat gerçekten uygun.\"", next: "closing_thinking", effects: { suspicion: 0 } },
+        { id: "a", text: "\"Bu evin bir ruhu var, Kaan burada kendini gerçekten bulabilir — üstüne %5 de indirim ayarlarım.\"", next: "closing_sold_ruh", effects: { interest: 20, discountPercent: 5 } },
+        { id: "b", text: "\"Rasyonel konuşayım: konum, metrekare ve fiyat gerçekten uygun, indirime gerek yok.\"", next: "closing_thinking", effects: { suspicion: 0 } },
         { id: "c", text: "\"Bugün karar vermezseniz başka bir aile alır, söyleyeyim.\"", next: "closing_lost", effects: { suspicion: 20 } },
       ],
     },

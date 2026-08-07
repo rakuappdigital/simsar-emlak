@@ -379,6 +379,16 @@
   background: rgba(0, 0, 0, 0.6);
   font-size: 0.75rem;
   padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.scene-price {
+  color: #ffd166;
+  font-weight: bold;
+  white-space: nowrap;
 }
 
 .dialogue-box {
@@ -511,4 +521,16 @@
 .muzaffer-note {
   color: #ffd166;
   font-style: italic;
+}
+
+.sale-summary {
+  background: #14142b;
+  border: 2px solid #444;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: #06d6a0;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }

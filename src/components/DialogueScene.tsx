@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ChoiceEffects, HouseScene, SceneOutcome } from "../types";
 import { houseImages } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
+import { formatTL } from "../data/economy";
 
 interface DialogueSceneProps {
   house: HouseScene;
@@ -58,7 +59,8 @@ export default function DialogueScene({ house, onChoiceEffects, onSceneEnd }: Di
           style={image ? { backgroundImage: `url(${image})` } : undefined}
         />
         <div className="scene-title">
-          {house.title} — {house.location}
+          <span>{house.title} — {house.location}</span>
+          <span className="scene-price">{formatTL(house.askingPrice)}</span>
         </div>
       </div>
 
