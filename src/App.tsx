@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import PhoneScreen from "./components/PhoneScreen";
 import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
@@ -12,6 +12,8 @@ import { WalletIcon, StarIcon, MedalIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
+import { pickIntroFlavor } from "./data/introFlavor";
+import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait } from "./data/characterPool";
 import { characterImages } from "./data/characterImages";
@@ -31,8 +33,9 @@ import {
 } from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
-import { maybeGenerateCallback, negotiationChoices, type CallbackEvent } from "./data/callbacks";
-import { loadSave, writeSave, clearSave } from "./data/save";
+import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, type CallbackEvent } from "./data/callbacks";
+import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
+import { pickDailyQuest, checkDailyQuest } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
 import { perks, hasPerk, consumableEffects } from "./data/perks";
 import { tieredShuffle } from "./data/shuffle";
@@ -41,6 +44,7 @@ import type {
   Badge,
   ChoiceEffects,
   ContractClause,
+  DailyQuestDef,
   GameStats,
   HouseResult,
   InboxMessage,
@@ -67,6 +71,7 @@ type Stage =
   | "summary";
 
 const CHITCHAT_CHANCE = 0.35;
+const RANK_ORDER = ["Stajyer", "Emlakçı", "Kıdemli Emlakçı", "Ofis Ortağı"];
 
 const outcomeText: Record<SceneOutcome, string> = {
   sold: "Satış tamamlandı! 🎉",
@@ -163,8 +168,9 @@ function App() {
     (CallbackEvent & { sessionKey: string }) | null
   >(null);
   const [contractClauses, setContractClauses] = useState<ContractClause[]>([]);
-  const [savedGame, setSavedGame] = useState<SaveGame | null>(null);
-  const [hasSave, setHasSave] = useState(false);
+  const [savedGames, setSavedGames] = useState<(SaveGame | null)[]>([null, null, null]);
+  const [activeSlot, setActiveSlot] = useState(0);
+  const hasSave = savedGames.some((s) => s !== null);
   const [showEmlahMenu, setShowEmlahMenu] = useState(false);
   const [emlahMenuTab, setEmlahMenuTab] = useState<EmlahTab>("market");
   const [inbox, setInbox] = useState<InboxMessage[]>([]);
@@ -175,9 +181,14 @@ function App() {
     messages: PhoneMessage[];
     showChoices: boolean;
   } | null>(null);
+  const [rankUpTitle, setRankUpTitle] = useState<string | null>(null);
+  const lastRankRef = useRef<string | null>(null);
+  const [dailyQuest, setDailyQuest] = useState<DailyQuestDef | null>(null);
+  const [dailyQuestResult, setDailyQuestResult] = useState<{ def: DailyQuestDef; completed: boolean } | null>(null);
+  const [introFlavorMsg, setIntroFlavorMsg] = useState<PhoneMessage | null>(null);
 
   useEffect(() => {
-    setHasSave(loadSave() !== null);
+    setSavedGames(loadAllSaves());
   }, []);
 
   const house = allHouses[houseOrder[index] ?? index];
@@ -198,9 +209,11 @@ function App() {
     newHouseOrder: number[] = houseOrder,
     newInbox: InboxMessage[] = inbox,
     newCastAssignment: Record<string, string[]> = castAssignment,
+    newDailyQuest: DailyQuestDef | null = dailyQuest,
+    slot: number = activeSlot,
   ) {
-    writeSave({
-      version: 5,
+    const save: SaveGame = {
+      version: 6,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -212,9 +225,11 @@ function App() {
       spent: newSpent,
       inbox: newInbox,
       castAssignment: newCastAssignment,
+      dailyQuest: newDailyQuest,
       savedAt: new Date().toISOString(),
-    });
-    setHasSave(true);
+    };
+    writeSave(save, slot);
+    setSavedGames((prev) => prev.map((s, i) => (i === slot ? save : s)));
   }
 
   function openEmlahMenu(tab: EmlahTab = "market") {
@@ -245,8 +260,10 @@ function App() {
     order: number[] = houseOrder,
     inboxList: InboxMessage[] = inbox,
     castAssignmentParam: Record<string, string[]> = castAssignment,
+    dailyQuestParam: DailyQuestDef | null = dailyQuest,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
+    loadHouseImage(nextHouse.id);
 
     if (nextHouse.tier > Math.max(...tiersList)) {
       setIndex(newIndex);
@@ -254,14 +271,27 @@ function App() {
       return;
     }
 
+    const currentQuest = newIndex % HOUSES_PER_WEEK === 0 ? pickDailyQuest(weekIndexForHouse(newIndex)) : dailyQuestParam;
+    setDailyQuest(currentQuest);
+
     const positionInWeek = newIndex % HOUSES_PER_WEEK;
-    const newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
+    let newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
+    const flavor = newIndex > 0 ? pickIntroFlavor(currentResults) : { message: null, isLucky: false };
+    setIntroFlavorMsg(flavor.message);
+    if (flavor.isLucky) {
+      newStats = {
+        ...newStats,
+        interest: Math.min(100, newStats.interest + 15),
+        suspicion: Math.max(0, newStats.suspicion - 10),
+      };
+    }
     setStats(newStats);
     const remainingConsumables = consumeOneOfEach(consumablesList);
     setConsumables(remainingConsumables);
 
     const nextIntro = houseIntros[nextHouse.id] ?? defaultIntro(nextHouse);
-    let newInbox = logMessages(inboxList, "muzaffer", "Muzaffer Bey", nextIntro.messages, newIndex + 1);
+    const introMessages = flavor.message ? [flavor.message, ...nextIntro.messages] : nextIntro.messages;
+    let newInbox = logMessages(inboxList, "muzaffer", "Muzaffer Bey", introMessages, newIndex + 1);
     newInbox = pruneInbox(newInbox, currentResults, newIndex + 1);
 
     if (newIndex > 0 && currentResults.length > 0) {
@@ -275,7 +305,7 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam);
+        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest);
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -283,7 +313,7 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam);
+    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest);
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -300,6 +330,8 @@ function App() {
   function startNewGame() {
     const order = tieredShuffle(allHouses.map((h) => h.tier));
     const cast = assignCast(allHouses);
+    const slot = firstAvailableSlot();
+    setActiveSlot(slot);
     setHouseOrder(order);
     setResults([]);
     setBadges([]);
@@ -310,20 +342,23 @@ function App() {
     setSpent(0);
     setInbox([]);
     setCastAssignment(cast);
+    setDailyQuest(null);
+    setDailyQuestResult(null);
     setLastChitchatId(undefined);
-    clearSave();
-    setHasSave(false);
     setActiveCallback(null);
-    enterPhone(0, [], [], {}, [1], order, [], cast);
+    lastRankRef.current = null;
+    enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
 
   function openSaved() {
-    setSavedGame(loadSave());
+    setSavedGames(loadAllSaves());
     setStage("saved");
   }
 
-  function continueSaved() {
+  function continueSaved(slot: number) {
+    const savedGame = savedGames[slot];
     if (!savedGame) return;
+    setActiveSlot(slot);
     setHouseOrder(savedGame.houseOrder);
     setResults(savedGame.results);
     setBadges(savedGame.badges);
@@ -334,6 +369,8 @@ function App() {
     setSpent(savedGame.spent);
     setInbox(savedGame.inbox);
     setCastAssignment(savedGame.castAssignment);
+    setDailyQuestResult(null);
+    lastRankRef.current = null;
     enterPhone(
       savedGame.index,
       savedGame.results,
@@ -343,13 +380,13 @@ function App() {
       savedGame.houseOrder,
       savedGame.inbox,
       savedGame.castAssignment,
+      savedGame.dailyQuest,
     );
   }
 
-  function deleteSaved() {
-    clearSave();
-    setSavedGame(null);
-    setHasSave(false);
+  function deleteSaved(slot: number) {
+    clearSave(slot);
+    setSavedGames((prev) => prev.map((s, i) => (i === slot ? null : s)));
   }
 
   function handleSceneEnd(outcome: SceneOutcome) {
@@ -388,7 +425,12 @@ function App() {
     if (isLastHouseOfWeek(index)) {
       const weekIdx = weekIndexForHouse(index);
       const weekResults = newResults.slice(weekIdx * HOUSES_PER_WEEK, weekIdx * HOUSES_PER_WEEK + HOUSES_PER_WEEK);
-      const weekOutcome = evaluateWeek(weekIdx, weekResults);
+      let weekOutcome = evaluateWeek(weekIdx, weekResults);
+      if (dailyQuest) {
+        const completed = checkDailyQuest(dailyQuest, weekResults);
+        if (completed) weekOutcome = { ...weekOutcome, bonus: weekOutcome.bonus + dailyQuest.reward };
+        setDailyQuestResult({ def: dailyQuest, completed });
+      }
       newWeekOutcomes = [...weekOutcomes, weekOutcome];
       setWeekOutcomes(newWeekOutcomes);
       setPendingWeekOutcome(weekOutcome);
@@ -414,6 +456,7 @@ function App() {
 
   function proceedAfterWeek() {
     setPendingWeekOutcome(null);
+    setDailyQuestResult(null);
     if (isLastHouse) {
       setStage("summary");
     } else {
@@ -516,10 +559,16 @@ function App() {
     const updatedResults = results.map((r, i) => (i === resultIndex ? { ...r, retriedLost: true } : r));
     setResults(updatedResults);
 
-    const openingMessages: PhoneMessage[] = [
-      { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında tekrar sizinle konuşmak istedim.` },
-      { from: contactName, text: "Belki bir şansımız daha vardır diye düşündüm." },
-    ];
+    const openingMessages: PhoneMessage[] =
+      targetHouse.tier === 3
+        ? [
+            { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında ailemizle tekrar konuştuk.` },
+            { from: contactName, text: "Bu ölçekte bir karar bizim için kolay değil, ama bir şansımız daha olsun istedik." },
+          ]
+        : [
+            { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında tekrar sizinle konuşmak istedim.` },
+            { from: contactName, text: "Belki bir şansımız daha vardır diye düşündüm." },
+          ];
     const newInbox = logMessages(inbox, houseId, contactName, openingMessages, index + 1);
     setInbox(newInbox);
     persist(updatedResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
@@ -528,7 +577,7 @@ function App() {
       resultIndex,
       contactName,
       messages: openingMessages,
-      choices: negotiationChoices,
+      choices: targetHouse.tier === 3 ? luxuryNegotiationChoices : negotiationChoices,
       sessionKey: `retry-${houseId}-${Date.now()}`,
     });
     setShowEmlahMenu(false);
@@ -588,6 +637,23 @@ function App() {
   useEffect(() => {
     if (pendingNewBadges.length > 0) playReward();
   }, [pendingNewBadges]);
+
+  useEffect(() => {
+    const currentRank = rankTitle(earned);
+    const previousRank = lastRankRef.current;
+    if (previousRank !== null && RANK_ORDER.indexOf(currentRank) > RANK_ORDER.indexOf(previousRank)) {
+      setRankUpTitle(currentRank);
+      playReward();
+    }
+    lastRankRef.current = currentRank;
+  }, [earned]);
+
+  useEffect(() => {
+    if (!rankUpTitle) return;
+    const t = setTimeout(() => setRankUpTitle(null), 2800);
+    return () => clearTimeout(t);
+  }, [rankUpTitle]);
+
   const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "sounds";
 
   return (
@@ -598,12 +664,27 @@ function App() {
           <span className="subtitle">
             Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitle(earned)}
           </span>
+          {dailyQuest && (
+            <span className="quest-banner" title={dailyQuest.description}>
+              🎯 {dailyQuest.title}
+            </span>
+          )}
           <div className="header-actions">
             <button className="wallet-pill wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
               <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)} · Emlah
             </button>
           </div>
         </header>
+      )}
+
+      {rankUpTitle && (
+        <div className="rankup-overlay" onClick={() => setRankUpTitle(null)}>
+          <div className="rankup-card">
+            <StarIcon size={32} />
+            <p className="rankup-label">Yeni Rütbe!</p>
+            <p className="rankup-title">{rankUpTitle}</p>
+          </div>
+        </div>
       )}
 
       {showEmlahMenu && (
@@ -635,7 +716,7 @@ function App() {
       )}
 
       {stage === "saved" && (
-        <SavedGames save={savedGame} onContinue={continueSaved} onDelete={deleteSaved} onBack={() => setStage("menu")} />
+        <SavedGames saves={savedGames} onContinue={continueSaved} onDelete={deleteSaved} onBack={() => setStage("menu")} />
       )}
 
       {stage === "sounds" && <SoundSettings onBack={() => setStage("menu")} />}
@@ -671,7 +752,12 @@ function App() {
       )}
 
       {stage === "phone" && intro && (
-        <PhoneScreen key={house.id} messages={intro.messages} thought={intro.thought} onContinue={afterIntro} />
+        <PhoneScreen
+          key={house.id}
+          messages={introFlavorMsg ? [introFlavorMsg, ...intro.messages] : intro.messages}
+          thought={intro.thought}
+          onContinue={afterIntro}
+        />
       )}
 
       {stage === "chitchat" && activeChitchat && (
@@ -749,6 +835,7 @@ function App() {
         <WeekResult
           outcome={pendingWeekOutcome}
           balance={balance}
+          dailyQuestResult={dailyQuestResult}
           onOpenMarket={() => openEmlahMenu("market")}
           onContinue={proceedAfterWeek}
         />

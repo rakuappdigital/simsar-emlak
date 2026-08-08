@@ -82,6 +82,10 @@ import e37 from "../assets/portraits/e37.webp";
 import e38 from "../assets/portraits/e38.webp";
 import e39 from "../assets/portraits/e39.webp";
 import e40 from "../assets/portraits/e40.webp";
+import e41 from "../assets/portraits/e41.webp";
+import e42 from "../assets/portraits/e42.webp";
+import e43 from "../assets/portraits/e43.webp";
+import e44 from "../assets/portraits/e44.webp";
 
 /**
  * Shared pool of reusable customer identities, decoupled from any single
@@ -176,6 +180,10 @@ export const characterPool: PoolCharacter[] = [
   { id: "e38", gender: "e", name: "Koray" },
   { id: "e39", gender: "e", name: "Engin" },
   { id: "e40", gender: "e", name: "Cenk" },
+  { id: "e41", gender: "e", name: "Selim" },
+  { id: "e42", gender: "e", name: "Kaya" },
+  { id: "e43", gender: "e", name: "Metin" },
+  { id: "e44", gender: "e", name: "Turan" },
 ];
 
 /**
@@ -192,6 +200,7 @@ export const poolPortraits: Record<string, string> = {
   e11, e12, e13, e14, e15, e16, e17, e18, e19, e20,
   e21, e22, e23, e24, e25, e26, e27, e28, e29, e30,
   e31, e32, e33, e34, e35, e36, e37, e38, e39, e40,
+  e41, e42, e43, e44,
 };
 
 /**

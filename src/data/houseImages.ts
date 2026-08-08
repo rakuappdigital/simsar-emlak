@@ -1,69 +1,59 @@
-import kokulu from "../assets/houses/kokulu.webp";
-import hayaletli from "../assets/houses/hayaletli.webp";
-import denizesifir from "../assets/houses/denizesifir.webp";
-import kamburbalkon from "../assets/houses/kamburbalkon.webp";
-import kedicenneti from "../assets/houses/kedicenneti.webp";
-import asansorsuz from "../assets/houses/asansorsuz.webp";
-import nemgalerisi from "../assets/houses/nemgalerisi.webp";
-import davulcu from "../assets/houses/davulcu.webp";
-import tapusorunlu from "../assets/houses/tapusorunlu.webp";
-import minicik from "../assets/houses/minicik.webp";
-import aidatsurprizi from "../assets/houses/aidatsurprizi.webp";
-import eskifirin from "../assets/houses/eskifirin.webp";
-import manzaraomurluk from "../assets/houses/manzaraomurluk.webp";
-import geceklubu from "../assets/houses/geceklubu.webp";
-import guvercin from "../assets/houses/guvercin.webp";
-import kaptanrutubet from "../assets/houses/kaptanrutubet.webp";
-import miraskavgasi from "../assets/houses/miraskavgasi.webp";
-import ogrencievi from "../assets/houses/ogrencievi.webp";
-import kapicihayvan from "../assets/houses/kapicihayvan.webp";
-import zeminvitrin from "../assets/houses/zeminvitrin.webp";
-import mekanik from "../assets/houses/mekanik.webp";
-import bataklik from "../assets/houses/bataklik.webp";
-import kule from "../assets/houses/kule.webp";
-import magara from "../assets/houses/magara.webp";
-import kiris from "../assets/houses/kiris.webp";
-import hicmutfak from "../assets/houses/hicmutfak.webp";
-import trenis from "../assets/houses/trenis.webp";
-import kutuphane from "../assets/houses/kutuphane.webp";
-import garaj from "../assets/houses/garaj.webp";
-import cam from "../assets/houses/cam.webp";
-import dairesel from "../assets/houses/dairesel.webp";
-import merdo from "../assets/houses/merdo.webp";
-import dikeydep from "../assets/houses/dikeydep.webp";
-
-export const houseImages: Record<string, string> = {
-  "kokulu-studyo": kokulu,
-  "hayaletli-daire": hayaletli,
-  "denize-sifir": denizesifir,
-  "kambur-balkon": kamburbalkon,
-  "kedi-cenneti": kedicenneti,
-  "asansorsuz-zirve": asansorsuz,
-  "nem-galerisi": nemgalerisi,
-  "davulcu-komsu": davulcu,
-  "tapu-sorunlu": tapusorunlu,
-  minicik: minicik,
-  "aidat-surprizi": aidatsurprizi,
-  "eski-firin": eskifirin,
-  "manzara-omurluk": manzaraomurluk,
-  "gece-klubu": geceklubu,
-  guvercin: guvercin,
-  "kaptan-rutubet": kaptanrutubet,
-  "miras-kavgasi": miraskavgasi,
-  "ogrenci-evi": ogrencievi,
-  "kapici-hayvan": kapicihayvan,
-  "zemin-vitrin": zeminvitrin,
-  "dislisaat-kulesi": mekanik,
-  "batakli-koy-evi": bataklik,
-  "bulut-kulesi": kule,
-  "kristal-magara": magara,
-  "kiris-saplanmis-konak": kiris,
-  "sifir-uc-studyo": hicmutfak,
-  "eski-tren-istasyonu": trenis,
-  "kutuphane-yatak-odasi": kutuphane,
-  "garaj-loft": garaj,
-  "cam-kutu-tuvalet": cam,
-  "tek-dairesel-oda": dairesel,
-  "merdiven-evi": merdo,
-  "dikey-depolama": dikeydep,
+/**
+ * House background art is loaded on demand (dynamic import per house id)
+ * instead of one eager bundle — with 33 house webps (~150-350KB each),
+ * eagerly importing all of them would bloat the initial page load for art
+ * the player won't see for many houses/weeks, if ever, in a given run.
+ */
+const loaders: Record<string, () => Promise<{ default: string }>> = {
+  "kokulu-studyo": () => import("../assets/houses/kokulu.webp"),
+  "hayaletli-daire": () => import("../assets/houses/hayaletli.webp"),
+  "denize-sifir": () => import("../assets/houses/denizesifir.webp"),
+  "kambur-balkon": () => import("../assets/houses/kamburbalkon.webp"),
+  "kedi-cenneti": () => import("../assets/houses/kedicenneti.webp"),
+  "asansorsuz-zirve": () => import("../assets/houses/asansorsuz.webp"),
+  "nem-galerisi": () => import("../assets/houses/nemgalerisi.webp"),
+  "davulcu-komsu": () => import("../assets/houses/davulcu.webp"),
+  "tapu-sorunlu": () => import("../assets/houses/tapusorunlu.webp"),
+  minicik: () => import("../assets/houses/minicik.webp"),
+  "aidat-surprizi": () => import("../assets/houses/aidatsurprizi.webp"),
+  "eski-firin": () => import("../assets/houses/eskifirin.webp"),
+  "manzara-omurluk": () => import("../assets/houses/manzaraomurluk.webp"),
+  "gece-klubu": () => import("../assets/houses/geceklubu.webp"),
+  guvercin: () => import("../assets/houses/guvercin.webp"),
+  "kaptan-rutubet": () => import("../assets/houses/kaptanrutubet.webp"),
+  "miras-kavgasi": () => import("../assets/houses/miraskavgasi.webp"),
+  "ogrenci-evi": () => import("../assets/houses/ogrencievi.webp"),
+  "kapici-hayvan": () => import("../assets/houses/kapicihayvan.webp"),
+  "zemin-vitrin": () => import("../assets/houses/zeminvitrin.webp"),
+  "dislisaat-kulesi": () => import("../assets/houses/mekanik.webp"),
+  "batakli-koy-evi": () => import("../assets/houses/bataklik.webp"),
+  "bulut-kulesi": () => import("../assets/houses/kule.webp"),
+  "kristal-magara": () => import("../assets/houses/magara.webp"),
+  "kiris-saplanmis-konak": () => import("../assets/houses/kiris.webp"),
+  "sifir-uc-studyo": () => import("../assets/houses/hicmutfak.webp"),
+  "eski-tren-istasyonu": () => import("../assets/houses/trenis.webp"),
+  "kutuphane-yatak-odasi": () => import("../assets/houses/kutuphane.webp"),
+  "garaj-loft": () => import("../assets/houses/garaj.webp"),
+  "cam-kutu-tuvalet": () => import("../assets/houses/cam.webp"),
+  "tek-dairesel-oda": () => import("../assets/houses/dairesel.webp"),
+  "merdiven-evi": () => import("../assets/houses/merdo.webp"),
+  "dikey-depolama": () => import("../assets/houses/dikeydep.webp"),
 };
+
+const cache: Record<string, string> = {};
+
+/** Resolves to the house's background image URL, loading and caching it on first request. */
+export function loadHouseImage(houseId: string): Promise<string> | null {
+  if (cache[houseId]) return Promise.resolve(cache[houseId]);
+  const loader = loaders[houseId];
+  if (!loader) return null;
+  return loader().then((mod) => {
+    cache[houseId] = mod.default;
+    return mod.default;
+  });
+}
+
+/** Synchronous peek — returns the URL only if it's already been loaded (for instant re-renders of the same house). */
+export function peekHouseImage(houseId: string): string | undefined {
+  return cache[houseId];
+}

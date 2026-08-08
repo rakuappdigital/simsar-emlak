@@ -37,6 +37,38 @@ export const negotiationChoices: NegotiationChoice[] = [
   },
 ];
 
+/** Same ids/effects as negotiationChoices (so effect resolution stays identical) — just upscale phrasing for tier-3 luxury houses. */
+export const luxuryNegotiationChoices: NegotiationChoice[] = [
+  {
+    id: "empathetic",
+    text: '"Kararınızı zorlamak istemem, sizi tereddüte düşüren detayı konuşalım."',
+    suspicionDelta: -5,
+    interestDelta: 10,
+    funDelta: 0,
+    closingBias: 15,
+  },
+  {
+    id: "pushy",
+    text: '"Bu segmentte böyle bir fırsat sık çıkmıyor, başka görüşmelerimiz de var."',
+    suspicionDelta: 15,
+    interestDelta: 0,
+    funDelta: 0,
+    closingBias: 10,
+  },
+  {
+    id: "patient",
+    text: '"Bu ölçekte bir yatırımda acele etmemenizi tercih ederim, ne zaman hazırsanız buradayım."',
+    suspicionDelta: -10,
+    interestDelta: 5,
+    funDelta: 5,
+    closingBias: -5,
+  },
+];
+
+function choicesForTier(tier: number): NegotiationChoice[] {
+  return tier === 3 ? luxuryNegotiationChoices : negotiationChoices;
+}
+
 export interface CallbackEvent {
   resultIndex: number;
   contactName: string;
@@ -83,13 +115,21 @@ export function maybeGenerateCallback(
   }
 
   // outcome === "thinking" — a real negotiation with consequences
+  const thinkingMessages =
+    house.tier === 3
+      ? [
+          { from: contactName, text: `Merhaba, ${house.title} konusunda ailemizle tekrar değerlendirdik...` },
+          { from: contactName, text: "Bu ölçekte bir yatırımda hâlâ emin değiliz, biraz daha bilgi verir misiniz?" },
+        ]
+      : [
+          { from: contactName, text: `Merhaba, ${house.title} konusunda tekrar düşündük...` },
+          { from: contactName, text: "Hâlâ tam kararsızız açıkçası, biraz daha yardımcı olur musunuz?" },
+        ];
+
   return {
     resultIndex,
     contactName,
-    messages: [
-      { from: contactName, text: `Merhaba, ${house.title} konusunda tekrar düşündük...` },
-      { from: contactName, text: "Hâlâ tam kararsızız açıkçası, biraz daha yardımcı olur musunuz?" },
-    ],
-    choices: negotiationChoices,
+    messages: thinkingMessages,
+    choices: choicesForTier(house.tier),
   };
 }

@@ -92,7 +92,20 @@ export default function PhoneScreen({
           </div>
           <div className="wa-title">
             <span className="wa-name">{contactName}</span>
-            <span className="wa-status">{statusText}</span>
+            <span className="wa-status">
+              {statusText === "yazıyor..." ? (
+                <>
+                  yazıyor
+                  <span className="typing-dots">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                  </span>
+                </>
+              ) : (
+                statusText
+              )}
+            </span>
           </div>
           <span className="wa-icons">
             <VideoCamIcon size={15} />

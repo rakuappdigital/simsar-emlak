@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Choice, ChoiceEffects, GameStats, HouseScene, SceneOutcome } from "../types";
-import { houseImages } from "../data/houseImages";
+import { loadHouseImage, peekHouseImage } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
 import { resolveOutcome, closingBiasMultiplier } from "../data/scoring";
@@ -8,6 +8,7 @@ import { shuffle } from "../data/shuffle";
 import { resolveCustomerNames, resolvePortrait, interpolateNames } from "../data/characterPool";
 
 const FUN_BONUS_THRESHOLD = 30;
+const TYPE_MS_PER_CHAR = 16;
 
 const bonusChoice: Choice = {
   id: "bonus-fun",
@@ -46,6 +47,7 @@ export default function DialogueScene({
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
+  const [typedLength, setTypedLength] = useState(0);
 
   useEffect(() => {
     setNodeId(house.startNode);
@@ -55,6 +57,25 @@ export default function DialogueScene({
   const node = house.nodes[nodeId];
   const linesShown = node.lines.slice(0, lineIndex + 1);
   const atLastLine = lineIndex >= node.lines.length - 1;
+
+  function getLineText(line: { text: string }) {
+    return house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
+  }
+
+  const currentLine = linesShown[linesShown.length - 1];
+  const currentText = currentLine ? getLineText(currentLine) : "";
+  const isTyping = typedLength < currentText.length;
+
+  useEffect(() => {
+    setTypedLength(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, lineIndex]);
+
+  useEffect(() => {
+    if (typedLength >= currentText.length) return;
+    const timer = setTimeout(() => setTypedLength((n) => n + 1), TYPE_MS_PER_CHAR);
+    return () => clearTimeout(timer);
+  }, [typedLength, currentText.length]);
 
   const isClosingNode = node.choices?.some((c) => c.effects?.closingBias !== undefined) ?? false;
   const bonusUnlocked = isClosingNode && stats.fun >= FUN_BONUS_THRESHOLD;
@@ -81,6 +102,14 @@ export default function DialogueScene({
     }
   }
 
+  function handleBoxClick() {
+    if (isTyping) {
+      setTypedLength(currentText.length);
+      return;
+    }
+    if (!atLastLine) advanceLine();
+  }
+
   function pickChoice(choice: Choice) {
     if (choice.effects) onChoiceEffects(choice.effects);
 
@@ -100,13 +129,29 @@ export default function DialogueScene({
     setLineIndex(0);
   }
 
-  const image = houseImages[house.id];
+  const [image, setImage] = useState<string | undefined>(() => peekHouseImage(house.id));
+
+  useEffect(() => {
+    const cached = peekHouseImage(house.id);
+    if (cached) {
+      setImage(cached);
+      return;
+    }
+    setImage(undefined);
+    let cancelled = false;
+    loadHouseImage(house.id)?.then((url) => {
+      if (!cancelled) setImage(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [house.id]);
 
   return (
     <div className="dialogue-scene">
       <div className="scene-stage">
         <div
-          className={`pixel-bg ${image ? "" : house.background}`}
+          className={`pixel-bg scene-bg-enter ${image ? "" : house.background}`}
           style={image ? { backgroundImage: `url(${image})` } : undefined}
         />
         <div className="scene-title">
@@ -115,18 +160,23 @@ export default function DialogueScene({
         </div>
       </div>
 
-      <div className="dialogue-box" onClick={atLastLine ? undefined : advanceLine}>
+      <div className="dialogue-box" onClick={handleBoxClick}>
         {linesShown.map((line, i) => {
+          const isCurrent = i === linesShown.length - 1;
           const slot = speakerSlot[line.speaker];
           const dynamicName = house.dynamicCast && slot !== undefined ? resolvedNames[slot] : undefined;
           const displayName = dynamicName ?? line.name ?? speakerLabel[line.speaker] ?? "";
-          const text = house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
+          const fullText = getLineText(line);
+          const text = isCurrent ? fullText.slice(0, typedLength) : fullText;
           if (line.speaker === "thought") {
             return (
               <div key={i} className="dialogue-line speaker-thought">
                 <div className="dialogue-line-body">
                   <span className="speaker-name">{displayName}</span>
-                  <span className="line-text">{text}</span>
+                  <span className="line-text">
+                    {text}
+                    {isCurrent && isTyping && <span className="type-cursor" aria-hidden />}
+                  </span>
                 </div>
               </div>
             );
@@ -141,19 +191,22 @@ export default function DialogueScene({
               )}
               <div className="dialogue-line-body">
                 <span className="speaker-name">{displayName}</span>
-                <span className="line-text">{text}</span>
+                <span className="line-text">
+                  {text}
+                  {isCurrent && isTyping && <span className="type-cursor" aria-hidden />}
+                </span>
               </div>
             </div>
           );
         })}
 
-        {!atLastLine && (
+        {!atLastLine && !isTyping && (
           <button className="pixel-btn small" onClick={advanceLine}>
             Devam ▸
           </button>
         )}
 
-        {atLastLine && displayChoices && (
+        {atLastLine && !isTyping && displayChoices && (
           <div className="choices">
             {displayChoices.map((c) => (
               <button
@@ -167,7 +220,7 @@ export default function DialogueScene({
           </div>
         )}
 
-        {atLastLine && !node.choices && (node.next || node.end) && (
+        {atLastLine && !isTyping && !node.choices && (node.next || node.end) && (
           <button className="pixel-btn small" onClick={advanceLine}>
             {node.end ? "Sahneyi Bitir" : "Devam ▸"}
           </button>

@@ -174,8 +174,15 @@ export interface InboxMessage {
   day: number;
 }
 
+export interface DailyQuestDef {
+  id: "discount-free" | "low-suspicion" | "streak-2" | "high-fun";
+  title: string;
+  description: string;
+  reward: number;
+}
+
 export interface SaveGame {
-  version: 5;
+  version: 6;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -188,6 +195,8 @@ export interface SaveGame {
   inbox: InboxMessage[];
   /** houseId -> assigned pool character ids, in customer1/customer2 order. */
   castAssignment: Record<string, string[]>;
+  /** This week's rotating bonus objective, or null between weeks. */
+  dailyQuest: DailyQuestDef | null;
   savedAt: string;
 }
 

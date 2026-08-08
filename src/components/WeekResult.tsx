@@ -1,15 +1,16 @@
-import type { WeekOutcome } from "../types";
+import type { DailyQuestDef, WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { CartIcon } from "./icons";
 
 interface WeekResultProps {
   outcome: WeekOutcome;
   balance: number;
+  dailyQuestResult: { def: DailyQuestDef; completed: boolean } | null;
   onOpenMarket: () => void;
   onContinue: () => void;
 }
 
-export default function WeekResult({ outcome, balance, onOpenMarket, onContinue }: WeekResultProps) {
+export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenMarket, onContinue }: WeekResultProps) {
   return (
     <div className="result-screen">
       <p className="week-result-title">Hafta {outcome.weekIndex + 1} Değerlendirmesi</p>
@@ -21,6 +22,12 @@ export default function WeekResult({ outcome, balance, onOpenMarket, onContinue 
           {outcome.honestyGoalMet ? "✅" : "❌"} Dürüstlük hedefi: ortalama şüphe {outcome.avgSuspicion.toFixed(0)}
           {" "}(hedef: %{outcome.maxAvgSuspicion} altı)
         </p>
+        {dailyQuestResult && (
+          <p>
+            {dailyQuestResult.completed ? "✅" : "❌"} Özel görev — {dailyQuestResult.def.title}
+            {dailyQuestResult.completed && ` (+${formatTL(dailyQuestResult.def.reward)})`}
+          </p>
+        )}
         {outcome.bonus > 0 ? (
           <p className="week-bonus">Hafta bonusu: +{formatTL(outcome.bonus)}</p>
         ) : (
