@@ -821,3 +821,27 @@
   font-weight: bold;
   margin-top: 4px;
 }
+
+/* ---------- Ending card ---------- */
+.ending-card {
+  background: linear-gradient(135deg, #14142b, #1f1f3d);
+  border: 2px solid #ffd166;
+  border-radius: 10px;
+  padding: 16px 20px;
+  text-align: center;
+  max-width: 420px;
+}
+
+.ending-title {
+  color: #ffd166;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.ending-description {
+  color: #ddd;
+  font-size: 0.85rem;
+  margin: 0;
+  font-style: italic;
+}

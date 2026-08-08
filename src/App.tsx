@@ -10,7 +10,7 @@ import ContractModal from "./components/ContractModal";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { allHouses } from "./data/houses";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
-import { resolveOutcome, streakMultiplier } from "./data/scoring";
+import { resolveOutcome, streakMultiplier, fatigueSuspicion, rankBonus, rankTitle } from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, type CallbackEvent } from "./data/callbacks";
@@ -18,6 +18,7 @@ import { loadSave, writeSave, clearSave } from "./data/save";
 import { generateContract } from "./data/contract";
 import { perks, hasPerk } from "./data/perks";
 import { shuffledRange } from "./data/shuffle";
+import { computeEnding } from "./data/endings";
 import type {
   Badge,
   ChoiceEffects,
@@ -55,12 +56,13 @@ function computeSale(
   discountPercent: number,
   priorStreak: number,
   contractModifier: number,
+  rankBonusValue: number,
 ): SaleResult {
   const finalPrice = askingPrice * (1 - discountPercent / 100);
   const baseCommission = finalPrice * COMMISSION_RATE;
   const streakBonus = streakMultiplier(priorStreak);
-  const commission = baseCommission * (1 + streakBonus + contractModifier);
-  return { finalPrice, commission, discountPercent, streakBonus, contractModifier };
+  const commission = baseCommission * (1 + streakBonus + contractModifier + rankBonusValue);
+  return { finalPrice, commission, discountPercent, streakBonus, contractModifier, rankBonus: rankBonusValue };
 }
 
 function reputationLabel(results: HouseResult[]): string {
@@ -99,8 +101,15 @@ function App() {
   const isLastHouse = index === allHouses.length - 1;
   const lastResult = results[results.length - 1];
 
-  function freshStats(): GameStats {
-    return { suspicion: 0, interest: 0, fun: hasPerk(ownedPerks, "sansli-nal") ? 10 : 0, discountPercent: 0 };
+  function freshStats(forIndex: number = index, perksList: string[] = ownedPerks): GameStats {
+    const positionInWeek = forIndex % HOUSES_PER_WEEK;
+    const rested = hasPerk(perksList, "enerji-icecegi");
+    return {
+      suspicion: fatigueSuspicion(positionInWeek, rested),
+      interest: 0,
+      fun: hasPerk(perksList, "sansli-nal") ? 10 : 0,
+      discountPercent: 0,
+    };
   }
 
   function applyEffects(effects: ChoiceEffects) {
@@ -142,7 +151,7 @@ function App() {
     setWeekOutcomes([]);
     setOwnedPerks([]);
     setSpent(0);
-    setStats(freshStats());
+    setStats(freshStats(0, []));
     clearSave();
     setHasSave(false);
     setActiveCallback(null);
@@ -163,7 +172,7 @@ function App() {
     setWeekOutcomes(savedGame.weekOutcomes);
     setOwnedPerks(savedGame.ownedPerks);
     setSpent(savedGame.spent);
-    setStats({ suspicion: 0, interest: 0, fun: hasPerk(savedGame.ownedPerks, "sansli-nal") ? 10 : 0, discountPercent: 0 });
+    setStats(freshStats(savedGame.index, savedGame.ownedPerks));
     enterPhone(savedGame.index, savedGame.results, savedGame.ownedPerks);
   }
 
@@ -200,7 +209,9 @@ function App() {
   function finalizeResult(outcome: SceneOutcome, contractModifier: number) {
     const priorStreak = computeStreak(results);
     const sale =
-      outcome === "sold" ? computeSale(house.askingPrice, stats.discountPercent, priorStreak, contractModifier) : null;
+      outcome === "sold"
+        ? computeSale(house.askingPrice, stats.discountPercent, priorStreak, contractModifier, rankBonus(earned))
+        : null;
     const newResult: HouseResult = {
       houseId: house.id,
       outcome,
@@ -235,7 +246,7 @@ function App() {
   }
 
   function proceedAfterResult() {
-    setStats(freshStats());
+    setStats(freshStats(index + 1, ownedPerks));
     if (pendingWeekOutcome) {
       setStage("weekGoal");
       return;
@@ -249,6 +260,7 @@ function App() {
 
   function proceedAfterWeek() {
     setPendingWeekOutcome(null);
+    setStats(freshStats(index + 1, ownedPerks));
     if (isLastHouse) {
       setStage("summary");
     } else {
@@ -273,20 +285,20 @@ function App() {
     if (!choice) return;
 
     const original = results[activeCallback.resultIndex];
+    const targetHouse = allHouses.find((h) => h.id === original.houseId)!;
     const projected: GameStats = {
       suspicion: original.finalStats.suspicion + choice.suspicionDelta,
       interest: original.finalStats.interest + choice.interestDelta,
       fun: original.finalStats.fun + choice.funDelta,
       discountPercent: original.finalStats.discountPercent,
     };
-    const outcome2: SceneOutcome = resolveOutcome(projected, choice.closingBias);
+    const outcome2: SceneOutcome = resolveOutcome(projected, choice.closingBias, targetHouse.profile);
 
     let confirmText: string;
     let updatedResult: HouseResult = { ...original, finalStats: projected, finalSuspicion: projected.suspicion };
 
     if (outcome2 === "sold") {
-      const targetHouse = allHouses.find((h) => h.id === original.houseId)!;
-      const sale = computeSale(targetHouse.askingPrice, original.finalStats.discountPercent, 0, 0);
+      const sale = computeSale(targetHouse.askingPrice, original.finalStats.discountPercent, 0, 0, rankBonus(earned));
       updatedResult = { ...updatedResult, outcome: "sold", converted: true, sale };
       confirmText = "Harika, süreci hemen başlatıyorum! 🎉";
     } else if (outcome2 === "lost") {
@@ -323,7 +335,7 @@ function App() {
         <header className="game-header">
           <h1>Simsar Emlak</h1>
           <span className="subtitle">
-            Emlah'ın günü — Ev {index + 1}/{allHouses.length}
+            Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitle(earned)}
           </span>
           <span className="wallet-pill">💰 {formatTL(balance)}</span>
         </header>
@@ -383,6 +395,7 @@ function App() {
                 {lastResult.sale.discountPercent > 0 && ` (%${lastResult.sale.discountPercent} indirimli)`}
               </p>
               {lastResult.sale.streakBonus > 0 && <p>Seri bonusu: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥</p>}
+              {lastResult.sale.rankBonus > 0 && <p>Rütbe bonusu: +%{Math.round(lastResult.sale.rankBonus * 100)} ⭐</p>}
               {lastResult.sale.contractModifier !== 0 && (
                 <p>Sözleşme etkisi: {lastResult.sale.contractModifier > 0 ? "+" : ""}%{Math.round(lastResult.sale.contractModifier * 100)}</p>
               )}
@@ -428,6 +441,7 @@ function App() {
           <p className="sale-summary">Toplam Kazanç: {formatTL(earned)}</p>
           <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
           <p className="sale-summary">Unvan: {reputationLabel(results)}</p>
+          <p className="sale-summary">Kariyer: {rankTitle(earned)}</p>
           {badges.length > 0 && (
             <div className="badge-popup">
               <p>Kazanılan rozetler:</p>
@@ -436,6 +450,15 @@ function App() {
               ))}
             </div>
           )}
+          {(() => {
+            const ending = computeEnding(results, earned);
+            return (
+              <div className="ending-card">
+                <p className="ending-title">{ending.title}</p>
+                <p className="ending-description">{ending.description}</p>
+              </div>
+            );
+          })()}
           <p className="muzaffer-note">Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"</p>
           <button className="menu-btn" onClick={() => setStage("menu")}>
             Ana Menü

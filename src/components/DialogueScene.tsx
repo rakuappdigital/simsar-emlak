@@ -75,7 +75,7 @@ export default function DialogueScene({ house, stats, onChoiceEffects, onSceneEn
         fun: stats.fun + (choice.effects.fun ?? 0),
         discountPercent: stats.discountPercent + (choice.effects.discountPercent ?? 0),
       };
-      const outcome = resolveOutcome(projected, choice.effects.closingBias);
+      const outcome = resolveOutcome(projected, choice.effects.closingBias, house.profile);
       setNodeId(house.closingNodes[outcome]);
     } else {
       setNodeId(choice.next);

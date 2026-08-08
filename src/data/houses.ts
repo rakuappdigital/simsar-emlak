@@ -8,6 +8,7 @@ export const houseKokuluStudyo: HouseScene = {
   background: "placeholder-house-1",
   askingPrice: 3200000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.4, interestWeight: 1 },
   startNode: "start",
   nodes: {
     // 1) Karşılama — küçük bir seçim
@@ -480,6 +481,7 @@ export const houseKamburBalkon: HouseScene = {
   background: "placeholder-house-4",
   askingPrice: 3000000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.4, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -695,6 +697,7 @@ export const houseAsansorsuzZirve: HouseScene = {
   background: "placeholder-house-6",
   askingPrice: 3400000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 0.9, interestWeight: 1.3 },
   startNode: "start",
   nodes: {
     start: {
@@ -786,6 +789,7 @@ export const houseNemGalerisi: HouseScene = {
   background: "placeholder-house-7",
   askingPrice: 2100000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.4, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -871,6 +875,7 @@ export const houseDavulcuKomsu: HouseScene = {
   background: "placeholder-house-8",
   askingPrice: 4100000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.5, funWeight: 1, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -956,6 +961,7 @@ export const houseTapuSorunlu: HouseScene = {
   background: "placeholder-house-9",
   askingPrice: 8500000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.5, funWeight: 1, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -1041,6 +1047,7 @@ export const houseMinicik: HouseScene = {
   background: "placeholder-house-10",
   askingPrice: 1650000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.4, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -1126,6 +1133,7 @@ export const houseAidatSuprizi: HouseScene = {
   background: "placeholder-house-11",
   askingPrice: 3700000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 0.9, interestWeight: 1.3 },
   startNode: "start",
   nodes: {
     start: {
@@ -1296,6 +1304,7 @@ export const houseManzaraOmurluk: HouseScene = {
   background: "placeholder-house-13",
   askingPrice: 5200000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 0.9, interestWeight: 1.3 },
   startNode: "start",
   nodes: {
     start: {
@@ -1381,6 +1390,7 @@ export const houseGeceKlubu: HouseScene = {
   background: "placeholder-house-14",
   askingPrice: 3900000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.4, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -1466,6 +1476,7 @@ export const houseGuvercin: HouseScene = {
   background: "placeholder-house-15",
   askingPrice: 3300000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.4, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -1636,6 +1647,7 @@ export const houseMirasKavgasi: HouseScene = {
   background: "placeholder-house-17",
   askingPrice: 3100000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.5, funWeight: 1, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -1721,6 +1733,7 @@ export const houseOgrenciEvi: HouseScene = {
   background: "placeholder-house-18",
   askingPrice: 2750000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.5, funWeight: 1, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {
@@ -1812,6 +1825,7 @@ export const houseKapiciHayvan: HouseScene = {
   background: "placeholder-house-19",
   askingPrice: 3150000,
   closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.5, funWeight: 1, interestWeight: 1 },
   startNode: "start",
   nodes: {
     start: {

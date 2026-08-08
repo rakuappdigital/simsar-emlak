@@ -35,6 +35,13 @@ export interface DialogueNode {
   end?: "sold" | "thinking" | "lost";
 }
 
+/** How strongly this particular customer reacts to each stat when the outcome is resolved. */
+export interface CustomerProfile {
+  suspicionWeight: number;
+  funWeight: number;
+  interestWeight: number;
+}
+
 export interface HouseScene {
   id: string;
   title: string;
@@ -45,6 +52,8 @@ export interface HouseScene {
   askingPrice: number;
   /** Node ids to jump to once the final outcome is computed from stats. */
   closingNodes: { sold: string; thinking: string; lost: string };
+  /** Optional per-customer personality weighting; falls back to DEFAULT_PROFILE. */
+  profile?: CustomerProfile;
   startNode: string;
   nodes: Record<string, DialogueNode>;
 }
@@ -70,6 +79,8 @@ export interface SaleResult {
   streakBonus: number;
   /** From the post-sale contract signing (-0.05..+0.05 typically). */
   contractModifier: number;
+  /** Passive bonus from Emlah's career rank at the time of this sale. */
+  rankBonus: number;
 }
 
 export interface HouseResult {

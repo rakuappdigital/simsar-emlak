@@ -19,6 +19,12 @@ export const perks: Perk[] = [
     description: "Eski müşterilerin seni tekrar araması ve ikna olması daha olası hale gelir.",
     cost: 180000,
   },
+  {
+    id: "enerji-icecegi",
+    title: "Enerji İçeceği",
+    description: "Aynı hafta art arda ev göstermenin yorgunluk etkisi yarı yarıya azalır.",
+    cost: 90000,
+  },
 ];
 
 export function hasPerk(owned: string[], id: string): boolean {
