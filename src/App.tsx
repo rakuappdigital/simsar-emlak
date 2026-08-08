@@ -10,7 +10,7 @@ import ContractModal from "./components/ContractModal";
 import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
-import { logMessages, housesSinceLastCallback } from "./data/inbox";
+import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast } from "./data/characterPool";
 import { allHouses } from "./data/houses";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
@@ -249,6 +249,7 @@ function App() {
 
     const nextIntro = houseIntros[nextHouse.id] ?? defaultIntro(nextHouse);
     let newInbox = logMessages(inboxList, "muzaffer", "Muzaffer Bey", nextIntro.messages, newIndex + 1);
+    newInbox = pruneInbox(newInbox, currentResults, newIndex + 1);
 
     if (newIndex > 0 && currentResults.length > 0) {
       const sinceLast = housesSinceLastCallback(newInbox, newIndex + 1);

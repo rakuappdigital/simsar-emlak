@@ -1,4 +1,4 @@
-import type { InboxMessage, PhoneMessage } from "../types";
+import type { HouseResult, InboxMessage, PhoneMessage } from "../types";
 
 let counter = 0;
 function nextId(): string {
@@ -66,4 +66,33 @@ export function groupThreads(inbox: InboxMessage[]): InboxThread[] {
     return b.lastMessage.day - a.lastMessage.day;
   });
   return threads;
+}
+
+const PRUNE_GRACE_HOUSES = 3;
+
+/**
+ * Drops customer threads that are truly done — sold, or lost with the
+ * one-time "Tekrar Dene" already used — a few houses after their last
+ * message, so the saved inbox doesn't grow forever. Threads still worth
+ * keeping (open "thinking" negotiations, or a "lost" sale that hasn't been
+ * retried yet, since that's what powers the inbox retry option) are left
+ * alone, as is the Muzaffer thread.
+ */
+export function pruneInbox(
+  inbox: InboxMessage[],
+  results: HouseResult[],
+  currentDay: number,
+  graceHouses = PRUNE_GRACE_HOUSES,
+): InboxMessage[] {
+  const threads = groupThreads(inbox);
+  const closedThreadIds = new Set<string>();
+  for (const t of threads) {
+    if (t.threadId === "muzaffer") continue;
+    if (currentDay - t.lastMessage.day <= graceHouses) continue;
+    const result = results.find((r) => r.houseId === t.threadId);
+    const isDone = result && (result.outcome === "sold" || (result.outcome === "lost" && result.retriedLost));
+    if (isDone) closedThreadIds.add(t.threadId);
+  }
+  if (closedThreadIds.size === 0) return inbox;
+  return inbox.filter((m) => !closedThreadIds.has(m.threadId));
 }
