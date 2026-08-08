@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import type { PhoneMessage } from "../types";
 import { SignalIcon, BatteryIcon, BellIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
+import { playMessage } from "../data/sound";
 
 interface PhoneScreenProps {
   messages: PhoneMessage[];
   thought?: string;
   onContinue: () => void;
   contactName?: string;
+  avatarSrc?: string;
   statusText?: string;
   choices?: { id: string; text: string }[];
   onChoice?: (id: string) => void;
@@ -24,6 +26,7 @@ export default function PhoneScreen({
   thought,
   onContinue,
   contactName = "Muzaffer Bey",
+  avatarSrc,
   statusText = "yazıyor...",
   choices,
   onChoice,
@@ -46,9 +49,13 @@ export default function PhoneScreen({
 
   useEffect(() => {
     if (visibleCount >= messages.length + (thought ? 1 : 0)) return;
-    const timer = setTimeout(() => setVisibleCount((c) => c + 1), 1400);
+    const nextMessage = messages[visibleCount];
+    const timer = setTimeout(() => {
+      if (nextMessage && nextMessage.from !== "Emlah") playMessage();
+      setVisibleCount((c) => c + 1);
+    }, 1400);
     return () => clearTimeout(timer);
-  }, [visibleCount, messages.length, thought]);
+  }, [visibleCount, messages, thought]);
 
   const allShown = visibleCount >= messages.length + (thought ? 1 : 0);
 
@@ -80,7 +87,9 @@ export default function PhoneScreen({
           <span className="wa-back">
             <ChevronLeftIcon size={14} />
           </span>
-          <div className="wa-avatar">{contactName.charAt(0)}</div>
+          <div className="wa-avatar">
+            {avatarSrc ? <img src={avatarSrc} alt={contactName} className="wa-avatar-img" /> : contactName.charAt(0)}
+          </div>
           <div className="wa-title">
             <span className="wa-name">{contactName}</span>
             <span className="wa-status">{statusText}</span>

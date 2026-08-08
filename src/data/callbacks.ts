@@ -1,4 +1,5 @@
 import type { HouseResult, HouseScene, PhoneMessage } from "../types";
+import { resolveCustomerNames } from "./characterPool";
 
 export interface NegotiationChoice {
   id: string;
@@ -48,6 +49,7 @@ export function maybeGenerateCallback(
   results: HouseResult[],
   allHouses: HouseScene[],
   chance: number,
+  castAssignment: Record<string, string[]> = {},
 ): CallbackEvent | null {
   if (results.length === 0 || chance <= 0) return null;
   if (Math.random() > chance) return null;
@@ -56,7 +58,7 @@ export function maybeGenerateCallback(
   const result = results[resultIndex];
   const house = allHouses.find((h) => h.id === result.houseId);
   if (!house) return null;
-  const contactName = house.customerNames[0];
+  const contactName = resolveCustomerNames(house, castAssignment)[0];
 
   if (result.outcome === "sold") {
     return {

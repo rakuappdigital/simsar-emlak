@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import PhoneScreen from "./components/PhoneScreen";
 import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
@@ -9,10 +9,12 @@ import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
 import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
 import { WalletIcon, StarIcon, MedalIcon } from "./components/icons";
+import { playClick, playSale, playLost, playReward } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
-import { assignCast } from "./data/characterPool";
+import { assignCast, resolveCustomerNames, resolvePortrait } from "./data/characterPool";
+import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
 import {
@@ -92,6 +94,16 @@ function reputationLabel(results: HouseResult[]): string {
   if (avg <= 25) return "Dürüst Simsar";
   if (avg <= 45) return "Dengeli Simsar";
   return "İstanbul'un En Sinsi Emlakçısı";
+}
+
+function contactAvatar(
+  name: string,
+  houseId: string | undefined,
+  castAssignment: Record<string, string[]>,
+): string | undefined {
+  const house = houseId ? allHouses.find((h) => h.id === houseId) : undefined;
+  if (house) return resolvePortrait(name, house, castAssignment) ?? characterImages[name];
+  return characterImages[name];
 }
 
 function consumeOneOfEach(consumables: Record<string, number>): Record<string, number> {
@@ -258,7 +270,7 @@ function App() {
       // No back-to-back callbacks; chance ramps up gradually the longer it's
       // been since the last one, capped so it never becomes a certainty.
       const chance = sinceLast <= 1 ? 0 : Math.min(0.55 + perkBoost, 0.12 + sinceLast * 0.07 + perkBoost);
-      const callback = maybeGenerateCallback(currentResults, allHouses, chance);
+      const callback = maybeGenerateCallback(currentResults, allHouses, chance, castAssignmentParam);
       if (callback) {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
@@ -499,7 +511,7 @@ function App() {
     if (result.outcome !== "lost" || result.retriedLost) return;
     const targetHouse = allHouses.find((h) => h.id === houseId);
     if (!targetHouse) return;
-    const contactName = targetHouse.customerNames[0];
+    const contactName = resolveCustomerNames(targetHouse, castAssignment)[0];
 
     const updatedResults = results.map((r, i) => (i === resultIndex ? { ...r, retriedLost: true } : r));
     setResults(updatedResults);
@@ -559,10 +571,27 @@ function App() {
     weekOutcomes.reduce((sum, w) => sum + w.bonus, 0);
   const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
+
+  function handleRootClick(e: MouseEvent<HTMLDivElement>) {
+    const target = (e.target as HTMLElement).closest(
+      "button.pixel-btn, button.menu-btn, button.choice-btn, button.emlah-tab-btn, button.thread-row, button.wallet-pill-btn, button.market-close, button.thread-back",
+    );
+    if (target) playClick();
+  }
+
+  useEffect(() => {
+    if (stage !== "result" || !lastResult) return;
+    if (lastResult.outcome === "sold") playSale();
+    else if (lastResult.outcome === "lost") playLost();
+  }, [stage, lastResult]);
+
+  useEffect(() => {
+    if (pendingNewBadges.length > 0) playReward();
+  }, [pendingNewBadges]);
   const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "sounds";
 
   return (
-    <div className="game-root">
+    <div className="game-root" onClick={handleRootClick}>
       {marketVisible && (
         <header className="game-header">
           <h1>Simsar Emlak</h1>
@@ -626,6 +655,11 @@ function App() {
           key={activeCallback.sessionKey}
           messages={activeCallback.messages}
           contactName={activeCallback.contactName}
+          avatarSrc={contactAvatar(
+            activeCallback.contactName,
+            results[activeCallback.resultIndex]?.houseId,
+            castAssignment,
+          )}
           statusText="mesaj yazdı"
           choices={activeCallback.choices?.map((c) => ({ id: c.id, text: c.text }))}
           onChoice={handleNegotiationChoice}
@@ -670,7 +704,7 @@ function App() {
       {stage === "contract" && (
         <ContractModal
           clauses={contractClauses}
-          customerName={house.customerNames[0]}
+          customerName={resolveCustomerNames(house, castAssignment)[0]}
           onFinish={(modifier) => finalizeResult("sold", modifier)}
         />
       )}

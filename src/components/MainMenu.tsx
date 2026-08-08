@@ -1,3 +1,5 @@
+import { LogoIcon } from "./icons";
+
 interface MainMenuProps {
   hasSave: boolean;
   onNewGame: () => void;
@@ -9,6 +11,7 @@ export default function MainMenu({ hasSave, onNewGame, onOpenSaved, onSounds }: 
   return (
     <div className="menu-screen">
       <div className="menu-title-block">
+        <LogoIcon size={56} className="app-logo" />
         <h1 className="menu-title">Simsar Emlak</h1>
         <p className="menu-subtitle">İstanbul'un en... yaratıcı emlakçısı</p>
       </div>

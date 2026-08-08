@@ -2,6 +2,35 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Surfaces, darkest to lightest */
+  --c-bg: #1a1a2e;
+  --c-surface: #14142b;
+  --c-surface-alt: #26264d;
+  --c-surface-hover: #1f1f3d;
+  --c-surface-dark: #0d0d1a;
+  --c-surface-deep: #222;
+  --c-divider: #2a2a4a;
+
+  /* Borders */
+  --c-border: #333;
+  --c-border-light: #444;
+
+  /* Brand + status */
+  --c-accent: #ffd166;
+  --c-success: #06d6a0;
+  --c-danger: #ef476f;
+  --c-info: #118ab2;
+
+  /* Text */
+  --c-text: #f0f0f0;
+  --c-text-dim: #aaa;
+  --c-text-dimmer: #999;
+  --c-text-faint: #888;
+  --c-text-faint2: #ccc;
+  --c-text-faint3: #ddd;
+}
+
 html {
   /* VT323 renders visually smaller than typical fonts at the same size —
      bumping the root size scales every rem-based value in the app so text

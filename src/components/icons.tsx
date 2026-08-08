@@ -183,6 +183,23 @@ export function PhoneCallIcon(props: IconProps) {
   );
 }
 
+/** App logo: a house silhouette with a keyhole door — real-estate + "key handover" in one mark. */
+export function LogoIcon(props: IconProps) {
+  return (
+    <Grid {...props} viewBox="0 0 24 24">
+      <rect x="10" y="2" width="4" height="2" />
+      <rect x="7" y="4" width="10" height="2" />
+      <rect x="4" y="6" width="16" height="2" />
+      <rect x="5" y="8" width="14" height="10" />
+      <rect x="7" y="10" width="3" height="3" className="icon-cutout" />
+      <rect x="14" y="10" width="3" height="3" className="icon-cutout" />
+      <rect x="10" y="12" width="4" height="6" className="icon-cutout" />
+      <rect x="11" y="13" width="2" height="2" className="icon-accent" />
+      <rect x="11" y="15" width="2" height="2" className="icon-accent" />
+    </Grid>
+  );
+}
+
 export function BellIcon(props: IconProps) {
   return (
     <Grid {...props}>
