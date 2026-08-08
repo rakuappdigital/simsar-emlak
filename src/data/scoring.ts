@@ -72,28 +72,33 @@ export function fatigueSuspicion(positionInWeek: number, factor: number): number
   return positionInWeek * FATIGUE_PER_HOUSE * factor;
 }
 
-/** Car + energy drink items stack multiplicatively to shrink the fatigue penalty. */
+/** Car + energy drink + assistant items stack multiplicatively to shrink the fatigue penalty. */
 export function fatigueFactor(owned: string[]): number {
   let factor = 1;
   if (owned.includes("luks-arac")) factor = 0.25;
   else if (owned.includes("orta-segment-araba")) factor = 0.45;
   else if (owned.includes("ikinci-el-araba")) factor = 0.7;
+  else if (owned.includes("bisiklet")) factor = 0.9;
   if (owned.includes("enerji-icecegi")) factor *= 0.8;
+  if (owned.includes("kisisel-asistan")) factor *= 0.85;
   return factor;
 }
 
-/** İkna Kartviziti + Empati Eğitimi stack multiplicatively to shrink suspicion gains. */
+/** İkna Kartviziti + Empati Eğitimi + Not Defteri stack multiplicatively to shrink suspicion gains. */
 export function suspicionGainFactor(owned: string[]): number {
   let factor = 1;
   if (owned.includes("ikna-kartviziti")) factor *= 0.8;
   if (owned.includes("empati-egitimi")) factor *= 0.9;
+  if (owned.includes("not-defteri")) factor *= 0.95;
   return factor;
 }
 
 /** Negotiation certifications amplify how much a closing choice's bias swings the outcome. */
 export function closingBiasMultiplier(owned: string[]): number {
+  if (owned.includes("muzakere-3")) return 1.3;
   if (owned.includes("muzakere-2")) return 1.2;
   if (owned.includes("muzakere-1")) return 1.1;
+  if (owned.includes("temel-satis-egitimi")) return 1.05;
   return 1;
 }
 

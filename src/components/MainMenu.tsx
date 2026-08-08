@@ -4,10 +4,10 @@ interface MainMenuProps {
   hasSave: boolean;
   onNewGame: () => void;
   onOpenSaved: () => void;
-  onSounds: () => void;
+  onSettings: () => void;
 }
 
-export default function MainMenu({ hasSave, onNewGame, onOpenSaved, onSounds }: MainMenuProps) {
+export default function MainMenu({ hasSave, onNewGame, onOpenSaved, onSettings }: MainMenuProps) {
   return (
     <div className="menu-screen">
       <div className="menu-title-block">
@@ -22,8 +22,8 @@ export default function MainMenu({ hasSave, onNewGame, onOpenSaved, onSounds }: 
         <button className="menu-btn" onClick={onOpenSaved} disabled={!hasSave}>
           Kayıtlı Oyunlar
         </button>
-        <button className="menu-btn" onClick={onSounds}>
-          Sesler
+        <button className="menu-btn" onClick={onSettings}>
+          Ayarlar
         </button>
       </nav>
     </div>

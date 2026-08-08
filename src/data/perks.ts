@@ -15,6 +15,13 @@ import type { Perk } from "../types";
 export const perks: Perk[] = [
   // --- Ofis ---
   {
+    id: "not-defteri",
+    category: "ofis",
+    title: "Cepte Not Defteri",
+    description: "Görüşme notlarını düzenli tutmanı sağlar, şüphe artışını ek %5 azaltır.",
+    cost: 18000,
+  },
+  {
     id: "enerji-icecegi",
     category: "ofis",
     title: "Enerji İçeceği",
@@ -49,8 +56,24 @@ export const perks: Perk[] = [
     description: "Eski müşterilerin seni tekrar araması ve ikna olması daha olası hale gelir.",
     cost: 130000,
   },
+  {
+    id: "kisisel-asistan",
+    category: "ofis",
+    title: "Kişisel Asistan",
+    description: "Randevularını senin yerine ayarlar, haftalık yorgunluk etkisini ek %15 azaltır.",
+    cost: 240000,
+    requires: "referans-agi",
+  },
 
   // --- Kıyafet (Prestij barına katkı sağlar) ---
+  {
+    id: "ucuz-kravat",
+    category: "kiyafet",
+    title: "Ucuz Kravat",
+    description: "Prestij +5. Küçük ama bir başlangıç.",
+    cost: 15000,
+    prestige: 5,
+  },
   {
     id: "rahat-ayakkabi",
     category: "kiyafet",
@@ -76,8 +99,24 @@ export const perks: Perk[] = [
     requires: "sik-gomlek",
     prestige: 40,
   },
+  {
+    id: "ozel-dikim-takim",
+    category: "kiyafet",
+    title: "Özel Dikim Takım Elbise",
+    description: "Prestij +60. İstanbul'un en iyi terzisinden, imajın zirvede.",
+    cost: 200000,
+    requires: "luks-saat",
+    prestige: 60,
+  },
 
   // --- Sertifika ---
+  {
+    id: "temel-satis-egitimi",
+    category: "sertifika",
+    title: "Temel Satış Eğitimi",
+    description: "Kapanış cümlelerinin etkisini %5 güçlendirir.",
+    cost: 40000,
+  },
   {
     id: "muzakere-1",
     category: "sertifika",
@@ -93,14 +132,30 @@ export const perks: Perk[] = [
     cost: 220000,
     requires: "muzakere-1",
   },
+  {
+    id: "muzakere-3",
+    category: "sertifika",
+    title: "Müzakere Sertifikası III",
+    description: "Kapanış cümlelerinin etkisini toplamda %30 güçlendirir.",
+    cost: 400000,
+    requires: "muzakere-2",
+  },
 
   // --- Araç ---
+  {
+    id: "bisiklet",
+    category: "arac",
+    title: "Bisiklet",
+    description: "Haftalık yorgunluk etkisini %10 azaltır. Küçük bir başlangıç.",
+    cost: 25000,
+  },
   {
     id: "ikinci-el-araba",
     category: "arac",
     title: "İkinci El Araba",
     description: "Haftalık yorgunluk etkisini %30 azaltır.",
     cost: 85000,
+    requires: "bisiklet",
   },
   {
     id: "orta-segment-araba",
@@ -140,11 +195,19 @@ export const perks: Perk[] = [
 
   // --- Sarf Malzemesi (tek kullanımlık) ---
   {
-    id: "sosyal-medya-reklami",
+    id: "seker-ikrami",
     category: "sarf",
-    title: "Sosyal Medya Reklamı",
-    description: "Bir sonraki evde ilgi puanı +15 ile başlarsın.",
-    cost: 15000,
+    title: "Şeker İkramı",
+    description: "Bir sonraki evde eğlence puanı +5 ile başlarsın.",
+    cost: 5000,
+    consumable: true,
+  },
+  {
+    id: "kahve-ikrami",
+    category: "sarf",
+    title: "Kahve İkramı",
+    description: "Bir sonraki evde eğlence puanı +10 ile başlarsın.",
+    cost: 8000,
     consumable: true,
   },
   {
@@ -156,11 +219,19 @@ export const perks: Perk[] = [
     consumable: true,
   },
   {
-    id: "kahve-ikrami",
+    id: "sosyal-medya-reklami",
     category: "sarf",
-    title: "Kahve İkramı",
-    description: "Bir sonraki evde eğlence puanı +10 ile başlarsın.",
-    cost: 8000,
+    title: "Sosyal Medya Reklamı",
+    description: "Bir sonraki evde ilgi puanı +15 ile başlarsın.",
+    cost: 15000,
+    consumable: true,
+  },
+  {
+    id: "hediye-paketi",
+    category: "sarf",
+    title: "Özel Hediye Paketi",
+    description: "Bir sonraki evde ilgi +10 ve eğlence +10 ile başlarsın.",
+    cost: 25000,
     consumable: true,
   },
 ];
@@ -170,7 +241,9 @@ export function hasPerk(owned: string[], id: string): boolean {
 }
 
 export const consumableEffects: Record<string, { suspicion?: number; interest?: number; fun?: number }> = {
-  "sosyal-medya-reklami": { interest: 15 },
-  "acil-temizlik": { suspicion: -10 },
+  "seker-ikrami": { fun: 5 },
   "kahve-ikrami": { fun: 10 },
+  "acil-temizlik": { suspicion: -10 },
+  "sosyal-medya-reklami": { interest: 15 },
+  "hediye-paketi": { interest: 10, fun: 10 },
 };

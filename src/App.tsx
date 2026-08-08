@@ -4,7 +4,7 @@ import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
 import MainMenu from "./components/MainMenu";
 import SavedGames from "./components/SavedGames";
-import SoundSettings from "./components/SoundSettings";
+import SettingsScreen from "./components/SettingsScreen";
 import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
 import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
@@ -12,6 +12,9 @@ import { WalletIcon, StarIcon, MedalIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
+import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
+import WorkTaskScreen from "./components/WorkTaskScreen";
+import { pickWorkTask, type WorkTaskDef } from "./data/workTasks";
 import { pickIntroFlavor } from "./data/introFlavor";
 import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
@@ -59,10 +62,11 @@ import "./game.css";
 type Stage =
   | "menu"
   | "saved"
-  | "sounds"
+  | "settings"
   | "callback"
   | "phone"
   | "chitchat"
+  | "task"
   | "house"
   | "contract"
   | "locked"
@@ -70,8 +74,22 @@ type Stage =
   | "weekGoal"
   | "summary";
 
-const CHITCHAT_CHANCE = 0.35;
+const CHITCHAT_CHANCE = 0.27;
+const FRIEND_CHANCE = 0.08;
+const WORK_TASK_CHANCE = 0.4;
 const RANK_ORDER = ["Stajyer", "Emlakçı", "Kıdemli Emlakçı", "Ofis Ortağı"];
+
+interface PendingHouseEntry {
+  newIndex: number;
+  currentResults: HouseResult[];
+  perksList: string[];
+  consumablesList: Record<string, number>;
+  tiersList: number[];
+  order: number[];
+  inboxList: InboxMessage[];
+  castAssignmentParam: Record<string, string[]>;
+  dailyQuestParam: DailyQuestDef | null;
+}
 
 const outcomeText: Record<SceneOutcome, string> = {
   sold: "Satış tamamlandı! 🎉",
@@ -181,11 +199,20 @@ function App() {
     messages: PhoneMessage[];
     showChoices: boolean;
   } | null>(null);
+  const [lastFriendId, setLastFriendId] = useState<string | undefined>(undefined);
+  const [activeFriendChat, setActiveFriendChat] = useState<{
+    set: FriendMessageSet;
+    messages: PhoneMessage[];
+    showChoices: boolean;
+  } | null>(null);
   const [rankUpTitle, setRankUpTitle] = useState<string | null>(null);
   const lastRankRef = useRef<string | null>(null);
   const [dailyQuest, setDailyQuest] = useState<DailyQuestDef | null>(null);
   const [dailyQuestResult, setDailyQuestResult] = useState<{ def: DailyQuestDef; completed: boolean } | null>(null);
   const [introFlavorMsg, setIntroFlavorMsg] = useState<PhoneMessage | null>(null);
+  const [activeTask, setActiveTask] = useState<WorkTaskDef | null>(null);
+  const [lastTaskId, setLastTaskId] = useState<string | undefined>(undefined);
+  const [pendingHouseEntry, setPendingHouseEntry] = useState<PendingHouseEntry | null>(null);
 
   useEffect(() => {
     setSavedGames(loadAllSaves());
@@ -271,6 +298,45 @@ function App() {
       return;
     }
 
+    // Occasionally interject a small office task before the next house shows
+    // up — otherwise every sale immediately hands you the next assignment
+    // and the whole day can blow by in a few clicks.
+    if (newIndex > 0 && Math.random() < WORK_TASK_CHANCE) {
+      setPendingHouseEntry({
+        newIndex,
+        currentResults,
+        perksList,
+        consumablesList,
+        tiersList,
+        order,
+        inboxList,
+        castAssignmentParam,
+        dailyQuestParam,
+      });
+      const task = pickWorkTask(lastTaskId);
+      setLastTaskId(task.id);
+      setActiveTask(task);
+      setStage("task");
+      return;
+    }
+
+    proceedToHouseIntro(newIndex, currentResults, perksList, consumablesList, tiersList, order, inboxList, castAssignmentParam, dailyQuestParam, null);
+  }
+
+  function proceedToHouseIntro(
+    newIndex: number,
+    currentResults: HouseResult[],
+    perksList: string[],
+    consumablesList: Record<string, number>,
+    tiersList: number[],
+    order: number[],
+    inboxList: InboxMessage[],
+    castAssignmentParam: Record<string, string[]>,
+    dailyQuestParam: DailyQuestDef | null,
+    taskReward: { suspicion?: number; interest?: number; fun?: number } | null,
+  ) {
+    const nextHouse = allHouses[order[newIndex] ?? newIndex];
+
     const currentQuest = newIndex % HOUSES_PER_WEEK === 0 ? pickDailyQuest(weekIndexForHouse(newIndex)) : dailyQuestParam;
     setDailyQuest(currentQuest);
 
@@ -283,6 +349,14 @@ function App() {
         ...newStats,
         interest: Math.min(100, newStats.interest + 15),
         suspicion: Math.max(0, newStats.suspicion - 10),
+      };
+    }
+    if (taskReward) {
+      newStats = {
+        ...newStats,
+        interest: Math.min(100, newStats.interest + (taskReward.interest ?? 0)),
+        suspicion: Math.max(0, newStats.suspicion + (taskReward.suspicion ?? 0)),
+        fun: Math.min(100, newStats.fun + (taskReward.fun ?? 0)),
       };
     }
     setStats(newStats);
@@ -317,6 +391,26 @@ function App() {
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
+  }
+
+  function completeWorkTask(choiceId: string) {
+    if (!activeTask || !pendingHouseEntry) return;
+    const choice = activeTask.choices.find((c) => c.id === choiceId);
+    const p = pendingHouseEntry;
+    setActiveTask(null);
+    setPendingHouseEntry(null);
+    proceedToHouseIntro(
+      p.newIndex,
+      p.currentResults,
+      p.perksList,
+      p.consumablesList,
+      p.tiersList,
+      p.order,
+      p.inboxList,
+      p.castAssignmentParam,
+      p.dailyQuestParam,
+      choice?.reward ?? null,
+    );
   }
 
   // If a tier unlock happens while sitting on the "locked" gate, move on automatically.
@@ -585,17 +679,51 @@ function App() {
   }
 
   function afterIntro() {
-    const shouldChitchat = index > 0 && Math.random() < CHITCHAT_CHANCE;
-    if (!shouldChitchat) {
+    if (index === 0) {
       setStage("house");
       return;
     }
-    const set = pickChitchat(lastChitchatId);
-    setLastChitchatId(set.id);
-    const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: set.prompt }];
-    setActiveChitchat({ set, messages: openMsg, showChoices: true });
-    setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", openMsg, index + 1));
-    setStage("chitchat");
+    // Single roll picks at most one extra exchange, so friend messages and
+    // boss chitchat never both fire for the same house visit.
+    const roll = Math.random();
+    if (roll < FRIEND_CHANCE) {
+      const set = pickFriendMessage(lastFriendId);
+      setLastFriendId(set.id);
+      const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
+      setActiveFriendChat({ set, messages: openMsg, showChoices: true });
+      const threadId = `friend-${set.contactName.toLowerCase()}`;
+      setInbox((prev) => logMessages(prev, threadId, set.contactName, openMsg, index + 1));
+      setStage("chitchat");
+      return;
+    }
+    if (roll < FRIEND_CHANCE + CHITCHAT_CHANCE) {
+      const set = pickChitchat(lastChitchatId);
+      setLastChitchatId(set.id);
+      const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: set.prompt }];
+      setActiveChitchat({ set, messages: openMsg, showChoices: true });
+      setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", openMsg, index + 1));
+      setStage("chitchat");
+      return;
+    }
+    setStage("house");
+  }
+
+  function handleFriendChoice(choiceId: string) {
+    if (!activeFriendChat) return;
+    const choice = activeFriendChat.set.choices.find((c) => c.id === choiceId);
+    if (!choice) return;
+
+    const threadId = `friend-${activeFriendChat.set.contactName.toLowerCase()}`;
+    const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
+    const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: choice.reaction };
+
+    setInbox((prev) => {
+      const withReply = logMessages(prev, threadId, "Emlah", [replyMsg], index + 1, true);
+      return logMessages(withReply, threadId, activeFriendChat.set.contactName, [reactionMsg], index + 1);
+    });
+    setActiveFriendChat((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
+    );
   }
 
   function handleChitchatChoice(choiceId: string) {
@@ -605,6 +733,8 @@ function App() {
 
     const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
     const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: choice.reaction };
+
+    if (choice.bonus) applyEffects(choice.bonus);
 
     setInbox((prev) => {
       const withReply = logMessages(prev, "muzaffer", "Emlah", [replyMsg], index + 1, true);
@@ -654,7 +784,7 @@ function App() {
     return () => clearTimeout(t);
   }, [rankUpTitle]);
 
-  const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "sounds";
+  const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "settings";
 
   return (
     <div className="game-root" onClick={handleRootClick}>
@@ -712,14 +842,14 @@ function App() {
 
       <div key={stage} className="stage-transition">
       {stage === "menu" && (
-        <MainMenu hasSave={hasSave} onNewGame={startNewGame} onOpenSaved={openSaved} onSounds={() => setStage("sounds")} />
+        <MainMenu hasSave={hasSave} onNewGame={startNewGame} onOpenSaved={openSaved} onSettings={() => setStage("settings")} />
       )}
 
       {stage === "saved" && (
         <SavedGames saves={savedGames} onContinue={continueSaved} onDelete={deleteSaved} onBack={() => setStage("menu")} />
       )}
 
-      {stage === "sounds" && <SoundSettings onBack={() => setStage("menu")} />}
+      {stage === "settings" && <SettingsScreen onBack={() => setStage("menu")} />}
 
       {stage === "locked" && (
         <div className="result-screen">
@@ -772,6 +902,23 @@ function App() {
           }}
         />
       )}
+
+      {stage === "chitchat" && activeFriendChat && (
+        <PhoneScreen
+          key={`friend-${activeFriendChat.set.id}-${index}`}
+          contactName={activeFriendChat.set.contactName}
+          statusText="yazıyor..."
+          messages={activeFriendChat.messages}
+          choices={activeFriendChat.showChoices ? activeFriendChat.set.choices.map((c) => ({ id: c.id, text: c.text })) : undefined}
+          onChoice={handleFriendChoice}
+          onContinue={() => {
+            setActiveFriendChat(null);
+            setStage("house");
+          }}
+        />
+      )}
+
+      {stage === "task" && activeTask && <WorkTaskScreen task={activeTask} onChoice={completeWorkTask} />}
 
       {stage === "house" && (
         <>

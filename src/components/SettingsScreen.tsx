@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { getSfxVolume, getMusicVolume, setSfxVolume, setMusicVolume, startMusic, stopMusic, playClick } from "../data/sound";
 
-interface SoundSettingsProps {
+interface SettingsScreenProps {
   onBack: () => void;
 }
 
-export default function SoundSettings({ onBack }: SoundSettingsProps) {
+/**
+ * Single settings screen with room to grow: each future setting (e.g.
+ * difficulty, language) gets its own "menu-section-title" block below Ses,
+ * not a whole new menu stage.
+ */
+export default function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [music, setMusic] = useState(getMusicVolume);
   const [sfx, setSfx] = useState(getSfxVolume);
 
@@ -23,7 +28,9 @@ export default function SoundSettings({ onBack }: SoundSettingsProps) {
 
   return (
     <div className="menu-screen">
-      <h2 className="menu-section-title">Sesler</h2>
+      <h2 className="menu-section-title">Ayarlar</h2>
+
+      <p className="settings-subsection-title">Ses</p>
       <div className="sound-row">
         <span>Müzik</span>
         <input
@@ -45,6 +52,7 @@ export default function SoundSettings({ onBack }: SoundSettingsProps) {
           onMouseUp={() => playClick()}
         />
       </div>
+
       <button className="menu-btn ghost" onClick={onBack}>
         Geri
       </button>

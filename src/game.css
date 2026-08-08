@@ -842,6 +842,41 @@
   font-weight: bold;
 }
 
+.work-task-screen {
+  max-width: 420px;
+  margin: 0 auto;
+  background: var(--c-surface);
+  border: 2px dashed var(--c-border-light);
+  border-radius: 10px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: stage-in 0.28s ease-out;
+}
+
+.work-task-tag {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-text-dim);
+  margin: 0;
+}
+
+.work-task-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--c-accent);
+  margin: 4px 0;
+}
+
+.work-task-prompt {
+  font-size: 0.9rem;
+  color: var(--c-text);
+  margin: 0 0 6px;
+}
+
 @keyframes sold-pop {
   0% {
     transform: scale(0.6);
@@ -910,6 +945,15 @@
   color: var(--c-accent);
   font-size: 1.3rem;
   margin: 0;
+}
+
+.settings-subsection-title {
+  color: var(--c-text-dim);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 8px 0 0;
+  align-self: flex-start;
 }
 
 .menu-buttons {
