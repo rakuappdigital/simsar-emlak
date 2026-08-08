@@ -273,6 +273,17 @@
   border-left: 8px solid transparent;
 }
 
+.wa-bubble.outgoing::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid #d9fdd3;
+  border-right: 8px solid transparent;
+}
+
 .wa-bubble .wa-time {
   position: absolute;
   bottom: 4px;

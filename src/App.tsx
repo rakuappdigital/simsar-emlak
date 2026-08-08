@@ -472,7 +472,10 @@ function App() {
 
     const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
     setResults(newResults);
-    const newInbox = logMessages(inbox, targetHouse.id, activeCallback.contactName, [{ from: activeCallback.contactName, text: confirmText }], index + 1);
+    const playerMsg: PhoneMessage = { from: "Emlah", text: choice.text };
+    const confirmMsg: PhoneMessage = { from: activeCallback.contactName, text: confirmText };
+    let newInbox = logMessages(inbox, targetHouse.id, "Emlah", [playerMsg], index + 1, true);
+    newInbox = logMessages(newInbox, targetHouse.id, activeCallback.contactName, [confirmMsg], index + 1);
     setInbox(newInbox);
     persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
 
@@ -480,7 +483,7 @@ function App() {
       prev
         ? {
             ...prev,
-            messages: [...prev.messages, { from: prev.contactName, text: confirmText }] as PhoneMessage[],
+            messages: [...prev.messages, playerMsg, confirmMsg],
             choices: undefined,
           }
         : prev,

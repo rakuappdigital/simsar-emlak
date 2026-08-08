@@ -88,7 +88,7 @@ export default function PhoneScreen({
 
         <div className="whatsapp-body">
           {messages.slice(0, visibleCount).map((m, i) => (
-            <div className="wa-bubble incoming" key={i}>
+            <div className={`wa-bubble ${m.from === "Emlah" ? "outgoing" : "incoming"}`} key={i}>
               {m.text}
               <span className="wa-time">14:4{Math.min(9, i)}</span>
             </div>
