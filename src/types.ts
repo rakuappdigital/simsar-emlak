@@ -42,10 +42,24 @@ export interface CustomerProfile {
   interestWeight: number;
 }
 
+export type Gender = "k" | "e";
+
+/** A single customer slot to be filled randomly from the character pool at game start. */
+export interface CastSlot {
+  /** If omitted, any gender from the pool can fill this slot. */
+  gender?: Gender;
+}
+
 export interface HouseScene {
   id: string;
   title: string;
   location: string;
+  /**
+   * Static customer names for hand-authored houses. Ignored (and can be
+   * left as placeholders) when `dynamicCast` is set — those houses get
+   * their customer name(s) assigned randomly from the shared character
+   * pool at the start of each game instead.
+   */
   customerNames: string[];
   background: string;
   /** Asking price in TL, shown to the player before negotiation. */
@@ -56,8 +70,17 @@ export interface HouseScene {
   profile?: CustomerProfile;
   /** Portfolio tier — tier 2/3 houses stay out of rotation until unlocked in the market. */
   tier: 1 | 2 | 3;
+  /** One entry per customer slot (customer1, customer2, ...) — enables random cast assignment. */
+  dynamicCast?: CastSlot[];
   startNode: string;
   nodes: Record<string, DialogueNode>;
+}
+
+/** A reusable customer identity — name + portrait — not tied to any single house. */
+export interface PoolCharacter {
+  id: string;
+  gender: Gender;
+  name: string;
 }
 
 export interface PhoneMessage {
@@ -95,6 +118,8 @@ export interface HouseResult {
   finalSuspicion: number;
   /** Set to true if this "thinking" result later converted into a sale via a callback. */
   converted?: boolean;
+  /** True once the player has used their one manual "Tekrar Dene" attempt from the inbox on a lost sale. */
+  retriedLost?: boolean;
 }
 
 export interface WeekGoal {
@@ -138,8 +163,19 @@ export interface Perk {
   prestige?: number;
 }
 
+export interface InboxMessage {
+  id: string;
+  /** "muzaffer" for the boss thread, otherwise a houseId — one thread per customer. */
+  threadId: string;
+  contactName: string;
+  text: string;
+  fromPlayer?: boolean;
+  /** 1-based house position this message is associated with, for chronological ordering/flavor. */
+  day: number;
+}
+
 export interface SaveGame {
-  version: 3;
+  version: 5;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -149,6 +185,9 @@ export interface SaveGame {
   consumables: Record<string, number>;
   unlockedTiers: number[];
   spent: number;
+  inbox: InboxMessage[];
+  /** houseId -> assigned pool character ids, in customer1/customer2 order. */
+  castAssignment: Record<string, string[]>;
   savedAt: string;
 }
 

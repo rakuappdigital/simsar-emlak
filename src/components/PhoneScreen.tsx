@@ -31,9 +31,12 @@ export default function PhoneScreen({
   const [banner] = useState(() => funnyBanner[Math.floor(Math.random() * funnyBanner.length)]);
   const [showBanner, setShowBanner] = useState(true);
 
-  useEffect(() => {
-    setVisibleCount(0);
-  }, [messages]);
+  // Deliberately no reset-on-`messages`-change here: when the same
+  // conversation grows (e.g. a reply gets appended), we want to keep
+  // whatever has already been revealed and only animate in the new
+  // message(s) — not replay the whole thread from scratch. A genuinely
+  // new conversation gets a fresh `key` from the parent, which remounts
+  // this component and naturally resets visibleCount to 0 via useState.
 
   useEffect(() => {
     const t = setTimeout(() => setShowBanner(false), 2600);
@@ -42,7 +45,7 @@ export default function PhoneScreen({
 
   useEffect(() => {
     if (visibleCount >= messages.length + (thought ? 1 : 0)) return;
-    const timer = setTimeout(() => setVisibleCount((c) => c + 1), 550);
+    const timer = setTimeout(() => setVisibleCount((c) => c + 1), 1400);
     return () => clearTimeout(timer);
   }, [visibleCount, messages.length, thought]);
 

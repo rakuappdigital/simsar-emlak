@@ -44,16 +44,12 @@ export interface CallbackEvent {
   choices?: NegotiationChoice[];
 }
 
-const BASE_CHANCE = 0.3;
-const BOOSTED_CHANCE = 0.45;
-
 export function maybeGenerateCallback(
   results: HouseResult[],
   allHouses: HouseScene[],
-  chanceBoost = false,
+  chance: number,
 ): CallbackEvent | null {
-  if (results.length === 0) return null;
-  const chance = chanceBoost ? BOOSTED_CHANCE : BASE_CHANCE;
+  if (results.length === 0 || chance <= 0) return null;
   if (Math.random() > chance) return null;
 
   const resultIndex = Math.floor(Math.random() * results.length);

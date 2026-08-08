@@ -25,10 +25,24 @@
   color: #aaa;
 }
 
-.wallet-pill {
+.header-actions {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .header-actions {
+    position: static;
+    justify-content: center;
+    margin-top: 8px;
+  }
+}
+
+.wallet-pill {
   background: #14142b;
   border: 2px solid #ffd166;
   border-radius: 999px;
@@ -45,6 +59,23 @@
 
 .wallet-pill-btn:hover {
   background: #1f1f3d;
+}
+
+.icon-pill-btn {
+  background: #14142b;
+  border: 2px solid #444;
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.icon-pill-btn:hover {
+  border-color: #ffd166;
 }
 
 /* ---------- Phone screen (WhatsApp mockup) ---------- */
@@ -224,6 +255,11 @@
   color: #1a1a1a;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
   animation: pop-in 0.2s ease-out;
+}
+
+.wa-bubble.outgoing {
+  background: #d9fdd3;
+  align-self: flex-end;
 }
 
 .wa-bubble.incoming::before {
@@ -965,4 +1001,221 @@
 /* ---------- Locked house gate ---------- */
 .result-screen .menu-empty {
   max-width: 340px;
+}
+
+/* ---------- Messages inbox ---------- */
+.messages-modal {
+  max-width: 420px;
+}
+
+.thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.thread-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: none;
+  border: none;
+  border-top: 1px solid #2a2a4a;
+  padding: 10px 4px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: inherit;
+}
+
+.thread-row:hover {
+  background: #1f1f3d;
+}
+
+.thread-row-info {
+  min-width: 0;
+}
+
+.thread-row-name {
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin: 0;
+  color: #ffd166;
+}
+
+.thread-row-preview {
+  font-size: 0.72rem;
+  color: #aaa;
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thread-row-badge {
+  background: #06d6a0;
+  color: #0d0d1a;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.thread-back {
+  background: none;
+  border: none;
+  color: #ffd166;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+}
+
+.thread-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #e5ddd5;
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* ---------- Emlah menu (tabbed) ---------- */
+.emlah-menu {
+  max-width: 480px;
+}
+
+.emlah-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.emlah-tab-btn {
+  background: none;
+  border: 1px solid #333;
+  border-radius: 999px;
+  color: #ccc;
+  font-family: inherit;
+  font-size: 0.72rem;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.emlah-tab-btn:hover {
+  background: #1f1f3d;
+}
+
+.emlah-tab-btn.active {
+  background: #ffd166;
+  border-color: #ffd166;
+  color: #0d0d1a;
+  font-weight: bold;
+}
+
+.emlah-tab-content {
+  overflow-y: auto;
+}
+
+/* ---------- Portfolio panel ---------- */
+.portfolio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.portfolio-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #2a2a4a;
+  padding: 8px 4px;
+}
+
+.portfolio-row-info {
+  min-width: 0;
+}
+
+.portfolio-row-title {
+  font-weight: bold;
+  font-size: 0.82rem;
+  margin: 0;
+  color: #ffd166;
+}
+
+.portfolio-row-location {
+  font-size: 0.68rem;
+  color: #aaa;
+  margin: 2px 0 0;
+}
+
+.portfolio-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.portfolio-row-price {
+  font-size: 0.72rem;
+  color: #06d6a0;
+}
+
+.portfolio-row-status {
+  font-size: 0.68rem;
+  font-weight: bold;
+}
+
+.portfolio-row.status-sold .portfolio-row-status {
+  color: #06d6a0;
+}
+
+.portfolio-row.status-lost .portfolio-row-status {
+  color: #ef476f;
+}
+
+.portfolio-row.status-thinking .portfolio-row-status {
+  color: #ffd166;
+}
+
+.portfolio-row.status-locked .portfolio-row-status {
+  color: #888;
+}
+
+.portfolio-row.status-current .portfolio-row-status {
+  color: #118ab2;
+}
+
+/* ---------- Career panel ---------- */
+.career-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.career-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #2a2a4a;
+  padding-top: 8px;
+  font-size: 0.82rem;
+}
+
+.career-stat-label {
+  color: #aaa;
+}
+
+.career-stat-value {
+  color: #ffd166;
+  font-weight: bold;
 }

@@ -5,6 +5,7 @@ import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
 import { resolveOutcome, closingBiasMultiplier } from "../data/scoring";
 import { shuffle } from "../data/shuffle";
+import { resolveCustomerNames, resolvePortrait, interpolateNames } from "../data/characterPool";
 
 const FUN_BONUS_THRESHOLD = 30;
 
@@ -19,6 +20,7 @@ interface DialogueSceneProps {
   house: HouseScene;
   stats: GameStats;
   ownedPerks: string[];
+  castAssignment: Record<string, string[]>;
   onChoiceEffects: (effects: ChoiceEffects) => void;
   onSceneEnd: (outcome: SceneOutcome) => void;
 }
@@ -28,7 +30,20 @@ const speakerLabel: Record<string, string> = {
   thought: "Emlah (içinden)",
 };
 
-export default function DialogueScene({ house, stats, ownedPerks, onChoiceEffects, onSceneEnd }: DialogueSceneProps) {
+const speakerSlot: Record<string, number> = {
+  customer1: 0,
+  customer2: 1,
+};
+
+export default function DialogueScene({
+  house,
+  stats,
+  ownedPerks,
+  castAssignment,
+  onChoiceEffects,
+  onSceneEnd,
+}: DialogueSceneProps) {
+  const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
 
@@ -102,18 +117,21 @@ export default function DialogueScene({ house, stats, ownedPerks, onChoiceEffect
 
       <div className="dialogue-box" onClick={atLastLine ? undefined : advanceLine}>
         {linesShown.map((line, i) => {
-          const displayName = line.name ?? speakerLabel[line.speaker] ?? "";
+          const slot = speakerSlot[line.speaker];
+          const dynamicName = house.dynamicCast && slot !== undefined ? resolvedNames[slot] : undefined;
+          const displayName = dynamicName ?? line.name ?? speakerLabel[line.speaker] ?? "";
+          const text = house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
           if (line.speaker === "thought") {
             return (
               <div key={i} className="dialogue-line speaker-thought">
                 <div className="dialogue-line-body">
                   <span className="speaker-name">{displayName}</span>
-                  <span className="line-text">{line.text}</span>
+                  <span className="line-text">{text}</span>
                 </div>
               </div>
             );
           }
-          const portrait = characterImages[displayName];
+          const portrait = resolvePortrait(displayName, house, castAssignment) ?? characterImages[displayName];
           return (
             <div key={i} className={`dialogue-line speaker-${line.speaker}`}>
               {portrait ? (
@@ -123,7 +141,7 @@ export default function DialogueScene({ house, stats, ownedPerks, onChoiceEffect
               )}
               <div className="dialogue-line-body">
                 <span className="speaker-name">{displayName}</span>
-                <span className="line-text">{line.text}</span>
+                <span className="line-text">{text}</span>
               </div>
             </div>
           );

@@ -7,8 +7,11 @@ import SavedGames from "./components/SavedGames";
 import SoundSettings from "./components/SoundSettings";
 import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
-import MarketModal from "./components/MarketModal";
+import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
 import { houseIntros, defaultIntro } from "./data/intro";
+import { pickChitchat, type ChitchatSet } from "./data/chitchat";
+import { logMessages, housesSinceLastCallback } from "./data/inbox";
+import { assignCast } from "./data/characterPool";
 import { allHouses } from "./data/houses";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
 import {
@@ -37,6 +40,7 @@ import type {
   ContractClause,
   GameStats,
   HouseResult,
+  InboxMessage,
   PhoneMessage,
   SaleResult,
   SaveGame,
@@ -51,12 +55,15 @@ type Stage =
   | "sounds"
   | "callback"
   | "phone"
+  | "chitchat"
   | "house"
   | "contract"
   | "locked"
   | "result"
   | "weekGoal"
   | "summary";
+
+const CHITCHAT_CHANCE = 0.35;
 
 const outcomeText: Record<SceneOutcome, string> = {
   sold: "Satış tamamlandı! 🎉",
@@ -145,7 +152,16 @@ function App() {
   const [contractClauses, setContractClauses] = useState<ContractClause[]>([]);
   const [savedGame, setSavedGame] = useState<SaveGame | null>(null);
   const [hasSave, setHasSave] = useState(false);
-  const [showMarket, setShowMarket] = useState(false);
+  const [showEmlahMenu, setShowEmlahMenu] = useState(false);
+  const [emlahMenuTab, setEmlahMenuTab] = useState<EmlahTab>("market");
+  const [inbox, setInbox] = useState<InboxMessage[]>([]);
+  const [castAssignment, setCastAssignment] = useState<Record<string, string[]>>({});
+  const [lastChitchatId, setLastChitchatId] = useState<string | undefined>(undefined);
+  const [activeChitchat, setActiveChitchat] = useState<{
+    set: ChitchatSet;
+    messages: PhoneMessage[];
+    showChoices: boolean;
+  } | null>(null);
 
   useEffect(() => {
     setHasSave(loadSave() !== null);
@@ -167,9 +183,11 @@ function App() {
     newConsumables: Record<string, number> = consumables,
     newUnlockedTiers: number[] = unlockedTiers,
     newHouseOrder: number[] = houseOrder,
+    newInbox: InboxMessage[] = inbox,
+    newCastAssignment: Record<string, string[]> = castAssignment,
   ) {
     writeSave({
-      version: 3,
+      version: 5,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -179,9 +197,16 @@ function App() {
       consumables: newConsumables,
       unlockedTiers: newUnlockedTiers,
       spent: newSpent,
+      inbox: newInbox,
+      castAssignment: newCastAssignment,
       savedAt: new Date().toISOString(),
     });
     setHasSave(true);
+  }
+
+  function openEmlahMenu(tab: EmlahTab = "market") {
+    setEmlahMenuTab(tab);
+    setShowEmlahMenu(true);
   }
 
   function applyEffects(effects: ChoiceEffects) {
@@ -205,6 +230,8 @@ function App() {
     consumablesList: Record<string, number>,
     tiersList: number[],
     order: number[] = houseOrder,
+    inboxList: InboxMessage[] = inbox,
+    castAssignmentParam: Record<string, string[]> = castAssignment,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
@@ -219,18 +246,30 @@ function App() {
     setStats(newStats);
     const remainingConsumables = consumeOneOfEach(consumablesList);
     setConsumables(remainingConsumables);
-    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order);
+
+    const nextIntro = houseIntros[nextHouse.id] ?? defaultIntro(nextHouse);
+    let newInbox = logMessages(inboxList, "muzaffer", "Muzaffer Bey", nextIntro.messages, newIndex + 1);
 
     if (newIndex > 0 && currentResults.length > 0) {
-      const chanceBoost = hasPerk(perksList, "referans-agi");
-      const callback = maybeGenerateCallback(currentResults, allHouses, chanceBoost);
+      const sinceLast = housesSinceLastCallback(newInbox, newIndex + 1);
+      const perkBoost = hasPerk(perksList, "referans-agi") ? 0.15 : 0;
+      // No back-to-back callbacks; chance ramps up gradually the longer it's
+      // been since the last one, capped so it never becomes a certainty.
+      const chance = sinceLast <= 1 ? 0 : Math.min(0.55 + perkBoost, 0.12 + sinceLast * 0.07 + perkBoost);
+      const callback = maybeGenerateCallback(currentResults, allHouses, chance);
       if (callback) {
+        const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
+        newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
+        setInbox(newInbox);
+        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam);
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
         return;
       }
     }
+    setInbox(newInbox);
+    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam);
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -246,6 +285,7 @@ function App() {
 
   function startNewGame() {
     const order = tieredShuffle(allHouses.map((h) => h.tier));
+    const cast = assignCast(allHouses);
     setHouseOrder(order);
     setResults([]);
     setBadges([]);
@@ -254,10 +294,13 @@ function App() {
     setConsumables({});
     setUnlockedTiers([1]);
     setSpent(0);
+    setInbox([]);
+    setCastAssignment(cast);
+    setLastChitchatId(undefined);
     clearSave();
     setHasSave(false);
     setActiveCallback(null);
-    enterPhone(0, [], [], {}, [1], order);
+    enterPhone(0, [], [], {}, [1], order, [], cast);
   }
 
   function openSaved() {
@@ -275,6 +318,8 @@ function App() {
     setConsumables(savedGame.consumables);
     setUnlockedTiers(savedGame.unlockedTiers);
     setSpent(savedGame.spent);
+    setInbox(savedGame.inbox);
+    setCastAssignment(savedGame.castAssignment);
     enterPhone(
       savedGame.index,
       savedGame.results,
@@ -282,6 +327,8 @@ function App() {
       savedGame.consumables,
       savedGame.unlockedTiers,
       savedGame.houseOrder,
+      savedGame.inbox,
+      savedGame.castAssignment,
     );
   }
 
@@ -425,7 +472,9 @@ function App() {
 
     const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
     setResults(newResults);
-    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers);
+    const newInbox = logMessages(inbox, targetHouse.id, activeCallback.contactName, [{ from: activeCallback.contactName, text: confirmText }], index + 1);
+    setInbox(newInbox);
+    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
 
     setActiveCallback((prev) =>
       prev
@@ -435,6 +484,68 @@ function App() {
             choices: undefined,
           }
         : prev,
+    );
+  }
+
+  function retryFromInbox(houseId: string) {
+    const resultIndex = results.findIndex((r) => r.houseId === houseId);
+    if (resultIndex === -1) return;
+    const result = results[resultIndex];
+    if (result.outcome !== "lost" || result.retriedLost) return;
+    const targetHouse = allHouses.find((h) => h.id === houseId);
+    if (!targetHouse) return;
+    const contactName = targetHouse.customerNames[0];
+
+    const updatedResults = results.map((r, i) => (i === resultIndex ? { ...r, retriedLost: true } : r));
+    setResults(updatedResults);
+
+    const openingMessages: PhoneMessage[] = [
+      { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında tekrar sizinle konuşmak istedim.` },
+      { from: contactName, text: "Belki bir şansımız daha vardır diye düşündüm." },
+    ];
+    const newInbox = logMessages(inbox, houseId, contactName, openingMessages, index + 1);
+    setInbox(newInbox);
+    persist(updatedResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
+
+    setActiveCallback({
+      resultIndex,
+      contactName,
+      messages: openingMessages,
+      choices: negotiationChoices,
+      sessionKey: `retry-${houseId}-${Date.now()}`,
+    });
+    setShowEmlahMenu(false);
+    setStage("callback");
+  }
+
+  function afterIntro() {
+    const shouldChitchat = index > 0 && Math.random() < CHITCHAT_CHANCE;
+    if (!shouldChitchat) {
+      setStage("house");
+      return;
+    }
+    const set = pickChitchat(lastChitchatId);
+    setLastChitchatId(set.id);
+    const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: set.prompt }];
+    setActiveChitchat({ set, messages: openMsg, showChoices: true });
+    setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", openMsg, index + 1));
+    setStage("chitchat");
+  }
+
+  function handleChitchatChoice(choiceId: string) {
+    if (!activeChitchat) return;
+    const choice = activeChitchat.set.choices.find((c) => c.id === choiceId);
+    if (!choice) return;
+
+    const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
+    const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: choice.reaction };
+
+    setInbox((prev) => {
+      const withReply = logMessages(prev, "muzaffer", "Emlah", [replyMsg], index + 1, true);
+      return logMessages(withReply, "muzaffer", "Muzaffer Bey", [reactionMsg], index + 1);
+    });
+    setActiveChitchat((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
   }
 
@@ -453,20 +564,34 @@ function App() {
           <span className="subtitle">
             Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitle(earned)}
           </span>
-          <button className="wallet-pill wallet-pill-btn" onClick={() => setShowMarket(true)}>
-            💰 {formatTL(balance)} · 🛒
-          </button>
+          <div className="header-actions">
+            <button className="wallet-pill wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
+              💰 {formatTL(balance)} · Emlah
+            </button>
+          </div>
         </header>
       )}
 
-      {showMarket && (
-        <MarketModal
+      {showEmlahMenu && (
+        <EmlahMenu
+          initialTab={emlahMenuTab}
           balance={balance}
           ownedPerks={ownedPerks}
           consumables={consumables}
           unlockedTiers={unlockedTiers}
           onBuy={buyItem}
-          onClose={() => setShowMarket(false)}
+          inbox={inbox}
+          results={results}
+          onRetry={retryFromInbox}
+          allHouses={allHouses}
+          houseOrder={houseOrder}
+          currentIndex={index}
+          rankTitleText={rankTitle(earned)}
+          reputationText={reputationLabel(results)}
+          earned={earned}
+          badges={badges}
+          allBadges={allBadges}
+          onClose={() => setShowEmlahMenu(false)}
         />
       )}
 
@@ -484,7 +609,7 @@ function App() {
         <div className="result-screen">
           <p>Bu ev Tier {house.tier} portföyünde — henüz erişimin yok.</p>
           <p className="menu-empty">Ofis Marketi'nden "Portföy Kilidi" bölümüne bakabilirsin.</p>
-          <button className="pixel-btn" onClick={() => setShowMarket(true)}>
+          <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
             Marketi Aç
           </button>
         </div>
@@ -506,7 +631,20 @@ function App() {
       )}
 
       {stage === "phone" && intro && (
-        <PhoneScreen key={house.id} messages={intro.messages} thought={intro.thought} onContinue={() => setStage("house")} />
+        <PhoneScreen key={house.id} messages={intro.messages} thought={intro.thought} onContinue={afterIntro} />
+      )}
+
+      {stage === "chitchat" && activeChitchat && (
+        <PhoneScreen
+          key={`chitchat-${activeChitchat.set.id}-${index}`}
+          messages={activeChitchat.messages}
+          choices={activeChitchat.showChoices ? activeChitchat.set.choices.map((c) => ({ id: c.id, text: c.text })) : undefined}
+          onChoice={handleChitchatChoice}
+          onContinue={() => {
+            setActiveChitchat(null);
+            setStage("house");
+          }}
+        />
       )}
 
       {stage === "house" && (
@@ -516,6 +654,7 @@ function App() {
             house={house}
             stats={stats}
             ownedPerks={ownedPerks}
+            castAssignment={castAssignment}
             onChoiceEffects={applyEffects}
             onSceneEnd={handleSceneEnd}
           />
@@ -564,7 +703,7 @@ function App() {
         <WeekResult
           outcome={pendingWeekOutcome}
           balance={balance}
-          onOpenMarket={() => setShowMarket(true)}
+          onOpenMarket={() => openEmlahMenu("market")}
           onContinue={proceedAfterWeek}
         />
       )}
