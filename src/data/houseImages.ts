@@ -18,6 +18,19 @@ import miraskavgasi from "../assets/houses/miraskavgasi.webp";
 import ogrencievi from "../assets/houses/ogrencievi.webp";
 import kapicihayvan from "../assets/houses/kapicihayvan.webp";
 import zeminvitrin from "../assets/houses/zeminvitrin.webp";
+import mekanik from "../assets/houses/mekanik.webp";
+import bataklik from "../assets/houses/bataklik.webp";
+import kule from "../assets/houses/kule.webp";
+import magara from "../assets/houses/magara.webp";
+import kiris from "../assets/houses/kiris.webp";
+import hicmutfak from "../assets/houses/hicmutfak.webp";
+import trenis from "../assets/houses/trenis.webp";
+import kutuphane from "../assets/houses/kutuphane.webp";
+import garaj from "../assets/houses/garaj.webp";
+import cam from "../assets/houses/cam.webp";
+import dairesel from "../assets/houses/dairesel.webp";
+import merdo from "../assets/houses/merdo.webp";
+import dikeydep from "../assets/houses/dikeydep.webp";
 
 export const houseImages: Record<string, string> = {
   "kokulu-studyo": kokulu,
@@ -40,4 +53,17 @@ export const houseImages: Record<string, string> = {
   "ogrenci-evi": ogrencievi,
   "kapici-hayvan": kapicihayvan,
   "zemin-vitrin": zeminvitrin,
+  "dislisaat-kulesi": mekanik,
+  "batakli-koy-evi": bataklik,
+  "bulut-kulesi": kule,
+  "kristal-magara": magara,
+  "kiris-saplanmis-konak": kiris,
+  "sifir-uc-studyo": hicmutfak,
+  "eski-tren-istasyonu": trenis,
+  "kutuphane-yatak-odasi": kutuphane,
+  "garaj-loft": garaj,
+  "cam-kutu-tuvalet": cam,
+  "tek-dairesel-oda": dairesel,
+  "merdiven-evi": merdo,
+  "dikey-depolama": dikeydep,
 };

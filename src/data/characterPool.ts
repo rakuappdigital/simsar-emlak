@@ -42,6 +42,47 @@ import k38 from "../assets/portraits/k38.webp";
 import k39 from "../assets/portraits/k39.webp";
 import k40 from "../assets/portraits/k40.webp";
 
+import e1 from "../assets/portraits/e1.webp";
+import e2 from "../assets/portraits/e2.webp";
+import e3 from "../assets/portraits/e3.webp";
+import e4 from "../assets/portraits/e4.webp";
+import e5 from "../assets/portraits/e5.webp";
+import e6 from "../assets/portraits/e6.webp";
+import e7 from "../assets/portraits/e7.webp";
+import e8 from "../assets/portraits/e8.webp";
+import e9 from "../assets/portraits/e9.webp";
+import e10 from "../assets/portraits/e10.webp";
+import e11 from "../assets/portraits/e11.webp";
+import e12 from "../assets/portraits/e12.webp";
+import e13 from "../assets/portraits/e13.webp";
+import e14 from "../assets/portraits/e14.webp";
+import e15 from "../assets/portraits/e15.webp";
+import e16 from "../assets/portraits/e16.webp";
+import e17 from "../assets/portraits/e17.webp";
+import e18 from "../assets/portraits/e18.webp";
+import e19 from "../assets/portraits/e19.webp";
+import e20 from "../assets/portraits/e20.webp";
+import e21 from "../assets/portraits/e21.webp";
+import e22 from "../assets/portraits/e22.webp";
+import e23 from "../assets/portraits/e23.webp";
+import e24 from "../assets/portraits/e24.webp";
+import e25 from "../assets/portraits/e25.webp";
+import e26 from "../assets/portraits/e26.webp";
+import e27 from "../assets/portraits/e27.webp";
+import e28 from "../assets/portraits/e28.webp";
+import e29 from "../assets/portraits/e29.webp";
+import e30 from "../assets/portraits/e30.webp";
+import e31 from "../assets/portraits/e31.webp";
+import e32 from "../assets/portraits/e32.webp";
+import e33 from "../assets/portraits/e33.webp";
+import e34 from "../assets/portraits/e34.webp";
+import e35 from "../assets/portraits/e35.webp";
+import e36 from "../assets/portraits/e36.webp";
+import e37 from "../assets/portraits/e37.webp";
+import e38 from "../assets/portraits/e38.webp";
+import e39 from "../assets/portraits/e39.webp";
+import e40 from "../assets/portraits/e40.webp";
+
 /**
  * Shared pool of reusable customer identities, decoupled from any single
  * house. Filename convention for portraits: "k" prefix for female
@@ -94,6 +135,47 @@ export const characterPool: PoolCharacter[] = [
   { id: "k38", gender: "k", name: "Doğa" },
   { id: "k39", gender: "k", name: "Masal" },
   { id: "k40", gender: "k", name: "Alara" },
+
+  { id: "e1", gender: "e", name: "Ahmet" },
+  { id: "e2", gender: "e", name: "Mehmet" },
+  { id: "e3", gender: "e", name: "Mustafa" },
+  { id: "e4", gender: "e", name: "Kemal" },
+  { id: "e5", gender: "e", name: "Ali" },
+  { id: "e6", gender: "e", name: "Hasan" },
+  { id: "e7", gender: "e", name: "Hüseyin" },
+  { id: "e8", gender: "e", name: "İbrahim" },
+  { id: "e9", gender: "e", name: "İsmail" },
+  { id: "e10", gender: "e", name: "Osman" },
+  { id: "e11", gender: "e", name: "Yusuf" },
+  { id: "e12", gender: "e", name: "Ömer" },
+  { id: "e13", gender: "e", name: "Emir" },
+  { id: "e14", gender: "e", name: "Arda" },
+  { id: "e15", gender: "e", name: "Çınar" },
+  { id: "e16", gender: "e", name: "Ege" },
+  { id: "e17", gender: "e", name: "Hakan" },
+  { id: "e18", gender: "e", name: "Gökhan" },
+  { id: "e19", gender: "e", name: "Volkan" },
+  { id: "e20", gender: "e", name: "Serkan" },
+  { id: "e21", gender: "e", name: "Burak" },
+  { id: "e22", gender: "e", name: "Emre" },
+  { id: "e23", gender: "e", name: "Onur" },
+  { id: "e24", gender: "e", name: "Mert" },
+  { id: "e25", gender: "e", name: "Can" },
+  { id: "e26", gender: "e", name: "Efe" },
+  { id: "e27", gender: "e", name: "Kaan" },
+  { id: "e28", gender: "e", name: "Alp" },
+  { id: "e29", gender: "e", name: "Ozan" },
+  { id: "e30", gender: "e", name: "Umut" },
+  { id: "e31", gender: "e", name: "Baran" },
+  { id: "e32", gender: "e", name: "Ayaz" },
+  { id: "e33", gender: "e", name: "Poyraz" },
+  { id: "e34", gender: "e", name: "Doruk" },
+  { id: "e35", gender: "e", name: "Batuhan" },
+  { id: "e36", gender: "e", name: "Berk" },
+  { id: "e37", gender: "e", name: "Tolga" },
+  { id: "e38", gender: "e", name: "Koray" },
+  { id: "e39", gender: "e", name: "Engin" },
+  { id: "e40", gender: "e", name: "Cenk" },
 ];
 
 /**
@@ -106,6 +188,10 @@ export const poolPortraits: Record<string, string> = {
   k11, k12, k13, k14, k15, k16, k17, k18, k19, k20,
   k21, k22, k23, k24, k25, k26, k27, k28, k29, k30,
   k31, k32, k33, k34, k35, k36, k37, k38, k39, k40,
+  e1, e2, e3, e4, e5, e6, e7, e8, e9, e10,
+  e11, e12, e13, e14, e15, e16, e17, e18, e19, e20,
+  e21, e22, e23, e24, e25, e26, e27, e28, e29, e30,
+  e31, e32, e33, e34, e35, e36, e37, e38, e39, e40,
 };
 
 /**
