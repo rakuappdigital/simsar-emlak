@@ -54,6 +54,8 @@ export interface HouseScene {
   closingNodes: { sold: string; thinking: string; lost: string };
   /** Optional per-customer personality weighting; falls back to DEFAULT_PROFILE. */
   profile?: CustomerProfile;
+  /** Portfolio tier — tier 2/3 houses stay out of rotation until unlocked in the market. */
+  tier: 1 | 2 | 3;
   startNode: string;
   nodes: Record<string, DialogueNode>;
 }
@@ -118,21 +120,32 @@ export interface Badge {
   description: string;
 }
 
+export type MarketCategory = "ofis" | "kiyafet" | "sertifika" | "arac" | "kilit" | "sarf";
+
 export interface Perk {
   id: string;
+  category: MarketCategory;
   title: string;
   description: string;
   cost: number;
+  /** True for single-use items that go into the consumables inventory instead of ownedPerks. */
+  consumable?: boolean;
+  /** id of another market item that must already be owned before this one can be bought. */
+  requires?: string;
+  /** Set on "kilit" items — buying it adds this tier to unlockedTiers. */
+  unlocksTier?: 2 | 3;
 }
 
 export interface SaveGame {
-  version: 2;
+  version: 3;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
   weekOutcomes: WeekOutcome[];
   badges: string[];
   ownedPerks: string[];
+  consumables: Record<string, number>;
+  unlockedTiers: number[];
   spent: number;
   savedAt: string;
 }

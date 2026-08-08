@@ -1,13 +1,13 @@
 import type { SaveGame } from "../types";
 
-const SAVE_KEY = "simsar-emlak-save-v2";
+const SAVE_KEY = "simsar-emlak-save-v3";
 
 export function loadSave(): SaveGame | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SaveGame;
-    if (parsed.version !== 2) return null;
+    if (parsed.version !== 3) return null;
     return parsed;
   } catch {
     return null;

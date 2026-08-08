@@ -1,16 +1,14 @@
 import type { WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
-import { perks } from "../data/perks";
 
 interface WeekResultProps {
   outcome: WeekOutcome;
   balance: number;
-  ownedPerks: string[];
-  onBuyPerk: (perkId: string) => void;
+  onOpenMarket: () => void;
   onContinue: () => void;
 }
 
-export default function WeekResult({ outcome, balance, ownedPerks, onBuyPerk, onContinue }: WeekResultProps) {
+export default function WeekResult({ outcome, balance, onOpenMarket, onContinue }: WeekResultProps) {
   return (
     <div className="result-screen">
       <p className="week-result-title">Hafta {outcome.weekIndex + 1} Değerlendirmesi</p>
@@ -29,27 +27,10 @@ export default function WeekResult({ outcome, balance, ownedPerks, onBuyPerk, on
         )}
       </div>
 
-      <div className="perk-shop">
-        <p className="perk-shop-title">Bakiye: {formatTL(balance)}</p>
-        {perks.map((perk) => {
-          const owned = ownedPerks.includes(perk.id);
-          return (
-            <div className="perk-row" key={perk.id}>
-              <div className="perk-info">
-                <p className="perk-title">{perk.title}</p>
-                <p className="perk-description">{perk.description}</p>
-              </div>
-              <button
-                className="pixel-btn small"
-                disabled={owned || balance < perk.cost}
-                onClick={() => onBuyPerk(perk.id)}
-              >
-                {owned ? "Alındı ✓" : formatTL(perk.cost)}
-              </button>
-            </div>
-          );
-        })}
-      </div>
+      <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
+      <button className="pixel-btn small" onClick={onOpenMarket}>
+        🛒 Ofis Marketini Aç
+      </button>
 
       <button className="pixel-btn" onClick={onContinue}>
         Devam Et

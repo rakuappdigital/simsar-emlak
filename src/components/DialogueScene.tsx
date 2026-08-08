@@ -3,7 +3,7 @@ import type { Choice, ChoiceEffects, GameStats, HouseScene, SceneOutcome } from 
 import { houseImages } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
-import { resolveOutcome } from "../data/scoring";
+import { resolveOutcome, closingBiasMultiplier } from "../data/scoring";
 import { shuffle } from "../data/shuffle";
 
 const FUN_BONUS_THRESHOLD = 30;
@@ -18,6 +18,7 @@ const bonusChoice: Choice = {
 interface DialogueSceneProps {
   house: HouseScene;
   stats: GameStats;
+  ownedPerks: string[];
   onChoiceEffects: (effects: ChoiceEffects) => void;
   onSceneEnd: (outcome: SceneOutcome) => void;
 }
@@ -27,7 +28,7 @@ const speakerLabel: Record<string, string> = {
   thought: "Emlah (içinden)",
 };
 
-export default function DialogueScene({ house, stats, onChoiceEffects, onSceneEnd }: DialogueSceneProps) {
+export default function DialogueScene({ house, stats, ownedPerks, onChoiceEffects, onSceneEnd }: DialogueSceneProps) {
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
 
@@ -75,7 +76,8 @@ export default function DialogueScene({ house, stats, onChoiceEffects, onSceneEn
         fun: stats.fun + (choice.effects.fun ?? 0),
         discountPercent: stats.discountPercent + (choice.effects.discountPercent ?? 0),
       };
-      const outcome = resolveOutcome(projected, choice.effects.closingBias, house.profile);
+      const bias = choice.effects.closingBias * closingBiasMultiplier(ownedPerks);
+      const outcome = resolveOutcome(projected, bias, house.profile);
       setNodeId(house.closingNodes[outcome]);
     } else {
       setNodeId(choice.next);

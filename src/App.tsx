@@ -7,17 +7,27 @@ import SavedGames from "./components/SavedGames";
 import SoundSettings from "./components/SoundSettings";
 import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
+import MarketModal from "./components/MarketModal";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { allHouses } from "./data/houses";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
-import { resolveOutcome, streakMultiplier, fatigueSuspicion, rankBonus, rankTitle } from "./data/scoring";
+import {
+  resolveOutcome,
+  streakMultiplier,
+  fatigueSuspicion,
+  fatigueFactor,
+  suspicionGainFactor,
+  closingBiasMultiplier,
+  rankBonus,
+  rankTitle,
+} from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, type CallbackEvent } from "./data/callbacks";
 import { loadSave, writeSave, clearSave } from "./data/save";
 import { generateContract } from "./data/contract";
-import { perks, hasPerk } from "./data/perks";
-import { shuffledRange } from "./data/shuffle";
+import { perks, hasPerk, consumableEffects } from "./data/perks";
+import { tieredShuffle } from "./data/shuffle";
 import { computeEnding } from "./data/endings";
 import type {
   Badge,
@@ -41,6 +51,7 @@ type Stage =
   | "phone"
   | "house"
   | "contract"
+  | "locked"
   | "result"
   | "weekGoal"
   | "summary";
@@ -73,15 +84,58 @@ function reputationLabel(results: HouseResult[]): string {
   return "İstanbul'un En Sinsi Emlakçısı";
 }
 
+function consumeOneOfEach(consumables: Record<string, number>): Record<string, number> {
+  const remaining = { ...consumables };
+  for (const id of Object.keys(remaining)) {
+    if (remaining[id] > 0) remaining[id] -= 1;
+  }
+  return remaining;
+}
+
+function computeFreshStats(
+  positionInWeek: number,
+  perksList: string[],
+  consumablesList: Record<string, number>,
+): GameStats {
+  const factor = fatigueFactor(perksList);
+  let stats: GameStats = {
+    suspicion: fatigueSuspicion(positionInWeek, factor),
+    interest: 0,
+    fun: hasPerk(perksList, "sansli-nal") ? 10 : 0,
+    discountPercent: 0,
+  };
+  if (hasPerk(perksList, "sik-gomlek")) stats.interest += 5;
+  if (hasPerk(perksList, "luks-saat")) stats.interest += 8;
+  if (hasPerk(perksList, "rahat-ayakkabi")) stats.fun += 5;
+  if (hasPerk(perksList, "luks-arac")) stats.interest += 5;
+
+  for (const [id, count] of Object.entries(consumablesList)) {
+    if (count > 0) {
+      const effect = consumableEffects[id];
+      if (effect) {
+        stats = {
+          ...stats,
+          suspicion: stats.suspicion + (effect.suspicion ?? 0),
+          interest: stats.interest + (effect.interest ?? 0),
+          fun: stats.fun + (effect.fun ?? 0),
+        };
+      }
+    }
+  }
+  return stats;
+}
+
 function App() {
   const [stage, setStage] = useState<Stage>("menu");
   const [index, setIndex] = useState(0);
-  const [houseOrder, setHouseOrder] = useState<number[]>(() => shuffledRange(allHouses.length));
+  const [houseOrder, setHouseOrder] = useState<number[]>(() => tieredShuffle(allHouses.map((h) => h.tier)));
   const [stats, setStats] = useState<GameStats>({ suspicion: 0, interest: 0, fun: 0, discountPercent: 0 });
   const [results, setResults] = useState<HouseResult[]>([]);
   const [badges, setBadges] = useState<string[]>([]);
   const [weekOutcomes, setWeekOutcomes] = useState<WeekOutcome[]>([]);
   const [ownedPerks, setOwnedPerks] = useState<string[]>([]);
+  const [consumables, setConsumables] = useState<Record<string, number>>({});
+  const [unlockedTiers, setUnlockedTiers] = useState<number[]>([1]);
   const [spent, setSpent] = useState(0);
   const [pendingNewBadges, setPendingNewBadges] = useState<Badge[]>([]);
   const [pendingWeekOutcome, setPendingWeekOutcome] = useState<WeekOutcome | null>(null);
@@ -91,6 +145,7 @@ function App() {
   const [contractClauses, setContractClauses] = useState<ContractClause[]>([]);
   const [savedGame, setSavedGame] = useState<SaveGame | null>(null);
   const [hasSave, setHasSave] = useState(false);
+  const [showMarket, setShowMarket] = useState(false);
 
   useEffect(() => {
     setHasSave(loadSave() !== null);
@@ -100,23 +155,40 @@ function App() {
   const intro = house ? (houseIntros[house.id] ?? defaultIntro(house)) : null;
   const isLastHouse = index === allHouses.length - 1;
   const lastResult = results[results.length - 1];
+  const maxUnlockedTier = Math.max(...unlockedTiers);
 
-  function freshStats(forIndex: number = index, perksList: string[] = ownedPerks): GameStats {
-    const positionInWeek = forIndex % HOUSES_PER_WEEK;
-    const rested = hasPerk(perksList, "enerji-icecegi");
-    return {
-      suspicion: fatigueSuspicion(positionInWeek, rested),
-      interest: 0,
-      fun: hasPerk(perksList, "sansli-nal") ? 10 : 0,
-      discountPercent: 0,
-    };
+  function persist(
+    newResults: HouseResult[],
+    newWeekOutcomes: WeekOutcome[],
+    newBadges: string[],
+    newIndex: number,
+    newOwnedPerks: string[],
+    newSpent: number,
+    newConsumables: Record<string, number> = consumables,
+    newUnlockedTiers: number[] = unlockedTiers,
+    newHouseOrder: number[] = houseOrder,
+  ) {
+    writeSave({
+      version: 3,
+      index: newIndex,
+      houseOrder: newHouseOrder,
+      results: newResults,
+      weekOutcomes: newWeekOutcomes,
+      badges: newBadges,
+      ownedPerks: newOwnedPerks,
+      consumables: newConsumables,
+      unlockedTiers: newUnlockedTiers,
+      spent: newSpent,
+      savedAt: new Date().toISOString(),
+    });
+    setHasSave(true);
   }
 
   function applyEffects(effects: ChoiceEffects) {
-    const dampenSuspicion = hasPerk(ownedPerks, "ikna-kartviziti");
+    const suspicionFactor = suspicionGainFactor(ownedPerks);
     setStats((s) => {
       const rawSuspicion = effects.suspicion ?? 0;
-      const suspicionDelta = dampenSuspicion && rawSuspicion > 0 ? rawSuspicion * 0.8 : rawSuspicion;
+      const suspicionDelta = rawSuspicion > 0 ? rawSuspicion * suspicionFactor : rawSuspicion;
       return {
         suspicion: s.suspicion + suspicionDelta,
         interest: s.interest + (effects.interest ?? 0),
@@ -126,9 +198,31 @@ function App() {
     });
   }
 
-  function enterPhone(newIndex: number, currentResults: HouseResult[], perksForChance: string[]) {
+  function enterPhone(
+    newIndex: number,
+    currentResults: HouseResult[],
+    perksList: string[],
+    consumablesList: Record<string, number>,
+    tiersList: number[],
+    order: number[] = houseOrder,
+  ) {
+    const nextHouse = allHouses[order[newIndex] ?? newIndex];
+
+    if (nextHouse.tier > Math.max(...tiersList)) {
+      setIndex(newIndex);
+      setStage("locked");
+      return;
+    }
+
+    const positionInWeek = newIndex % HOUSES_PER_WEEK;
+    const newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
+    setStats(newStats);
+    const remainingConsumables = consumeOneOfEach(consumablesList);
+    setConsumables(remainingConsumables);
+    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order);
+
     if (newIndex > 0 && currentResults.length > 0) {
-      const chanceBoost = hasPerk(perksForChance, "referans-agi");
+      const chanceBoost = hasPerk(perksList, "referans-agi");
       const callback = maybeGenerateCallback(currentResults, allHouses, chanceBoost);
       if (callback) {
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
@@ -142,21 +236,28 @@ function App() {
     setStage("phone");
   }
 
+  // If a tier unlock happens while sitting on the "locked" gate, move on automatically.
+  useEffect(() => {
+    if (stage === "locked" && house.tier <= maxUnlockedTier) {
+      enterPhone(index, results, ownedPerks, consumables, unlockedTiers);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlockedTiers, stage]);
+
   function startNewGame() {
-    const order = shuffledRange(allHouses.length);
+    const order = tieredShuffle(allHouses.map((h) => h.tier));
     setHouseOrder(order);
-    setIndex(0);
     setResults([]);
     setBadges([]);
     setWeekOutcomes([]);
     setOwnedPerks([]);
+    setConsumables({});
+    setUnlockedTiers([1]);
     setSpent(0);
-    setStats(freshStats(0, []));
     clearSave();
     setHasSave(false);
     setActiveCallback(null);
-    setIndex(0);
-    setStage("phone");
+    enterPhone(0, [], [], {}, [1], order);
   }
 
   function openSaved() {
@@ -171,30 +272,23 @@ function App() {
     setBadges(savedGame.badges);
     setWeekOutcomes(savedGame.weekOutcomes);
     setOwnedPerks(savedGame.ownedPerks);
+    setConsumables(savedGame.consumables);
+    setUnlockedTiers(savedGame.unlockedTiers);
     setSpent(savedGame.spent);
-    setStats(freshStats(savedGame.index, savedGame.ownedPerks));
-    enterPhone(savedGame.index, savedGame.results, savedGame.ownedPerks);
+    enterPhone(
+      savedGame.index,
+      savedGame.results,
+      savedGame.ownedPerks,
+      savedGame.consumables,
+      savedGame.unlockedTiers,
+      savedGame.houseOrder,
+    );
   }
 
   function deleteSaved() {
     clearSave();
     setSavedGame(null);
     setHasSave(false);
-  }
-
-  function persist(newResults: HouseResult[], newWeekOutcomes: WeekOutcome[], newBadges: string[], newIndex: number, newOwnedPerks: string[], newSpent: number) {
-    writeSave({
-      version: 2,
-      index: newIndex,
-      houseOrder,
-      results: newResults,
-      weekOutcomes: newWeekOutcomes,
-      badges: newBadges,
-      ownedPerks: newOwnedPerks,
-      spent: newSpent,
-      savedAt: new Date().toISOString(),
-    });
-    setHasSave(true);
   }
 
   function handleSceneEnd(outcome: SceneOutcome) {
@@ -241,12 +335,11 @@ function App() {
       setPendingWeekOutcome(null);
     }
 
-    persist(newResults, newWeekOutcomes, newBadgesState, index + 1, ownedPerks, spent);
+    persist(newResults, newWeekOutcomes, newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers);
     setStage("result");
   }
 
   function proceedAfterResult() {
-    setStats(freshStats(index + 1, ownedPerks));
     if (pendingWeekOutcome) {
       setStage("weekGoal");
       return;
@@ -254,29 +347,50 @@ function App() {
     if (isLastHouse) {
       setStage("summary");
     } else {
-      enterPhone(index + 1, results, ownedPerks);
+      enterPhone(index + 1, results, ownedPerks, consumables, unlockedTiers);
     }
   }
 
   function proceedAfterWeek() {
     setPendingWeekOutcome(null);
-    setStats(freshStats(index + 1, ownedPerks));
     if (isLastHouse) {
       setStage("summary");
     } else {
-      enterPhone(index + 1, results, ownedPerks);
+      enterPhone(index + 1, results, ownedPerks, consumables, unlockedTiers);
     }
   }
 
-  function buyPerk(perkId: string) {
-    const perk = perks.find((p) => p.id === perkId);
-    if (!perk || ownedPerks.includes(perkId)) return;
-    if (balance < perk.cost) return;
-    const newOwned = [...ownedPerks, perkId];
-    const newSpent = spent + perk.cost;
+  function buyItem(itemId: string) {
+    const item = perks.find((p) => p.id === itemId);
+    if (!item) return;
+
+    if (item.consumable) {
+      if (balance < item.cost) return;
+      const newConsumables = { ...consumables, [itemId]: (consumables[itemId] ?? 0) + 1 };
+      const newSpent = spent + item.cost;
+      setConsumables(newConsumables);
+      setSpent(newSpent);
+      persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, newConsumables, unlockedTiers);
+      return;
+    }
+
+    if (ownedPerks.includes(itemId)) return;
+    if (item.requires && !ownedPerks.includes(item.requires)) return;
+    if (item.unlocksTier && unlockedTiers.includes(item.unlocksTier)) return;
+    if (balance < item.cost) return;
+
+    const newOwned = [...ownedPerks, itemId];
+    const newSpent = spent + item.cost;
     setOwnedPerks(newOwned);
     setSpent(newSpent);
-    persist(results, weekOutcomes, badges, index + 1, newOwned, newSpent);
+
+    let newUnlockedTiers = unlockedTiers;
+    if (item.unlocksTier) {
+      newUnlockedTiers = [...unlockedTiers, item.unlocksTier];
+      setUnlockedTiers(newUnlockedTiers);
+    }
+
+    persist(results, weekOutcomes, badges, index, newOwned, newSpent, consumables, newUnlockedTiers);
   }
 
   function handleNegotiationChoice(choiceId: string) {
@@ -286,13 +400,14 @@ function App() {
 
     const original = results[activeCallback.resultIndex];
     const targetHouse = allHouses.find((h) => h.id === original.houseId)!;
+    const bias = choice.closingBias * closingBiasMultiplier(ownedPerks);
     const projected: GameStats = {
       suspicion: original.finalStats.suspicion + choice.suspicionDelta,
       interest: original.finalStats.interest + choice.interestDelta,
       fun: original.finalStats.fun + choice.funDelta,
       discountPercent: original.finalStats.discountPercent,
     };
-    const outcome2: SceneOutcome = resolveOutcome(projected, choice.closingBias, targetHouse.profile);
+    const outcome2: SceneOutcome = resolveOutcome(projected, bias, targetHouse.profile);
 
     let confirmText: string;
     let updatedResult: HouseResult = { ...original, finalStats: projected, finalSuspicion: projected.suspicion };
@@ -310,7 +425,7 @@ function App() {
 
     const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
     setResults(newResults);
-    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent);
+    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers);
 
     setActiveCallback((prev) =>
       prev
@@ -328,17 +443,31 @@ function App() {
     weekOutcomes.reduce((sum, w) => sum + w.bonus, 0);
   const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
+  const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "sounds";
 
   return (
     <div className="game-root">
-      {stage !== "menu" && stage !== "saved" && stage !== "sounds" && (
+      {marketVisible && (
         <header className="game-header">
           <h1>Simsar Emlak</h1>
           <span className="subtitle">
             Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitle(earned)}
           </span>
-          <span className="wallet-pill">💰 {formatTL(balance)}</span>
+          <button className="wallet-pill wallet-pill-btn" onClick={() => setShowMarket(true)}>
+            💰 {formatTL(balance)} · 🛒
+          </button>
         </header>
+      )}
+
+      {showMarket && (
+        <MarketModal
+          balance={balance}
+          ownedPerks={ownedPerks}
+          consumables={consumables}
+          unlockedTiers={unlockedTiers}
+          onBuy={buyItem}
+          onClose={() => setShowMarket(false)}
+        />
       )}
 
       {stage === "menu" && (
@@ -350,6 +479,16 @@ function App() {
       )}
 
       {stage === "sounds" && <SoundSettings onBack={() => setStage("menu")} />}
+
+      {stage === "locked" && (
+        <div className="result-screen">
+          <p>Bu ev Tier {house.tier} portföyünde — henüz erişimin yok.</p>
+          <p className="menu-empty">Ofis Marketi'nden "Portföy Kilidi" bölümüne bakabilirsin.</p>
+          <button className="pixel-btn" onClick={() => setShowMarket(true)}>
+            Marketi Aç
+          </button>
+        </div>
+      )}
 
       {stage === "callback" && activeCallback && (
         <PhoneScreen
@@ -373,7 +512,13 @@ function App() {
       {stage === "house" && (
         <>
           <StatsBar stats={stats} />
-          <DialogueScene house={house} stats={stats} onChoiceEffects={applyEffects} onSceneEnd={handleSceneEnd} />
+          <DialogueScene
+            house={house}
+            stats={stats}
+            ownedPerks={ownedPerks}
+            onChoiceEffects={applyEffects}
+            onSceneEnd={handleSceneEnd}
+          />
         </>
       )}
 
@@ -419,8 +564,7 @@ function App() {
         <WeekResult
           outcome={pendingWeekOutcome}
           balance={balance}
-          ownedPerks={ownedPerks}
-          onBuyPerk={buyPerk}
+          onOpenMarket={() => setShowMarket(true)}
           onContinue={proceedAfterWeek}
         />
       )}
