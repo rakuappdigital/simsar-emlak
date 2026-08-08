@@ -1,5 +1,6 @@
 import { perks } from "../data/perks";
 import { formatTL } from "../data/economy";
+import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
 import type { MarketCategory } from "../types";
 
 interface MarketModalProps {
@@ -44,9 +45,21 @@ export default function MarketModal({
         {categoryOrder.map((cat) => {
           const items = perks.filter((p) => p.category === cat);
           if (items.length === 0) return null;
+          const prestige = cat === "kiyafet" ? computePrestige(ownedPerks) : null;
           return (
             <div className="market-category" key={cat}>
               <p className="market-category-title">{categoryLabels[cat]}</p>
+              {prestige !== null && (
+                <div className="prestige-bar">
+                  <span className="prestige-label">Prestij: {prestige}/{PRESTIGE_MAX}</span>
+                  <div className="stat-track">
+                    <div
+                      className="stat-fill prestige-fill"
+                      style={{ width: `${Math.min(100, (prestige / PRESTIGE_MAX) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               {items.map((item) => {
                 const alreadyOwned = !item.consumable && ownedPerks.includes(item.id);
                 const count = item.consumable ? (consumables[item.id] ?? 0) : 0;

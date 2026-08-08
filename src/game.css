@@ -909,6 +909,22 @@
   letter-spacing: 0.5px;
 }
 
+.prestige-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.prestige-label {
+  font-size: 0.72rem;
+  color: #06d6a0;
+}
+
+.prestige-fill {
+  background: linear-gradient(90deg, #06d6a0, #ffd166);
+}
+
 .market-item {
   display: flex;
   justify-content: space-between;

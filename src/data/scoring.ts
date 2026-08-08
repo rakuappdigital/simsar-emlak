@@ -1,4 +1,5 @@
 import type { CustomerProfile, GameStats, SceneOutcome } from "../types";
+import { perks } from "./perks";
 
 export const DEFAULT_PROFILE: CustomerProfile = { suspicionWeight: 1.1, funWeight: 1, interestWeight: 1 };
 
@@ -94,4 +95,26 @@ export function closingBiasMultiplier(owned: string[]): number {
   if (owned.includes("muzakere-2")) return 1.2;
   if (owned.includes("muzakere-1")) return 1.1;
   return 1;
+}
+
+/**
+ * Prestij: a single shared meter that "kıyafet" purchases feed into, instead
+ * of each item needing its own bespoke stat bonus. Simpler to price and to
+ * reason about — buying a second or third wardrobe piece just adds points.
+ */
+export const PRESTIGE_MAX = 70; // owning every current kıyafet item caps it out
+
+export function computePrestige(owned: string[]): number {
+  return perks
+    .filter((p) => p.category === "kiyafet" && owned.includes(p.id))
+    .reduce((sum, p) => sum + (p.prestige ?? 0), 0);
+}
+
+const PRESTIGE_STEP = 25;
+const PRESTIGE_STEP_BONUS = 2; // +2 interest and +2 fun per full step
+
+/** Every PRESTIGE_STEP points of prestige grants a small starting interest+fun bump. */
+export function prestigeBonus(prestige: number): { interest: number; fun: number } {
+  const steps = Math.floor(prestige / PRESTIGE_STEP);
+  return { interest: steps * PRESTIGE_STEP_BONUS, fun: steps * PRESTIGE_STEP_BONUS };
 }

@@ -20,6 +20,8 @@ import {
   closingBiasMultiplier,
   rankBonus,
   rankTitle,
+  computePrestige,
+  prestigeBonus,
 } from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
@@ -98,16 +100,14 @@ function computeFreshStats(
   consumablesList: Record<string, number>,
 ): GameStats {
   const factor = fatigueFactor(perksList);
+  const prestige = computePrestige(perksList);
+  const { interest: prestigeInterest, fun: prestigeFun } = prestigeBonus(prestige);
   let stats: GameStats = {
     suspicion: fatigueSuspicion(positionInWeek, factor),
-    interest: 0,
-    fun: hasPerk(perksList, "sansli-nal") ? 10 : 0,
+    interest: prestigeInterest,
+    fun: (hasPerk(perksList, "sansli-nal") ? 10 : 0) + prestigeFun,
     discountPercent: 0,
   };
-  if (hasPerk(perksList, "sik-gomlek")) stats.interest += 5;
-  if (hasPerk(perksList, "luks-saat")) stats.interest += 8;
-  if (hasPerk(perksList, "rahat-ayakkabi")) stats.fun += 5;
-  if (hasPerk(perksList, "luks-arac")) stats.interest += 5;
 
   for (const [id, count] of Object.entries(consumablesList)) {
     if (count > 0) {

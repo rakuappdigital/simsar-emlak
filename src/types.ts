@@ -134,6 +134,8 @@ export interface Perk {
   requires?: string;
   /** Set on "kilit" items — buying it adds this tier to unlockedTiers. */
   unlocksTier?: 2 | 3;
+  /** Set on "kiyafet" items — contributes to the shared Prestij bar instead of a bespoke stat effect. */
+  prestige?: number;
 }
 
 export interface SaveGame {
