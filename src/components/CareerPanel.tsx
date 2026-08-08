@@ -1,6 +1,7 @@
 import type { Badge } from "../types";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
+import { MedalIcon } from "./icons";
 
 interface CareerPanelProps {
   rankTitleText: string;
@@ -57,7 +58,9 @@ export default function CareerPanel({
       {badges.length > 0 && (
         <div className="badge-popup">
           {badges.map((id) => (
-            <p key={id}>🏅 {allBadges[id]?.title ?? id}</p>
+            <p key={id}>
+              <MedalIcon size={14} className="icon-inline" /> {allBadges[id]?.title ?? id}
+            </p>
           ))}
         </div>
       )}

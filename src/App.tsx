@@ -8,6 +8,7 @@ import SoundSettings from "./components/SoundSettings";
 import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
 import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
+import { WalletIcon, StarIcon, MedalIcon } from "./components/icons";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
@@ -570,7 +571,7 @@ function App() {
           </span>
           <div className="header-actions">
             <button className="wallet-pill wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
-              💰 {formatTL(balance)} · Emlah
+              <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)} · Emlah
             </button>
           </div>
         </header>
@@ -599,6 +600,7 @@ function App() {
         />
       )}
 
+      <div key={stage} className="stage-transition">
       {stage === "menu" && (
         <MainMenu hasSave={hasSave} onNewGame={startNewGame} onOpenSaved={openSaved} onSounds={() => setStage("sounds")} />
       )}
@@ -674,7 +676,7 @@ function App() {
       )}
 
       {stage === "result" && lastResult && (
-        <div className="result-screen">
+        <div className={`result-screen ${lastResult.outcome === "sold" ? "result-sold" : ""}`}>
           <p>{outcomeText[lastResult.outcome]}</p>
           {lastResult.sale && (
             <div className="sale-summary">
@@ -683,7 +685,11 @@ function App() {
                 {lastResult.sale.discountPercent > 0 && ` (%${lastResult.sale.discountPercent} indirimli)`}
               </p>
               {lastResult.sale.streakBonus > 0 && <p>Seri bonusu: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥</p>}
-              {lastResult.sale.rankBonus > 0 && <p>Rütbe bonusu: +%{Math.round(lastResult.sale.rankBonus * 100)} ⭐</p>}
+              {lastResult.sale.rankBonus > 0 && (
+                <p>
+                  Rütbe bonusu: +%{Math.round(lastResult.sale.rankBonus * 100)} <StarIcon size={12} className="icon-inline" />
+                </p>
+              )}
               {lastResult.sale.contractModifier !== 0 && (
                 <p>Sözleşme etkisi: {lastResult.sale.contractModifier > 0 ? "+" : ""}%{Math.round(lastResult.sale.contractModifier * 100)}</p>
               )}
@@ -693,7 +699,9 @@ function App() {
           {pendingNewBadges.length > 0 && (
             <div className="badge-popup">
               {pendingNewBadges.map((b) => (
-                <p key={b.id}>🏅 Yeni rozet: {b.title}</p>
+                <p key={b.id}>
+                  <MedalIcon size={14} className="icon-inline" /> Yeni rozet: {b.title}
+                </p>
               ))}
             </div>
           )}
@@ -733,7 +741,9 @@ function App() {
             <div className="badge-popup">
               <p>Kazanılan rozetler:</p>
               {badges.map((id) => (
-                <p key={id}>🏅 {allBadges[id]?.title ?? id}</p>
+                <p key={id}>
+                  <MedalIcon size={14} className="icon-inline" /> {allBadges[id]?.title ?? id}
+                </p>
               ))}
             </div>
           )}
@@ -752,6 +762,7 @@ function App() {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

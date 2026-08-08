@@ -1,10 +1,12 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import type { Badge, HouseResult, HouseScene, InboxMessage } from "../types";
 import { formatTL } from "../data/economy";
 import MarketPanel from "./MarketPanel";
 import MessagesPanel from "./MessagesPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, CloseIcon } from "./icons";
 
 export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer";
 
@@ -29,11 +31,11 @@ interface EmlahMenuProps {
   onClose: () => void;
 }
 
-const tabs: { id: EmlahTab; label: string }[] = [
-  { id: "market", label: "🛒 Market" },
-  { id: "mesajlar", label: "💬 Mesajlar" },
-  { id: "portfoy", label: "🏠 Portföy" },
-  { id: "kariyer", label: "⭐ Kariyer" },
+const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
+  { id: "market", icon: <CartIcon size={14} />, label: "Market" },
+  { id: "mesajlar", icon: <ChatIcon size={14} />, label: "Mesajlar" },
+  { id: "portfoy", icon: <HouseIcon size={14} />, label: "Portföy" },
+  { id: "kariyer", icon: <StarIcon size={14} />, label: "Kariyer" },
 ];
 
 export default function EmlahMenu({
@@ -63,9 +65,11 @@ export default function EmlahMenu({
       <div className="market-modal emlah-menu">
         <div className="market-header">
           <h2 className="market-title">Emlah</h2>
-          <span className="market-balance">💰 {formatTL(balance)}</span>
+          <span className="market-balance">
+            <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)}
+          </span>
           <button className="market-close" onClick={onClose} aria-label="Kapat">
-            ✕
+            <CloseIcon size={12} />
           </button>
         </div>
 
@@ -76,7 +80,8 @@ export default function EmlahMenu({
               className={`emlah-tab-btn ${tab === t.id ? "active" : ""}`}
               onClick={() => setTab(t.id)}
             >
-              {t.label}
+              {t.icon}
+              <span>{t.label}</span>
             </button>
           ))}
         </div>

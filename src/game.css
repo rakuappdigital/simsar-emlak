@@ -1,3 +1,26 @@
+.stage-transition {
+  animation: stage-in 0.28s ease-out;
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-transition,
+  .choice-btn,
+  .wa-bubble {
+    animation: none !important;
+  }
+}
+
 .game-root {
   max-width: 1000px;
   margin: 0 auto;
@@ -14,10 +37,13 @@
 }
 
 .game-header h1 {
-  font-size: 2rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.2rem;
   margin: 0;
   letter-spacing: 1px;
+  line-height: 1.4;
   color: #ffd166;
+  text-shadow: 2px 2px 0 #0d0d1a;
 }
 
 .subtitle {
@@ -189,8 +215,8 @@
 
 .wa-back {
   color: #fff;
-  font-size: 1.3rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .wa-avatar {
@@ -227,8 +253,34 @@
 
 .wa-icons {
   color: #fff;
-  font-size: 0.8rem;
-  letter-spacing: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-icons {
+  color: #fff;
+}
+
+.battery-low {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ios-banner-icon {
+  display: flex;
+  align-items: center;
+  color: #ffd166;
+}
+
+.icon-inline {
+  vertical-align: -2px;
+  flex-shrink: 0;
+}
+
+.icon-accent {
+  fill: #ffd166;
 }
 
 .whatsapp-body {
@@ -554,10 +606,33 @@
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
+  transition: transform 0.1s ease-out, border-color 0.1s ease-out;
+  animation: choice-in 0.25s ease-out backwards;
 }
+
+.choice-btn:nth-child(1) { animation-delay: 0s; }
+.choice-btn:nth-child(2) { animation-delay: 0.05s; }
+.choice-btn:nth-child(3) { animation-delay: 0.1s; }
+.choice-btn:nth-child(4) { animation-delay: 0.15s; }
 
 .choice-btn:hover {
   border-color: #ffd166;
+  transform: translateX(3px);
+}
+
+.choice-btn:active {
+  transform: translateX(1px) scale(0.98);
+}
+
+@keyframes choice-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .pixel-btn {
@@ -571,6 +646,17 @@
   cursor: pointer;
   font-family: inherit;
   margin-top: 8px;
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.pixel-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 #0d0d1a;
+}
+
+.pixel-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .pixel-btn.small {
@@ -586,6 +672,26 @@
   flex-direction: column;
   gap: 10px;
   align-items: center;
+}
+
+.result-sold p:first-child {
+  animation: sold-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #06d6a0;
+  font-weight: bold;
+}
+
+@keyframes sold-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .muzaffer-note {
@@ -624,10 +730,13 @@
 }
 
 .menu-title {
-  font-size: 2.4rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.5rem;
+  line-height: 1.6;
   color: #ffd166;
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   letter-spacing: 1px;
+  text-shadow: 3px 3px 0 #0d0d1a;
 }
 
 .menu-subtitle {
@@ -653,15 +762,24 @@
   border: 2px solid #444;
   color: #f0f0f0;
   padding: 14px 20px;
-  font-size: 1rem;
+  font-size: 0.68rem;
+  line-height: 1.6;
   border-radius: 8px;
   cursor: pointer;
-  font-family: inherit;
-  font-weight: bold;
+  font-family: "Press Start 2P", monospace;
+}
+
+.menu-btn {
+  transition: transform 0.1s ease-out, border-color 0.1s ease-out;
 }
 
 .menu-btn:hover:not(:disabled) {
   border-color: #ffd166;
+  transform: translateY(-2px);
+}
+
+.menu-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .menu-btn:disabled {
@@ -722,9 +840,10 @@
 
 /* ---------- Week goal + badges ---------- */
 .week-result-title {
-  font-size: 1.2rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
   color: #ffd166;
-  font-weight: bold;
 }
 
 .week-bonus {
@@ -927,9 +1046,10 @@
 }
 
 .market-title {
+  font-family: "Press Start 2P", monospace;
   color: #ffd166;
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
 }
 
 .market-balance {
@@ -1118,10 +1238,18 @@
   font-size: 0.72rem;
   padding: 5px 10px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.emlah-tab-btn {
+  transition: transform 0.1s ease-out, background 0.1s ease-out;
 }
 
 .emlah-tab-btn:hover {
   background: #1f1f3d;
+  transform: translateY(-1px);
 }
 
 .emlah-tab-btn.active {

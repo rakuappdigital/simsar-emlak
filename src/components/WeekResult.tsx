@@ -1,5 +1,6 @@
 import type { WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
+import { CartIcon } from "./icons";
 
 interface WeekResultProps {
   outcome: WeekOutcome;
@@ -29,7 +30,7 @@ export default function WeekResult({ outcome, balance, onOpenMarket, onContinue 
 
       <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
       <button className="pixel-btn small" onClick={onOpenMarket}>
-        🛒 Ofis Marketini Aç
+        <CartIcon size={13} className="icon-inline" /> Ofis Marketini Aç
       </button>
 
       <button className="pixel-btn" onClick={onContinue}>

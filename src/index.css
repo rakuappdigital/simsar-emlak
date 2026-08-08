@@ -2,6 +2,13 @@
   box-sizing: border-box;
 }
 
+html {
+  /* VT323 renders visually smaller than typical fonts at the same size —
+     bumping the root size scales every rem-based value in the app so text
+     stays legible instead of touching each component individually. */
+  font-size: 20px;
+}
+
 html,
 body,
 #root {
@@ -13,5 +20,5 @@ body,
 body {
   background: #1a1a2e;
   color: #f0f0f0;
-  font-family: "Courier New", monospace;
+  font-family: "VT323", "Courier New", monospace;
 }

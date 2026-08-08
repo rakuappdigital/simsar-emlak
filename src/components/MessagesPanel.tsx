@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { HouseResult, InboxMessage } from "../types";
 import { groupThreads } from "../data/inbox";
+import { ChevronLeftIcon } from "./icons";
 
 interface MessagesPanelProps {
   inbox: InboxMessage[];
@@ -42,7 +43,7 @@ export default function MessagesPanel({ inbox, results, onRetry }: MessagesPanel
   return (
     <div className="thread-detail">
       <button className="thread-back" onClick={() => setSelected(null)}>
-        ‹ Tüm mesajlar
+        <ChevronLeftIcon size={12} className="icon-inline" /> Tüm mesajlar
       </button>
       <div className="thread-messages">
         {activeThread.messages.map((m) => (

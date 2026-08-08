@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { PhoneMessage } from "../types";
+import { SignalIcon, BatteryIcon, BellIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
 
 interface PhoneScreenProps {
   messages: PhoneMessage[];
@@ -59,31 +60,35 @@ export default function PhoneScreen({
         <div className="phone-statusbar">
           <span className="status-time">14:47</span>
           <span className="status-icons">
-            <span className="signal-bars" aria-hidden>
-              ▂▄▆█
-            </span>
-            <span aria-hidden>📶</span>
+            <SignalIcon size={13} aria-hidden />
             <span className="battery-low" aria-hidden>
-              🔋 8%
+              <BatteryIcon size={15} /> 8%
             </span>
           </span>
         </div>
 
         {showBanner && (
           <div className="ios-banner">
-            <span className="ios-banner-icon">🔔</span>
+            <span className="ios-banner-icon">
+              <BellIcon size={14} />
+            </span>
             <span className="ios-banner-text">{banner}</span>
           </div>
         )}
 
         <div className="whatsapp-header">
-          <span className="wa-back">‹</span>
+          <span className="wa-back">
+            <ChevronLeftIcon size={14} />
+          </span>
           <div className="wa-avatar">{contactName.charAt(0)}</div>
           <div className="wa-title">
             <span className="wa-name">{contactName}</span>
             <span className="wa-status">{statusText}</span>
           </div>
-          <span className="wa-icons">📹 📞</span>
+          <span className="wa-icons">
+            <VideoCamIcon size={15} />
+            <PhoneCallIcon size={13} />
+          </span>
         </div>
 
         <div className="whatsapp-body">
