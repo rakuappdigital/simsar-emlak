@@ -17,6 +17,7 @@ import WorkTaskScreen from "./components/WorkTaskScreen";
 import { pickWorkTask, type WorkTaskDef } from "./data/workTasks";
 import { pickIntroFlavor } from "./data/introFlavor";
 import { generateShareCard } from "./data/shareCard";
+import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait } from "./data/characterPool";
@@ -212,6 +213,7 @@ function App() {
     showChoices: boolean;
   } | null>(null);
   const [rankUpTitle, setRankUpTitle] = useState<string | null>(null);
+  const [badgeCelebration, setBadgeCelebration] = useState<Badge[] | null>(null);
   const lastRankRef = useRef<string | null>(null);
   const [dailyQuest, setDailyQuest] = useState<DailyQuestDef | null>(null);
   const [dailyQuestResult, setDailyQuestResult] = useState<{ def: DailyQuestDef; completed: boolean } | null>(null);
@@ -240,6 +242,16 @@ function App() {
       // ignore
     }
   }
+
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [showSavedToast, setShowSavedToast] = useState(false);
+
+  useEffect(() => {
+    if (lastSavedAt === null) return;
+    setShowSavedToast(true);
+    const t = setTimeout(() => setShowSavedToast(false), 1600);
+    return () => clearTimeout(t);
+  }, [lastSavedAt]);
 
   useEffect(() => {
     setSavedGames(loadAllSaves());
@@ -292,6 +304,7 @@ function App() {
     };
     writeSave(save, slot);
     setSavedGames((prev) => prev.map((s, i) => (i === slot ? save : s)));
+    setLastSavedAt(Date.now());
   }
 
   function openEmlahMenu(tab: EmlahTab = "market") {
@@ -301,7 +314,7 @@ function App() {
   }
 
   function applyEffects(effects: ChoiceEffects) {
-    const suspicionFactor = suspicionGainFactor(ownedPerks);
+    const suspicionFactor = suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()];
     setStats((s) => {
       const rawSuspicion = effects.suspicion ?? 0;
       const suspicionDelta = rawSuspicion > 0 ? rawSuspicion * suspicionFactor : rawSuspicion;
@@ -578,6 +591,7 @@ function App() {
     const newBadgesState = [...badges, ...newBadgeIds];
     setBadges(newBadgesState);
     setPendingNewBadges(newlyEarned);
+    if (newlyEarned.length > 0) setBadgeCelebration(newlyEarned);
 
     let newWeekOutcomes = weekOutcomes;
     if (isLastHouseOfWeek(index)) {
@@ -853,7 +867,10 @@ function App() {
     const target = (e.target as HTMLElement).closest(
       "button.pixel-btn, button.menu-btn, button.choice-btn, button.emlah-tab-btn, button.thread-row, button.wallet-pill-btn, button.market-close, button.thread-back",
     );
-    if (target) playClick();
+    if (target) {
+      playClick();
+      navigator.vibrate?.(10);
+    }
   }
 
   useEffect(() => {
@@ -881,6 +898,12 @@ function App() {
     const t = setTimeout(() => setRankUpTitle(null), 2800);
     return () => clearTimeout(t);
   }, [rankUpTitle]);
+
+  useEffect(() => {
+    if (!badgeCelebration) return;
+    const t = setTimeout(() => setBadgeCelebration(null), 2800);
+    return () => clearTimeout(t);
+  }, [badgeCelebration]);
 
   const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "settings";
 
@@ -916,6 +939,22 @@ function App() {
         </div>
       )}
 
+      {badgeCelebration && (
+        <div className="rankup-overlay" onClick={() => setBadgeCelebration(null)}>
+          <div className="rankup-card">
+            <MedalIcon size={32} />
+            <p className="rankup-label">Yeni Rozet!</p>
+            {badgeCelebration.map((b) => (
+              <p className="rankup-title" key={b.id}>
+                {b.title}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showSavedToast && <div className="saved-toast">Kaydedildi ✓</div>}
+
       {showEmlahMenu && (
         <EmlahMenu
           initialTab={emlahMenuTab}
@@ -937,6 +976,7 @@ function App() {
           allBadges={allBadges}
           tasksCompleted={tasksCompleted}
           chitchatBonuses={chitchatBonuses}
+          completedWeeks={weekOutcomes.length}
           onClose={() => setShowEmlahMenu(false)}
         />
       )}
@@ -1056,6 +1096,13 @@ function App() {
 
       {stage === "result" && lastResult && (
         <div className={`result-screen ${lastResult.outcome === "sold" ? "result-sold" : ""}`}>
+          {lastResult.outcome === "sold" && (
+            <div className="confetti" aria-hidden>
+              {Array.from({ length: 14 }).map((_, i) => (
+                <span key={i} className="confetti-piece" />
+              ))}
+            </div>
+          )}
           <p>{outcomeText[lastResult.outcome]}</p>
           {lastResult.sale && (
             <div className="sale-summary">

@@ -1,6 +1,7 @@
 import type { Badge, HouseResult } from "../types";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
+import { rivalTotalSales } from "../data/rival";
 import { MedalIcon } from "./icons";
 
 interface CareerPanelProps {
@@ -14,6 +15,7 @@ interface CareerPanelProps {
   results: HouseResult[];
   tasksCompleted: number;
   chitchatBonuses: number;
+  completedWeeks: number;
 }
 
 export default function CareerPanel({
@@ -27,9 +29,11 @@ export default function CareerPanel({
   results,
   tasksCompleted,
   chitchatBonuses,
+  completedWeeks,
 }: CareerPanelProps) {
   const prestige = computePrestige(ownedPerks);
   const soldResults = results.filter((r) => r.outcome === "sold" && r.sale);
+  const rivalSales = rivalTotalSales(completedWeeks);
   const bestSale = soldResults.reduce(
     (max, r) => (r.sale!.finalPrice > max ? r.sale!.finalPrice : max),
     0,
@@ -83,6 +87,12 @@ export default function CareerPanel({
         <span className="career-stat-label">Yakalanan Sohbet Bonusu</span>
         <span className="career-stat-value">{chitchatBonuses}</span>
       </div>
+      {completedWeeks > 0 && (
+        <div className="career-stat-row">
+          <span className="career-stat-label">Fırat Bey (rakip)</span>
+          <span className="career-stat-value">{rivalSales} satış</span>
+        </div>
+      )}
 
       <p className="market-category-title">Rozetler</p>
       {badges.length === 0 && <p className="menu-empty">Henüz rozet yok.</p>}

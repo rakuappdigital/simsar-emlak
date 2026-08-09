@@ -3,7 +3,7 @@ import type { Choice, ChoiceEffects, GameStats, HouseScene, SceneOutcome } from 
 import { loadHouseImage, peekHouseImage } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
-import { resolveOutcome, closingBiasMultiplier } from "../data/scoring";
+import { resolveOutcome, closingBiasMultiplier, personalityHint } from "../data/scoring";
 import { shuffle } from "../data/shuffle";
 import { resolveCustomerNames, resolvePortrait, interpolateNames } from "../data/characterPool";
 
@@ -57,6 +57,8 @@ export default function DialogueScene({
   const node = house.nodes[nodeId];
   const linesShown = node.lines.slice(0, lineIndex + 1);
   const atLastLine = lineIndex >= node.lines.length - 1;
+  const portraitOutcomeClass =
+    nodeId === house.closingNodes.sold ? "portrait-sold" : nodeId === house.closingNodes.lost ? "portrait-lost" : "";
 
   function getLineText(line: { text: string }) {
     return house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
@@ -150,10 +152,11 @@ export default function DialogueScene({
   return (
     <div className="dialogue-scene">
       <div className="scene-stage">
-        <div
-          className={`pixel-bg scene-bg-enter ${image ? "" : house.background}`}
-          style={image ? { backgroundImage: `url(${image})` } : undefined}
-        />
+        <div className={`pixel-bg scene-bg-enter ${image ? "" : house.background}`} />
+        {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})` }} />}
+        {personalityHint(house.profile) && (
+          <span className="personality-tag">{personalityHint(house.profile)}</span>
+        )}
         <div className="scene-title">
           <span>{house.title} — {house.location}</span>
           <span className="scene-price">{formatTL(house.askingPrice)}</span>
@@ -185,7 +188,7 @@ export default function DialogueScene({
           return (
             <div key={i} className={`dialogue-line speaker-${line.speaker}`}>
               {portrait ? (
-                <img className="portrait-avatar" src={portrait} alt={displayName} />
+                <img className={`portrait-avatar ${portraitOutcomeClass}`} src={portrait} alt={displayName} />
               ) : (
                 <div className="portrait-avatar portrait-placeholder" aria-hidden />
               )}

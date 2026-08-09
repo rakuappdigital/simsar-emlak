@@ -103,6 +103,18 @@ export function closingBiasMultiplier(owned: string[]): number {
 }
 
 /**
+ * Purely informational read of a house's profile weights — surfaced to the
+ * player as a small hint, doesn't feed back into resolveOutcome at all.
+ */
+export function personalityHint(profile: CustomerProfile | undefined): string | null {
+  const p = profile ?? DEFAULT_PROFILE;
+  if (p.suspicionWeight >= 1.4) return "Dikkatli";
+  if (p.funWeight >= 1.3) return "Eğlenceye Açık";
+  if (p.interestWeight >= 1.2) return "Detaycı";
+  return null;
+}
+
+/**
  * Prestij: a single shared meter that "kıyafet" purchases feed into, instead
  * of each item needing its own bespoke stat bonus. Simpler to price and to
  * reason about — buying a second or third wardrobe piece just adds points.
