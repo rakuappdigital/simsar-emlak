@@ -1515,7 +1515,9 @@
 }
 
 .emlah-tab-content {
+  height: 50vh;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 /* ---------- Portfolio panel ---------- */
