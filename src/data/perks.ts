@@ -192,6 +192,15 @@ export const perks: Perk[] = [
     requires: "portfoy-tier2",
     unlocksTier: 3,
   },
+  {
+    id: "portfoy-tier4",
+    category: "kilit",
+    title: "Portföy Yükseltmesi: Efsanevi Portföy",
+    description: "Şehrin efsaneleşmiş, en ulaşılmaz mülkleri portföyünüze eklenir.",
+    cost: 950000,
+    requires: "portfoy-tier3",
+    unlocksTier: 4,
+  },
 
   // --- Sarf Malzemesi (tek kullanımlık) ---
   {

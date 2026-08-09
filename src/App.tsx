@@ -16,6 +16,7 @@ import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
 import WorkTaskScreen from "./components/WorkTaskScreen";
 import { pickWorkTask, type WorkTaskDef } from "./data/workTasks";
 import { pickIntroFlavor } from "./data/introFlavor";
+import { generateShareCard } from "./data/shareCard";
 import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait } from "./data/characterPool";
@@ -51,6 +52,7 @@ import type {
   GameStats,
   HouseResult,
   InboxMessage,
+  PendingLoan,
   PhoneMessage,
   SaleResult,
   SaveGame,
@@ -77,6 +79,10 @@ type Stage =
 const CHITCHAT_CHANCE = 0.27;
 const FRIEND_CHANCE = 0.08;
 const WORK_TASK_CHANCE = 0.4;
+const LOAN_AMOUNT = 20000;
+const LOAN_REPAY_AMOUNT = 28000;
+const LOAN_REPAY_CHANCE = 0.8;
+const LOAN_DUE_HOUSES = HOUSES_PER_WEEK * 2;
 const RANK_ORDER = ["Stajyer", "Emlakçı", "Kıdemli Emlakçı", "Ofis Ortağı"];
 
 interface PendingHouseEntry {
@@ -213,6 +219,27 @@ function App() {
   const [activeTask, setActiveTask] = useState<WorkTaskDef | null>(null);
   const [lastTaskId, setLastTaskId] = useState<string | undefined>(undefined);
   const [pendingHouseEntry, setPendingHouseEntry] = useState<PendingHouseEntry | null>(null);
+  const [bonusEarnings, setBonusEarnings] = useState(0);
+  const [pendingLoan, setPendingLoan] = useState<PendingLoan | null>(null);
+  const [tasksCompleted, setTasksCompleted] = useState(0);
+  const [chitchatBonuses, setChitchatBonuses] = useState(0);
+  const [seenInboxCount, setSeenInboxCount] = useState(0);
+  const [tutorialDismissed, setTutorialDismissed] = useState(() => {
+    try {
+      return localStorage.getItem("simsar-emlak-tutorial-seen") === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  function dismissTutorial() {
+    setTutorialDismissed(true);
+    try {
+      localStorage.setItem("simsar-emlak-tutorial-seen", "1");
+    } catch {
+      // ignore
+    }
+  }
 
   useEffect(() => {
     setSavedGames(loadAllSaves());
@@ -238,9 +265,13 @@ function App() {
     newCastAssignment: Record<string, string[]> = castAssignment,
     newDailyQuest: DailyQuestDef | null = dailyQuest,
     slot: number = activeSlot,
+    newBonusEarnings: number = bonusEarnings,
+    newPendingLoan: PendingLoan | null = pendingLoan,
+    newTasksCompleted: number = tasksCompleted,
+    newChitchatBonuses: number = chitchatBonuses,
   ) {
     const save: SaveGame = {
-      version: 6,
+      version: 7,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -253,6 +284,10 @@ function App() {
       inbox: newInbox,
       castAssignment: newCastAssignment,
       dailyQuest: newDailyQuest,
+      bonusEarnings: newBonusEarnings,
+      pendingLoan: newPendingLoan,
+      tasksCompleted: newTasksCompleted,
+      chitchatBonuses: newChitchatBonuses,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -262,6 +297,7 @@ function App() {
   function openEmlahMenu(tab: EmlahTab = "market") {
     setEmlahMenuTab(tab);
     setShowEmlahMenu(true);
+    setSeenInboxCount(inbox.length);
   }
 
   function applyEffects(effects: ChoiceEffects) {
@@ -337,6 +373,21 @@ function App() {
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
+    // Resolve any loan to Bora that's come due before anything else this visit.
+    let newBonusEarnings = bonusEarnings;
+    let loanInbox = inboxList;
+    if (pendingLoan && newIndex >= pendingLoan.dueIndex) {
+      const repaid = Math.random() < LOAN_REPAY_CHANCE;
+      const loanMsg: PhoneMessage = repaid
+        ? { from: "Bora", text: `Borcunu ödüyorum kanka, sağ ol beklettiğim için! (+${formatTL(pendingLoan.amount)})` }
+        : { from: "Bora", text: "Kanka çok mahcubum ama şu an gerçekten elimden bir şey gelmiyor, borcunu şimdilik ödeyemeyeceğim..." };
+      loanInbox = logMessages(inboxList, "friend-bora", "Bora", [loanMsg], newIndex + 1);
+      if (repaid) newBonusEarnings += pendingLoan.amount;
+      setBonusEarnings(newBonusEarnings);
+      setPendingLoan(null);
+    }
+    const newPendingLoan = pendingLoan && newIndex >= pendingLoan.dueIndex ? null : pendingLoan;
+
     const currentQuest = newIndex % HOUSES_PER_WEEK === 0 ? pickDailyQuest(weekIndexForHouse(newIndex)) : dailyQuestParam;
     setDailyQuest(currentQuest);
 
@@ -365,7 +416,7 @@ function App() {
 
     const nextIntro = houseIntros[nextHouse.id] ?? defaultIntro(nextHouse);
     const introMessages = flavor.message ? [flavor.message, ...nextIntro.messages] : nextIntro.messages;
-    let newInbox = logMessages(inboxList, "muzaffer", "Muzaffer Bey", introMessages, newIndex + 1);
+    let newInbox = logMessages(loanInbox, "muzaffer", "Muzaffer Bey", introMessages, newIndex + 1);
     newInbox = pruneInbox(newInbox, currentResults, newIndex + 1);
 
     if (newIndex > 0 && currentResults.length > 0) {
@@ -379,7 +430,7 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest);
+        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses);
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -387,7 +438,7 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest);
+    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses);
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -399,6 +450,7 @@ function App() {
     const p = pendingHouseEntry;
     setActiveTask(null);
     setPendingHouseEntry(null);
+    setTasksCompleted((c) => c + 1);
     proceedToHouseIntro(
       p.newIndex,
       p.currentResults,
@@ -439,7 +491,14 @@ function App() {
     setDailyQuest(null);
     setDailyQuestResult(null);
     setLastChitchatId(undefined);
+    setLastFriendId(undefined);
+    setLastTaskId(undefined);
     setActiveCallback(null);
+    setBonusEarnings(0);
+    setPendingLoan(null);
+    setTasksCompleted(0);
+    setChitchatBonuses(0);
+    setSeenInboxCount(0);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -464,6 +523,11 @@ function App() {
     setInbox(savedGame.inbox);
     setCastAssignment(savedGame.castAssignment);
     setDailyQuestResult(null);
+    setBonusEarnings(savedGame.bonusEarnings);
+    setPendingLoan(savedGame.pendingLoan);
+    setTasksCompleted(savedGame.tasksCompleted);
+    setChitchatBonuses(savedGame.chitchatBonuses);
+    setSeenInboxCount(savedGame.inbox.length);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -509,7 +573,7 @@ function App() {
     setResults(newResults);
 
     const gameComplete = index === allHouses.length - 1;
-    const newlyEarned = checkNewBadges(newResults, gameComplete, badges);
+    const newlyEarned = checkNewBadges(newResults, gameComplete, badges, { tasksCompleted, chitchatBonuses });
     const newBadgeIds = newlyEarned.map((b) => b.id);
     const newBadgesState = [...badges, ...newBadgeIds];
     setBadges(newBadgesState);
@@ -556,6 +620,25 @@ function App() {
     } else {
       enterPhone(index + 1, results, ownedPerks, consumables, unlockedTiers);
     }
+  }
+
+  async function downloadShareCard() {
+    const ending = computeEnding(results, earned);
+    const soldCount = results.filter((r) => r.outcome === "sold").length;
+    const dataUrl = await generateShareCard({
+      soldCount,
+      totalEarned: earned,
+      balance,
+      reputation: reputationLabel(results),
+      rank: rankTitle(earned),
+      badgeCount: badges.length,
+      endingTitle: ending.title,
+      endingDescription: ending.description,
+    });
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "simsar-emlak-sonuc.png";
+    a.click();
   }
 
   function buyItem(itemId: string) {
@@ -654,7 +737,7 @@ function App() {
     setResults(updatedResults);
 
     const openingMessages: PhoneMessage[] =
-      targetHouse.tier === 3
+      targetHouse.tier >= 3
         ? [
             { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında ailemizle tekrar konuştuk.` },
             { from: contactName, text: "Bu ölçekte bir karar bizim için kolay değil, ama bir şansımız daha olsun istedik." },
@@ -671,7 +754,7 @@ function App() {
       resultIndex,
       contactName,
       messages: openingMessages,
-      choices: targetHouse.tier === 3 ? luxuryNegotiationChoices : negotiationChoices,
+      choices: targetHouse.tier >= 3 ? luxuryNegotiationChoices : negotiationChoices,
       sessionKey: `retry-${houseId}-${Date.now()}`,
     });
     setShowEmlahMenu(false);
@@ -687,7 +770,7 @@ function App() {
     // boss chitchat never both fire for the same house visit.
     const roll = Math.random();
     if (roll < FRIEND_CHANCE) {
-      const set = pickFriendMessage(lastFriendId);
+      const set = pickFriendMessage(lastFriendId, pendingLoan !== null);
       setLastFriendId(set.id);
       const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
       setActiveFriendChat({ set, messages: openMsg, showChoices: true });
@@ -717,13 +800,23 @@ function App() {
     const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
     const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: choice.reaction };
 
-    setInbox((prev) => {
-      const withReply = logMessages(prev, threadId, "Emlah", [replyMsg], index + 1, true);
-      return logMessages(withReply, threadId, activeFriendChat.set.contactName, [reactionMsg], index + 1);
-    });
+    let newSpent = spent;
+    let newPendingLoan = pendingLoan;
+    if (choice.loanAction === "lend" && !pendingLoan) {
+      newSpent = spent + LOAN_AMOUNT;
+      newPendingLoan = { dueIndex: index + LOAN_DUE_HOUSES, amount: LOAN_REPAY_AMOUNT };
+      setSpent(newSpent);
+      setPendingLoan(newPendingLoan);
+      applyEffects({ fun: 8 });
+    }
+
+    const withReply = logMessages(inbox, threadId, "Emlah", [replyMsg], index + 1, true);
+    const newInbox = logMessages(withReply, threadId, activeFriendChat.set.contactName, [reactionMsg], index + 1);
+    setInbox(newInbox);
     setActiveFriendChat((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
+    persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, bonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses);
   }
 
   function handleChitchatChoice(choiceId: string) {
@@ -734,7 +827,10 @@ function App() {
     const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
     const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: choice.reaction };
 
-    if (choice.bonus) applyEffects(choice.bonus);
+    if (choice.bonus) {
+      applyEffects(choice.bonus);
+      setChitchatBonuses((c) => c + 1);
+    }
 
     setInbox((prev) => {
       const withReply = logMessages(prev, "muzaffer", "Emlah", [replyMsg], index + 1, true);
@@ -747,9 +843,11 @@ function App() {
 
   const earned =
     results.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) +
-    weekOutcomes.reduce((sum, w) => sum + w.bonus, 0);
+    weekOutcomes.reduce((sum, w) => sum + w.bonus, 0) +
+    bonusEarnings;
   const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
+  const unreadCount = inbox.slice(seenInboxCount).filter((m) => !m.fromPlayer).length;
 
   function handleRootClick(e: MouseEvent<HTMLDivElement>) {
     const target = (e.target as HTMLElement).closest(
@@ -802,6 +900,7 @@ function App() {
           <div className="header-actions">
             <button className="wallet-pill wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
               <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)} · Emlah
+              {unreadCount > 0 && <span className="unread-dot">{unreadCount > 9 ? "9+" : unreadCount}</span>}
             </button>
           </div>
         </header>
@@ -836,6 +935,8 @@ function App() {
           earned={earned}
           badges={badges}
           allBadges={allBadges}
+          tasksCompleted={tasksCompleted}
+          chitchatBonuses={chitchatBonuses}
           onClose={() => setShowEmlahMenu(false)}
         />
       )}
@@ -923,6 +1024,17 @@ function App() {
       {stage === "house" && (
         <>
           <StatsBar stats={stats} />
+          {index === 0 && !tutorialDismissed && (
+            <div className="tutorial-tip">
+              <p>
+                <strong>Şüphe</strong> yükseldikçe satış zorlaşır. <strong>İlgi</strong> ve{" "}
+                <strong>Eğlence</strong> ise satışı kolaylaştırır — cevaplarınla bu üçünü dengelemeye çalış.
+              </p>
+              <button className="pixel-btn small" onClick={dismissTutorial}>
+                Anladım
+              </button>
+            </div>
+          )}
           <DialogueScene
             house={house}
             stats={stats}
@@ -1025,6 +1137,9 @@ function App() {
             );
           })()}
           <p className="muzaffer-note">Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"</p>
+          <button className="pixel-btn small" onClick={downloadShareCard}>
+            Paylaşım Kartını İndir
+          </button>
           <button className="menu-btn" onClick={() => setStage("menu")}>
             Ana Menü
           </button>

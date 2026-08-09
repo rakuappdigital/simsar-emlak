@@ -1,4 +1,4 @@
-import type { Badge } from "../types";
+import type { Badge, HouseResult } from "../types";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
 import { MedalIcon } from "./icons";
@@ -11,6 +11,9 @@ interface CareerPanelProps {
   ownedPerks: string[];
   badges: string[];
   allBadges: Record<string, Badge>;
+  results: HouseResult[];
+  tasksCompleted: number;
+  chitchatBonuses: number;
 }
 
 export default function CareerPanel({
@@ -21,8 +24,18 @@ export default function CareerPanel({
   ownedPerks,
   badges,
   allBadges,
+  results,
+  tasksCompleted,
+  chitchatBonuses,
 }: CareerPanelProps) {
   const prestige = computePrestige(ownedPerks);
+  const soldResults = results.filter((r) => r.outcome === "sold" && r.sale);
+  const bestSale = soldResults.reduce(
+    (max, r) => (r.sale!.finalPrice > max ? r.sale!.finalPrice : max),
+    0,
+  );
+  const cleanestSale =
+    soldResults.length > 0 ? Math.min(...soldResults.map((r) => r.finalSuspicion)) : null;
 
   return (
     <div className="career-panel">
@@ -51,6 +64,24 @@ export default function CareerPanel({
             style={{ width: `${Math.min(100, (prestige / PRESTIGE_MAX) * 100)}%` }}
           />
         </div>
+      </div>
+
+      <p className="market-category-title">İstatistikler</p>
+      <div className="career-stat-row">
+        <span className="career-stat-label">En Yüksek Satış</span>
+        <span className="career-stat-value">{bestSale > 0 ? formatTL(bestSale) : "—"}</span>
+      </div>
+      <div className="career-stat-row">
+        <span className="career-stat-label">En Düşük Şüpheyle Satış</span>
+        <span className="career-stat-value">{cleanestSale !== null ? cleanestSale.toFixed(0) : "—"}</span>
+      </div>
+      <div className="career-stat-row">
+        <span className="career-stat-label">Tamamlanan İş Görevi</span>
+        <span className="career-stat-value">{tasksCompleted}</span>
+      </div>
+      <div className="career-stat-row">
+        <span className="career-stat-label">Yakalanan Sohbet Bonusu</span>
+        <span className="career-stat-value">{chitchatBonuses}</span>
       </div>
 
       <p className="market-category-title">Rozetler</p>

@@ -28,6 +28,8 @@ interface EmlahMenuProps {
   earned: number;
   badges: string[];
   allBadges: Record<string, Badge>;
+  tasksCompleted: number;
+  chitchatBonuses: number;
   onClose: () => void;
 }
 
@@ -56,6 +58,8 @@ export default function EmlahMenu({
   earned,
   badges,
   allBadges,
+  tasksCompleted,
+  chitchatBonuses,
   onClose,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
@@ -115,6 +119,9 @@ export default function EmlahMenu({
               ownedPerks={ownedPerks}
               badges={badges}
               allBadges={allBadges}
+              results={results}
+              tasksCompleted={tasksCompleted}
+              chitchatBonuses={chitchatBonuses}
             />
           )}
         </div>

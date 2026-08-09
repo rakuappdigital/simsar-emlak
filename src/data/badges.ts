@@ -22,6 +22,16 @@ export const allBadges: Record<string, Badge> = {
     title: "İstanbul'un En Sinsi Emlakçısı",
     description: "Oyunu yüksek ortalama şüpheyle tamamladın.",
   },
+  "gorev-ustasi": {
+    id: "gorev-ustasi",
+    title: "Görev Ustası",
+    description: "10 ofis görevi tamamladın.",
+  },
+  "sohbet-ustasi": {
+    id: "sohbet-ustasi",
+    title: "Sohbet Ustası",
+    description: "5 sohbette bonus cevabı yakaladın.",
+  },
 };
 
 export function computeStreak(results: HouseResult[]): number {
@@ -46,6 +56,7 @@ export function checkNewBadges(
   results: HouseResult[],
   isGameComplete: boolean,
   alreadyEarned: string[],
+  extra: { tasksCompleted: number; chitchatBonuses: number },
 ): Badge[] {
   const earned = new Set(alreadyEarned);
   const newly: Badge[] = [];
@@ -65,6 +76,8 @@ export function checkNewBadges(
   if (soldCount >= 10) maybeAdd("on-satis");
   if (streak >= 3) maybeAdd("seri-3");
   if (honestyStreak >= 3) maybeAdd("durust-seri");
+  if (extra.tasksCompleted >= 10) maybeAdd("gorev-ustasi");
+  if (extra.chitchatBonuses >= 5) maybeAdd("sohbet-ustasi");
 
   if (isGameComplete && results.length > 0) {
     const avgSuspicion = results.reduce((s, r) => s + r.finalSuspicion, 0) / results.length;

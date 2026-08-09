@@ -66,7 +66,7 @@ export const luxuryNegotiationChoices: NegotiationChoice[] = [
 ];
 
 function choicesForTier(tier: number): NegotiationChoice[] {
-  return tier === 3 ? luxuryNegotiationChoices : negotiationChoices;
+  return tier >= 3 ? luxuryNegotiationChoices : negotiationChoices;
 }
 
 export interface CallbackEvent {
@@ -116,7 +116,7 @@ export function maybeGenerateCallback(
 
   // outcome === "thinking" — a real negotiation with consequences
   const thinkingMessages =
-    house.tier === 3
+    house.tier >= 3
       ? [
           { from: contactName, text: `Merhaba, ${house.title} konusunda ailemizle tekrar değerlendirdik...` },
           { from: contactName, text: "Bu ölçekte bir yatırımda hâlâ emin değiliz, biraz daha bilgi verir misiniz?" },

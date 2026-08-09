@@ -2,6 +2,8 @@ export interface FriendChoice {
   id: string;
   text: string;
   reaction: string;
+  /** Present only on the loan-ask set — drives App.tsx's small lend/repay loop. */
+  loanAction?: "lend" | "decline";
 }
 
 export interface FriendMessageSet {
@@ -12,19 +14,35 @@ export interface FriendMessageSet {
 }
 
 /**
- * Purely cosmetic messages from recurring friends outside the work thread —
- * a small easter egg, rare on purpose. No gameplay effect today; the loan
- * tease is deliberate groundwork for a future "borç ver/isteme" mechanic.
+ * Mostly-cosmetic messages from recurring friends outside the work thread —
+ * a small easter egg, rare on purpose. "bora-borc-istek" is the one set with
+ * a real (small) consequence: lend him money and, a couple of weeks later,
+ * he either pays back with a little extra or — occasionally — doesn't.
  */
 export const friendMessageSets: FriendMessageSet[] = [
   {
-    id: "bora-borc",
+    id: "bora-borc-istek",
     contactName: "Bora",
-    prompt: "Kanka müsait misin, ufak bir konu var...",
+    prompt: "Kanka müsait misin, ufak bir konu var... Elin biraz cebe uzanır mı, birkaç haftaya öderim söz.",
     choices: [
-      { id: "a", text: "Ne oldu, anlat bakalım.", reaction: "Yok bir şey açıkçası, borç isteyecektim ama sonra sorarım 😅" },
-      { id: "b", text: "Param yok kanka, baştan söyleyeyim 😄", reaction: "Hahaha tamam tamam, belki bir dahaki sefere." },
-      { id: "c", text: "Şu an çok yoğunum, sonra konuşalım mı?", reaction: "Tamamdır, kolay gelsin emlakçı!" },
+      {
+        id: "lend",
+        text: "Tamam kanka, gönderiyorum.",
+        reaction: "Sağ ol be dostum, unutmam bunu, birkaç haftaya hallederim!",
+        loanAction: "lend",
+      },
+      {
+        id: "decline",
+        text: "Şu an bende de yok açıkçası, kusura bakma.",
+        reaction: "Yok sorun değil, anlarım, başka baktım zaten.",
+        loanAction: "decline",
+      },
+      {
+        id: "joke",
+        text: "Emlakçıdan borç istemek biraz ironik değil mi? 😄",
+        reaction: "Haha haklısın, ama denemeden olmaz dedim 😅",
+        loanAction: "decline",
+      },
     ],
   },
   {
@@ -59,7 +77,9 @@ export const friendMessageSets: FriendMessageSet[] = [
   },
 ];
 
-export function pickFriendMessage(excludeId?: string): FriendMessageSet {
-  const pool = excludeId ? friendMessageSets.filter((f) => f.id !== excludeId) : friendMessageSets;
+export function pickFriendMessage(excludeId?: string, loanActive = false): FriendMessageSet {
+  let pool = friendMessageSets;
+  if (excludeId) pool = pool.filter((f) => f.id !== excludeId);
+  if (loanActive) pool = pool.filter((f) => f.id !== "bora-borc-istek");
   return pool[Math.floor(Math.random() * pool.length)];
 }

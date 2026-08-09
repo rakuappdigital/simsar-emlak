@@ -88,11 +88,30 @@
   font-size: 0.8rem;
   font-weight: bold;
   color: var(--c-accent);
+  position: relative;
 }
 
 .wallet-pill-btn {
   cursor: pointer;
   font-family: inherit;
+}
+
+.unread-dot {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--c-danger);
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: bold;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  animation: fun-pulse 1.2s ease-in-out infinite;
 }
 
 .wallet-pill-btn:hover {
@@ -502,6 +521,25 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+.tutorial-tip {
+  background: var(--c-surface-alt);
+  border: 2px dashed var(--c-accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  animation: stage-in 0.28s ease-out;
+}
+
+.tutorial-tip p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--c-text);
 }
 
 .stat-label {

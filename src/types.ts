@@ -68,8 +68,8 @@ export interface HouseScene {
   closingNodes: { sold: string; thinking: string; lost: string };
   /** Optional per-customer personality weighting; falls back to DEFAULT_PROFILE. */
   profile?: CustomerProfile;
-  /** Portfolio tier — tier 2/3 houses stay out of rotation until unlocked in the market. */
-  tier: 1 | 2 | 3;
+  /** Portfolio tier — tier 2/3/4 houses stay out of rotation until unlocked in the market. */
+  tier: 1 | 2 | 3 | 4;
   /** One entry per customer slot (customer1, customer2, ...) — enables random cast assignment. */
   dynamicCast?: CastSlot[];
   startNode: string;
@@ -158,7 +158,7 @@ export interface Perk {
   /** id of another market item that must already be owned before this one can be bought. */
   requires?: string;
   /** Set on "kilit" items — buying it adds this tier to unlockedTiers. */
-  unlocksTier?: 2 | 3;
+  unlocksTier?: 2 | 3 | 4;
   /** Set on "kiyafet" items — contributes to the shared Prestij bar instead of a bespoke stat effect. */
   prestige?: number;
 }
@@ -181,8 +181,14 @@ export interface DailyQuestDef {
   reward: number;
 }
 
+/** An active loan to Bora, waiting to (maybe) be repaid at houseIndex >= dueIndex. */
+export interface PendingLoan {
+  dueIndex: number;
+  amount: number;
+}
+
 export interface SaveGame {
-  version: 6;
+  version: 7;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -197,6 +203,13 @@ export interface SaveGame {
   castAssignment: Record<string, string[]>;
   /** This week's rotating bonus objective, or null between weeks. */
   dailyQuest: DailyQuestDef | null;
+  /** One-off income outside the sale/week-bonus flow (loan repayments, etc.). */
+  bonusEarnings: number;
+  /** A loan currently out to Bora, or null if none active. */
+  pendingLoan: PendingLoan | null;
+  /** Lifetime counters that badges and the career stats panel read from. */
+  tasksCompleted: number;
+  chitchatBonuses: number;
   savedAt: string;
 }
 
