@@ -59,9 +59,9 @@ export const houseKokuluStudyo: HouseScene = {
       id: "q1_c",
       lines: [
         { speaker: "customer1", name: "Ceylin", text: "(pencereye bakar) Işık güzelmiş, itiraf edeyim." },
-        { speaker: "customer1", name: "Ceylin", text: "Ama konuyu değiştirdiğinizi de fark ettim." },
+        { speaker: "customer1", name: "Ceylin", text: "Ama konuyu değiştirdiğinizi de fark ettim, o yüzden direkt sorayım o zaman." },
       ],
-      next: "kitchen",
+      next: "health",
     },
 
     // 3) Mutfak sorusu — ikinci seçim
@@ -556,16 +556,26 @@ export const houseKamburBalkon: HouseScene = {
     guvenlik_a: {
       id: "guvenlik_a",
       lines: [{ speaker: "customer2", name: "Barış", text: "(şüpheyle) Siz mi denediniz, ne zaman?" }],
-      next: "kapanis",
+      next: "surpriz",
     },
     guvenlik_b: {
       id: "guvenlik_b",
       lines: [{ speaker: "customer1", name: "Ela", text: "Mantıklı, önce kontrol ettirelim o zaman." }],
-      next: "kapanis",
+      next: "surpriz",
     },
     guvenlik_c: {
       id: "guvenlik_c",
       lines: [{ speaker: "customer2", name: "Barış", text: "Alışkanlık meselesi mi... emin değilim." }],
+      next: "surpriz",
+    },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer2", name: "Barış", text: "(ayağını yere vurur, balkon hafifçe gıcırdar) Bunu duydunuz mu?!" },
+        { speaker: "customer1", name: "Ela", text: "(irkilir) Barış, öyle yapma, kalbim ağzıma geldi!" },
+        { speaker: "emlah", text: "Sakin olun, eski binalarda böyle sesler normaldir, yapısal bir şey değil." },
+      ],
       next: "kapanis",
     },
 
@@ -1615,9 +1625,19 @@ export const houseKaptanRutubet: HouseScene = {
         { id: "c", text: "\"Bir kaptan rutubetten korkar mı hiç?\"", next: "cozum_c", effects: { fun: 20 } },
       ],
     },
-    cozum_a: { id: "cozum_a", lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "Yalıtım fikri işime gelir." }], next: "kapanis" },
-    cozum_b: { id: "cozum_b", lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "Zaten bekliyordum bu cevabı." }], next: "kapanis" },
-    cozum_c: { id: "cozum_c", lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "(kahkaha atar) Haklısınız, korkmam ben!" }], next: "kapanis" },
+    cozum_a: { id: "cozum_a", lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "Yalıtım fikri işime gelir." }], next: "surpriz" },
+    cozum_b: { id: "cozum_b", lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "Zaten bekliyordum bu cevabı." }], next: "surpriz" },
+    cozum_c: { id: "cozum_c", lines: [{ speaker: "customer1", name: "Kaptan Yusuf", text: "(kahkaha atar) Haklısınız, korkmam ben!" }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", name: "Kaptan Yusuf", text: "(tam o sırada tavandan bir damla düşer, tam şapkasının üstüne) Vay canına." },
+        { speaker: "emlah", text: "(hızla) O da... deniz esintisinin bir hediyesi sayılır." },
+        { speaker: "customer1", name: "Kaptan Yusuf", text: "(gülmeye başlar) Denizde daha kötüsünü gördüm ben, sorun değil." },
+      ],
+      next: "kapanis",
+    },
 
     kapanis: {
       id: "kapanis",
@@ -1708,17 +1728,20 @@ export const houseMirasKavgasi: HouseScene = {
 
     kapanis: {
       id: "kapanis",
-      lines: [{ speaker: "customer1", name: "Pınar Hanım", text: "Kendi avukatımla süreci bir gözden geçireceğim." }],
+      lines: [
+        { speaker: "customer1", name: "Pınar Hanım", text: "Son bir şey — kardeşlerden biri satıştan vazgeçmemi istiyor, biri de bir an önce bitsin istiyor." },
+        { speaker: "customer1", name: "Pınar Hanım", text: "Siz olsanız hangi tarafı haklı bulurdunuz?" },
+      ],
       choices: [
-        { id: "a", text: "\"Elbette, tüm belgeleri paylaşırım — süreç hızlanırsa %3 indirim de düşünürüm.\"", next: "closing_sold", effects: { closingBias: 35,  discountPercent: 3 } },
-        { id: "b", text: "\"Bu tarihi doku bu fiyata bir daha çıkmaz.\"", next: "closing_lost", effects: { closingBias: -35,  suspicion: 20 } },
-        { id: "c", text: "\"Süreç hızlıca netleşecek, endişelenmeyin.\"", next: "closing_thinking" , effects: { closingBias: 0 } },
+        { id: "a", text: "\"İkisini de kırmadan, şeffaf ilerleyen taraf haklı — belgeleri paylaşırım, süreç hızlanırsa %3 indirim de düşünürüm.\"", next: "closing_sold", effects: { closingBias: 35, discountPercent: 3 } },
+        { id: "b", text: "\"Bu tarihi doku bu fiyata bir daha çıkmaz, uzatmadan bitirmeniz sizin yararınıza.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+        { id: "c", text: "\"Bu aile içi bir karar, ben sadece süreç hızlıca netleşecek diyebilirim.\"", next: "closing_thinking", effects: { closingBias: 0 } },
       ],
     },
     closing_sold: {
       id: "closing_sold",
       lines: [
-        { speaker: "customer1", name: "Pınar Hanım", text: "Şeffaflığınız ve indirim ikna edici oldu, anlaştık." },
+        { speaker: "customer1", name: "Pınar Hanım", text: "Taraf tutmamanız ve şeffaflığınız ikna edici oldu, anlaştık." },
         { speaker: "emlah", text: "Hayırlı olsun, belgeleri hemen hazırlatırım." },
       ],
       end: "sold",
@@ -1726,7 +1749,7 @@ export const houseMirasKavgasi: HouseScene = {
     closing_thinking: {
       id: "closing_thinking",
       lines: [
-        { speaker: "customer1", name: "Pınar Hanım", text: "\"Endişelenmeyin\" demeniz beni endişelendirdi açıkçası." },
+        { speaker: "customer1", name: "Pınar Hanım", text: "Kardeşlerimle önce ben konuşayım, sizi sonra ararım." },
         { speaker: "emlah", text: "Anlıyorum, avukatınızla konuşun önce." },
       ],
       end: "thinking",
@@ -1734,8 +1757,8 @@ export const houseMirasKavgasi: HouseScene = {
     closing_lost: {
       id: "closing_lost",
       lines: [
-        { speaker: "customer1", name: "Pınar Hanım", text: "Bu baskı taktiği benim mesleğimde işe yaramaz." },
-        { speaker: "customer1", name: "Pınar Hanım", text: "Başka seçeneklere bakacağım." },
+        { speaker: "customer1", name: "Pınar Hanım", text: "Bir tarafı diğerine karşı aceleye getirmeye çalıştığınızı fark ettim." },
+        { speaker: "customer1", name: "Pınar Hanım", text: "Bu baskı taktiği benim mesleğimde işe yaramaz, başka seçeneklere bakacağım." },
       ],
       end: "lost",
     },
@@ -2819,7 +2842,14 @@ export const houseKutuphaneYatakOdasi: HouseScene = {
       ],
     },
     q1_a: { id: "q1_a", lines: [{ speaker: "customer1", text: "\"Dönmenize gerek yok\" cümlesi biraz endişelendirdi beni." }], next: "fall" },
-    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Raf kaldırmak mantıklı bir çözüm gibi duruyor." }], next: "fall" },
+    q1_b: {
+      id: "q1_b",
+      lines: [
+        { speaker: "customer1", text: "Raf kaldırmak mantıklı bir çözüm gibi duruyor." },
+        { speaker: "customer1", text: "Aslında güvenlik tarafını da merak ediyordum ama bu cevap içimi rahatlattı, fiyata geçebiliriz." },
+      ],
+      next: "price",
+    },
     q1_c: { id: "q1_c", lines: [{ speaker: "customer1", text: "(güler) Bu argümanı beğendim doğrusu." }], next: "fall" },
 
     fall: {
