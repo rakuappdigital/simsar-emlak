@@ -112,6 +112,18 @@ export default function DialogueScene({
     if (!atLastLine) advanceLine();
   }
 
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.code !== "Space" && e.code !== "Enter") return;
+      if (displayChoices) return;
+      e.preventDefault();
+      handleBoxClick();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTyping, atLastLine, currentText, displayChoices]);
+
   function pickChoice(choice: Choice) {
     if (choice.effects) onChoiceEffects(choice.effects);
 

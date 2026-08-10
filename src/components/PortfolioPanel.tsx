@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { HouseResult, HouseScene, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
 
@@ -23,10 +24,27 @@ export default function PortfolioPanel({
   currentIndex,
 }: PortfolioPanelProps) {
   const maxUnlockedTier = Math.max(...unlockedTiers);
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase("tr");
+  const filteredHouses = normalizedQuery
+    ? allHouses.filter(
+        (h) =>
+          h.title.toLocaleLowerCase("tr").includes(normalizedQuery) ||
+          h.location.toLocaleLowerCase("tr").includes(normalizedQuery),
+      )
+    : allHouses;
 
   return (
     <div className="portfolio-panel">
-      {allHouses.map((h) => {
+      <input
+        type="text"
+        className="portfolio-search"
+        placeholder="Ev veya semt ara..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      {filteredHouses.length === 0 && <p className="menu-empty">Eşleşen ev bulunamadı.</p>}
+      {filteredHouses.map((h) => {
         const playedIdx = houseOrder.indexOf(allHouses.indexOf(h));
         const result = playedIdx !== -1 && playedIdx < results.length ? results[playedIdx] : undefined;
 

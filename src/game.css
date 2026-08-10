@@ -1695,6 +1695,22 @@
   gap: 2px;
 }
 
+.portfolio-search {
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--c-divider);
+  border-radius: 4px;
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+
+.portfolio-search:focus {
+  outline: none;
+  border-color: var(--c-accent);
+}
+
 .portfolio-row {
   display: flex;
   align-items: center;
