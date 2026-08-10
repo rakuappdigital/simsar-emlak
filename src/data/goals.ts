@@ -7,6 +7,11 @@ export const weekGoals: WeekGoal[] = [
   { weekIndex: 1, salesTarget: 3, maxAvgSuspicion: 35 },
   { weekIndex: 2, salesTarget: 3, maxAvgSuspicion: 30 },
   { weekIndex: 3, salesTarget: 4, maxAvgSuspicion: 25 },
+  { weekIndex: 4, salesTarget: 4, maxAvgSuspicion: 22 },
+  { weekIndex: 5, salesTarget: 4, maxAvgSuspicion: 20 },
+  { weekIndex: 6, salesTarget: 5, maxAvgSuspicion: 18 },
+  { weekIndex: 7, salesTarget: 5, maxAvgSuspicion: 16 },
+  { weekIndex: 8, salesTarget: 5, maxAvgSuspicion: 15 },
 ];
 
 export function weekIndexForHouse(houseIndex: number): number {
@@ -18,7 +23,9 @@ export function isLastHouseOfWeek(houseIndex: number): boolean {
 }
 
 export function evaluateWeek(weekIndex: number, weekResults: HouseResult[]): WeekOutcome {
-  const goal = weekGoals[weekIndex];
+  // Clamp defensively: if the house count ever outgrows weekGoals again, reuse the
+  // hardest defined week instead of crashing on an undefined lookup.
+  const goal = weekGoals[Math.min(weekIndex, weekGoals.length - 1)];
   const salesMade = weekResults.filter((r) => r.outcome === "sold").length;
   const avgSuspicion =
     weekResults.reduce((sum, r) => sum + r.finalSuspicion, 0) / (weekResults.length || 1);
@@ -30,6 +37,12 @@ export function evaluateWeek(weekIndex: number, weekResults: HouseResult[]): Wee
   if (salesGoalMet) bonus += 40000;
   if (honestyGoalMet) bonus += 30000;
 
+  const bestOfWeek = weekResults.reduce<HouseResult | null>((best, r) => {
+    if (r.bestLine === undefined || r.bestLineFun === undefined) return best;
+    if (!best || (best.bestLineFun ?? 0) < r.bestLineFun) return r;
+    return best;
+  }, null);
+
   return {
     weekIndex,
     salesTarget: goal.salesTarget,
@@ -39,5 +52,6 @@ export function evaluateWeek(weekIndex: number, weekResults: HouseResult[]): Wee
     salesGoalMet,
     honestyGoalMet,
     bonus,
+    bestLine: bestOfWeek?.bestLine,
   };
 }

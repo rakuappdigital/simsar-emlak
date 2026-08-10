@@ -120,6 +120,10 @@ export interface HouseResult {
   converted?: boolean;
   /** True once the player has used their one manual "Tekrar Dene" attempt from the inbox on a lost sale. */
   retriedLost?: boolean;
+  /** Text of the highest-fun choice picked during this house's dialogue, if any. */
+  bestLine?: string;
+  /** The `fun` value of `bestLine`, kept alongside it to compare across houses when picking a week's best. */
+  bestLineFun?: number;
 }
 
 export interface WeekGoal {
@@ -137,6 +141,8 @@ export interface WeekOutcome {
   salesGoalMet: boolean;
   honestyGoalMet: boolean;
   bonus: number;
+  /** Text of the week's single highest-fun dialogue choice, if any house had one. */
+  bestLine?: string;
 }
 
 export interface Badge {

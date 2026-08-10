@@ -114,6 +114,14 @@ export function playLost(): void {
   ]);
 }
 
+/** "Thinking it over" outcome — a neutral, curious little bounce, not a win or a loss. */
+export function playThinking(): void {
+  playTones([
+    { freq: 440, start: 0, duration: 0.09, type: "triangle", gain: 0.45 },
+    { freq: 523.25, start: 0.09, duration: 0.12, type: "triangle", gain: 0.4 },
+  ]);
+}
+
 /** Badge/level-up style flourish. */
 export function playReward(): void {
   playTones([

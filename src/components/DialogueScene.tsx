@@ -24,6 +24,7 @@ interface DialogueSceneProps {
   castAssignment: Record<string, string[]>;
   onChoiceEffects: (effects: ChoiceEffects) => void;
   onSceneEnd: (outcome: SceneOutcome) => void;
+  onLineChosen?: (text: string, fun: number) => void;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -43,6 +44,7 @@ export default function DialogueScene({
   castAssignment,
   onChoiceEffects,
   onSceneEnd,
+  onLineChosen,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -126,6 +128,7 @@ export default function DialogueScene({
 
   function pickChoice(choice: Choice) {
     if (choice.effects) onChoiceEffects(choice.effects);
+    if (choice.effects?.fun) onLineChosen?.(choice.text, choice.effects.fun);
 
     if (choice.effects?.closingBias !== undefined) {
       const projected: GameStats = {

@@ -45,6 +45,13 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
         )}
       </div>
 
+      {outcome.bestLine && (
+        <p className="best-line-quote">
+          <span className="best-line-label">🗣️ Haftanın cümlesi</span>
+          <span className="best-line-text">{outcome.bestLine}</span>
+        </p>
+      )}
+
       <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
       <button className="pixel-btn small" onClick={onOpenMarket}>
         <CartIcon size={13} className="icon-inline" /> Ofis Marketini Aç

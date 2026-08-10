@@ -9,7 +9,7 @@ import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
 import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
 import { WalletIcon, StarIcon, MedalIcon } from "./components/icons";
-import { playClick, playSale, playLost, playReward } from "./data/sound";
+import { playClick, playSale, playLost, playReward, playThinking } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
@@ -180,6 +180,7 @@ function App() {
   const [index, setIndex] = useState(0);
   const [houseOrder, setHouseOrder] = useState<number[]>(() => tieredShuffle(allHouses.map((h) => h.tier)));
   const [stats, setStats] = useState<GameStats>({ suspicion: 0, interest: 0, fun: 0, discountPercent: 0 });
+  const [bestLineThisHouse, setBestLineThisHouse] = useState<{ text: string; fun: number } | null>(null);
   const [results, setResults] = useState<HouseResult[]>([]);
   const [badges, setBadges] = useState<string[]>([]);
   const [weekOutcomes, setWeekOutcomes] = useState<WeekOutcome[]>([]);
@@ -311,6 +312,10 @@ function App() {
     setEmlahMenuTab(tab);
     setShowEmlahMenu(true);
     setSeenInboxCount(inbox.length);
+  }
+
+  function handleLineChosen(text: string, fun: number) {
+    setBestLineThisHouse((prev) => (prev && prev.fun >= fun ? prev : { text, fun }));
   }
 
   function applyEffects(effects: ChoiceEffects) {
@@ -581,9 +586,12 @@ function App() {
       sale,
       finalStats: stats,
       finalSuspicion: stats.suspicion,
+      bestLine: bestLineThisHouse?.text,
+      bestLineFun: bestLineThisHouse?.fun,
     };
     const newResults = [...results, newResult];
     setResults(newResults);
+    setBestLineThisHouse(null);
 
     const gameComplete = index === allHouses.length - 1;
     const newlyEarned = checkNewBadges(newResults, gameComplete, badges, { tasksCompleted, chitchatBonuses });
@@ -877,6 +885,7 @@ function App() {
     if (stage !== "result" || !lastResult) return;
     if (lastResult.outcome === "sold") playSale();
     else if (lastResult.outcome === "lost") playLost();
+    else if (lastResult.outcome === "thinking") playThinking();
   }, [stage, lastResult]);
 
   useEffect(() => {
@@ -923,7 +932,11 @@ function App() {
           <div className="header-actions">
             <button className="wallet-pill wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
               <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)} · Emlah
-              {unreadCount > 0 && <span className="unread-dot">{unreadCount > 9 ? "9+" : unreadCount}</span>}
+              {unreadCount > 0 && (
+                <span className="unread-dot" key={unreadCount}>
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </header>
@@ -1082,6 +1095,7 @@ function App() {
             castAssignment={castAssignment}
             onChoiceEffects={applyEffects}
             onSceneEnd={handleSceneEnd}
+            onLineChosen={handleLineChosen}
           />
         </>
       )}

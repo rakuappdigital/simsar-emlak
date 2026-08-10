@@ -91,7 +91,7 @@ const portfolioTab = page.locator(".emlah-tab-btn", { hasText: "Portföy" });
 await portfolioTab.click().catch(() => {});
 await page.waitForTimeout(300);
 const rowCount = await page.locator(".portfolio-row").count();
-assert(rowCount === 36, `Portföy tab lists 36 houses (got ${rowCount})`);
+assert(rowCount === 42, `Portföy tab lists 42 houses (got ${rowCount})`);
 
 assert(errors.length === 0, `zero console/page errors (got ${errors.length})`);
 if (errors.length > 0) {

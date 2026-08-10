@@ -139,7 +139,20 @@
   align-items: center;
   justify-content: center;
   padding: 0 3px;
-  animation: fun-pulse 1.2s ease-in-out infinite;
+  animation:
+    unread-pop 0.25s ease-out,
+    fun-pulse 1.2s ease-in-out 0.25s infinite;
+}
+
+@keyframes unread-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .wallet-pill-btn:hover {
@@ -748,6 +761,19 @@
   padding: 12px;
 }
 
+/* Themed placeholder gradients for houses without hand-painted art yet —
+   used instead of the generic "pixel art buraya gelecek" text overlay so
+   these scenes read as intentionally stylized rather than broken/missing. */
+.pixel-bg.theme-sea { background: linear-gradient(180deg, #1b3a5c, #0e7490 55%, #164e63); }
+.pixel-bg.theme-island { background: linear-gradient(180deg, #0e7490, #06b6d4 55%, #fde68a); }
+.pixel-bg.theme-sky { background: linear-gradient(180deg, #1e3a8a, #60a5fa 55%, #e0f2fe); }
+.pixel-bg.theme-busstop { background: linear-gradient(180deg, #374151, #4b5563 55%, #facc15); }
+.pixel-bg.theme-echo { background: radial-gradient(circle, #6d28d9, #312e81 55%, #1e1b4b); }
+.pixel-bg.theme-wind { background: linear-gradient(120deg, #94a3b8, #e2e8f0 55%, #64748b); }
+.pixel-bg.theme-tailor { background: linear-gradient(180deg, #7c2d12, #c2410c 55%, #fbbf24); }
+.pixel-bg.theme-metro { background: linear-gradient(180deg, #111827, #1f2937 55%, #f97316); }
+.pixel-bg.theme-houseboat { background: linear-gradient(180deg, #075985, #0891b2 55%, #78350f); }
+
 .personality-tag {
   position: absolute;
   top: 8px;
@@ -1272,6 +1298,29 @@
   font-size: 0.78rem;
   color: var(--c-text-dim);
   font-style: italic;
+}
+
+.best-line-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  border-left: 2px solid var(--c-accent);
+  background: var(--c-surface);
+}
+
+.best-line-label {
+  font-size: 0.62rem;
+  color: var(--c-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.best-line-text {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--c-text);
 }
 
 .badge-popup {
