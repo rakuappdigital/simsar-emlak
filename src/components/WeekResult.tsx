@@ -1,6 +1,7 @@
 import type { DailyQuestDef, WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { rivalSalesForWeek } from "../data/rival";
+import { weeklyNewsLine } from "../data/weeklyNews";
 import { CartIcon } from "./icons";
 
 interface WeekResultProps {
@@ -16,6 +17,7 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
   return (
     <div className="result-screen">
       <p className="week-result-title">Hafta {outcome.weekIndex + 1} Değerlendirmesi</p>
+      <p className="weekly-news">{weeklyNewsLine(outcome.weekIndex)}</p>
       <div className="sale-summary">
         <p>
           {outcome.salesGoalMet ? "✅" : "❌"} Satış hedefi: {outcome.salesMade}/{outcome.salesTarget}

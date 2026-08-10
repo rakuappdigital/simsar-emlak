@@ -1289,6 +1289,12 @@
   color: var(--c-accent);
 }
 
+.weekly-news {
+  font-size: 0.7rem;
+  color: var(--c-text-dim);
+  margin: 2px 0 10px;
+}
+
 .week-bonus {
   color: var(--c-accent);
   font-weight: bold;
