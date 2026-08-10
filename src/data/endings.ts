@@ -5,7 +5,11 @@ export interface Ending {
   description: string;
 }
 
-const RICH_THRESHOLD = 700000;
+// Total commission across a 42-house game realistically lands anywhere from
+// ~0 (barely selling) to ~5M+ TL (selling most houses, good streak/rank bonuses).
+// Threshold sits above "sold a modest handful" so the honest-but-poor and
+// kovuldu endings stay reachable instead of every playthrough reading as rich.
+const RICH_THRESHOLD = 2200000;
 const HONEST_AVG = 25;
 const SNEAKY_AVG = 55;
 
