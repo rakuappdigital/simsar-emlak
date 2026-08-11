@@ -1499,6 +1499,27 @@
   font-style: italic;
 }
 
+/* ---------- Premium house overlay (Özel Davetler) ---------- */
+.premium-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--c-bg);
+  overflow-y: auto;
+  z-index: 60;
+  padding: 16px 24px 40px;
+}
+
+.premium-overlay-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.rankup-invite-note {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--c-accent);
+}
+
 /* ---------- Market modal ---------- */
 .market-modal {
   background: var(--c-bg);

@@ -194,7 +194,7 @@ export interface PendingLoan {
 }
 
 export interface SaveGame {
-  version: 7;
+  version: 8;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -216,6 +216,8 @@ export interface SaveGame {
   /** Lifetime counters that badges and the career stats panel read from. */
   tasksCompleted: number;
   chitchatBonuses: number;
+  /** One-off "Özel Davet" bonus house results — never touches `results`/`houseOrder` indices. */
+  premiumResults: HouseResult[];
   savedAt: string;
 }
 

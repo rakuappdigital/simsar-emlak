@@ -6,9 +6,10 @@ import MarketPanel from "./MarketPanel";
 import MessagesPanel from "./MessagesPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, CloseIcon } from "./icons";
+import PremiumInvitesPanel from "./PremiumInvitesPanel";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer";
+export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -32,6 +33,10 @@ interface EmlahMenuProps {
   chitchatBonuses: number;
   completedWeeks: number;
   onClose: () => void;
+  premiumHouses: HouseScene[];
+  unlockedPremiumIds: string[];
+  premiumResults: HouseResult[];
+  onOpenPremium: (houseId: string) => void;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -39,6 +44,7 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "mesajlar", icon: <ChatIcon size={14} />, label: "Mesajlar" },
   { id: "portfoy", icon: <HouseIcon size={14} />, label: "Portföy" },
   { id: "kariyer", icon: <StarIcon size={14} />, label: "Kariyer" },
+  { id: "davet", icon: <MedalIcon size={14} />, label: "Özel Davetler" },
 ];
 
 export default function EmlahMenu({
@@ -63,6 +69,10 @@ export default function EmlahMenu({
   chitchatBonuses,
   completedWeeks,
   onClose,
+  premiumHouses,
+  unlockedPremiumIds,
+  premiumResults,
+  onOpenPremium,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -125,6 +135,14 @@ export default function EmlahMenu({
               tasksCompleted={tasksCompleted}
               chitchatBonuses={chitchatBonuses}
               completedWeeks={completedWeeks}
+            />
+          )}
+          {tab === "davet" && (
+            <PremiumInvitesPanel
+              premiumHouses={premiumHouses}
+              unlockedIds={unlockedPremiumIds}
+              premiumResults={premiumResults}
+              onOpen={onOpenPremium}
             />
           )}
         </div>

@@ -1,5 +1,5 @@
 import type { CustomerProfile, GameStats, SceneOutcome } from "../types";
-import { perks } from "./perks";
+import { perks, hasPerk, consumableEffects } from "./perks";
 
 export const DEFAULT_PROFILE: CustomerProfile = { suspicionWeight: 1.1, funWeight: 1, interestWeight: 1 };
 
@@ -134,4 +134,36 @@ const PRESTIGE_STEP_BONUS = 2; // +2 interest and +2 fun per full step
 export function prestigeBonus(prestige: number): { interest: number; fun: number } {
   const steps = Math.floor(prestige / PRESTIGE_STEP);
   return { interest: steps * PRESTIGE_STEP_BONUS, fun: steps * PRESTIGE_STEP_BONUS };
+}
+
+/** Starting stats for a house visit: fatigue-based suspicion, prestige/perk bonuses, active consumables. */
+export function computeFreshStats(
+  positionInWeek: number,
+  perksList: string[],
+  consumablesList: Record<string, number>,
+): GameStats {
+  const factor = fatigueFactor(perksList);
+  const prestige = computePrestige(perksList);
+  const { interest: prestigeInterest, fun: prestigeFun } = prestigeBonus(prestige);
+  let stats: GameStats = {
+    suspicion: fatigueSuspicion(positionInWeek, factor),
+    interest: prestigeInterest,
+    fun: (hasPerk(perksList, "sansli-nal") ? 10 : 0) + prestigeFun,
+    discountPercent: 0,
+  };
+
+  for (const [id, count] of Object.entries(consumablesList)) {
+    if (count > 0) {
+      const effect = consumableEffects[id];
+      if (effect) {
+        stats = {
+          ...stats,
+          suspicion: stats.suspicion + (effect.suspicion ?? 0),
+          interest: stats.interest + (effect.interest ?? 0),
+          fun: stats.fun + (effect.fun ?? 0),
+        };
+      }
+    }
+  }
+  return stats;
 }

@@ -23,18 +23,17 @@ import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait } from "./data/characterPool";
 import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
+import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
+import PremiumHouseScene from "./components/PremiumHouseScene";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
 import {
   resolveOutcome,
   streakMultiplier,
-  fatigueSuspicion,
-  fatigueFactor,
   suspicionGainFactor,
   closingBiasMultiplier,
   rankBonus,
   rankTitle,
-  computePrestige,
-  prestigeBonus,
+  computeFreshStats,
 } from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
@@ -42,7 +41,7 @@ import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, ty
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
 import { pickDailyQuest, checkDailyQuest } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
-import { perks, hasPerk, consumableEffects } from "./data/perks";
+import { perks, hasPerk } from "./data/perks";
 import { tieredShuffle } from "./data/shuffle";
 import { computeEnding } from "./data/endings";
 import type {
@@ -104,7 +103,7 @@ const outcomeText: Record<SceneOutcome, string> = {
   lost: "Satış kaybedildi.",
 };
 
-function computeSale(
+export function computeSale(
   askingPrice: number,
   discountPercent: number,
   priorStreak: number,
@@ -142,37 +141,6 @@ function consumeOneOfEach(consumables: Record<string, number>): Record<string, n
     if (remaining[id] > 0) remaining[id] -= 1;
   }
   return remaining;
-}
-
-function computeFreshStats(
-  positionInWeek: number,
-  perksList: string[],
-  consumablesList: Record<string, number>,
-): GameStats {
-  const factor = fatigueFactor(perksList);
-  const prestige = computePrestige(perksList);
-  const { interest: prestigeInterest, fun: prestigeFun } = prestigeBonus(prestige);
-  let stats: GameStats = {
-    suspicion: fatigueSuspicion(positionInWeek, factor),
-    interest: prestigeInterest,
-    fun: (hasPerk(perksList, "sansli-nal") ? 10 : 0) + prestigeFun,
-    discountPercent: 0,
-  };
-
-  for (const [id, count] of Object.entries(consumablesList)) {
-    if (count > 0) {
-      const effect = consumableEffects[id];
-      if (effect) {
-        stats = {
-          ...stats,
-          suspicion: stats.suspicion + (effect.suspicion ?? 0),
-          interest: stats.interest + (effect.interest ?? 0),
-          fun: stats.fun + (effect.fun ?? 0),
-        };
-      }
-    }
-  }
-  return stats;
 }
 
 function App() {
@@ -214,6 +182,7 @@ function App() {
     showChoices: boolean;
   } | null>(null);
   const [rankUpTitle, setRankUpTitle] = useState<string | null>(null);
+  const [rankUpUnlockedInvites, setRankUpUnlockedInvites] = useState(false);
   const [badgeCelebration, setBadgeCelebration] = useState<Badge[] | null>(null);
   const lastRankRef = useRef<string | null>(null);
   const [dailyQuest, setDailyQuest] = useState<DailyQuestDef | null>(null);
@@ -226,6 +195,8 @@ function App() {
   const [pendingLoan, setPendingLoan] = useState<PendingLoan | null>(null);
   const [tasksCompleted, setTasksCompleted] = useState(0);
   const [chitchatBonuses, setChitchatBonuses] = useState(0);
+  const [premiumResults, setPremiumResults] = useState<HouseResult[]>([]);
+  const [activePremiumHouseId, setActivePremiumHouseId] = useState<string | null>(null);
   const [seenInboxCount, setSeenInboxCount] = useState(0);
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try {
@@ -282,9 +253,10 @@ function App() {
     newPendingLoan: PendingLoan | null = pendingLoan,
     newTasksCompleted: number = tasksCompleted,
     newChitchatBonuses: number = chitchatBonuses,
+    newPremiumResults: HouseResult[] = premiumResults,
   ) {
     const save: SaveGame = {
-      version: 7,
+      version: 8,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -301,6 +273,7 @@ function App() {
       pendingLoan: newPendingLoan,
       tasksCompleted: newTasksCompleted,
       chitchatBonuses: newChitchatBonuses,
+      premiumResults: newPremiumResults,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -493,7 +466,7 @@ function App() {
 
   function startNewGame() {
     const order = tieredShuffle(allHouses.map((h) => h.tier));
-    const cast = assignCast(allHouses);
+    const cast = assignCast([...allHouses, ...premiumHouses]);
     const slot = firstAvailableSlot();
     setActiveSlot(slot);
     setHouseOrder(order);
@@ -516,6 +489,7 @@ function App() {
     setPendingLoan(null);
     setTasksCompleted(0);
     setChitchatBonuses(0);
+    setPremiumResults([]);
     setSeenInboxCount(0);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
@@ -545,6 +519,7 @@ function App() {
     setPendingLoan(savedGame.pendingLoan);
     setTasksCompleted(savedGame.tasksCompleted);
     setChitchatBonuses(savedGame.chitchatBonuses);
+    setPremiumResults(savedGame.premiumResults ?? []);
     setSeenInboxCount(savedGame.inbox.length);
     lastRankRef.current = null;
     enterPhone(
@@ -620,6 +595,55 @@ function App() {
 
     persist(newResults, newWeekOutcomes, newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers);
     setStage("result");
+  }
+
+  function openPremiumHouse(houseId: string) {
+    setActivePremiumHouseId(houseId);
+    setShowEmlahMenu(false);
+  }
+
+  function finishPremiumHouse(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) {
+    const premiumHouse = premiumHouses.find((h) => h.id === activePremiumHouseId);
+    if (!premiumHouse) return;
+    const sale =
+      outcome === "sold"
+        ? computeSale(premiumHouse.askingPrice, finalStats.discountPercent, 0, contractModifier, rankBonus(earned))
+        : null;
+    const newResult: HouseResult = {
+      houseId: premiumHouse.id,
+      outcome,
+      sale,
+      finalStats,
+      finalSuspicion: finalStats.suspicion,
+    };
+    const newPremiumResults = [...premiumResults, newResult];
+    setPremiumResults(newPremiumResults);
+    if (outcome === "sold") playSale();
+    else if (outcome === "lost") playLost();
+    else playThinking();
+    persist(
+      results,
+      weekOutcomes,
+      badges,
+      index,
+      ownedPerks,
+      spent,
+      consumables,
+      unlockedTiers,
+      houseOrder,
+      inbox,
+      castAssignment,
+      dailyQuest,
+      activeSlot,
+      bonusEarnings,
+      pendingLoan,
+      tasksCompleted,
+      chitchatBonuses,
+      newPremiumResults,
+    );
+    setActivePremiumHouseId(null);
+    setEmlahMenuTab("davet");
+    setShowEmlahMenu(true);
   }
 
   function proceedAfterResult() {
@@ -866,7 +890,8 @@ function App() {
   const earned =
     results.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) +
     weekOutcomes.reduce((sum, w) => sum + w.bonus, 0) +
-    bonusEarnings;
+    bonusEarnings +
+    premiumResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
   const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
   const unreadCount = inbox.slice(seenInboxCount).filter((m) => !m.fromPlayer).length;
@@ -897,6 +922,7 @@ function App() {
     const previousRank = lastRankRef.current;
     if (previousRank !== null && RANK_ORDER.indexOf(currentRank) > RANK_ORDER.indexOf(previousRank)) {
       setRankUpTitle(currentRank);
+      setRankUpUnlockedInvites(ranksUnlockNewPremium(previousRank, currentRank));
       playReward();
     }
     lastRankRef.current = currentRank;
@@ -948,6 +974,7 @@ function App() {
             <StarIcon size={32} />
             <p className="rankup-label">Yeni Rütbe!</p>
             <p className="rankup-title">{rankUpTitle}</p>
+            {rankUpUnlockedInvites && <p className="rankup-invite-note">🎁 Ününüz yayılıyor — yeni özel davetler açıldı!</p>}
           </div>
         </div>
       )}
@@ -991,7 +1018,25 @@ function App() {
           chitchatBonuses={chitchatBonuses}
           completedWeeks={weekOutcomes.length}
           onClose={() => setShowEmlahMenu(false)}
+          premiumHouses={premiumHouses}
+          unlockedPremiumIds={unlockedPremiumHouseIds(rankTitle(earned))}
+          premiumResults={premiumResults}
+          onOpenPremium={openPremiumHouse}
         />
+      )}
+
+      {activePremiumHouseId && (
+        <div className="premium-overlay">
+          <div className="premium-overlay-inner">
+            <PremiumHouseScene
+              house={premiumHouses.find((h) => h.id === activePremiumHouseId)!}
+              ownedPerks={ownedPerks}
+              consumables={consumables}
+              castAssignment={castAssignment}
+              onFinish={finishPremiumHouse}
+            />
+          </div>
+        </div>
       )}
 
       <div key={stage} className="stage-transition">
