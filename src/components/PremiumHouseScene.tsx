@@ -1,17 +1,19 @@
 import { useState } from "react";
-import type { ChoiceEffects, GameStats, HouseScene, SceneOutcome } from "../types";
+import type { ChoiceEffects, GameStats, HouseResult, HouseScene, SceneOutcome } from "../types";
 import DialogueScene from "./DialogueScene";
 import ContractModal from "./ContractModal";
 import { generateContract } from "../data/contract";
 import { suspicionGainFactor, computeFreshStats } from "../data/scoring";
 import { getDifficulty, difficultyMultiplier } from "../data/difficulty";
 import { resolveCustomerNames } from "../data/characterPool";
+import { reputationSuspicionOffset } from "../data/introFlavor";
 
 interface PremiumHouseSceneProps {
   house: HouseScene;
   ownedPerks: string[];
   consumables: Record<string, number>;
   castAssignment: Record<string, string[]>;
+  results: HouseResult[];
   onFinish: (outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) => void;
 }
 
@@ -27,9 +29,13 @@ export default function PremiumHouseScene({
   ownedPerks,
   consumables,
   castAssignment,
+  results,
   onFinish,
 }: PremiumHouseSceneProps) {
-  const [stats, setStats] = useState<GameStats>(() => computeFreshStats(0, ownedPerks, consumables));
+  const [stats, setStats] = useState<GameStats>(() => {
+    const fresh = computeFreshStats(0, ownedPerks, consumables);
+    return { ...fresh, suspicion: Math.max(0, fresh.suspicion + reputationSuspicionOffset(results)) };
+  });
   const [stage, setStage] = useState<"dialogue" | "contract">("dialogue");
 
   function applyEffects(effects: ChoiceEffects) {

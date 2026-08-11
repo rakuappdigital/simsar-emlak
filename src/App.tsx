@@ -15,7 +15,7 @@ import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
 import WorkTaskScreen from "./components/WorkTaskScreen";
 import { pickWorkTask, type WorkTaskDef } from "./data/workTasks";
-import { pickIntroFlavor } from "./data/introFlavor";
+import { pickIntroFlavor, reputationLabel, reputationSuspicionOffset } from "./data/introFlavor";
 import { generateShareCard } from "./data/shareCard";
 import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
@@ -115,14 +115,6 @@ export function computeSale(
   const streakBonus = streakMultiplier(priorStreak);
   const commission = baseCommission * (1 + streakBonus + contractModifier + rankBonusValue);
   return { finalPrice, commission, discountPercent, streakBonus, contractModifier, rankBonus: rankBonusValue };
-}
-
-function reputationLabel(results: HouseResult[]): string {
-  if (results.length === 0) return "";
-  const avg = results.reduce((s, r) => s + r.finalSuspicion, 0) / results.length;
-  if (avg <= 25) return "Dürüst Simsar";
-  if (avg <= 45) return "Dengeli Simsar";
-  return "İstanbul'un En Sinsi Emlakçısı";
 }
 
 function contactAvatar(
@@ -384,6 +376,10 @@ function App() {
 
     const positionInWeek = newIndex % HOUSES_PER_WEEK;
     let newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
+    newStats = {
+      ...newStats,
+      suspicion: Math.max(0, newStats.suspicion + reputationSuspicionOffset(currentResults)),
+    };
     const flavor = newIndex > 0 ? pickIntroFlavor(currentResults) : { message: null, isLucky: false };
     setIntroFlavorMsg(flavor.message);
     if (flavor.isLucky) {
@@ -1033,6 +1029,7 @@ function App() {
               ownedPerks={ownedPerks}
               consumables={consumables}
               castAssignment={castAssignment}
+              results={results}
               onFinish={finishPremiumHouse}
             />
           </div>

@@ -41,6 +41,46 @@ export function pickLuckyLine(): string {
   return luckyLines[Math.floor(Math.random() * luckyLines.length)];
 }
 
+/** Word-of-mouth reputation label — same bucketing shown in the Kariyer tab. */
+export function reputationLabel(results: HouseResult[]): string {
+  if (results.length === 0) return "";
+  const avg = results.reduce((s, r) => s + r.finalSuspicion, 0) / results.length;
+  if (avg <= 25) return "Dürüst Simsar";
+  if (avg <= 45) return "Dengeli Simsar";
+  return "İstanbul'un En Sinsi Emlakçısı";
+}
+
+/**
+ * Lets reputation nudge the next customer's starting trust — a small, felt
+ * consequence for the sneaky/honest pattern in past houses, instead of every
+ * visit starting from a fully clean slate. Derived from reputationLabel
+ * itself so the mechanical effect can never drift out of sync with the label
+ * shown to the player.
+ */
+export function reputationSuspicionOffset(results: HouseResult[]): number {
+  const label = reputationLabel(results);
+  if (label === "Dürüst Simsar") return -6;
+  if (label === "İstanbul'un En Sinsi Emlakçısı") return 6;
+  return 0;
+}
+
+const honestReputationLines = [
+  "Az önce biriyle konuştum, sizi cidden övmüş — dürüst biri olduğunuzu söylüyorlar.",
+  "Bugünkü müşteri sizi bir tanıdıktan duymuş, güvenilir biri olduğunuzu söylemişler.",
+  "Adınız mahallede iyi anılıyor galiba, bu da işimizi kolaylaştırır.",
+];
+
+const sneakyReputationLines = [
+  "Bugünkü müşteri biraz temkinli geliyor, sanırım sizi araştırmış.",
+  "Duydum ki bazı müşteriler sizin hakkınızda dedikodu yapıyormuş, dikkatli olun.",
+  "Bu sefer karşınızdaki biraz daha soru soracak gibi, hazırlıklı olun.",
+];
+
+export function pickReputationLine(label: string): string {
+  const lines = label === "Dürüst Simsar" ? honestReputationLines : sneakyReputationLines;
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
 const rivalLines = [
   "Bu arada Fırat Bey de senin bölgede geziyormuş, gözünü dört aç.",
   "Fırat Bey geçen hafta iki ev birden sattı, moralini bozma ama bilesin istedim.",
@@ -55,6 +95,7 @@ export function pickRivalLine(): string {
 const LUCKY_DAY_CHANCE = 0.08;
 const MOOD_COMMENT_CHANCE = 0.6;
 const RIVAL_CHANCE = 0.12;
+const REPUTATION_CHANCE = 0.18;
 
 export interface IntroFlavorResult {
   message: PhoneMessage | null;
@@ -73,6 +114,10 @@ export function pickIntroFlavor(results: HouseResult[]): IntroFlavorResult {
   }
   if (Math.random() < RIVAL_CHANCE) {
     return { message: { from: "Muzaffer Bey", text: pickRivalLine() }, isLucky: false };
+  }
+  const repLabel = reputationLabel(results);
+  if (repLabel !== "" && repLabel !== "Dengeli Simsar" && Math.random() < REPUTATION_CHANCE) {
+    return { message: { from: "Muzaffer Bey", text: pickReputationLine(repLabel) }, isLucky: false };
   }
   return { message: null, isLucky: false };
 }
