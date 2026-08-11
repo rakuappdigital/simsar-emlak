@@ -1,6 +1,6 @@
 /**
  * House background art is loaded on demand (dynamic import per house id)
- * instead of one eager bundle — with 33 house webps (~150-350KB each),
+ * instead of one eager bundle — with 42 house webps (~140-400KB each),
  * eagerly importing all of them would bloat the initial page load for art
  * the player won't see for many houses/weeks, if ever, in a given run.
  */
@@ -38,6 +38,15 @@ const loaders: Record<string, () => Promise<{ default: string }>> = {
   "tek-dairesel-oda": () => import("../assets/houses/dairesel.webp"),
   "merdiven-evi": () => import("../assets/houses/merdo.webp"),
   "dikey-depolama": () => import("../assets/houses/dikeydep.webp"),
+  "bogazin-incisi": () => import("../assets/houses/bogaz.webp"),
+  "ozel-ada": () => import("../assets/houses/ada.webp"),
+  "gokyuzu-malikanesi": () => import("../assets/houses/gokyuzu.webp"),
+  "otobus-duragi": () => import("../assets/houses/otobus.webp"),
+  "yanki-dairesi": () => import("../assets/houses/yanki.webp"),
+  "ruzgar-tuneli": () => import("../assets/houses/ruzgar.webp"),
+  "terzi-atolyesi": () => import("../assets/houses/terzi.webp"),
+  "metro-titresim": () => import("../assets/houses/metro.webp"),
+  "yuzen-bogaz-evi": () => import("../assets/houses/yuzenev.webp"),
 };
 
 const cache: Record<string, string> = {};
