@@ -1628,6 +1628,18 @@
   margin: 2px 0 0;
 }
 
+.market-item-discount {
+  font-size: 0.68rem;
+  color: var(--c-accent);
+  margin: 2px 0 0;
+}
+
+.market-item-price-original {
+  text-decoration: line-through;
+  opacity: 0.6;
+  font-size: 0.85em;
+}
+
 /* ---------- Locked house gate ---------- */
 .result-screen .menu-empty {
   max-width: 340px;

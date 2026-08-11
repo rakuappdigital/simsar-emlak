@@ -109,6 +109,7 @@ export default function EmlahMenu({
               ownedPerks={ownedPerks}
               consumables={consumables}
               unlockedTiers={unlockedTiers}
+              badges={badges}
               onBuy={onBuy}
             />
           )}

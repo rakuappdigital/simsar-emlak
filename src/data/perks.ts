@@ -12,6 +12,24 @@ import type { Perk } from "../types";
  * bonus. Simpler to read, and buying a second or third piece of clothing
  * doesn't need its own hand-tuned number.
  */
+/**
+ * Small, capped reward for the "Dürüstlük Serisi" badge (3 low-suspicion
+ * sales in a row) — a fixed, one-time-effect discount on a single ofis
+ * item, not a stacking or open-ended bonus, so it can't skew the market's
+ * cost balance no matter how the rest of a run goes.
+ */
+export const BADGE_DISCOUNT_PERK_ID = "ikna-kartviziti";
+export const BADGE_DISCOUNT_BADGE_ID = "durust-seri";
+export const BADGE_DISCOUNT_RATE = 0.1;
+
+/** Actual price to charge/display for an item, after any badge-earned discount. */
+export function effectiveCost(item: Perk, ownedBadges: string[]): number {
+  if (item.id === BADGE_DISCOUNT_PERK_ID && ownedBadges.includes(BADGE_DISCOUNT_BADGE_ID)) {
+    return Math.round(item.cost * (1 - BADGE_DISCOUNT_RATE));
+  }
+  return item.cost;
+}
+
 export const perks: Perk[] = [
   // --- Ofis ---
   {

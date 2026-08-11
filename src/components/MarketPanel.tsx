@@ -1,4 +1,4 @@
-import { perks } from "../data/perks";
+import { perks, effectiveCost } from "../data/perks";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
 import type { MarketCategory } from "../types";
@@ -8,6 +8,7 @@ interface MarketPanelProps {
   ownedPerks: string[];
   consumables: Record<string, number>;
   unlockedTiers: number[];
+  badges: string[];
   onBuy: (id: string) => void;
 }
 
@@ -27,6 +28,7 @@ export default function MarketPanel({
   ownedPerks,
   consumables,
   unlockedTiers,
+  badges,
   onBuy,
 }: MarketPanelProps) {
   return (
@@ -55,7 +57,9 @@ export default function MarketPanel({
               const prereqItem = item.requires ? perks.find((p) => p.id === item.requires) : undefined;
               const prereqMet = !item.requires || ownedPerks.includes(item.requires);
               const tierAlready = item.unlocksTier ? unlockedTiers.includes(item.unlocksTier) : false;
-              const disabled = alreadyOwned || tierAlready || !prereqMet || balance < item.cost;
+              const price = effectiveCost(item, badges);
+              const discounted = price < item.cost;
+              const disabled = alreadyOwned || tierAlready || !prereqMet || balance < price;
               return (
                 <div className="market-item" key={item.id}>
                   <div className="market-item-info">
@@ -65,9 +69,20 @@ export default function MarketPanel({
                       <p className="market-item-requires">Önce gerekli: {prereqItem.title}</p>
                     )}
                     {item.consumable && count > 0 && <p className="market-item-count">Elinde: {count}</p>}
+                    {discounted && !alreadyOwned && (
+                      <p className="market-item-discount">🏅 Dürüstlük Serisi indirimi uygulandı</p>
+                    )}
                   </div>
                   <button className="pixel-btn small" disabled={disabled} onClick={() => onBuy(item.id)}>
-                    {alreadyOwned || tierAlready ? "Alındı ✓" : formatTL(item.cost)}
+                    {alreadyOwned || tierAlready ? (
+                      "Alındı ✓"
+                    ) : discounted ? (
+                      <>
+                        <span className="market-item-price-original">{formatTL(item.cost)}</span> {formatTL(price)}
+                      </>
+                    ) : (
+                      formatTL(price)
+                    )}
                   </button>
                 </div>
               );

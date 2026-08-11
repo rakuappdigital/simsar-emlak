@@ -39,9 +39,9 @@ import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, type CallbackEvent } from "./data/callbacks";
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
-import { pickDailyQuest, checkDailyQuest } from "./data/dailyQuest";
+import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
-import { perks, hasPerk } from "./data/perks";
+import { perks, hasPerk, effectiveCost } from "./data/perks";
 import { tieredShuffle } from "./data/shuffle";
 import { computeEnding } from "./data/endings";
 import type {
@@ -371,7 +371,10 @@ function App() {
     }
     const newPendingLoan = pendingLoan && newIndex >= pendingLoan.dueIndex ? null : pendingLoan;
 
-    const currentQuest = newIndex % HOUSES_PER_WEEK === 0 ? pickDailyQuest(weekIndexForHouse(newIndex)) : dailyQuestParam;
+    const currentQuest =
+      newIndex % HOUSES_PER_WEEK === 0
+        ? applyRecoveryBonus(pickDailyQuest(weekIndexForHouse(newIndex)), weekOutcomes)
+        : dailyQuestParam;
     setDailyQuest(currentQuest);
 
     const positionInWeek = newIndex % HOUSES_PER_WEEK;
@@ -700,10 +703,11 @@ function App() {
     if (ownedPerks.includes(itemId)) return;
     if (item.requires && !ownedPerks.includes(item.requires)) return;
     if (item.unlocksTier && unlockedTiers.includes(item.unlocksTier)) return;
-    if (balance < item.cost) return;
+    const price = effectiveCost(item, badges);
+    if (balance < price) return;
 
     const newOwned = [...ownedPerks, itemId];
-    const newSpent = spent + item.cost;
+    const newSpent = spent + price;
     setOwnedPerks(newOwned);
     setSpent(newSpent);
 

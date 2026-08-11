@@ -1,4 +1,4 @@
-import type { DailyQuestDef, HouseResult } from "../types";
+import type { DailyQuestDef, HouseResult, WeekOutcome } from "../types";
 
 export const dailyQuestDefs: DailyQuestDef[] = [
   {
@@ -29,6 +29,26 @@ export const dailyQuestDefs: DailyQuestDef[] = [
 
 export function pickDailyQuest(weekIndex: number): DailyQuestDef {
   return dailyQuestDefs[weekIndex % dailyQuestDefs.length];
+}
+
+const RECOVERY_BONUS = 15000;
+
+/**
+ * A small, capped reward bump — not a new discount/multiplier system, just
+ * one flat extra amount — when the last two completed weeks both missed
+ * their sales target. Muzaffer's "annoyed" mood (see introFlavor.ts)
+ * already tells the player something is off; this gives that streak of bad
+ * weeks an actual recovery lever instead of only ever being narrative.
+ */
+export function applyRecoveryBonus(quest: DailyQuestDef, weekOutcomes: WeekOutcome[]): DailyQuestDef {
+  const lastTwo = weekOutcomes.slice(-2);
+  const bothMissed = lastTwo.length === 2 && lastTwo.every((w) => !w.salesGoalMet);
+  if (!bothMissed) return quest;
+  return {
+    ...quest,
+    reward: quest.reward + RECOVERY_BONUS,
+    description: `${quest.description} (Toparlanma bonusu: +${RECOVERY_BONUS.toLocaleString("tr-TR")}₺)`,
+  };
 }
 
 export function checkDailyQuest(def: DailyQuestDef, weekResults: HouseResult[]): boolean {
