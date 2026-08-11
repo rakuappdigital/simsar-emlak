@@ -17,7 +17,7 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
   return (
     <div className="result-screen">
       <p className="week-result-title">Hafta {outcome.weekIndex + 1} Değerlendirmesi</p>
-      <p className="weekly-news">{weeklyNewsLine(outcome.weekIndex)}</p>
+      <p className="weekly-news">{weeklyNewsLine(outcome.weekIndex, dailyQuestResult?.def.id)}</p>
       <div className="sale-summary">
         <p>
           {outcome.salesGoalMet ? "✅" : "❌"} Satış hedefi: {outcome.salesMade}/{outcome.salesTarget}

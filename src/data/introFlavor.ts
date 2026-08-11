@@ -1,4 +1,5 @@
 import type { HouseResult, PhoneMessage } from "../types";
+import { computeStreak } from "./badges";
 
 export type Mood = "happy" | "neutral" | "annoyed";
 
@@ -81,6 +82,19 @@ export function pickReputationLine(label: string): string {
   return lines[Math.floor(Math.random() * lines.length)];
 }
 
+/** Streak length at which the commission bonus caps out (see STREAK_BONUS_CAP/RATE in scoring.ts). */
+const HOT_STREAK_THRESHOLD = 3;
+
+const streakLines = [
+  "Şu anki gidişat müthiş, arka arkaya satıyorsun!",
+  "Bu formu bozma, tam bir seri yakaladın.",
+  "Ofis seni konuşuyor, bu kadar art arda satış az görülür.",
+];
+
+export function pickStreakLine(): string {
+  return streakLines[Math.floor(Math.random() * streakLines.length)];
+}
+
 const rivalLines = [
   "Bu arada Fırat Bey de senin bölgede geziyormuş, gözünü dört aç.",
   "Fırat Bey geçen hafta iki ev birden sattı, moralini bozma ama bilesin istedim.",
@@ -96,6 +110,7 @@ const LUCKY_DAY_CHANCE = 0.08;
 const MOOD_COMMENT_CHANCE = 0.6;
 const RIVAL_CHANCE = 0.12;
 const REPUTATION_CHANCE = 0.18;
+const STREAK_COMMENT_CHANCE = 0.35;
 
 export interface IntroFlavorResult {
   message: PhoneMessage | null;
@@ -118,6 +133,9 @@ export function pickIntroFlavor(results: HouseResult[]): IntroFlavorResult {
   const repLabel = reputationLabel(results);
   if (repLabel !== "" && repLabel !== "Dengeli Simsar" && Math.random() < REPUTATION_CHANCE) {
     return { message: { from: "Muzaffer Bey", text: pickReputationLine(repLabel) }, isLucky: false };
+  }
+  if (computeStreak(results) >= HOT_STREAK_THRESHOLD && Math.random() < STREAK_COMMENT_CHANCE) {
+    return { message: { from: "Muzaffer Bey", text: pickStreakLine() }, isLucky: false };
   }
   return { message: null, isLucky: false };
 }
