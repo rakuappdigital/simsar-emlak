@@ -4203,6 +4203,525 @@ export const houseYuzenBogazEvi: HouseScene = {
   },
 };
 
+export const houseAkilliEvCildirmis: HouseScene = {
+  id: "akilli-ev-cildirmis",
+  title: "Çıldırmış Akıllı Ev",
+  location: "Ataşehir, teknoloji sitesi",
+  customerNames: [],
+  dynamicCast: [{}],
+  background: "theme-tailor",
+  askingPrice: 3300000,
+  tier: 2,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.3, funWeight: 1.2, interestWeight: 1 },
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", text: "Merhaba, ben {isim}. \"Tam akıllı ev\" diye yazıyordu ilanda, teknolojiye bayılırım." },
+        { speaker: "customer1", text: "Işıklar, perdeler, her şey sesle mi çalışıyor gerçekten?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Kesinlikle, tek kelimeyle her şeyi yönetiyorsunuz.\"", next: "enter", effects: { interest: 10 } },
+        { id: "b", text: "\"Çalışıyor, ama bazen kendi kararlarını da veriyor açıkçası.\"", next: "enter", effects: { suspicion: 5 } },
+        { id: "c", text: "\"Önce içeri geçelim, sistemi kendiniz görün.\"", next: "enter", effects: { fun: 5 } },
+      ],
+    },
+    enter: {
+      id: "enter",
+      lines: [
+        { speaker: "emlah", text: "İşte salon, \"Işıkları aç\" demeniz yeterli." },
+        { speaker: "customer1", text: "(söyler söylemez tüm ışıklar yanıp söner, perde kendi kendine açılır) Bu normal mi?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Normal, sistem sizi tanımaya çalışıyor, birkaç gün sürer.\"", next: "q1_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Küçük bir kalibrasyon sorunu, teknisyen bir bakışta çözer.\"", next: "q1_b" },
+        { id: "c", text: "\"Ev sizi karşılıyor sayılır, hoş geldin diyor bir nevi.\"", next: "q1_c", effects: { fun: 15, suspicion: 10 } },
+      ],
+    },
+    q1_a: { id: "q1_a", lines: [{ speaker: "customer1", text: "\"Tanımaya çalışıyor\" derken beni mi izliyor yani?" }], next: "surpriz" },
+    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Teknisyen çağırmak sorun olmaz umarım." }], next: "surpriz" },
+    q1_c: { id: "q1_c", lines: [{ speaker: "customer1", text: "(gülümser) Ev beni karşılıyor, hoşuma gitti bu." }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", text: "(tam o sırada televizyon kendi kendine açılır, ses sonuna kadar açık) Aaa!" },
+        { speaker: "emlah", text: "(hızla kapatır) Bazen biraz coşkulu davranıyor sistem, kusura bakmayın." },
+        { speaker: "customer1", text: "Coşkulu bir ev... ilginç bir özellik sayılır bu da." },
+      ],
+      next: "price",
+    },
+
+    price: {
+      id: "price",
+      lines: [{ speaker: "customer1", text: "Fiyatta bu sistem için bir esneklik var mı?" }],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup %8 indirim sağlayabilirim.\"", next: "closing_sold", effects: { closingBias: 35, suspicion: -10, discountPercent: 8 } },
+        { id: "b", text: "\"Fiyat zaten bu teknolojiye göre makul, düşünebilirsiniz.\"", next: "closing_thinking", effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu sistem bu fiyata bir daha çıkmaz, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", text: "İndirimle birlikte karar verdim, sistemi kendim eğitirim artık." },
+        { speaker: "emlah", text: "Hayırlı olsun, umarım ev sizi de sever." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", text: "Bir de sistemi kapalıyken görmek isterim, sonra karar veririm." },
+        { speaker: "emlah", text: "Tabii, ne zaman isterseniz tekrar arayabilirsiniz." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", text: "Beni aceleye getirmeye çalıştığınızı fark ettim." },
+        { speaker: "customer1", text: "Sanırım bu ev bana göre değil, vaktinizi aldım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const housePazarGunuKaosu: HouseScene = {
+  id: "pazar-gunu-kaosu",
+  title: "Pazar Günü Kaosu",
+  location: "Kadıköy, pazar sokağı",
+  customerNames: [],
+  dynamicCast: [{}, {}],
+  background: "theme-busstop",
+  askingPrice: 2200000,
+  tier: 1,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.2, funWeight: 1.1, interestWeight: 1 },
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", text: "Merhaba, ben {isim}, bu da eşim {isim2}. Sokak bugün çok sakinmiş, hep böyle mi?" },
+        { speaker: "customer2", text: "Hafta içi böyleyse harika olur açıkçası." },
+      ],
+      choices: [
+        { id: "a", text: "\"Hafta içi tamamen böyle sakin, evet.\"", next: "enter", effects: { suspicion: 10 } },
+        { id: "b", text: "\"Genelde sakin, sadece pazar günleri farklı.\"", next: "enter", effects: { interest: 5 } },
+        { id: "c", text: "\"Sokağın bir de canlı bir yüzü var, göreceksiniz.\"", next: "enter", effects: { fun: 5 } },
+      ],
+    },
+    enter: {
+      id: "enter",
+      lines: [
+        { speaker: "emlah", text: "İşte salon, sokağa nazır geniş pencereler." },
+        { speaker: "customer1", text: "\"Pazar günleri farklı\" derken ne demek istediniz tam olarak?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Sokak pazarı kuruluyor, biraz kalabalık oluyor sadece.\"", next: "q1_a", effects: { suspicion: 10 } },
+        { id: "b", text: "\"Haftada bir gün pazar var, geri kalan altı gün sessiz.\"", next: "q1_b" },
+        { id: "c", text: "\"Pazar günleri sokak bir festivale dönüşüyor resmen.\"", next: "q1_c", effects: { fun: 15, suspicion: 5 } },
+      ],
+    },
+    q1_a: { id: "q1_a", lines: [{ speaker: "customer2", text: "\"Biraz kalabalık\" ne kadar kalabalık acaba?" }], next: "surpriz" },
+    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Altı gün sessizse idare ederiz bence." }], next: "surpriz" },
+    q1_c: { id: "q1_c", lines: [{ speaker: "customer2", text: "(güler) Festival demek hoşuma gitti doğrusu." }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", text: "(pencereden dışarı bakar) O tezgahlar şimdiden mi kuruluyor yoksa?" },
+        { speaker: "emlah", text: "(pencereye göz atar) Yarın pazar, bir gün erken hazırlık yapıyorlar galiba." },
+        { speaker: "customer2", text: "Erkenciler varmış demek ki." },
+      ],
+      next: "price",
+    },
+
+    price: {
+      id: "price",
+      lines: [{ speaker: "customer1", text: "Fiyatta pazar günü payı diye bir esneklik olur mu?" }],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup %9 indirim sağlayabilirim.\"", next: "closing_sold", effects: { closingBias: 35, suspicion: -10, discountPercent: 9 } },
+        { id: "b", text: "\"Bu sokak bu fiyata bir daha çıkmaz, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+        { id: "c", text: "\"Fiyat zaten bu konuma göre makul, düşünebilirsiniz.\"", next: "closing_thinking", effects: { closingBias: 0 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", text: "İndirimle birlikte karar verdik, pazara da alışırız zamanla." },
+        { speaker: "emlah", text: "Hayırlı olsun, pazar günleri file almayı unutmayın." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer2", text: "Bir pazar günü gelip gerçekten görelim, sonra karar veririz." },
+        { speaker: "emlah", text: "Tabii, ne zaman isterseniz tekrar arayabilirsiniz." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", text: "Bizi aceleye getirmeye çalıştığınızı fark ettik." },
+        { speaker: "customer2", text: "Sanırım bu ev bize göre değil, vaktinizi aldık." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const houseYanlisAdresKargo: HouseScene = {
+  id: "yanlis-adres-kargo",
+  title: "Yanlış Adres Kargo Durağı",
+  location: "Bahçelievler, apartman girişi",
+  customerNames: [],
+  dynamicCast: [{}],
+  background: "theme-busstop",
+  askingPrice: 1650000,
+  tier: 1,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.3, interestWeight: 1 },
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", text: "Merhaba, ben {isim}. Kapıda bir sürü kargo kutusu vardı, hepsi bu daireye mi ait?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Hayır hayır, o kutular önceki sakinin, temizlenecek.\"", next: "enter" },
+        { id: "b", text: "\"Açıkçası bina biraz kargo durağı gibi kullanılıyor bazen.\"", next: "enter", effects: { suspicion: 5 } },
+        { id: "c", text: "\"Herkes bu binaya güveniyor, kargoları buraya bırakıyor.\"", next: "enter", effects: { fun: 5 } },
+      ],
+    },
+    enter: {
+      id: "enter",
+      lines: [
+        { speaker: "emlah", text: "İşte daire, giriş kata çok yakın, pratik bir konum." },
+        { speaker: "customer1", text: "(kapı çalar, dışarıda biri \"kargom burada mı\" diye bağırır) Bu sık oluyor mu?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Nadiren oluyor, yanlış anlaşılma sadece.\"", next: "q1_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Biraz sık oluyor açıkçası, kapıya bir not asabilirsiniz.\"", next: "q1_b" },
+        { id: "c", text: "\"En azından hiç yalnız hissetmezsiniz, sürekli ziyaretçi oluyor.\"", next: "q1_c", effects: { fun: 15, suspicion: 10 } },
+      ],
+    },
+    q1_a: { id: "q1_a", lines: [{ speaker: "customer1", text: "\"Yanlış anlaşılma\" derken kaç kişi geldi bugün acaba?" }], next: "surpriz" },
+    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Not fikri mantıklı, deneriz." }], next: "surpriz" },
+    q1_c: { id: "q1_c", lines: [{ speaker: "customer1", text: "(güler) Sürekli ziyaretçi... bir bakıma sosyalleşme fırsatı." }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", text: "(kapı yine çalar, bu sefer bir kurye \"iki kargo daha var\" der) Vay canına." },
+        { speaker: "emlah", text: "(gülümser) Görüyorsunuz, bina gerçekten popüler bir adres." },
+        { speaker: "customer1", text: "Popüler kelimesini böyle kullanmak hiç aklıma gelmezdi." },
+      ],
+      next: "price",
+    },
+
+    price: {
+      id: "price",
+      lines: [{ speaker: "customer1", text: "Fiyatta bu \"popülerlik\" payı diye bir indirim var mı?" }],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup %10 indirim ayarlarım.\"", next: "closing_sold", effects: { closingBias: 35, suspicion: -10, discountPercent: 10 } },
+        { id: "b", text: "\"Fiyat zaten bu konuma göre makul, düşünebilirsiniz.\"", next: "closing_thinking", effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu daire bu fiyata bir daha çıkmaz, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", text: "İndirimle birlikte karar verdim, bir tabela asarım kapıya." },
+        { speaker: "emlah", text: "Hayırlı olsun, kuryelerle iyi geçinin." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", text: "Bir gün daha sakin bir saatte gelip bakayım, sonra karar veririm." },
+        { speaker: "emlah", text: "Tabii, ne zaman isterseniz tekrar arayabilirsiniz." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", text: "Beni aceleye getirmeye çalıştığınızı fark ettim." },
+        { speaker: "customer1", text: "Sanırım bu ev bana göre değil, vaktinizi aldım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const houseFotografNoktasiBahce: HouseScene = {
+  id: "fotograf-noktasi-bahce",
+  title: "Fotoğraf Noktası Bahçe",
+  location: "Moda, sahil arkası",
+  customerNames: [],
+  dynamicCast: [{}],
+  background: "theme-island",
+  askingPrice: 2450000,
+  tier: 1,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.1, funWeight: 1.3, interestWeight: 1.1 },
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", text: "Merhaba, ben {isim}. Bahçedeki o beyaz kemer çok şık, kendiniz mi yaptırdınız?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Ev sahibi yaptırmış, herkesin dikkatini çekiyor.\"", next: "enter", effects: { interest: 10 } },
+        { id: "b", text: "\"Yaptırmış ama biraz da ünlü oldu açıkçası, göstereyim.\"", next: "enter", effects: { suspicion: 5 } },
+        { id: "c", text: "\"Önce bahçeye bakalım, kendiniz göreceksiniz.\"", next: "enter", effects: { fun: 5 } },
+      ],
+    },
+    enter: {
+      id: "enter",
+      lines: [
+        { speaker: "emlah", text: "İşte bahçe, o kemer gerçekten fotoğraflık." },
+        { speaker: "customer1", text: "(bahçe kapısının önünde bir çift telefonla poz veriyordur) Bunlar kim, tanıdığınız mı?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Tanımıyorum, muhtemelen yoldan geçen biri.\"", next: "q1_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Açıkçası bu kemer Instagram'da meşhur oldu, sık böyle oluyor.\"", next: "q1_b", effects: { interest: 5 } },
+        { id: "c", text: "\"Ücretsiz fotoğraf stüdyonuz var sayılır artık.\"", next: "q1_c", effects: { fun: 15, suspicion: 10 } },
+      ],
+    },
+    q1_a: { id: "q1_a", lines: [{ speaker: "customer1", text: "Yoldan geçen biri bahçenin içine mi girdi yani?" }], next: "surpriz" },
+    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Meşhur olmak hoş ama biraz da tuhaf." }], next: "surpriz" },
+    q1_c: { id: "q1_c", lines: [{ speaker: "customer1", text: "(güler) Stüdyo fikri fena değil aslında." }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", text: "(bir başka çift daha gelir, kemerin önünde sıraya girerler) Bu ciddi mi şimdi?" },
+        { speaker: "emlah", text: "(gülümser) Hafta sonları biraz daha yoğun oluyor açıkçası." },
+        { speaker: "customer1", text: "Hafta sonu sırası bile var yani." },
+      ],
+      next: "price",
+    },
+
+    price: {
+      id: "price",
+      lines: [{ speaker: "customer1", text: "Fiyatta bu \"ünlülük\" payı diye bir indirim düşünülür mü?" }],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup %7 indirim sağlayabilirim.\"", next: "closing_sold", effects: { closingBias: 35, suspicion: -10, discountPercent: 7 } },
+        { id: "b", text: "\"Bu bahçe bu fiyata bir daha çıkmaz, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+        { id: "c", text: "\"Fiyat zaten bu bahçeye göre makul, düşünebilirsiniz.\"", next: "closing_thinking", effects: { closingBias: 0 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", text: "İndirimle birlikte karar verdim, belki bir de tabela koyarım ücretli diye." },
+        { speaker: "emlah", text: "Hayırlı olsun, iyi kareler dilerim." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", text: "Bir hafta sonu daha gelip yoğunluğu görmek isterim, sonra karar veririm." },
+        { speaker: "emlah", text: "Tabii, ne zaman isterseniz tekrar arayabilirsiniz." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", text: "Beni aceleye getirmeye çalıştığınızı fark ettim." },
+        { speaker: "customer1", text: "Sanırım bu ev bana göre değil, vaktinizi aldım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const houseParanoyakKameraKomsusu: HouseScene = {
+  id: "paranoyak-kamera-komsusu",
+  title: "Paranoyak Kamera Komşusu",
+  location: "Bahçeşehir, site içi",
+  customerNames: [],
+  dynamicCast: [{}, {}],
+  background: "theme-metro",
+  askingPrice: 3150000,
+  tier: 2,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.4, funWeight: 1, interestWeight: 1 },
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", text: "Merhaba, ben {isim}, bu da eşim {isim2}. Komşunun duvarında bir sürü kamera var, fark ettiniz mi?" },
+        { speaker: "customer2", text: "Sayabildiğim kadarıyla en az sekiz tane vardı." },
+      ],
+      choices: [
+        { id: "a", text: "\"Fark ettim, güvenlik konusunda hassas biri sadece.\"", next: "enter", effects: { suspicion: 10 } },
+        { id: "b", text: "\"Evet, biraz fazla kaçıyor ama size bir zararı yok.\"", next: "enter" },
+        { id: "c", text: "\"O kameralar sayesinde mahalle çok güvenli sayılır.\"", next: "enter", effects: { fun: 5, interest: 5 } },
+      ],
+    },
+    enter: {
+      id: "enter",
+      lines: [
+        { speaker: "emlah", text: "İşte salon, geniş ve ferah." },
+        { speaker: "customer1", text: "(pencereden bakar) O kameralardan biri tam bizim pencereye bakıyor sanki." },
+      ],
+      choices: [
+        { id: "a", text: "\"Öyle görünüyor ama muhtemelen kendi bahçesini çekiyordur.\"", next: "q1_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Haklısınız, isterseniz yönetimle konuşup açı değiştirmesini isteyebiliriz.\"", next: "q1_b", effects: { interest: 10 } },
+        { id: "c", text: "\"En azından evinizi kimse asla soyamaz, bedava güvenlik.\"", next: "q1_c", effects: { fun: 15, suspicion: 10 } },
+      ],
+    },
+    q1_a: { id: "q1_a", lines: [{ speaker: "customer2", text: "\"Muhtemelen\" pek güven verici bir kelime değil açıkçası." }], next: "surpriz" },
+    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Yönetimle konuşmak iyi bir ilk adım olur." }], next: "surpriz" },
+    q1_c: { id: "q1_c", lines: [{ speaker: "customer2", text: "(gülümser) Bedava güvenlik fikri hoşuma gitti." }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", text: "(tam o sırada komşunun panjuru hafifçe aralanır, biri dikkatle bakar sonra hızla kapatır)" },
+        { speaker: "customer2", text: "(irkilir) O da neydi öyle?" },
+        { speaker: "emlah", text: "(gülümser) Meraklı bir komşu sadece, alışırsınız zamanla." },
+      ],
+      next: "price",
+    },
+
+    price: {
+      id: "price",
+      lines: [{ speaker: "customer1", text: "Fiyatta bu durumu göz önünde bulundurur musunuz?" }],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup %8 indirim sağlayabilirim.\"", next: "closing_sold", effects: { closingBias: 35, suspicion: -10, discountPercent: 8 } },
+        { id: "b", text: "\"Bu site bu fiyata bir daha çıkmaz, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+        { id: "c", text: "\"Fiyat zaten bu konuma göre makul, düşünebilirsiniz.\"", next: "closing_thinking", effects: { closingBias: 0 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", text: "İndirimle birlikte karar verdik, perde kalın olsun yeter." },
+        { speaker: "emlah", text: "Hayırlı olsun, komşunuzla iyi geçinin." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer2", text: "Bir de akşam gelip komşuyu gözlemleyelim, sonra karar veririz." },
+        { speaker: "emlah", text: "Tabii, ne zaman isterseniz tekrar arayabilirsiniz." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", text: "Bizi aceleye getirmeye çalıştığınızı fark ettik." },
+        { speaker: "customer2", text: "Sanırım bu ev bize göre değil, vaktinizi aldık." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
+export const houseAntikaciElektrikTesisati: HouseScene = {
+  id: "antikaci-elektrik-tesisati",
+  title: "Antikacı Elektrik Tesisatı",
+  location: "Çukurcuma, antikacılar sokağı",
+  customerNames: [],
+  dynamicCast: [{}],
+  background: "theme-tailor",
+  askingPrice: 1950000,
+  tier: 1,
+  closingNodes: { sold: "closing_sold", thinking: "closing_thinking", lost: "closing_lost" },
+  profile: { suspicionWeight: 1.3, funWeight: 1.1, interestWeight: 1 },
+  startNode: "start",
+  nodes: {
+    start: {
+      id: "start",
+      lines: [
+        { speaker: "customer1", text: "Merhaba, ben {isim}. Alt kattaki antikacı dükkanı çok şirin, komşuluk nasıl acaba?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Çok iyi, kendisi de bina için epey emek veriyor.\"", next: "enter", effects: { interest: 10 } },
+        { id: "b", text: "\"İyi ama küçük bir elektrik tesisatı detayı var, göstereyim.\"", next: "enter", effects: { suspicion: 5 } },
+        { id: "c", text: "\"Önce içeri geçelim, sonra her şeyi anlatırım.\"", next: "enter", effects: { fun: 5 } },
+      ],
+    },
+    enter: {
+      id: "enter",
+      lines: [
+        { speaker: "emlah", text: "İşte daire, eski bina dokusu hâlâ korunmuş." },
+        { speaker: "customer1", text: "(ışık düğmesine basar, ışık titrer) Elektrik tesisatı bu bina için biraz eski mi kalmış?" },
+      ],
+      choices: [
+        { id: "a", text: "\"Biraz eski, ama antikacı beyle paylaştığınız için sorun çıkmıyor.\"", next: "q1_a", effects: { suspicion: 15 } },
+        { id: "b", text: "\"Eski evet, yenilenmesi gerekiyor ama fiyata da yansıdı bu.\"", next: "q1_b" },
+        { id: "c", text: "\"Eski tesisatın kendine has bir karakteri var, alışırsınız.\"", next: "q1_c", effects: { fun: 15, suspicion: 10 } },
+      ],
+    },
+    q1_a: { id: "q1_a", lines: [{ speaker: "customer1", text: "\"Paylaştığınız\" derken, aynı sigortayı mı kullanıyoruz yani?" }], next: "surpriz" },
+    q1_b: { id: "q1_b", lines: [{ speaker: "customer1", text: "Fiyata yansımışsa mantıklı bir denge." }], next: "surpriz" },
+    q1_c: { id: "q1_c", lines: [{ speaker: "customer1", text: "(gülümser) \"Karakter\" demek hoşuma gitti." }], next: "surpriz" },
+
+    surpriz: {
+      id: "surpriz",
+      lines: [
+        { speaker: "customer1", text: "(tam o sırada tüm ışıklar aniden söner, alt kattan antikacının sesi gelir: \"Kusura bakmayın, ütüyü taktım!\")" },
+        { speaker: "emlah", text: "(gülümser, karanlıkta el yordamıyla) Gördüğünüz gibi, birkaç saniyede geri geliyor." },
+        { speaker: "customer1", text: "(ışıklar geri gelir) Vay canına, gerçekten de geldi." },
+      ],
+      next: "price",
+    },
+
+    price: {
+      id: "price",
+      lines: [{ speaker: "customer1", text: "Fiyatta bu tesisat durumu için bir esneklik var mı?" }],
+      choices: [
+        { id: "a", text: "\"Sahibiyle konuşup %11 indirim sağlayabilirim.\"", next: "closing_sold", effects: { closingBias: 35, suspicion: -10, discountPercent: 11 } },
+        { id: "b", text: "\"Fiyat zaten bu dokuya göre makul, düşünebilirsiniz.\"", next: "closing_thinking", effects: { closingBias: 0 } },
+        { id: "c", text: "\"Bu daire bu fiyata bir daha çıkmaz, hemen karar vermelisiniz.\"", next: "closing_lost", effects: { closingBias: -35, suspicion: 20 } },
+      ],
+    },
+    closing_sold: {
+      id: "closing_sold",
+      lines: [
+        { speaker: "customer1", text: "İndirimle birlikte karar verdim, antikacı beyle ütü saatlerini konuşurum." },
+        { speaker: "emlah", text: "Hayırlı olsun, mum bulundurmanızı öneririm yine de." },
+      ],
+      end: "sold",
+    },
+    closing_thinking: {
+      id: "closing_thinking",
+      lines: [
+        { speaker: "customer1", text: "Bir de akşam ütü saatinde gelip görmek isterim, sonra karar veririm." },
+        { speaker: "emlah", text: "Tabii, ne zaman isterseniz tekrar arayabilirsiniz." },
+      ],
+      end: "thinking",
+    },
+    closing_lost: {
+      id: "closing_lost",
+      lines: [
+        { speaker: "customer1", text: "Beni aceleye getirmeye çalıştığınızı fark ettim." },
+        { speaker: "customer1", text: "Sanırım bu daire bana göre değil, vaktinizi aldım." },
+      ],
+      end: "lost",
+    },
+  },
+};
+
 export const allHouses: HouseScene[] = [
   houseKokuluStudyo,
   houseHayaletliDaire,
@@ -4246,4 +4765,10 @@ export const allHouses: HouseScene[] = [
   houseTerziAtolyesi,
   houseMetroTitresim,
   houseYuzenBogazEvi,
+  houseAkilliEvCildirmis,
+  housePazarGunuKaosu,
+  houseYanlisAdresKargo,
+  houseFotografNoktasiBahce,
+  houseParanoyakKameraKomsusu,
+  houseAntikaciElektrikTesisati,
 ];
