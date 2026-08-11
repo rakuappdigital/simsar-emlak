@@ -1,6 +1,6 @@
 /**
  * House background art is loaded on demand (dynamic import per house id)
- * instead of one eager bundle — with 42 house webps (~140-400KB each),
+ * instead of one eager bundle — with 54 house webps (~140-400KB each),
  * eagerly importing all of them would bloat the initial page load for art
  * the player won't see for many houses/weeks, if ever, in a given run.
  */
@@ -47,6 +47,18 @@ const loaders: Record<string, () => Promise<{ default: string }>> = {
   "terzi-atolyesi": () => import("../assets/houses/terzi.webp"),
   "metro-titresim": () => import("../assets/houses/metro.webp"),
   "yuzen-bogaz-evi": () => import("../assets/houses/yuzenev.webp"),
+  "karinca-kolonisi": () => import("../assets/houses/karinca.webp"),
+  "hali-saha-komsulugu": () => import("../assets/houses/halisaha.webp"),
+  "yosunlu-ortak-havuz": () => import("../assets/houses/havuz.webp"),
+  "rehberli-tur-duragi": () => import("../assets/houses/turrehber.webp"),
+  "balik-hali-sabah-gurultusu": () => import("../assets/houses/balikhali.webp"),
+  "ruya-yorumcusu-komsu": () => import("../assets/houses/ruyaci.webp"),
+  "kripto-madencisi-komsu": () => import("../assets/houses/kripto.webp"),
+  "sahibi-gorunmeyen-kat": () => import("../assets/houses/gizlikat.webp"),
+  "unlu-oyuncunun-evi": () => import("../assets/houses/unluev.webp"),
+  "manastir-bahcesi-komsulugu": () => import("../assets/houses/manastir.webp"),
+  "restorasyon-bitmemis-konak": () => import("../assets/houses/restorasyon.webp"),
+  "set-evi": () => import("../assets/houses/setevi.webp"),
 };
 
 const cache: Record<string, string> = {};
