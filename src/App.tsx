@@ -51,6 +51,7 @@ import type {
   DailyQuestDef,
   GameStats,
   HouseResult,
+  HouseScene,
   InboxMessage,
   PendingLoan,
   PhoneMessage,
@@ -189,6 +190,11 @@ function App() {
   const [chitchatBonuses, setChitchatBonuses] = useState(0);
   const [premiumResults, setPremiumResults] = useState<HouseResult[]>([]);
   const [activePremiumHouseId, setActivePremiumHouseId] = useState<string | null>(null);
+  const [pendingCallbackSale, setPendingCallbackSale] = useState<{
+    resultIndex: number;
+    targetHouse: HouseScene;
+    projectedStats: GameStats;
+  } | null>(null);
   const [seenInboxCount, setSeenInboxCount] = useState(0);
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try {
@@ -740,9 +746,7 @@ function App() {
     let updatedResult: HouseResult = { ...original, finalStats: projected, finalSuspicion: projected.suspicion };
 
     if (outcome2 === "sold") {
-      const sale = computeSale(targetHouse.askingPrice, original.finalStats.discountPercent, 0, 0, rankBonus(earned));
-      updatedResult = { ...updatedResult, outcome: "sold", converted: true, sale };
-      confirmText = "Harika, süreci hemen başlatıyorum! 🎉";
+      confirmText = "Harika, hemen bir sözleşme hazırlayıp göndereyim.";
     } else if (outcome2 === "lost") {
       updatedResult = { ...updatedResult, outcome: "lost" };
       confirmText = "Anlıyorum, sanırım başka bir seçeneğe bakacağız.";
@@ -759,6 +763,10 @@ function App() {
     setInbox(newInbox);
     persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
 
+    if (outcome2 === "sold") {
+      setPendingCallbackSale({ resultIndex: activeCallback.resultIndex, targetHouse, projectedStats: projected });
+    }
+
     setActiveCallback((prev) =>
       prev
         ? {
@@ -768,6 +776,28 @@ function App() {
           }
         : prev,
     );
+  }
+
+  function finishCallbackContract(modifier: number) {
+    if (!pendingCallbackSale) return;
+    const { resultIndex, targetHouse, projectedStats } = pendingCallbackSale;
+    const original = results[resultIndex];
+    const priorStreak = computeStreak(results);
+    const sale = computeSale(targetHouse.askingPrice, projectedStats.discountPercent, priorStreak, modifier, rankBonus(earned));
+    const updatedResult: HouseResult = {
+      ...original,
+      outcome: "sold",
+      converted: true,
+      sale,
+      finalStats: projectedStats,
+      finalSuspicion: projectedStats.suspicion,
+    };
+    const newResults = results.map((r, i) => (i === resultIndex ? updatedResult : r));
+    setResults(newResults);
+    playSale();
+    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox);
+    setPendingCallbackSale(null);
+    setStage("phone");
   }
 
   function retryFromInbox(houseId: string) {
@@ -1038,6 +1068,14 @@ function App() {
             />
           </div>
         </div>
+      )}
+
+      {pendingCallbackSale && (
+        <ContractModal
+          clauses={generateContract()}
+          customerName={resolveCustomerNames(pendingCallbackSale.targetHouse, castAssignment)[0]}
+          onFinish={finishCallbackContract}
+        />
       )}
 
       <div key={stage} className="stage-transition">

@@ -28,17 +28,35 @@ export function generateContract(): ContractClause[] {
   ];
 }
 
+/**
+ * Blind pick (round 1) + up to 2 more counter-offer rounds where the
+ * customer reveals their real preference on whatever's still mismatched
+ * and Emlah can concede or hold firm — 3 rounds total, hard cap.
+ */
+export const MAX_CONTRACT_ROUNDS = 3;
+
+/** Small, fixed cost per extra round beyond the first — negotiating harder
+ *  to reach the same deal chips a little off the commission bonus, so
+ *  reaching a full match on round 1 always beats reaching it on round 3. */
+export const CONTRACT_ROUND_PENALTY = 0.015;
+
 export interface ContractOutcome {
   matches: number;
   total: number;
-  modifier: number; // fraction applied to commission, e.g. 0.05 / -0.05
+  modifier: number;
+  roundsUsed: number;
 }
 
-export function evaluateContract(clauses: ContractClause[], selections: Record<string, string>): ContractOutcome {
+function baseModifier(matches: number, total: number): number {
+  if (matches === total) return 0.05;
+  if (matches === 0) return -0.05;
+  return 0;
+}
+
+export function evaluateContract(clauses: ContractClause[], selections: Record<string, string>, roundsUsed = 1): ContractOutcome {
   const total = clauses.length;
   const matches = clauses.filter((c) => selections[c.id] === c.preferredOptionId).length;
-  let modifier = 0;
-  if (matches === total) modifier = 0.05;
-  else if (matches === 0) modifier = -0.05;
-  return { matches, total, modifier };
+  const extraRounds = Math.max(0, roundsUsed - 1);
+  const modifier = baseModifier(matches, total) - extraRounds * CONTRACT_ROUND_PENALTY;
+  return { matches, total, modifier, roundsUsed };
 }
