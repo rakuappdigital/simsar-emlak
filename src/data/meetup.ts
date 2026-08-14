@@ -14,8 +14,15 @@ export const FLIRT_CHANCE = 0.08;
 /** Bond points gained per flirty moment picked during a house visit. */
 export const FLIRT_BOND_GAIN = 1;
 
-/** Bond needed before that character reaches out with a meetup invite. */
-export const MEETUP_BOND_THRESHOLD = 3;
+/**
+ * Bond needed before that character reaches out with a meetup invite.
+ * Pool characters are cast fresh per house (assignCast prefers unused
+ * candidates and the pool vastly outnumbers the slots used in one game),
+ * so the same character is met at most once per playthrough — bond can
+ * realistically only ever reach 1 from the flirty-choice moment itself.
+ * A threshold above 1 would make the invite unreachable in practice.
+ */
+export const MEETUP_BOND_THRESHOLD = 1;
 /** Chance, per house entry, that an eligible character's invite actually fires. */
 export const MEETUP_INVITE_CHANCE = 0.15;
 

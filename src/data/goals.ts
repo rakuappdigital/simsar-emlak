@@ -12,6 +12,7 @@ export const weekGoals: WeekGoal[] = [
   { weekIndex: 6, salesTarget: 5, maxAvgSuspicion: 18 },
   { weekIndex: 7, salesTarget: 5, maxAvgSuspicion: 16 },
   { weekIndex: 8, salesTarget: 5, maxAvgSuspicion: 15 },
+  { weekIndex: 9, salesTarget: 5, maxAvgSuspicion: 15 },
 ];
 
 export function weekIndexForHouse(houseIndex: number): number {

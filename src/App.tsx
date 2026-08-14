@@ -1003,7 +1003,9 @@ function App() {
     let newPendingInvestment = pendingInvestment;
     if (choice.investAction === "invest" && !pendingInvestment && balance >= INVESTMENT_COST) {
       newSpent = newSpent + INVESTMENT_COST;
-      newPendingInvestment = { dueIndex: index + INVESTMENT_DUE_HOUSES };
+      // Cap so a late-game investment still resolves by the final house
+      // instead of its due date landing past the end of the house list.
+      newPendingInvestment = { dueIndex: Math.min(index + INVESTMENT_DUE_HOUSES, allHouses.length - 1) };
       setSpent(newSpent);
       setPendingInvestment(newPendingInvestment);
     }
