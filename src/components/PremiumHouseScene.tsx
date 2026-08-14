@@ -6,7 +6,7 @@ import { generateContract } from "../data/contract";
 import { suspicionGainFactor, computeFreshStats } from "../data/scoring";
 import { getDifficulty, difficultyMultiplier } from "../data/difficulty";
 import { resolveCustomerNames } from "../data/characterPool";
-import { reputationSuspicionOffset } from "../data/introFlavor";
+import { reputationSuspicionOffset, districtReputationOffset, districtOf } from "../data/introFlavor";
 
 interface PremiumHouseSceneProps {
   house: HouseScene;
@@ -14,6 +14,7 @@ interface PremiumHouseSceneProps {
   consumables: Record<string, number>;
   castAssignment: Record<string, string[]>;
   results: HouseResult[];
+  allHouses: HouseScene[];
   onFinish: (outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) => void;
 }
 
@@ -30,11 +31,14 @@ export default function PremiumHouseScene({
   consumables,
   castAssignment,
   results,
+  allHouses,
   onFinish,
 }: PremiumHouseSceneProps) {
   const [stats, setStats] = useState<GameStats>(() => {
     const fresh = computeFreshStats(0, ownedPerks, consumables);
-    return { ...fresh, suspicion: Math.max(0, fresh.suspicion + reputationSuspicionOffset(results)) };
+    const offset =
+      reputationSuspicionOffset(results) + districtReputationOffset(results, allHouses, districtOf(house.location));
+    return { ...fresh, suspicion: Math.max(0, fresh.suspicion + offset) };
   });
   const [stage, setStage] = useState<"dialogue" | "contract">("dialogue");
 

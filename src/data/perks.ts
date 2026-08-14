@@ -22,10 +22,27 @@ export const BADGE_DISCOUNT_PERK_ID = "ikna-kartviziti";
 export const BADGE_DISCOUNT_BADGE_ID = "durust-seri";
 export const BADGE_DISCOUNT_RATE = 0.1;
 
-/** Actual price to charge/display for an item, after any badge-earned discount. */
-export function effectiveCost(item: Perk, ownedBadges: string[]): number {
+/**
+ * Same idea as the badge discount, but tied to the calendar instead of an
+ * achievement — every 3rd week (a deterministic, easily-testable schedule,
+ * same seeding spirit as weeklyNews.ts) a single ofis item goes on sale.
+ * Different item than the badge discount, so the two never stack on the
+ * same purchase, keeping the market's cost balance easy to reason about.
+ */
+export const CAMPAIGN_PERK_ID = "enerji-icecegi";
+export const CAMPAIGN_DISCOUNT_RATE = 0.15;
+
+export function isCampaignWeek(weekIndex: number): boolean {
+  return weekIndex % 3 === 1;
+}
+
+/** Actual price to charge/display for an item, after any badge- or campaign-earned discount. */
+export function effectiveCost(item: Perk, ownedBadges: string[], weekIndex: number): number {
   if (item.id === BADGE_DISCOUNT_PERK_ID && ownedBadges.includes(BADGE_DISCOUNT_BADGE_ID)) {
     return Math.round(item.cost * (1 - BADGE_DISCOUNT_RATE));
+  }
+  if (item.id === CAMPAIGN_PERK_ID && isCampaignWeek(weekIndex)) {
+    return Math.round(item.cost * (1 - CAMPAIGN_DISCOUNT_RATE));
   }
   return item.cost;
 }
@@ -78,7 +95,8 @@ export const perks: Perk[] = [
     id: "kisisel-asistan",
     category: "ofis",
     title: "Kişisel Asistan",
-    description: "Randevularını senin yerine ayarlar, haftalık yorgunluk etkisini ek %15 azaltır.",
+    description:
+      "Randevularını senin yerine ayarlar, haftalık yorgunluk etkisini ek %15 azaltır. Ayrıca her evden önce müşteriyle küçük bir ön görüşme yapar, ilgiye +5 ile başlarsın.",
     cost: 240000,
     requires: "referans-agi",
   },

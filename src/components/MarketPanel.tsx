@@ -1,4 +1,4 @@
-import { perks, effectiveCost } from "../data/perks";
+import { perks, effectiveCost, CAMPAIGN_PERK_ID, isCampaignWeek } from "../data/perks";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
 import type { MarketCategory } from "../types";
@@ -9,6 +9,7 @@ interface MarketPanelProps {
   consumables: Record<string, number>;
   unlockedTiers: number[];
   badges: string[];
+  weekIndex: number;
   onBuy: (id: string) => void;
 }
 
@@ -29,10 +30,15 @@ export default function MarketPanel({
   consumables,
   unlockedTiers,
   badges,
+  weekIndex,
   onBuy,
 }: MarketPanelProps) {
+  const campaignActive = isCampaignWeek(weekIndex);
   return (
     <div className="market-panel">
+      {campaignActive && (
+        <p className="market-campaign-banner">🎉 Bu hafta kampanya var — Enerji İçeceği indirimli!</p>
+      )}
       {categoryOrder.map((cat) => {
         const items = perks.filter((p) => p.category === cat);
         if (items.length === 0) return null;
@@ -57,8 +63,9 @@ export default function MarketPanel({
               const prereqItem = item.requires ? perks.find((p) => p.id === item.requires) : undefined;
               const prereqMet = !item.requires || ownedPerks.includes(item.requires);
               const tierAlready = item.unlocksTier ? unlockedTiers.includes(item.unlocksTier) : false;
-              const price = effectiveCost(item, badges);
+              const price = effectiveCost(item, badges, weekIndex);
               const discounted = price < item.cost;
+              const isCampaignItem = item.id === CAMPAIGN_PERK_ID && campaignActive;
               const disabled = alreadyOwned || tierAlready || !prereqMet || balance < price;
               return (
                 <div className="market-item" key={item.id}>
@@ -70,7 +77,9 @@ export default function MarketPanel({
                     )}
                     {item.consumable && count > 0 && <p className="market-item-count">Elinde: {count}</p>}
                     {discounted && !alreadyOwned && (
-                      <p className="market-item-discount">🏅 Dürüstlük Serisi indirimi uygulandı</p>
+                      <p className="market-item-discount">
+                        {isCampaignItem ? "🎉 Haftalık kampanya indirimi uygulandı" : "🏅 Dürüstlük Serisi indirimi uygulandı"}
+                      </p>
                     )}
                   </div>
                   <button className="pixel-btn small" disabled={disabled} onClick={() => onBuy(item.id)}>

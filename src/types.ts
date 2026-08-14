@@ -193,8 +193,13 @@ export interface PendingLoan {
   amount: number;
 }
 
+/** A property Emlah bought with his own money via the "bora-yatirim" chitchat — resolves for a profit or a loss a few weeks later. */
+export interface PendingInvestment {
+  dueIndex: number;
+}
+
 export interface SaveGame {
-  version: 8;
+  version: 9;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -218,6 +223,8 @@ export interface SaveGame {
   chitchatBonuses: number;
   /** One-off "Özel Davet" bonus house results — never touches `results`/`houseOrder` indices. */
   premiumResults: HouseResult[];
+  /** A self-funded property currently held, or null if none active. */
+  pendingInvestment: PendingInvestment | null;
   savedAt: string;
 }
 

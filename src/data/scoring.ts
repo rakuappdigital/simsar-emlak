@@ -147,7 +147,7 @@ export function computeFreshStats(
   const { interest: prestigeInterest, fun: prestigeFun } = prestigeBonus(prestige);
   let stats: GameStats = {
     suspicion: fatigueSuspicion(positionInWeek, factor),
-    interest: prestigeInterest,
+    interest: prestigeInterest + (hasPerk(perksList, "kisisel-asistan") ? 5 : 0),
     fun: (hasPerk(perksList, "sansli-nal") ? 10 : 0) + prestigeFun,
     discountPercent: 0,
   };

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import type { Badge, HouseResult, HouseScene, InboxMessage } from "../types";
 import { formatTL } from "../data/economy";
+import { weekIndexForHouse } from "../data/goals";
 import MarketPanel from "./MarketPanel";
 import MessagesPanel from "./MessagesPanel";
 import PortfolioPanel from "./PortfolioPanel";
@@ -110,6 +111,7 @@ export default function EmlahMenu({
               consumables={consumables}
               unlockedTiers={unlockedTiers}
               badges={badges}
+              weekIndex={weekIndexForHouse(currentIndex)}
               onBuy={onBuy}
             />
           )}

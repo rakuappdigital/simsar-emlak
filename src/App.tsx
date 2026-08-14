@@ -15,7 +15,9 @@ import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
 import WorkTaskScreen from "./components/WorkTaskScreen";
 import { pickWorkTask, type WorkTaskDef } from "./data/workTasks";
-import { pickIntroFlavor, reputationLabel, reputationSuspicionOffset } from "./data/introFlavor";
+import { pickQuickCall } from "./data/quickCall";
+import QuickCallScreen from "./components/QuickCallScreen";
+import { pickIntroFlavor, reputationLabel, reputationSuspicionOffset, districtOf, districtReputationOffset } from "./data/introFlavor";
 import { generateShareCard } from "./data/shareCard";
 import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
@@ -54,6 +56,7 @@ import type {
   HouseScene,
   InboxMessage,
   PendingLoan,
+  PendingInvestment,
   PhoneMessage,
   SaleResult,
   SaveGame,
@@ -70,6 +73,7 @@ type Stage =
   | "phone"
   | "chitchat"
   | "task"
+  | "quickcall"
   | "house"
   | "contract"
   | "locked"
@@ -84,6 +88,15 @@ const LOAN_AMOUNT = 20000;
 const LOAN_REPAY_AMOUNT = 28000;
 const LOAN_REPAY_CHANCE = 0.8;
 const LOAN_DUE_HOUSES = HOUSES_PER_WEEK * 2;
+const INVESTMENT_COST = 150000;
+const INVESTMENT_PROFIT_AMOUNT = 210000;
+const INVESTMENT_LOSS_AMOUNT = 90000;
+const INVESTMENT_PROFIT_CHANCE = 0.55;
+const INVESTMENT_DUE_HOUSES = HOUSES_PER_WEEK * 3;
+const BULK_DEAL_SAFE_AMOUNT = 70000;
+const BULK_DEAL_RISKY_BIG_AMOUNT = 160000;
+const BULK_DEAL_RISKY_SMALL_AMOUNT = 25000;
+const BULK_DEAL_RISKY_BIG_CHANCE = 0.5;
 const RANK_ORDER = ["Stajyer", "Emlakçı", "Kıdemli Emlakçı", "Ofis Ortağı"];
 
 interface PendingHouseEntry {
@@ -183,9 +196,11 @@ function App() {
   const [introFlavorMsg, setIntroFlavorMsg] = useState<PhoneMessage | null>(null);
   const [activeTask, setActiveTask] = useState<WorkTaskDef | null>(null);
   const [lastTaskId, setLastTaskId] = useState<string | undefined>(undefined);
+  const [lastQuickCallId, setLastQuickCallId] = useState<string | undefined>(undefined);
   const [pendingHouseEntry, setPendingHouseEntry] = useState<PendingHouseEntry | null>(null);
   const [bonusEarnings, setBonusEarnings] = useState(0);
   const [pendingLoan, setPendingLoan] = useState<PendingLoan | null>(null);
+  const [pendingInvestment, setPendingInvestment] = useState<PendingInvestment | null>(null);
   const [tasksCompleted, setTasksCompleted] = useState(0);
   const [chitchatBonuses, setChitchatBonuses] = useState(0);
   const [premiumResults, setPremiumResults] = useState<HouseResult[]>([]);
@@ -252,9 +267,10 @@ function App() {
     newTasksCompleted: number = tasksCompleted,
     newChitchatBonuses: number = chitchatBonuses,
     newPremiumResults: HouseResult[] = premiumResults,
+    newPendingInvestment: PendingInvestment | null = pendingInvestment,
   ) {
     const save: SaveGame = {
-      version: 8,
+      version: 9,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -272,6 +288,7 @@ function App() {
       tasksCompleted: newTasksCompleted,
       chitchatBonuses: newChitchatBonuses,
       premiumResults: newPremiumResults,
+      pendingInvestment: newPendingInvestment,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -338,10 +355,19 @@ function App() {
         castAssignmentParam,
         dailyQuestParam,
       });
-      const task = pickWorkTask(lastTaskId);
-      setLastTaskId(task.id);
-      setActiveTask(task);
-      setStage("task");
+      // Same interruption slot/frequency as before (WORK_TASK_CHANCE unchanged) —
+      // just a coin flip on which of the two mini-games fills it, for variety.
+      if (Math.random() < 0.5) {
+        const task = pickWorkTask(lastTaskId);
+        setLastTaskId(task.id);
+        setActiveTask(task);
+        setStage("task");
+      } else {
+        const quickCall = pickQuickCall(lastQuickCallId);
+        setLastQuickCallId(quickCall.id);
+        setActiveTask(quickCall);
+        setStage("quickcall");
+      }
       return;
     }
 
@@ -377,6 +403,20 @@ function App() {
     }
     const newPendingLoan = pendingLoan && newIndex >= pendingLoan.dueIndex ? null : pendingLoan;
 
+    // Resolve the self-funded property from "bora-yatirim", if its time has come.
+    if (pendingInvestment && newIndex >= pendingInvestment.dueIndex) {
+      const profit = Math.random() < INVESTMENT_PROFIT_CHANCE;
+      const investMsg: PhoneMessage = profit
+        ? { from: "Bora", text: `O daireyi hatırlıyor musun, satıldı! Payına düşen +${formatTL(INVESTMENT_PROFIT_AMOUNT)}` }
+        : { from: "Bora", text: `O daire konusunda kötü haberim var, beklediğimiz gibi gitmedi. Elimize sadece ${formatTL(INVESTMENT_LOSS_AMOUNT)} geçti.` };
+      loanInbox = logMessages(loanInbox, "friend-bora", "Bora", [investMsg], newIndex + 1);
+      newBonusEarnings += profit ? INVESTMENT_PROFIT_AMOUNT : INVESTMENT_LOSS_AMOUNT;
+      setBonusEarnings(newBonusEarnings);
+      setPendingInvestment(null);
+    }
+    const newPendingInvestment =
+      pendingInvestment && newIndex >= pendingInvestment.dueIndex ? null : pendingInvestment;
+
     const currentQuest =
       newIndex % HOUSES_PER_WEEK === 0
         ? applyRecoveryBonus(pickDailyQuest(weekIndexForHouse(newIndex)), weekOutcomes)
@@ -385,11 +425,17 @@ function App() {
 
     const positionInWeek = newIndex % HOUSES_PER_WEEK;
     let newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
+    const nextDistrict = districtOf(nextHouse.location);
     newStats = {
       ...newStats,
-      suspicion: Math.max(0, newStats.suspicion + reputationSuspicionOffset(currentResults)),
+      suspicion: Math.max(
+        0,
+        newStats.suspicion +
+          reputationSuspicionOffset(currentResults) +
+          districtReputationOffset(currentResults, allHouses, nextDistrict),
+      ),
     };
-    const flavor = newIndex > 0 ? pickIntroFlavor(currentResults) : { message: null, isLucky: false };
+    const flavor = newIndex > 0 ? pickIntroFlavor(currentResults, allHouses, nextDistrict) : { message: null, isLucky: false };
     setIntroFlavorMsg(flavor.message);
     if (flavor.isLucky) {
       newStats = {
@@ -426,7 +472,7 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses);
+        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -434,7 +480,7 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses);
+    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -492,6 +538,7 @@ function App() {
     setActiveCallback(null);
     setBonusEarnings(0);
     setPendingLoan(null);
+    setPendingInvestment(null);
     setTasksCompleted(0);
     setChitchatBonuses(0);
     setPremiumResults([]);
@@ -522,6 +569,7 @@ function App() {
     setDailyQuestResult(null);
     setBonusEarnings(savedGame.bonusEarnings);
     setPendingLoan(savedGame.pendingLoan);
+    setPendingInvestment(savedGame.pendingInvestment ?? null);
     setTasksCompleted(savedGame.tasksCompleted);
     setChitchatBonuses(savedGame.chitchatBonuses);
     setPremiumResults(savedGame.premiumResults ?? []);
@@ -709,7 +757,7 @@ function App() {
     if (ownedPerks.includes(itemId)) return;
     if (item.requires && !ownedPerks.includes(item.requires)) return;
     if (item.unlocksTier && unlockedTiers.includes(item.unlocksTier)) return;
-    const price = effectiveCost(item, badges);
+    const price = effectiveCost(item, badges, weekIndexForHouse(index));
     if (balance < price) return;
 
     const newOwned = [...ownedPerks, itemId];
@@ -846,7 +894,7 @@ function App() {
     // boss chitchat never both fire for the same house visit.
     const roll = Math.random();
     if (roll < FRIEND_CHANCE) {
-      const set = pickFriendMessage(lastFriendId, pendingLoan !== null);
+      const set = pickFriendMessage(lastFriendId, pendingLoan !== null, pendingInvestment !== null);
       setLastFriendId(set.id);
       const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
       setActiveFriendChat({ set, messages: openMsg, showChoices: true });
@@ -874,7 +922,6 @@ function App() {
 
     const threadId = `friend-${activeFriendChat.set.contactName.toLowerCase()}`;
     const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
-    const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: choice.reaction };
 
     let newSpent = spent;
     let newPendingLoan = pendingLoan;
@@ -885,14 +932,38 @@ function App() {
       setPendingLoan(newPendingLoan);
       applyEffects({ fun: 8 });
     }
+    let newPendingInvestment = pendingInvestment;
+    if (choice.investAction === "invest" && !pendingInvestment && balance >= INVESTMENT_COST) {
+      newSpent = newSpent + INVESTMENT_COST;
+      newPendingInvestment = { dueIndex: index + INVESTMENT_DUE_HOUSES };
+      setSpent(newSpent);
+      setPendingInvestment(newPendingInvestment);
+    }
 
+    let newBonusEarnings = bonusEarnings;
+    let bulkDealReaction = choice.reaction;
+    if (choice.bulkDealAction === "safe") {
+      newBonusEarnings = bonusEarnings + BULK_DEAL_SAFE_AMOUNT;
+      setBonusEarnings(newBonusEarnings);
+      bulkDealReaction = `${choice.reaction} (+${formatTL(BULK_DEAL_SAFE_AMOUNT)})`;
+    } else if (choice.bulkDealAction === "risky") {
+      const big = Math.random() < BULK_DEAL_RISKY_BIG_CHANCE;
+      const amount = big ? BULK_DEAL_RISKY_BIG_AMOUNT : BULK_DEAL_RISKY_SMALL_AMOUNT;
+      newBonusEarnings = bonusEarnings + amount;
+      setBonusEarnings(newBonusEarnings);
+      bulkDealReaction = big
+        ? `Anlaşma büyük çıktı, payınız: +${formatTL(amount)} 🎉`
+        : `Anlaşma beklediğimizden küçük oldu ama yine de bir pay çıktı: +${formatTL(amount)}`;
+    }
+
+    const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: bulkDealReaction };
     const withReply = logMessages(inbox, threadId, "Emlah", [replyMsg], index + 1, true);
     const newInbox = logMessages(withReply, threadId, activeFriendChat.set.contactName, [reactionMsg], index + 1);
     setInbox(newInbox);
     setActiveFriendChat((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
-    persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, bonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses);
+    persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
   }
 
   function handleChitchatChoice(choiceId: string) {
@@ -1064,6 +1135,7 @@ function App() {
               consumables={consumables}
               castAssignment={castAssignment}
               results={results}
+              allHouses={allHouses}
               onFinish={finishPremiumHouse}
             />
           </div>
@@ -1157,6 +1229,8 @@ function App() {
       )}
 
       {stage === "task" && activeTask && <WorkTaskScreen task={activeTask} onChoice={completeWorkTask} />}
+
+      {stage === "quickcall" && activeTask && <QuickCallScreen task={activeTask} onChoice={completeWorkTask} />}
 
       {stage === "house" && (
         <>

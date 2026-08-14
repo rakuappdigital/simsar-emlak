@@ -4,6 +4,10 @@ export interface FriendChoice {
   reaction: string;
   /** Present only on the loan-ask set — drives App.tsx's small lend/repay loop. */
   loanAction?: "lend" | "decline";
+  /** Present only on the investment-offer set — drives App.tsx's buy/resolve loop. */
+  investAction?: "invest" | "decline";
+  /** Present only on the bulk-deal set — drives App.tsx's immediate safe/risky/decline payout. */
+  bulkDealAction?: "safe" | "risky" | "decline";
 }
 
 export interface FriendMessageSet {
@@ -48,11 +52,26 @@ export const friendMessageSets: FriendMessageSet[] = [
   {
     id: "bora-yatirim",
     contactName: "Bora",
-    prompt: "Bu ara kripto paraya giriyorum, sen de girsene emlakçı kafasını bırak biraz 😄",
+    prompt: "Elimde ucuza kapatılabilecek bir daire var, sen de kendi paranla bir el atsana, birkaç haftaya değerlenir.",
     choices: [
-      { id: "a", text: "Ben tuğlaya güveniyorum kanka, sağlam iş.", reaction: "Haklısın valla, ev hiç değer kaybetmiyor." },
-      { id: "b", text: "O da ne şimdi? 😄", reaction: "Cahil kalma öyle, biraz araştır bence." },
-      { id: "c", text: "Sen bilirsin, ben riske girmem.", reaction: "Aferin, akıllı adamsın sen." },
+      {
+        id: "invest",
+        text: "Olur, kendi param için bir şans veriyorum.",
+        reaction: "Aferin, sonucu birkaç hafta içinde konuşuruz.",
+        investAction: "invest",
+      },
+      {
+        id: "decline-risk",
+        text: "Şu an riske girecek param yok açıkçası.",
+        reaction: "Sorun değil, başka sefere.",
+        investAction: "decline",
+      },
+      {
+        id: "decline-joke",
+        text: "Ben zaten başkasının evini satıyorum, kendime yetmiyor 😄",
+        reaction: "Haha mantıklı, boş ver o zaman.",
+        investAction: "decline",
+      },
     ],
   },
   {
@@ -75,11 +94,37 @@ export const friendMessageSets: FriendMessageSet[] = [
       { id: "c", text: "Şu an biraz meşgulüm, akşam konuşalım mı?", reaction: "Tamam tamam, kolay gelsin!" },
     ],
   },
+  {
+    id: "kurumsal-toplu-anlasma",
+    contactName: "Kurumsal Temsilci",
+    prompt: "Merhaba, bir şirket adına birden fazla daire almayı düşünüyoruz. Size bir danışmanlık payı çıkarabiliriz, ilgilenir misiniz?",
+    choices: [
+      {
+        id: "safe",
+        text: "\"Sabit bir danışmanlık ücreti üzerinden anlaşalım.\"",
+        reaction: "Anlaştık, güvenli tarafı seçtiniz — ödemeyi hemen geçiyoruz.",
+        bulkDealAction: "safe",
+      },
+      {
+        id: "risky",
+        text: "\"Satış hacmine bağlı bir pay öneriyorum, ikimiz için de daha iyi olabilir.\"",
+        reaction: "İlginç bir teklif, yönetime iletip size döneceğiz.",
+        bulkDealAction: "risky",
+      },
+      {
+        id: "decline",
+        text: "\"Şu an bu ölçekte bir işe vaktim yok açıkçası.\"",
+        reaction: "Anlıyoruz, belki ileride tekrar konuşuruz.",
+        bulkDealAction: "decline",
+      },
+    ],
+  },
 ];
 
-export function pickFriendMessage(excludeId?: string, loanActive = false): FriendMessageSet {
+export function pickFriendMessage(excludeId?: string, loanActive = false, investmentActive = false): FriendMessageSet {
   let pool = friendMessageSets;
   if (excludeId) pool = pool.filter((f) => f.id !== excludeId);
   if (loanActive) pool = pool.filter((f) => f.id !== "bora-borc-istek");
+  if (investmentActive) pool = pool.filter((f) => f.id !== "bora-yatirim");
   return pool[Math.floor(Math.random() * pool.length)];
 }

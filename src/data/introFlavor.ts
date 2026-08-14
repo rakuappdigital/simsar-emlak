@@ -1,4 +1,4 @@
-import type { HouseResult, PhoneMessage } from "../types";
+import type { HouseResult, HouseScene, PhoneMessage } from "../types";
 import { computeStreak } from "./badges";
 
 export type Mood = "happy" | "neutral" | "annoyed";
@@ -82,6 +82,48 @@ export function pickReputationLine(label: string): string {
   return lines[Math.floor(Math.random() * lines.length)];
 }
 
+/** District name from a "Semt, detay" location string, e.g. "Kadıköy, pazar sokağı" -> "Kadıköy". */
+export function districtOf(location: string): string {
+  return location.split(",")[0].trim();
+}
+
+const DISTRICT_HONEST_OFFSET = -3;
+const DISTRICT_SNEAKY_OFFSET = 3;
+
+/**
+ * A smaller, local echo of reputationSuspicionOffset scoped to just the
+ * current district — visiting a district where you've been consistently
+ * honest or sneaky before nudges trust a little further than the citywide
+ * average alone. Combined with reputationSuspicionOffset the total swing
+ * stays bounded at ±9, still a small fraction of a house's stat range.
+ */
+export function districtReputationOffset(results: HouseResult[], allHouses: HouseScene[], district: string): number {
+  const districtResults = results.filter((r) => {
+    const h = allHouses.find((house) => house.id === r.houseId);
+    return h ? districtOf(h.location) === district : false;
+  });
+  if (districtResults.length === 0) return 0;
+  const avg = districtResults.reduce((s, r) => s + r.finalSuspicion, 0) / districtResults.length;
+  if (avg <= 25) return DISTRICT_HONEST_OFFSET;
+  if (avg > 45) return DISTRICT_SNEAKY_OFFSET;
+  return 0;
+}
+
+const districtHonestLines = [
+  "Bu mahallede işleriniz hep temiz gitmiş, burada da rahat olacaksınız.",
+  "Bu semtte adınız iyi biliniyor galiba.",
+];
+
+const districtSneakyLines = [
+  "Bu mahallede sizinle ilgili bazı şeyler duymuş, biraz temkinli geliyor.",
+  "Bu semtte önceki bir işiniz pek iyi anılmıyor sanki.",
+];
+
+export function pickDistrictLine(district: string, honest: boolean): string {
+  const lines = honest ? districtHonestLines : districtSneakyLines;
+  return lines[Math.floor(Math.random() * lines.length)].replace("Bu mahallede", `${district}'de`).replace("Bu semtte", `${district}'de`);
+}
+
 /** Streak length at which the commission bonus caps out (see STREAK_BONUS_CAP/RATE in scoring.ts). */
 const HOT_STREAK_THRESHOLD = 3;
 
@@ -111,6 +153,7 @@ const MOOD_COMMENT_CHANCE = 0.6;
 const RIVAL_CHANCE = 0.12;
 const REPUTATION_CHANCE = 0.18;
 const STREAK_COMMENT_CHANCE = 0.35;
+const DISTRICT_CHANCE = 0.15;
 
 export interface IntroFlavorResult {
   message: PhoneMessage | null;
@@ -118,7 +161,11 @@ export interface IntroFlavorResult {
 }
 
 /** Picks at most one extra flavor line for Muzaffer's intro message, so the phone screen never gets spammy. */
-export function pickIntroFlavor(results: HouseResult[]): IntroFlavorResult {
+export function pickIntroFlavor(
+  results: HouseResult[],
+  allHouses: HouseScene[] = [],
+  currentDistrict: string | null = null,
+): IntroFlavorResult {
   const isLucky = Math.random() < LUCKY_DAY_CHANCE;
   if (isLucky) {
     return { message: { from: "Muzaffer Bey", text: pickLuckyLine() }, isLucky: true };
@@ -136,6 +183,15 @@ export function pickIntroFlavor(results: HouseResult[]): IntroFlavorResult {
   }
   if (computeStreak(results) >= HOT_STREAK_THRESHOLD && Math.random() < STREAK_COMMENT_CHANCE) {
     return { message: { from: "Muzaffer Bey", text: pickStreakLine() }, isLucky: false };
+  }
+  if (currentDistrict) {
+    const districtOffset = districtReputationOffset(results, allHouses, currentDistrict);
+    if (districtOffset !== 0 && Math.random() < DISTRICT_CHANCE) {
+      return {
+        message: { from: "Muzaffer Bey", text: pickDistrictLine(currentDistrict, districtOffset < 0) },
+        isLucky: false,
+      };
+    }
   }
   return { message: null, isLucky: false };
 }
