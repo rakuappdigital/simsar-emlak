@@ -22,7 +22,15 @@ import { generateShareCard } from "./data/shareCard";
 import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
-import { assignCast, resolveCustomerNames, resolvePortrait } from "./data/characterPool";
+import { assignCast, resolveCustomerNames, resolvePortrait, poolCharacterById } from "./data/characterPool";
+import {
+  FLIRT_BOND_GAIN,
+  MEETUP_BOND_THRESHOLD,
+  MEETUP_INVITE_CHANCE,
+  meetupActivities,
+  declineReplies,
+  pickInvitePrompt,
+} from "./data/meetup";
 import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
@@ -201,6 +209,14 @@ function App() {
   const [bonusEarnings, setBonusEarnings] = useState(0);
   const [pendingLoan, setPendingLoan] = useState<PendingLoan | null>(null);
   const [pendingInvestment, setPendingInvestment] = useState<PendingInvestment | null>(null);
+  const [friendBonds, setFriendBonds] = useState<Record<string, number>>({});
+  const [activeMeetup, setActiveMeetup] = useState<{
+    characterId: string;
+    characterName: string;
+    messages: PhoneMessage[];
+    showChoices: boolean;
+  } | null>(null);
+  const [pendingMeetupBonus, setPendingMeetupBonus] = useState<{ interest?: number; fun?: number } | null>(null);
   const [tasksCompleted, setTasksCompleted] = useState(0);
   const [chitchatBonuses, setChitchatBonuses] = useState(0);
   const [premiumResults, setPremiumResults] = useState<HouseResult[]>([]);
@@ -268,9 +284,10 @@ function App() {
     newChitchatBonuses: number = chitchatBonuses,
     newPremiumResults: HouseResult[] = premiumResults,
     newPendingInvestment: PendingInvestment | null = pendingInvestment,
+    newFriendBonds: Record<string, number> = friendBonds,
   ) {
     const save: SaveGame = {
-      version: 9,
+      version: 10,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -289,6 +306,7 @@ function App() {
       chitchatBonuses: newChitchatBonuses,
       premiumResults: newPremiumResults,
       pendingInvestment: newPendingInvestment,
+      friendBonds: newFriendBonds,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -318,6 +336,33 @@ function App() {
         discountPercent: s.discountPercent + (effects.discountPercent ?? 0),
       };
     });
+  }
+
+  function handleFlirt(characterId: string, _characterName: string) {
+    const newFriendBonds = { ...friendBonds, [characterId]: (friendBonds[characterId] ?? 0) + FLIRT_BOND_GAIN };
+    setFriendBonds(newFriendBonds);
+    persist(
+      results,
+      weekOutcomes,
+      badges,
+      index,
+      ownedPerks,
+      spent,
+      consumables,
+      unlockedTiers,
+      houseOrder,
+      inbox,
+      castAssignment,
+      dailyQuest,
+      activeSlot,
+      bonusEarnings,
+      pendingLoan,
+      tasksCompleted,
+      chitchatBonuses,
+      premiumResults,
+      pendingInvestment,
+      newFriendBonds,
+    );
   }
 
   function enterPhone(
@@ -452,6 +497,14 @@ function App() {
         fun: Math.min(100, newStats.fun + (taskReward.fun ?? 0)),
       };
     }
+    if (pendingMeetupBonus) {
+      newStats = {
+        ...newStats,
+        interest: Math.min(100, newStats.interest + (pendingMeetupBonus.interest ?? 0)),
+        fun: Math.min(100, newStats.fun + (pendingMeetupBonus.fun ?? 0)),
+      };
+      setPendingMeetupBonus(null);
+    }
     setStats(newStats);
     const remainingConsumables = consumeOneOfEach(consumablesList);
     setConsumables(remainingConsumables);
@@ -539,6 +592,9 @@ function App() {
     setBonusEarnings(0);
     setPendingLoan(null);
     setPendingInvestment(null);
+    setFriendBonds({});
+    setActiveMeetup(null);
+    setPendingMeetupBonus(null);
     setTasksCompleted(0);
     setChitchatBonuses(0);
     setPremiumResults([]);
@@ -570,6 +626,7 @@ function App() {
     setBonusEarnings(savedGame.bonusEarnings);
     setPendingLoan(savedGame.pendingLoan);
     setPendingInvestment(savedGame.pendingInvestment ?? null);
+    setFriendBonds(savedGame.friendBonds ?? {});
     setTasksCompleted(savedGame.tasksCompleted);
     setChitchatBonuses(savedGame.chitchatBonuses);
     setPremiumResults(savedGame.premiumResults ?? []);
@@ -909,6 +966,20 @@ function App() {
       setStage("chitchat");
       return;
     }
+    // Entirely separate, independently-rare layer — a bonded character
+    // reaching out. Only ever fires on top of an otherwise-quiet beat, never
+    // stacked with the friend/chitchat rolls above.
+    const eligibleCharacterId = Object.keys(friendBonds).find((id) => friendBonds[id] >= MEETUP_BOND_THRESHOLD);
+    if (eligibleCharacterId && Math.random() < MEETUP_INVITE_CHANCE) {
+      const character = poolCharacterById(eligibleCharacterId);
+      if (character) {
+        const openMsg: PhoneMessage[] = [{ from: character.name, text: pickInvitePrompt() }];
+        setActiveMeetup({ characterId: eligibleCharacterId, characterName: character.name, messages: openMsg, showChoices: true });
+        setInbox((prev) => logMessages(prev, `meetup-${eligibleCharacterId}`, character.name, openMsg, index + 1));
+        setStage("chitchat");
+        return;
+      }
+    }
     setStage("house");
   }
 
@@ -961,6 +1032,42 @@ function App() {
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
     persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
+  }
+
+  function handleMeetupChoice(activityId: string) {
+    if (!activeMeetup) return;
+    const activity = meetupActivities.find((a) => a.id === activityId);
+
+    const threadId = `meetup-${activeMeetup.characterId}`;
+    const replyMsg: PhoneMessage = { from: "Emlah", text: activity ? activity.label : "Şu an vaktim yok açıkçası." };
+
+    let newSpent = spent;
+    let newFriendBonds = friendBonds;
+    let reactionText: string;
+
+    if (!activity) {
+      reactionText = declineReplies[Math.floor(Math.random() * declineReplies.length)];
+    } else if (balance >= activity.cost) {
+      newSpent = spent + activity.cost;
+      setSpent(newSpent);
+      newFriendBonds = { ...friendBonds, [activeMeetup.characterId]: activity.bondGain };
+      setFriendBonds(newFriendBonds);
+      setPendingMeetupBonus(activity.bonus);
+      reactionText = activity.goodReplies[Math.floor(Math.random() * activity.goodReplies.length)];
+    } else {
+      newFriendBonds = { ...friendBonds, [activeMeetup.characterId]: 0 };
+      setFriendBonds(newFriendBonds);
+      reactionText = activity.cantAffordReplies[Math.floor(Math.random() * activity.cantAffordReplies.length)];
+    }
+
+    const reactionMsg: PhoneMessage = { from: activeMeetup.characterName, text: reactionText };
+    const withReply = logMessages(inbox, threadId, "Emlah", [replyMsg], index + 1, true);
+    const newInbox = logMessages(withReply, threadId, activeMeetup.characterName, [reactionMsg], index + 1);
+    setInbox(newInbox);
+    setActiveMeetup((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
+    );
+    persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, newFriendBonds);
   }
 
   function handleChitchatChoice(choiceId: string) {
@@ -1225,6 +1332,25 @@ function App() {
         />
       )}
 
+      {stage === "chitchat" && activeMeetup && (
+        <PhoneScreen
+          key={`meetup-${activeMeetup.characterId}-${index}`}
+          contactName={activeMeetup.characterName}
+          statusText="yazıyor..."
+          messages={activeMeetup.messages}
+          choices={
+            activeMeetup.showChoices
+              ? [...meetupActivities.map((a) => ({ id: a.id, text: a.label })), { id: "decline", text: "\"Şu an vaktim yok açıkçası.\"" }]
+              : undefined
+          }
+          onChoice={handleMeetupChoice}
+          onContinue={() => {
+            setActiveMeetup(null);
+            setStage("house");
+          }}
+        />
+      )}
+
       {stage === "task" && activeTask && <WorkTaskScreen task={activeTask} onChoice={completeWorkTask} />}
 
       {stage === "quickcall" && activeTask && <QuickCallScreen task={activeTask} onChoice={completeWorkTask} />}
@@ -1251,6 +1377,7 @@ function App() {
             onChoiceEffects={applyEffects}
             onSceneEnd={handleSceneEnd}
             onLineChosen={handleLineChosen}
+            onFlirt={handleFlirt}
           />
         </>
       )}

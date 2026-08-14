@@ -255,3 +255,7 @@ export function resolvePortrait(name: string, house: HouseScene, assignment: Rec
 export function interpolateNames(text: string, names: string[]): string {
   return text.replace(/\{isim\}/g, names[0] ?? "").replace(/\{isim2\}/g, names[1] ?? "");
 }
+
+export function poolCharacterById(id: string): PoolCharacter | undefined {
+  return characterPool.find((c) => c.id === id);
+}

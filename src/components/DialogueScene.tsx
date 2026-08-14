@@ -5,7 +5,8 @@ import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
 import { resolveOutcome, closingBiasMultiplier, personalityHint } from "../data/scoring";
 import { shuffle } from "../data/shuffle";
-import { resolveCustomerNames, resolvePortrait, interpolateNames } from "../data/characterPool";
+import { resolveCustomerNames, resolvePortrait, interpolateNames, poolCharacterById } from "../data/characterPool";
+import { FLIRT_FUN_THRESHOLD, FLIRT_CHANCE } from "../data/meetup";
 
 const FUN_BONUS_THRESHOLD = 30;
 const TYPE_MS_PER_CHAR = 16;
@@ -24,6 +25,13 @@ const DISCOUNT_ASK_PATTERN = /esneklik|indirim/i;
 const WON_DEAL_LINE = "Açıkçası burayı gerçekten beğendim, karar vermeye hazırım.";
 const WON_DEAL_CHOICE_TEXT = "\"O zaman bu şartlarla ilerleyelim, teklif gayet makul.\"";
 
+const flirtChoice: Choice = {
+  id: "flirt-bond",
+  text: "(Göz kırparak) İş ciddi ama bu kadar keyifli bir görüşme az oluyor doğrusu.",
+  next: "",
+  effects: { closingBias: 10, fun: 5 },
+};
+
 interface DialogueSceneProps {
   house: HouseScene;
   stats: GameStats;
@@ -32,6 +40,7 @@ interface DialogueSceneProps {
   onChoiceEffects: (effects: ChoiceEffects) => void;
   onSceneEnd: (outcome: SceneOutcome) => void;
   onLineChosen?: (text: string, fun: number) => void;
+  onFlirt?: (characterId: string, characterName: string) => void;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -52,6 +61,7 @@ export default function DialogueScene({
   onChoiceEffects,
   onSceneEnd,
   onLineChosen,
+  onFlirt,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -100,6 +110,17 @@ export default function DialogueScene({
 
   const bonusUnlocked = isClosingNode && stats.fun >= FUN_BONUS_THRESHOLD;
 
+  // A flirty option can only ever appear with a single, female dynamicCast
+  // customer (never in front of a partner/co-buyer), on a closing node, once
+  // fun is high enough — and even then only on a rare roll, re-rolled fresh
+  // each time a new node is entered so it can't be gamed by re-rendering.
+  const flirtCharacterId = house.dynamicCast?.length === 1 ? castAssignment[house.id]?.[0] : undefined;
+  const flirtCharacter = flirtCharacterId ? poolCharacterById(flirtCharacterId) : undefined;
+  const flirtEligible =
+    isClosingNode && !!onFlirt && !!flirtCharacter && flirtCharacter.gender === "k" && stats.fun >= FLIRT_FUN_THRESHOLD;
+  const flirtRoll = useMemo(() => Math.random(), [nodeId]);
+  const flirtUnlocked = flirtEligible && flirtRoll < FLIRT_CHANCE;
+
   const displayChoices = useMemo(() => {
     if (!node.choices) return undefined;
     let list = node.choices;
@@ -110,10 +131,11 @@ export default function DialogueScene({
           : c,
       );
     }
-    const finalList = bonusUnlocked ? [...list, bonusChoice] : list;
+    let finalList = bonusUnlocked ? [...list, bonusChoice] : list;
+    if (flirtUnlocked) finalList = [...finalList, flirtChoice];
     return shuffle(finalList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId, bonusUnlocked, dealAlreadyWon]);
+  }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked]);
 
   function advanceLine() {
     if (!atLastLine) {
@@ -153,6 +175,9 @@ export default function DialogueScene({
   function pickChoice(choice: Choice) {
     if (choice.effects) onChoiceEffects(choice.effects);
     if (choice.effects?.fun) onLineChosen?.(choice.text, choice.effects.fun);
+    if (choice.id === "flirt-bond" && flirtCharacterId && flirtCharacter) {
+      onFlirt?.(flirtCharacterId, flirtCharacter.name);
+    }
 
     if (choice.effects?.closingBias !== undefined) {
       const projected: GameStats = {

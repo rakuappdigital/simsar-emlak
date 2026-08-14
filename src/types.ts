@@ -199,7 +199,7 @@ export interface PendingInvestment {
 }
 
 export interface SaveGame {
-  version: 9;
+  version: 10;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -225,6 +225,8 @@ export interface SaveGame {
   premiumResults: HouseResult[];
   /** A self-funded property currently held, or null if none active. */
   pendingInvestment: PendingInvestment | null;
+  /** Pool character id -> bond points from flirty moments and meetups — entirely optional, never required to progress. */
+  friendBonds: Record<string, number>;
   savedAt: string;
 }
 
