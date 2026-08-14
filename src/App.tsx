@@ -39,7 +39,7 @@ import {
 } from "./data/scoring";
 import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
-import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, type CallbackEvent } from "./data/callbacks";
+import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, pickNegotiationReply, type CallbackEvent } from "./data/callbacks";
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
 import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
@@ -776,7 +776,10 @@ function App() {
 
   function handleNegotiationChoice(choiceId: string) {
     if (!activeCallback) return;
-    const choice = negotiationChoices.find((c) => c.id === choiceId);
+    // Look up from this callback's own (tier-appropriate) choice list, not a
+    // hardcoded one — luxury houses use differently-worded replies, and
+    // falling back to the plain list would silently use the wrong tone.
+    const choice = (activeCallback.choices ?? negotiationChoices).find((c) => c.id === choiceId);
     if (!choice) return;
 
     const original = results[activeCallback.resultIndex];
@@ -790,17 +793,11 @@ function App() {
     };
     const outcome2: SceneOutcome = resolveOutcome(projected, bias, targetHouse.profile);
 
-    let confirmText: string;
     let updatedResult: HouseResult = { ...original, finalStats: projected, finalSuspicion: projected.suspicion };
-
-    if (outcome2 === "sold") {
-      confirmText = "Harika, hemen bir sözleşme hazırlayıp göndereyim.";
-    } else if (outcome2 === "lost") {
+    if (outcome2 === "lost") {
       updatedResult = { ...updatedResult, outcome: "lost" };
-      confirmText = "Anlıyorum, sanırım başka bir seçeneğe bakacağız.";
-    } else {
-      confirmText = "Anlaşıldı, biraz daha düşünelim, haber veririz.";
     }
+    const confirmText = pickNegotiationReply(choice, outcome2);
 
     const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
     setResults(newResults);

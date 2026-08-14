@@ -17,6 +17,13 @@ const bonusChoice: Choice = {
   effects: { closingBias: 20, fun: 5 },
 };
 
+/** Matches the common "fiyatta esneklik/indirim var mı" closing prompts — used
+ *  to safely swap only the generic discount-ask lines, never touching
+ *  specially-authored closing framings (e.g. Miras Kavgası's heir dispute). */
+const DISCOUNT_ASK_PATTERN = /esneklik|indirim/i;
+const WON_DEAL_LINE = "Açıkçası burayı gerçekten beğendim, karar vermeye hazırım.";
+const WON_DEAL_CHOICE_TEXT = "\"O zaman bu şartlarla ilerleyelim, teklif gayet makul.\"";
+
 interface DialogueSceneProps {
   house: HouseScene;
   stats: GameStats;
@@ -62,8 +69,18 @@ export default function DialogueScene({
   const portraitOutcomeClass =
     nodeId === house.closingNodes.sold ? "portrait-sold" : nodeId === house.closingNodes.lost ? "portrait-lost" : "";
 
-  function getLineText(line: { text: string }) {
-    return house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
+  const isClosingNode = node.choices?.some((c) => c.effects?.closingBias !== undefined) ?? false;
+  // A discount only makes narrative sense when the deal is genuinely shaky —
+  // if it'd already resolve to "sold" with a perfectly neutral closing bias,
+  // Emlah has no real reason to offer one unprompted.
+  const dealAlreadyWon = isClosingNode && resolveOutcome(stats, 0, house.profile) === "sold";
+
+  function getLineText(line: { text: string; speaker: string }) {
+    const base = house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
+    if (isClosingNode && dealAlreadyWon && line.speaker !== "emlah" && line.speaker !== "thought" && DISCOUNT_ASK_PATTERN.test(base)) {
+      return WON_DEAL_LINE;
+    }
+    return base;
   }
 
   const currentLine = linesShown[linesShown.length - 1];
@@ -81,15 +98,22 @@ export default function DialogueScene({
     return () => clearTimeout(timer);
   }, [typedLength, currentText.length]);
 
-  const isClosingNode = node.choices?.some((c) => c.effects?.closingBias !== undefined) ?? false;
   const bonusUnlocked = isClosingNode && stats.fun >= FUN_BONUS_THRESHOLD;
 
   const displayChoices = useMemo(() => {
     if (!node.choices) return undefined;
-    const list = bonusUnlocked ? [...node.choices, bonusChoice] : node.choices;
-    return shuffle(list);
+    let list = node.choices;
+    if (dealAlreadyWon) {
+      list = list.map((c) =>
+        c.effects?.discountPercent && c.effects.discountPercent > 0
+          ? { ...c, text: WON_DEAL_CHOICE_TEXT, effects: { ...c.effects, discountPercent: 0 } }
+          : c,
+      );
+    }
+    const finalList = bonusUnlocked ? [...list, bonusChoice] : list;
+    return shuffle(finalList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId, bonusUnlocked]);
+  }, [nodeId, bonusUnlocked, dealAlreadyWon]);
 
   function advanceLine() {
     if (!atLastLine) {
