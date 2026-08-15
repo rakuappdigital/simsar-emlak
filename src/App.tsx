@@ -630,7 +630,7 @@ function App() {
 
   function startNewGame() {
     const order = tieredShuffle(allHouses.map((h) => h.tier));
-    const cast = assignCast([...allHouses, ...premiumHouses]);
+    const cast = assignCast([...allHouses, ...premiumHouses, ...investmentHouses]);
     const slot = firstAvailableSlot();
     setActiveSlot(slot);
     setHouseOrder(order);
