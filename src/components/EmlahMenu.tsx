@@ -158,6 +158,7 @@ export default function EmlahMenu({
               tasksCompleted={tasksCompleted}
               chitchatBonuses={chitchatBonuses}
               completedWeeks={completedWeeks}
+              investmentResults={investmentResults}
             />
           )}
           {tab === "davet" && (

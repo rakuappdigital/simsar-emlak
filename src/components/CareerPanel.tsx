@@ -16,6 +16,7 @@ interface CareerPanelProps {
   tasksCompleted: number;
   chitchatBonuses: number;
   completedWeeks: number;
+  investmentResults: HouseResult[];
 }
 
 export default function CareerPanel({
@@ -30,10 +31,12 @@ export default function CareerPanel({
   tasksCompleted,
   chitchatBonuses,
   completedWeeks,
+  investmentResults,
 }: CareerPanelProps) {
   const prestige = computePrestige(ownedPerks);
   const soldResults = results.filter((r) => r.outcome === "sold" && r.sale);
   const rivalSales = rivalTotalSales(completedWeeks);
+  const investmentNet = investmentResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
   const bestSale = soldResults.reduce(
     (max, r) => (r.sale!.finalPrice > max ? r.sale!.finalPrice : max),
     0,
@@ -91,6 +94,14 @@ export default function CareerPanel({
         <div className="career-stat-row">
           <span className="career-stat-label">Fırat Bey (rakip)</span>
           <span className="career-stat-value">{rivalSales} satış</span>
+        </div>
+      )}
+      {investmentResults.length > 0 && (
+        <div className="career-stat-row">
+          <span className="career-stat-label">Yatırımlardan Net Kazanç</span>
+          <span className={`career-stat-value ${investmentNet < 0 ? "career-stat-negative" : ""}`}>
+            {formatTL(investmentNet)}
+          </span>
         </div>
       )}
 

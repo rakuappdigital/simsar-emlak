@@ -110,6 +110,7 @@ export default function InvestmentPanel({
                   formatTL(price)
                 )}
               </button>
+              {discounted && <p className="market-item-discount">⚠️ Fiyat düşük ama satarken zorlanabilirsin</p>}
             </div>
           </div>
         );

@@ -49,7 +49,7 @@ import {
   rankTitle,
   computeFreshStats,
 } from "./data/scoring";
-import { computeStreak, checkNewBadges, allBadges } from "./data/badges";
+import { computeStreak, checkNewBadges, checkNewInvestmentBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, pickNegotiationReply, type CallbackEvent } from "./data/callbacks";
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
@@ -953,6 +953,14 @@ function App() {
     const newContactedCustomers = addContactedCustomer(houseDef, castAssignment, contactedCustomers);
     setContactedCustomers(newContactedCustomers);
 
+    const newlyEarnedInvestment = checkNewInvestmentBadges(newInvestmentResults, badges);
+    const newBadgesState = [...badges, ...newlyEarnedInvestment.map((b) => b.id)];
+    if (newlyEarnedInvestment.length > 0) {
+      setBadges(newBadgesState);
+      setPendingNewBadges(newlyEarnedInvestment);
+      setBadgeCelebration(newlyEarnedInvestment);
+    }
+
     if (outcome === "sold") playSale();
     else if (outcome === "lost") playLost();
     else playThinking();
@@ -960,7 +968,7 @@ function App() {
     persist(
       results,
       weekOutcomes,
-      badges,
+      newBadgesState,
       index,
       ownedPerks,
       spent,

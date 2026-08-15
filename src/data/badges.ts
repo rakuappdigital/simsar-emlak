@@ -32,6 +32,16 @@ export const allBadges: Record<string, Badge> = {
     title: "Sohbet Ustası",
     description: "5 sohbette bonus cevabı yakaladın.",
   },
+  "yatirimci-5": {
+    id: "yatirimci-5",
+    title: "Emlak Yatırımcısı",
+    description: "5 yatırım evini kendi adına sattın.",
+  },
+  "yatirimci-zarar-yok-3": {
+    id: "yatirimci-zarar-yok-3",
+    title: "Kayıpsız Seri",
+    description: "Art arda 3 yatırım evini zarar etmeden sattın.",
+  },
 };
 
 export function computeStreak(results: HouseResult[]): number {
@@ -84,6 +94,35 @@ export function checkNewBadges(
     if (avgSuspicion <= 25) maybeAdd("durust-simsar");
     if (avgSuspicion >= 55) maybeAdd("sinsi-simsar");
   }
+
+  return newly;
+}
+
+/** Streak of consecutive investment-house sale attempts that closed "sold" with a non-negative profit — breaks on any loss, thinking, or lost attempt. */
+export function computeInvestmentNoLossStreak(investmentResults: HouseResult[]): number {
+  let streak = 0;
+  for (let i = investmentResults.length - 1; i >= 0; i--) {
+    const r = investmentResults[i];
+    if (r.outcome === "sold" && (r.sale?.commission ?? 0) >= 0) streak++;
+    else break;
+  }
+  return streak;
+}
+
+/** Separate from checkNewBadges (which only ever looks at the main house pool) so investment-house sales never touch that call site. */
+export function checkNewInvestmentBadges(investmentResults: HouseResult[], alreadyEarned: string[]): Badge[] {
+  const earned = new Set(alreadyEarned);
+  const newly: Badge[] = [];
+  const maybeAdd = (id: string) => {
+    if (!earned.has(id)) {
+      earned.add(id);
+      newly.push(allBadges[id]);
+    }
+  };
+
+  const soldCount = investmentResults.filter((r) => r.outcome === "sold").length;
+  if (soldCount >= 5) maybeAdd("yatirimci-5");
+  if (computeInvestmentNoLossStreak(investmentResults) >= 3) maybeAdd("yatirimci-zarar-yok-3");
 
   return newly;
 }
