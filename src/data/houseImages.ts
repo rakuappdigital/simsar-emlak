@@ -65,6 +65,28 @@ const loaders: Record<string, () => Promise<{ default: string }>> = {
   "fotograf-noktasi-bahce": () => import("../assets/houses/fotobahce.webp"),
   "paranoyak-kamera-komsusu": () => import("../assets/houses/kameraparanoyak.webp"),
   "antikaci-elektrik-tesisati": () => import("../assets/houses/antikaelektrik.webp"),
+
+  // Yatırım Evleri
+  "yatirim-vapuriskelesi": () => import("../assets/houses/vapuriskelesi.webp"),
+  "yatirim-terzidukkani": () => import("../assets/houses/terzidukkani.webp"),
+  "yatirim-kapalikuyu": () => import("../assets/houses/kapalikuyu.webp"),
+  "yatirim-sinemakomsulugu": () => import("../assets/houses/sinemakomsulugu.webp"),
+  "yatirim-balikcibarinagi": () => import("../assets/houses/balikcibarinagi.webp"),
+  "yatirim-eskihan": () => import("../assets/houses/eskihan.webp"),
+  "yatirim-catibahce": () => import("../assets/houses/catibahce.webp"),
+  "yatirim-meyhaneustu": () => import("../assets/houses/meyhaneustu.webp"),
+  "yatirim-kutuphaneyani": () => import("../assets/houses/kutuphaneyani.webp"),
+  "yatirim-tramvayhatti": () => import("../assets/houses/tramvayhatti.webp"),
+  "yatirim-caybahcesi": () => import("../assets/houses/caybahcesi.webp"),
+  "yatirim-fabrikaloft": () => import("../assets/houses/fabrikaloft.webp"),
+  "yatirim-minaregolgesi": () => import("../assets/houses/minaregolgesi.webp"),
+  "yatirim-marinamanzarali": () => import("../assets/houses/marinamanzarali.webp"),
+  "yatirim-kuyumcularcarsisi": () => import("../assets/houses/kuyumcularcarsisi.webp"),
+  "yatirim-plakdukkani": () => import("../assets/houses/plakdukkani.webp"),
+  "yatirim-sukemerleri": () => import("../assets/houses/sukemerleri.webp"),
+  "yatirim-simitfirini": () => import("../assets/houses/simitfirini.webp"),
+  "yatirim-surduvari": () => import("../assets/houses/surduvari.webp"),
+  "yatirim-balikpazari": () => import("../assets/houses/balikpazari.webp"),
 };
 
 const cache: Record<string, string> = {};
