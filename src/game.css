@@ -1688,6 +1688,64 @@
   border-radius: 6px;
 }
 
+.market-campaign-banner.news-up {
+  color: var(--c-success);
+  border-color: var(--c-success);
+}
+
+.market-campaign-banner.news-down {
+  color: var(--c-danger);
+  border-color: var(--c-danger);
+}
+
+/* ---------- News banner (main screen ticker, not the phone) ---------- */
+.news-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  border-bottom: 1px dashed var(--c-border-light);
+  background: var(--c-surface-alt);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.news-banner-tag {
+  flex-shrink: 0;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+}
+
+.news-banner-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-dim);
+}
+
+.news-banner-up .news-banner-tag {
+  color: var(--c-success);
+}
+
+.news-banner-down .news-banner-tag {
+  color: var(--c-danger);
+}
+
+.investment-pitch-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.pixel-btn.small.ghost {
+  background: none;
+  border: 1px solid var(--c-border-light);
+  color: var(--c-text-dim);
+}
+
 /* ---------- Locked house gate ---------- */
 .result-screen .menu-empty {
   max-width: 340px;

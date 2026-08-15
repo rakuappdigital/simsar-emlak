@@ -1,6 +1,6 @@
 import type { SaveGame } from "../types";
 
-const SAVE_VERSION = 10;
+const SAVE_VERSION = 11;
 export const SAVE_SLOT_COUNT = 3;
 
 const keyFor = (slot: number) => `simsar-emlak-save-v${SAVE_VERSION}-slot${slot}`;

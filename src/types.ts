@@ -198,8 +198,21 @@ export interface PendingInvestment {
   dueIndex: number;
 }
 
+/** A flip-property from the investmentHouses pool that Emlah currently owns and hasn't resold yet. */
+export interface OwnedInvestmentHouse {
+  houseId: string;
+  purchasePrice: number;
+}
+
+/** A past customer (from a main, premium, or investment-house sale) Emlah can message again to pitch a flip property. */
+export interface ContactedCustomer {
+  characterId: string;
+  name: string;
+  houseTitle: string;
+}
+
 export interface SaveGame {
-  version: 10;
+  version: 11;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -227,6 +240,14 @@ export interface SaveGame {
   pendingInvestment: PendingInvestment | null;
   /** Pool character id -> bond points from flirty moments and meetups — entirely optional, never required to progress. */
   friendBonds: Record<string, number>;
+  /** Flip-properties currently owned but not yet resold. */
+  ownedInvestmentHouses: OwnedInvestmentHouse[];
+  /** Every resolved investment-house sale attempt (sold/thinking/lost) — separate from `results`, never touches week grouping. */
+  investmentResults: HouseResult[];
+  /** Past customers Emlah can message again to pitch a flip property. */
+  contactedCustomers: ContactedCustomer[];
+  /** id of the currently active marketNews headline (see data/marketNews.ts), or null if none active. */
+  activeNewsId: string | null;
   savedAt: string;
 }
 

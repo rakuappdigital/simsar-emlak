@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import type { Badge, HouseResult, HouseScene, InboxMessage } from "../types";
+import type { Badge, ContactedCustomer, HouseResult, HouseScene, InboxMessage, OwnedInvestmentHouse } from "../types";
 import { formatTL } from "../data/economy";
 import { weekIndexForHouse } from "../data/goals";
 import MarketPanel from "./MarketPanel";
@@ -8,9 +8,10 @@ import MessagesPanel from "./MessagesPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
 import PremiumInvitesPanel from "./PremiumInvitesPanel";
+import InvestmentPanel from "./InvestmentPanel";
 import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet";
+export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -38,6 +39,15 @@ interface EmlahMenuProps {
   unlockedPremiumIds: string[];
   premiumResults: HouseResult[];
   onOpenPremium: (houseId: string) => void;
+  investmentHouses: HouseScene[];
+  investmentUnlocked: boolean;
+  ownedInvestmentHouses: OwnedInvestmentHouse[];
+  investmentResults: HouseResult[];
+  currentNewsModifier: number;
+  onBuyInvestment: (houseId: string) => void;
+  onSellInvestment: (houseId: string) => void;
+  contactedCustomers: ContactedCustomer[];
+  onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -46,6 +56,7 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "portfoy", icon: <HouseIcon size={14} />, label: "Portföy" },
   { id: "kariyer", icon: <StarIcon size={14} />, label: "Kariyer" },
   { id: "davet", icon: <MedalIcon size={14} />, label: "Özel Davetler" },
+  { id: "yatirim", icon: <HouseIcon size={14} />, label: "Yatırım Evleri" },
 ];
 
 export default function EmlahMenu({
@@ -74,6 +85,15 @@ export default function EmlahMenu({
   unlockedPremiumIds,
   premiumResults,
   onOpenPremium,
+  investmentHouses,
+  investmentUnlocked,
+  ownedInvestmentHouses,
+  investmentResults,
+  currentNewsModifier,
+  onBuyInvestment,
+  onSellInvestment,
+  contactedCustomers,
+  onPitchInvestment,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -146,6 +166,20 @@ export default function EmlahMenu({
               unlockedIds={unlockedPremiumIds}
               premiumResults={premiumResults}
               onOpen={onOpenPremium}
+            />
+          )}
+          {tab === "yatirim" && (
+            <InvestmentPanel
+              balance={balance}
+              investmentHouses={investmentHouses}
+              investmentUnlocked={investmentUnlocked}
+              ownedInvestmentHouses={ownedInvestmentHouses}
+              investmentResults={investmentResults}
+              currentNewsModifier={currentNewsModifier}
+              onBuyInvestment={onBuyInvestment}
+              onSellInvestment={onSellInvestment}
+              contactedCustomers={contactedCustomers}
+              onPitchInvestment={onPitchInvestment}
             />
           )}
         </div>

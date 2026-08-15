@@ -35,6 +35,10 @@ import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
 import PremiumHouseScene from "./components/PremiumHouseScene";
+import { investmentHouses, isInvestmentUnlocked } from "./data/investmentHouses";
+import { marketNews, pickMarketNews } from "./data/marketNews";
+import { pickTipsterMessage } from "./data/tipsters";
+import NewsBanner from "./components/NewsBanner";
 import { COMMISSION_RATE, formatTL } from "./data/economy";
 import {
   resolveOutcome,
@@ -57,12 +61,14 @@ import { computeEnding } from "./data/endings";
 import type {
   Badge,
   ChoiceEffects,
+  ContactedCustomer,
   ContractClause,
   DailyQuestDef,
   GameStats,
   HouseResult,
   HouseScene,
   InboxMessage,
+  OwnedInvestmentHouse,
   PendingLoan,
   PendingInvestment,
   PhoneMessage,
@@ -106,6 +112,12 @@ const BULK_DEAL_RISKY_BIG_AMOUNT = 160000;
 const BULK_DEAL_RISKY_SMALL_AMOUNT = 25000;
 const BULK_DEAL_RISKY_BIG_CHANCE = 0.5;
 const RANK_ORDER = ["Stajyer", "Emlakçı", "Kıdemli Emlakçı", "Ofis Ortağı"];
+// Independent, non-interrupting ambient rolls — never touch `stage`, so they
+// can't collide with the friend/chitchat/meetup roll chain in afterIntro().
+const NEWS_CHANCE = 0.12;
+const TIPSTER_CHANCE = 0.08;
+/** Halves a negative news swing into extra toughness on top of the normal contract modifier when reselling a flip house. */
+const NEWS_RESALE_TOUGHNESS_FACTOR = 0.5;
 
 interface PendingHouseEntry {
   newIndex: number;
@@ -137,6 +149,39 @@ export function computeSale(
   const streakBonus = streakMultiplier(priorStreak);
   const commission = baseCommission * (1 + streakBonus + contractModifier + rankBonusValue);
   return { finalPrice, commission, discountPercent, streakBonus, contractModifier, rankBonus: rankBonusValue };
+}
+
+/**
+ * Investment-house resale — Emlah is the seller himself, so the whole
+ * negotiated price becomes profit-or-loss against what he paid, not a
+ * commission cut. `newsToughness` (0 when no negative news is active) is a
+ * small extra drag applied only here, never touching the shared contract
+ * modifier math used by main/premium/callback sales.
+ */
+function computeInvestmentSale(
+  askingPrice: number,
+  discountPercent: number,
+  contractModifier: number,
+  purchasePrice: number,
+  newsToughness: number,
+): { finalPrice: number; profit: number } {
+  const effectiveModifier = contractModifier - newsToughness;
+  const finalPrice = askingPrice * (1 - discountPercent / 100) * (1 + effectiveModifier);
+  return { finalPrice, profit: finalPrice - purchasePrice };
+}
+
+/** Logs a single-customer house's assigned character as a contact Emlah can message again — dedups by characterId, no-op for two-customer houses (no single clear identity). */
+function addContactedCustomer(
+  house: HouseScene,
+  castAssignmentParam: Record<string, string[]>,
+  currentContacts: ContactedCustomer[],
+): ContactedCustomer[] {
+  if (!house.dynamicCast || house.dynamicCast.length !== 1) return currentContacts;
+  const characterId = castAssignmentParam[house.id]?.[0];
+  if (!characterId || currentContacts.some((c) => c.characterId === characterId)) return currentContacts;
+  const character = poolCharacterById(characterId);
+  if (!character) return currentContacts;
+  return [...currentContacts, { characterId, name: character.name, houseTitle: house.title }];
 }
 
 function contactAvatar(
@@ -227,6 +272,13 @@ function App() {
     projectedStats: GameStats;
   } | null>(null);
   const [seenInboxCount, setSeenInboxCount] = useState(0);
+  const [ownedInvestmentHouses, setOwnedInvestmentHouses] = useState<OwnedInvestmentHouse[]>([]);
+  const [investmentResults, setInvestmentResults] = useState<HouseResult[]>([]);
+  const [contactedCustomers, setContactedCustomers] = useState<ContactedCustomer[]>([]);
+  const [activeNewsId, setActiveNewsId] = useState<string | null>(null);
+  const [lastTipsterId, setLastTipsterId] = useState<string | undefined>(undefined);
+  const [activeInvestmentSaleId, setActiveInvestmentSaleId] = useState<string | null>(null);
+  const [pitchTargetContact, setPitchTargetContact] = useState<ContactedCustomer | null>(null);
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try {
       return localStorage.getItem("simsar-emlak-tutorial-seen") === "1";
@@ -285,9 +337,13 @@ function App() {
     newPremiumResults: HouseResult[] = premiumResults,
     newPendingInvestment: PendingInvestment | null = pendingInvestment,
     newFriendBonds: Record<string, number> = friendBonds,
+    newOwnedInvestmentHouses: OwnedInvestmentHouse[] = ownedInvestmentHouses,
+    newInvestmentResults: HouseResult[] = investmentResults,
+    newContactedCustomers: ContactedCustomer[] = contactedCustomers,
+    newActiveNewsId: string | null = activeNewsId,
   ) {
     const save: SaveGame = {
-      version: 10,
+      version: 11,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -307,6 +363,10 @@ function App() {
       premiumResults: newPremiumResults,
       pendingInvestment: newPendingInvestment,
       friendBonds: newFriendBonds,
+      ownedInvestmentHouses: newOwnedInvestmentHouses,
+      investmentResults: newInvestmentResults,
+      contactedCustomers: newContactedCustomers,
+      activeNewsId: newActiveNewsId,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -599,6 +659,11 @@ function App() {
     setChitchatBonuses(0);
     setPremiumResults([]);
     setSeenInboxCount(0);
+    setOwnedInvestmentHouses([]);
+    setInvestmentResults([]);
+    setContactedCustomers([]);
+    setActiveNewsId(null);
+    setLastTipsterId(undefined);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -631,6 +696,10 @@ function App() {
     setChitchatBonuses(savedGame.chitchatBonuses);
     setPremiumResults(savedGame.premiumResults ?? []);
     setSeenInboxCount(savedGame.inbox.length);
+    setOwnedInvestmentHouses(savedGame.ownedInvestmentHouses ?? []);
+    setInvestmentResults(savedGame.investmentResults ?? []);
+    setContactedCustomers(savedGame.contactedCustomers ?? []);
+    setActiveNewsId(savedGame.activeNewsId ?? null);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -677,6 +746,8 @@ function App() {
     const newResults = [...results, newResult];
     setResults(newResults);
     setBestLineThisHouse(null);
+    const newContactedCustomers = addContactedCustomer(house, castAssignment, contactedCustomers);
+    setContactedCustomers(newContactedCustomers);
 
     const gameComplete = index === allHouses.length - 1;
     const newlyEarned = checkNewBadges(newResults, gameComplete, badges, { tasksCompleted, chitchatBonuses });
@@ -703,7 +774,31 @@ function App() {
       setPendingWeekOutcome(null);
     }
 
-    persist(newResults, newWeekOutcomes, newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers);
+    persist(
+      newResults,
+      newWeekOutcomes,
+      newBadgesState,
+      index,
+      ownedPerks,
+      spent,
+      consumables,
+      unlockedTiers,
+      houseOrder,
+      inbox,
+      castAssignment,
+      dailyQuest,
+      activeSlot,
+      bonusEarnings,
+      pendingLoan,
+      tasksCompleted,
+      chitchatBonuses,
+      premiumResults,
+      pendingInvestment,
+      friendBonds,
+      ownedInvestmentHouses,
+      investmentResults,
+      newContactedCustomers,
+    );
     setStage("result");
   }
 
@@ -728,6 +823,8 @@ function App() {
     };
     const newPremiumResults = [...premiumResults, newResult];
     setPremiumResults(newPremiumResults);
+    const newContactedCustomers = addContactedCustomer(premiumHouse, castAssignment, contactedCustomers);
+    setContactedCustomers(newContactedCustomers);
     if (outcome === "sold") playSale();
     else if (outcome === "lost") playLost();
     else playThinking();
@@ -750,9 +847,144 @@ function App() {
       tasksCompleted,
       chitchatBonuses,
       newPremiumResults,
+      pendingInvestment,
+      friendBonds,
+      ownedInvestmentHouses,
+      investmentResults,
+      newContactedCustomers,
     );
     setActivePremiumHouseId(null);
     setEmlahMenuTab("davet");
+    setShowEmlahMenu(true);
+  }
+
+  /** Current market-news swing on the investment-house pool only — 0 when no news is active. Never touches the main/premium pools' askingPrice. */
+  function currentNewsModifier(): number {
+    if (!activeNewsId) return 0;
+    const news = marketNews.find((n) => n.id === activeNewsId);
+    if (!news) return 0;
+    return news.direction === "up" ? news.magnitude : -news.magnitude;
+  }
+
+  function buyInvestmentHouse(houseId: string) {
+    const houseDef = investmentHouses.find((h) => h.id === houseId);
+    if (!houseDef) return;
+    if (ownedInvestmentHouses.some((o) => o.houseId === houseId)) return;
+    const price = Math.round(houseDef.askingPrice * (1 + currentNewsModifier()));
+    if (balance < price) return;
+    const newOwned = [...ownedInvestmentHouses, { houseId, purchasePrice: price }];
+    const newSpent = spent + price;
+    setOwnedInvestmentHouses(newOwned);
+    setSpent(newSpent);
+    persist(
+      results,
+      weekOutcomes,
+      badges,
+      index,
+      ownedPerks,
+      newSpent,
+      consumables,
+      unlockedTiers,
+      houseOrder,
+      inbox,
+      castAssignment,
+      dailyQuest,
+      activeSlot,
+      bonusEarnings,
+      pendingLoan,
+      tasksCompleted,
+      chitchatBonuses,
+      premiumResults,
+      pendingInvestment,
+      friendBonds,
+      newOwned,
+    );
+  }
+
+  function openInvestmentSale(houseId: string) {
+    setActiveInvestmentSaleId(houseId);
+    setShowEmlahMenu(false);
+  }
+
+  /** Pitching an owned flip house to a past customer is just a shortcut into the same resale scene, with a small trust bonus for the existing relationship. */
+  function pitchInvestmentToContact(contact: ContactedCustomer, houseId: string) {
+    if (!ownedInvestmentHouses.some((o) => o.houseId === houseId)) return;
+    setPitchTargetContact(contact);
+    openInvestmentSale(houseId);
+  }
+
+  function finishInvestmentSale(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) {
+    const houseDef = investmentHouses.find((h) => h.id === activeInvestmentSaleId);
+    const owned = ownedInvestmentHouses.find((o) => o.houseId === activeInvestmentSaleId);
+    if (!houseDef || !owned) return;
+
+    const newsMod = currentNewsModifier();
+    // Negative news makes buyers negotiate harder on top of the normal contract swing.
+    const newsToughness = newsMod < 0 ? Math.abs(newsMod) * NEWS_RESALE_TOUGHNESS_FACTOR : 0;
+    const warmLeadBonus = pitchTargetContact ? 0.02 : 0;
+    const sale: SaleResult | null =
+      outcome === "sold"
+        ? (() => {
+            const { finalPrice, profit } = computeInvestmentSale(
+              houseDef.askingPrice,
+              finalStats.discountPercent,
+              contractModifier + warmLeadBonus,
+              owned.purchasePrice,
+              newsToughness,
+            );
+            // `commission` holds net flip profit here, not agency commission — investmentResults is its own isolated array.
+            return { finalPrice, commission: profit, discountPercent: finalStats.discountPercent, streakBonus: 0, contractModifier, rankBonus: 0 };
+          })()
+        : null;
+    const newResult: HouseResult = {
+      houseId: houseDef.id,
+      outcome,
+      sale,
+      finalStats,
+      finalSuspicion: finalStats.suspicion,
+    };
+    const newInvestmentResults = [...investmentResults, newResult];
+    setInvestmentResults(newInvestmentResults);
+
+    const newOwnedInvestmentHouses =
+      outcome === "sold" ? ownedInvestmentHouses.filter((o) => o.houseId !== activeInvestmentSaleId) : ownedInvestmentHouses;
+    setOwnedInvestmentHouses(newOwnedInvestmentHouses);
+
+    const newContactedCustomers = addContactedCustomer(houseDef, castAssignment, contactedCustomers);
+    setContactedCustomers(newContactedCustomers);
+
+    if (outcome === "sold") playSale();
+    else if (outcome === "lost") playLost();
+    else playThinking();
+
+    persist(
+      results,
+      weekOutcomes,
+      badges,
+      index,
+      ownedPerks,
+      spent,
+      consumables,
+      unlockedTiers,
+      houseOrder,
+      inbox,
+      castAssignment,
+      dailyQuest,
+      activeSlot,
+      bonusEarnings,
+      pendingLoan,
+      tasksCompleted,
+      chitchatBonuses,
+      premiumResults,
+      pendingInvestment,
+      friendBonds,
+      newOwnedInvestmentHouses,
+      newInvestmentResults,
+      newContactedCustomers,
+    );
+    setActiveInvestmentSaleId(null);
+    setPitchTargetContact(null);
+    setEmlahMenuTab("yatirim");
     setShowEmlahMenu(true);
   }
 
@@ -940,6 +1172,47 @@ function App() {
   }
 
   function afterIntro() {
+    // Independent, non-interrupting ambient side effects — market news (a
+    // banner, not a phone message) and tipster pings (a passive inbox log)
+    // never touch `stage`, so they can't collide with anything below.
+    if (isInvestmentUnlocked(rankTitle(earned))) {
+      if (Math.random() < NEWS_CHANCE) {
+        const news = pickMarketNews(activeNewsId ?? undefined);
+        setActiveNewsId(news.id);
+        persist(
+          results,
+          weekOutcomes,
+          badges,
+          index,
+          ownedPerks,
+          spent,
+          consumables,
+          unlockedTiers,
+          houseOrder,
+          inbox,
+          castAssignment,
+          dailyQuest,
+          activeSlot,
+          bonusEarnings,
+          pendingLoan,
+          tasksCompleted,
+          chitchatBonuses,
+          premiumResults,
+          pendingInvestment,
+          friendBonds,
+          ownedInvestmentHouses,
+          investmentResults,
+          contactedCustomers,
+          news.id,
+        );
+      }
+      if (Math.random() < TIPSTER_CHANCE) {
+        const tip = pickTipsterMessage(lastTipsterId);
+        setLastTipsterId(tip.id);
+        const threadId = `tipster-${tip.from.toLowerCase().replace(/\s+/g, "-")}`;
+        setInbox((prev) => logMessages(prev, threadId, tip.from, [{ from: tip.from, text: tip.text }], index + 1));
+      }
+    }
     if (index === 0) {
       setStage("house");
       return;
@@ -1098,7 +1371,10 @@ function App() {
     results.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) +
     weekOutcomes.reduce((sum, w) => sum + w.bonus, 0) +
     bonusEarnings +
-    premiumResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
+    premiumResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0) +
+    // `sale.commission` here holds net flip profit, not agency commission —
+    // investmentResults is its own isolated array, so there's no ambiguity.
+    investmentResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
   const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
   const unreadCount = inbox.slice(seenInboxCount).filter((m) => !m.fromPlayer).length;
@@ -1175,6 +1451,10 @@ function App() {
         </header>
       )}
 
+      {marketVisible && activeNewsId && isInvestmentUnlocked(rankTitle(earned)) && (
+        <NewsBanner news={marketNews.find((n) => n.id === activeNewsId) ?? null} />
+      )}
+
       {rankUpTitle && (
         <div className="rankup-overlay" onClick={() => setRankUpTitle(null)}>
           <div className="rankup-card">
@@ -1229,6 +1509,15 @@ function App() {
           unlockedPremiumIds={unlockedPremiumHouseIds(rankTitle(earned))}
           premiumResults={premiumResults}
           onOpenPremium={openPremiumHouse}
+          investmentHouses={investmentHouses}
+          investmentUnlocked={isInvestmentUnlocked(rankTitle(earned))}
+          ownedInvestmentHouses={ownedInvestmentHouses}
+          investmentResults={investmentResults}
+          currentNewsModifier={currentNewsModifier()}
+          onBuyInvestment={buyInvestmentHouse}
+          onSellInvestment={openInvestmentSale}
+          contactedCustomers={contactedCustomers}
+          onPitchInvestment={pitchInvestmentToContact}
         />
       )}
 
@@ -1243,6 +1532,22 @@ function App() {
               results={results}
               allHouses={allHouses}
               onFinish={finishPremiumHouse}
+            />
+          </div>
+        </div>
+      )}
+
+      {activeInvestmentSaleId && (
+        <div className="premium-overlay">
+          <div className="premium-overlay-inner">
+            <PremiumHouseScene
+              house={investmentHouses.find((h) => h.id === activeInvestmentSaleId)!}
+              ownedPerks={ownedPerks}
+              consumables={consumables}
+              castAssignment={castAssignment}
+              results={results}
+              allHouses={allHouses}
+              onFinish={finishInvestmentSale}
             />
           </div>
         </div>
