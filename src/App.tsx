@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import PhoneScreen from "./components/PhoneScreen";
+import OfficeScene from "./components/OfficeScene";
 import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
 import MainMenu from "./components/MainMenu";
@@ -279,6 +280,15 @@ function App() {
   const [lastTipsterId, setLastTipsterId] = useState<string | undefined>(undefined);
   const [activeInvestmentSaleId, setActiveInvestmentSaleId] = useState<string | null>(null);
   const [pitchTargetContact, setPitchTargetContact] = useState<ContactedCustomer | null>(null);
+  // The "phone" stage is the hub landed on between houses/callbacks. Instead
+  // of always showing the message thread immediately, it now shows the
+  // office first — this flag reveals the phone/message screen on top of it
+  // once the player deliberately asks for today's job. Reset below whenever
+  // a fresh landing on "phone" happens, so the office is always seen first.
+  const [showPhoneOverlay, setShowPhoneOverlay] = useState(false);
+  useEffect(() => {
+    if (stage === "phone") setShowPhoneOverlay(false);
+  }, [stage]);
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try {
       return localStorage.getItem("simsar-emlak-tutorial-seen") === "1";
@@ -1610,7 +1620,17 @@ function App() {
         />
       )}
 
-      {stage === "phone" && intro && (
+      {stage === "phone" && intro && !showPhoneOverlay && (
+        <OfficeScene
+          rankTitleText={rankTitle(earned)}
+          balance={balance}
+          unreadCount={unreadCount}
+          onGetJob={() => setShowPhoneOverlay(true)}
+          onOpenMessages={() => openEmlahMenu("mesajlar")}
+        />
+      )}
+
+      {stage === "phone" && intro && showPhoneOverlay && (
         <PhoneScreen
           key={house.id}
           messages={introFlavorMsg ? [introFlavorMsg, ...intro.messages] : intro.messages}

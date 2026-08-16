@@ -1746,6 +1746,75 @@
   color: var(--c-text-dim);
 }
 
+/* ---------- Office scene (main hub between houses) ---------- */
+.office-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.office-stage {
+  position: relative;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 3px solid var(--c-border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c-divider);
+}
+
+.office-bg-tier-1 { background: linear-gradient(135deg, #4a4a6a, #33335c); }
+.office-bg-tier-2 { background: linear-gradient(135deg, #4a5a7a, #33436c); }
+.office-bg-tier-3 { background: linear-gradient(135deg, #5a5a3a, #6c5a33); }
+.office-bg-tier-4 { background: linear-gradient(135deg, #6a4a2a, #8c6c33); }
+
+.office-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.office-rank-tag {
+  color: var(--c-accent);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.office-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--c-surface);
+  border: 3px solid var(--c-border-light);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.office-balance {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  color: var(--c-accent);
+}
+
+.office-messages-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ---------- Locked house gate ---------- */
 .result-screen .menu-empty {
   max-width: 340px;

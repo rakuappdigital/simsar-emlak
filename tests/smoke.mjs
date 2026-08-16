@@ -19,6 +19,11 @@ function assert(condition, message) {
 }
 
 async function tick(page) {
+  const officeBtn = page.locator("button.office-get-job-btn");
+  if ((await officeBtn.count()) > 0 && (await officeBtn.first().isVisible().catch(() => false))) {
+    await officeBtn.first().click().catch(() => {});
+    return true;
+  }
   const continueBtn = page.locator("button.phone-continue");
   if ((await continueBtn.count()) > 0 && (await continueBtn.first().isVisible().catch(() => false))) {
     await continueBtn.first().click().catch(() => {});
