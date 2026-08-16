@@ -1623,6 +1623,7 @@ function App() {
       {stage === "phone" && intro && !showPhoneOverlay && (
         <OfficeScene
           rankTitleText={rankTitle(earned)}
+          ownedPerks={ownedPerks}
           balance={balance}
           unreadCount={unreadCount}
           onGetJob={() => setShowPhoneOverlay(true)}

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { formatTL } from "../data/economy";
-import { officeTierForRank, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
+import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
 import { WalletIcon, ChatIcon } from "./icons";
 
 interface OfficeSceneProps {
   rankTitleText: string;
+  ownedPerks: string[];
   balance: number;
   unreadCount: number;
   onGetJob: () => void;
@@ -13,15 +14,15 @@ interface OfficeSceneProps {
 
 /**
  * The main hub between houses — Emlah's office, replacing the old
- * always-on phone screen. Its art tier follows career rank (see
- * officeTierForRank), the same rank already tracked everywhere else, so it
- * upgrades automatically as the player progresses — no new state needed.
+ * always-on phone screen. Its art tier follows what's actually been bought
+ * from the "Ofis Ekipmanı" market category (see officeTierForOwnedPerks) —
+ * furnishing the office is a direct result of shopping, not just rank.
  * Messaging still exists (see PhoneScreen/MessagesPanel) but is now
  * something the player opts into from here, either to fetch today's job
  * or to browse past threads.
  */
-export default function OfficeScene({ rankTitleText, balance, unreadCount, onGetJob, onOpenMessages }: OfficeSceneProps) {
-  const tier = officeTierForRank(rankTitleText);
+export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, onGetJob, onOpenMessages }: OfficeSceneProps) {
+  const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
 
   useEffect(() => {
