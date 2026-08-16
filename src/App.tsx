@@ -25,6 +25,15 @@ import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait, poolCharacterById } from "./data/characterPool";
 import { injectCelebrities } from "./data/celebrities";
+import { RIVAL_DUEL_CHANCE, RIVAL_DUEL_BONUS_RATE, pickDuelStartMessage, pickDuelWinMessage, pickDuelLoseMessage } from "./data/rivalDuel";
+import {
+  MYSTERY_SHOPPER_CHANCE,
+  MYSTERY_SHOPPER_HONEST_BONUS,
+  MYSTERY_SHOPPER_SNEAKY_PENALTY,
+  mysteryShopperVerdict,
+  pickMysteryShopperReveal,
+} from "./data/mysteryShopper";
+import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
@@ -281,6 +290,13 @@ function App() {
   const [lastTipsterId, setLastTipsterId] = useState<string | undefined>(undefined);
   const [activeInvestmentSaleId, setActiveInvestmentSaleId] = useState<string | null>(null);
   const [pitchTargetContact, setPitchTargetContact] = useState<ContactedCustomer | null>(null);
+  // Four small, purely additive flavor systems — none persisted (they're
+  // scoped to the single house visit they're set for and resolved by the
+  // time that visit's result screen shows), so none of them touch
+  // SaveGame/persist() at all.
+  const [activeDuelHouseId, setActiveDuelHouseId] = useState<string | null>(null);
+  const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
+  const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -316,6 +332,12 @@ function App() {
     const t = setTimeout(() => setShowSavedToast(false), 1600);
     return () => clearTimeout(t);
   }, [lastSavedAt]);
+
+  useEffect(() => {
+    if (!socialReaction) return;
+    const t = setTimeout(() => setSocialReaction(null), 3200);
+    return () => clearTimeout(t);
+  }, [socialReaction]);
 
   useEffect(() => {
     setSavedGames(loadAllSaves());
@@ -762,6 +784,43 @@ function App() {
     const newContactedCustomers = addContactedCustomer(house, castAssignment, contactedCustomers);
     setContactedCustomers(newContactedCustomers);
 
+    // Rakip Emlakçı Düellosu — bonus-only, never an extra penalty beyond
+    // whatever outcome already happened.
+    let newBonusEarnings = bonusEarnings;
+    let newInbox = inbox;
+    if (activeDuelHouseId === house.id) {
+      if (outcome === "sold" && sale) {
+        const duelBonus = Math.round(house.askingPrice * RIVAL_DUEL_BONUS_RATE);
+        newBonusEarnings += duelBonus;
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: `${pickDuelWinMessage()} (+${formatTL(duelBonus)})` }], index + 1);
+      } else {
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDuelLoseMessage() }], index + 1);
+      }
+      setActiveDuelHouseId(null);
+    }
+
+    // Gizli Müşteri — silent until now; reveals itself only in the reaction
+    // message, small bonusEarnings adjustment only, never touches suspicion
+    // or any stored result.
+    if (mysteryShopperHouseId === house.id) {
+      const verdict = mysteryShopperVerdict(stats.suspicion);
+      if (verdict === "honest") newBonusEarnings += MYSTERY_SHOPPER_HONEST_BONUS;
+      else if (verdict === "sneaky") newBonusEarnings -= MYSTERY_SHOPPER_SNEAKY_PENALTY;
+      newInbox = logMessages(newInbox, house.id, "Gizli Müşteri", [{ from: "Gizli Müşteri", text: pickMysteryShopperReveal(verdict) }], index + 1);
+      setMysteryShopperHouseId(null);
+    }
+    if (newInbox !== inbox) setInbox(newInbox);
+
+    // Satış Sonrası Sosyal Medya Tepkisi — purely cosmetic, fires only when
+    // this sale is this week's best so far.
+    if (outcome === "sold" && sale) {
+      const weekIdx = weekIndexForHouse(index);
+      const weekResultsSoFar = newResults.slice(weekIdx * HOUSES_PER_WEEK, weekIdx * HOUSES_PER_WEEK + HOUSES_PER_WEEK);
+      const weekSoldPrices = weekResultsSoFar.filter((r) => r.sale).map((r) => r.sale!.finalPrice);
+      const isWeekBest = weekSoldPrices.length > 0 && sale.finalPrice === Math.max(...weekSoldPrices);
+      if (isWeekBest) setSocialReaction(generateSocialReaction());
+    }
+
     const gameComplete = index === allHouses.length - 1;
     const newlyEarned = checkNewBadges(newResults, gameComplete, badges, { tasksCompleted, chitchatBonuses });
     const newBadgeIds = newlyEarned.map((b) => b.id);
@@ -787,6 +846,8 @@ function App() {
       setPendingWeekOutcome(null);
     }
 
+    if (newBonusEarnings !== bonusEarnings) setBonusEarnings(newBonusEarnings);
+
     persist(
       newResults,
       newWeekOutcomes,
@@ -797,11 +858,11 @@ function App() {
       consumables,
       unlockedTiers,
       houseOrder,
-      inbox,
+      newInbox,
       castAssignment,
       dailyQuest,
       activeSlot,
-      bonusEarnings,
+      newBonusEarnings,
       pendingLoan,
       tasksCompleted,
       chitchatBonuses,
@@ -1234,6 +1295,18 @@ function App() {
         setInbox((prev) => logMessages(prev, threadId, tip.from, [{ from: tip.from, text: tip.text }], index + 1));
       }
     }
+    // Two more independent, silent flags for the upcoming house — neither
+    // touches `stage`, and both resolve entirely within finalizeResult()
+    // once that house's outcome is known, so they can't collide with
+    // anything below or leave a dangling state across house visits.
+    if (Math.random() < RIVAL_DUEL_CHANCE) {
+      setActiveDuelHouseId(house.id);
+      const duelMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickDuelStartMessage(house.title) };
+      setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", [duelMsg], index + 1));
+    } else if (Math.random() < MYSTERY_SHOPPER_CHANCE) {
+      // Deliberately silent — a mystery shopper who announced themselves wouldn't be much of a mystery.
+      setMysteryShopperHouseId(house.id);
+    }
     if (index === 0) {
       setStage("house");
       return;
@@ -1503,6 +1576,14 @@ function App() {
 
       {showSavedToast && <div className="saved-toast">Kaydedildi ✓</div>}
 
+      {socialReaction && (
+        <div className="social-toast">
+          <span className="social-toast-likes">❤️ {socialReaction.likes}</span>
+          <span className="social-toast-comment">{socialReaction.comment}</span>
+          <span className="social-toast-commenter">— {socialReaction.commenter}</span>
+        </div>
+      )}
+
       {showEmlahMenu && (
         <EmlahMenu
           initialTab={emlahMenuTab}
@@ -1717,6 +1798,7 @@ function App() {
             onSceneEnd={handleSceneEnd}
             onLineChosen={handleLineChosen}
             onFlirt={handleFlirt}
+            isDuel={activeDuelHouseId === house.id}
           />
         </>
       )}

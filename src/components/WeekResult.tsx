@@ -2,6 +2,7 @@ import type { DailyQuestDef, WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { rivalSalesForWeek } from "../data/rival";
 import { weeklyNewsLine } from "../data/weeklyNews";
+import { generateWeekJournalEntry } from "../data/journal";
 import { CartIcon } from "./icons";
 
 interface WeekResultProps {
@@ -53,6 +54,11 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
           <span className="best-line-text">{outcome.bestLine}</span>
         </p>
       )}
+
+      <p className="journal-entry">
+        <span className="journal-entry-label">📓 Emlah'ın Günlüğü</span>
+        <span className="journal-entry-text">{generateWeekJournalEntry(outcome)}</span>
+      </p>
 
       <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
       <button className="pixel-btn small" onClick={onOpenMarket}>

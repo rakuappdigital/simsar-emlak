@@ -42,6 +42,8 @@ interface DialogueSceneProps {
   onSceneEnd: (outcome: SceneOutcome) => void;
   onLineChosen?: (text: string, fun: number) => void;
   onFlirt?: (characterId: string, characterName: string) => void;
+  /** True when Fırat Bey is also circling this exact house (see rivalDuel.ts) — purely a visible warning tag, no stat effect. */
+  isDuel?: boolean;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -63,6 +65,7 @@ export default function DialogueScene({
   onSceneEnd,
   onLineChosen,
   onFlirt,
+  isDuel,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -249,6 +252,7 @@ export default function DialogueScene({
         {personalityHint(house.profile) && (
           <span className="personality-tag">{personalityHint(house.profile)}</span>
         )}
+        {isDuel && <span className="duel-tag">⏱️ Fırat Bey de bu evle ilgileniyor!</span>}
         <div className="scene-title">
           <span>{house.title} — {house.location}</span>
           <span className="scene-price">{formatTL(house.askingPrice)}</span>
