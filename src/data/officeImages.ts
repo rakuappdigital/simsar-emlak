@@ -2,14 +2,14 @@ import { perks } from "./perks";
 
 /**
  * Office background art, one per furnishing tier — loaded on demand just
- * like house art (see houseImages.ts). Empty until real art is supplied;
- * `loadOfficeImage` gracefully returns null for any tier with no loader
- * yet, so the OfficeScene falls back to its themed placeholder gradient.
- *
- * To wire in real art later, add entries here exactly like houseImages.ts:
- *   1: () => import("../assets/office/ofis-1.webp"),
+ * like house art (see houseImages.ts).
  */
-const loaders: Record<number, () => Promise<{ default: string }>> = {};
+const loaders: Record<number, () => Promise<{ default: string }>> = {
+  1: () => import("../assets/office/ofis1.webp"),
+  2: () => import("../assets/office/ofis2.webp"),
+  3: () => import("../assets/office/ofis3.webp"),
+  4: () => import("../assets/office/ofis4.webp"),
+};
 
 const cache: Record<number, string> = {};
 
