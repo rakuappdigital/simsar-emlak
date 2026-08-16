@@ -1,5 +1,6 @@
 import type { ContactedCustomer, HouseResult, HouseScene, OwnedInvestmentHouse, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
+import { conditionLabel, renovationOptions, renovationCost, type RenovationLevel } from "../data/renovation";
 
 interface InvestmentPanelProps {
   balance: number;
@@ -10,6 +11,7 @@ interface InvestmentPanelProps {
   currentNewsModifier: number;
   onBuyInvestment: (houseId: string) => void;
   onSellInvestment: (houseId: string) => void;
+  onRenovate: (houseId: string, level: RenovationLevel) => void;
   contactedCustomers: ContactedCustomer[];
   onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
 }
@@ -29,6 +31,7 @@ export default function InvestmentPanel({
   currentNewsModifier,
   onBuyInvestment,
   onSellInvestment,
+  onRenovate,
   contactedCustomers,
   onPitchInvestment,
 }: InvestmentPanelProps) {
@@ -66,6 +69,28 @@ export default function InvestmentPanel({
               <p className="portfolio-row-title">{houseDef.title}</p>
               <p className="portfolio-row-location">{houseDef.location}</p>
               <p className="portfolio-row-location">Alış: {formatTL(owned.purchasePrice)}</p>
+              <p className={`condition-tag condition-${owned.condition}`}>🔧 {conditionLabel[owned.condition]}</p>
+              {owned.renovationLevel === "yok" ? (
+                <div className="renovation-options">
+                  {renovationOptions.map((opt) => {
+                    const cost = renovationCost(opt.level, owned.purchasePrice);
+                    return (
+                      <button
+                        key={opt.level}
+                        className="pixel-btn small ghost"
+                        disabled={balance < cost}
+                        onClick={() => onRenovate(owned.houseId, opt.level)}
+                      >
+                        {opt.label} ({formatTL(cost)})
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="renovation-done-tag">
+                  ✅ {renovationOptions.find((o) => o.level === owned.renovationLevel)?.label} yapıldı
+                </p>
+              )}
               {contactedCustomers.length > 0 && (
                 <div className="investment-pitch-list">
                   {contactedCustomers.slice(0, 3).map((c) => (

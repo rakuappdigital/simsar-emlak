@@ -9,6 +9,7 @@ import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
 import PremiumInvitesPanel from "./PremiumInvitesPanel";
 import InvestmentPanel from "./InvestmentPanel";
+import type { RenovationLevel } from "../data/renovation";
 import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon } from "./icons";
 
 export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim";
@@ -46,6 +47,7 @@ interface EmlahMenuProps {
   currentNewsModifier: number;
   onBuyInvestment: (houseId: string) => void;
   onSellInvestment: (houseId: string) => void;
+  onRenovate: (houseId: string, level: RenovationLevel) => void;
   contactedCustomers: ContactedCustomer[];
   onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
 }
@@ -92,6 +94,7 @@ export default function EmlahMenu({
   currentNewsModifier,
   onBuyInvestment,
   onSellInvestment,
+  onRenovate,
   contactedCustomers,
   onPitchInvestment,
 }: EmlahMenuProps) {
@@ -180,6 +183,7 @@ export default function EmlahMenu({
               currentNewsModifier={currentNewsModifier}
               onBuyInvestment={onBuyInvestment}
               onSellInvestment={onSellInvestment}
+              onRenovate={onRenovate}
               contactedCustomers={contactedCustomers}
               onPitchInvestment={onPitchInvestment}
             />

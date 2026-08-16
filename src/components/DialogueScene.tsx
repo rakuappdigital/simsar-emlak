@@ -8,6 +8,7 @@ import { shuffle } from "../data/shuffle";
 import { resolveCustomerNames, resolvePortrait, interpolateNames, poolCharacterById } from "../data/characterPool";
 import { FLIRT_FUN_THRESHOLD, FLIRT_CHANCE } from "../data/meetup";
 import { celebrityById, CELEBRITY_DISCOUNT_BONUS, CELEBRITY_FAN_BONUS } from "../data/celebrities";
+import { pickConditionWarningThought, pickConditionWarningLine } from "../data/renovation";
 
 const FUN_BONUS_THRESHOLD = 30;
 const TYPE_MS_PER_CHAR = 16;
@@ -44,6 +45,8 @@ interface DialogueSceneProps {
   onFlirt?: (characterId: string, characterName: string) => void;
   /** True when Fırat Bey is also circling this exact house (see rivalDuel.ts) — purely a visible warning tag, no stat effect. */
   isDuel?: boolean;
+  /** Yatırım Evleri only — the owned house wasn't renovated enough for its condition (see renovation.ts). Adds a flavor exchange, no stat effect (the price penalty is applied separately in computeInvestmentSale). */
+  conditionWarning?: boolean;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -66,6 +69,7 @@ export default function DialogueScene({
   onLineChosen,
   onFlirt,
   isDuel,
+  conditionWarning,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -92,7 +96,21 @@ export default function DialogueScene({
           { speaker: "customer1", text: celebrity.fanReplyLine },
         ]
       : [];
-  const effectiveLines = celebrityIntroLines.length > 0 ? [...celebrityIntroLines, ...node.lines] : node.lines;
+  // Rolled once per house at purchase time (see renovation.ts) — never
+  // touches suspicion/interest/fun here, the price effect lives entirely
+  // in computeInvestmentSale. Just tells the player why, in character.
+  // Picked once via useMemo so it can't change wording across re-renders.
+  const conditionWarningThought = useMemo(() => pickConditionWarningThought(), [house.id]);
+  const conditionWarningLine = useMemo(() => pickConditionWarningLine(), [house.id]);
+  const conditionWarningLines: DialogueLine[] =
+    conditionWarning && nodeId === house.startNode
+      ? [
+          { speaker: "thought", text: conditionWarningThought },
+          { speaker: "customer1", text: conditionWarningLine },
+        ]
+      : [];
+  const prependedLines = [...celebrityIntroLines, ...conditionWarningLines];
+  const effectiveLines = prependedLines.length > 0 ? [...prependedLines, ...node.lines] : node.lines;
   const linesShown = effectiveLines.slice(0, lineIndex + 1);
   const atLastLine = lineIndex >= effectiveLines.length - 1;
 

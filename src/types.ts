@@ -170,6 +170,8 @@ export interface Perk {
   requiresOfisItemCount?: number;
   /** Set on "kiyafet" items — contributes to the shared Prestij bar instead of a bespoke stat effect. */
   prestige?: number;
+  /** Set on energy-drink "sarf" items — buying instantly refills the energy bar by this much instead of going into the consumables inventory. */
+  energyFill?: number;
 }
 
 export interface InboxMessage {
@@ -205,6 +207,10 @@ export interface PendingInvestment {
 export interface OwnedInvestmentHouse {
   houseId: string;
   purchasePrice: number;
+  /** Rolled once at purchase time — see data/renovation.ts. */
+  condition: "iyi" | "orta" | "kotu";
+  /** "yok" until the player pays for one of the three renovation levels. */
+  renovationLevel: "yok" | "basit" | "orta" | "yenileme";
 }
 
 /** A past customer (from a main, premium, or investment-house sale) Emlah can message again to pitch a flip property. */
@@ -215,7 +221,7 @@ export interface ContactedCustomer {
 }
 
 export interface SaveGame {
-  version: 11;
+  version: 12;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -251,6 +257,8 @@ export interface SaveGame {
   contactedCustomers: ContactedCustomer[];
   /** id of the currently active marketNews headline (see data/marketNews.ts), or null if none active. */
   activeNewsId: string | null;
+  /** Emlah'ın Enerjisi — 0-100, see data/energy.ts. */
+  energy: number;
   savedAt: string;
 }
 

@@ -36,6 +36,15 @@ import {
 } from "./data/mysteryShopper";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
+  type RenovationLevel,
+  rollCondition,
+  renovationGap,
+  renovationCost,
+  renovationPriceBoost,
+  RENOVATION_GAP_TOUGHNESS,
+} from "./data/renovation";
+import { ENERGY_MAX, ENERGY_DEPLETION_PER_HOUSE, ENERGY_LOW_THRESHOLD, ENERGY_LOW_SUSPICION_MULTIPLIER, WEEKLY_ENERGY_REGEN } from "./data/energy";
+import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
   MEETUP_INVITE_CHANCE,
@@ -175,9 +184,10 @@ function computeInvestmentSale(
   discountPercent: number,
   contractModifier: number,
   purchasePrice: number,
-  newsToughness: number,
+  toughness: number,
+  renovationBoost: number,
 ): { finalPrice: number; profit: number } {
-  const effectiveModifier = contractModifier - newsToughness;
+  const effectiveModifier = contractModifier + renovationBoost - toughness;
   const finalPrice = askingPrice * (1 - discountPercent / 100) * (1 + effectiveModifier);
   return { finalPrice, profit: finalPrice - purchasePrice };
 }
@@ -298,6 +308,9 @@ function App() {
   const [activeDuelHouseId, setActiveDuelHouseId] = useState<string | null>(null);
   const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
+  // Emlah'ın Enerjisi — persisted (it's a real resource the player manages
+  // across the whole game, unlike the four flavor systems above).
+  const [energy, setEnergy] = useState(ENERGY_MAX);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -375,9 +388,10 @@ function App() {
     newInvestmentResults: HouseResult[] = investmentResults,
     newContactedCustomers: ContactedCustomer[] = contactedCustomers,
     newActiveNewsId: string | null = activeNewsId,
+    newEnergy: number = energy,
   ) {
     const save: SaveGame = {
-      version: 11,
+      version: 12,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -401,6 +415,7 @@ function App() {
       investmentResults: newInvestmentResults,
       contactedCustomers: newContactedCustomers,
       activeNewsId: newActiveNewsId,
+      energy: newEnergy,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -419,7 +434,8 @@ function App() {
   }
 
   function applyEffects(effects: ChoiceEffects) {
-    const suspicionFactor = suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()];
+    const energyFactor = energy < ENERGY_LOW_THRESHOLD ? ENERGY_LOW_SUSPICION_MULTIPLIER : 1;
+    const suspicionFactor = suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()] * energyFactor;
     setStats((s) => {
       const rawSuspicion = effects.suspicion ?? 0;
       const suspicionDelta = rawSuspicion > 0 ? rawSuspicion * suspicionFactor : rawSuspicion;
@@ -700,6 +716,7 @@ function App() {
     setContactedCustomers([]);
     setActiveNewsId(null);
     setLastTipsterId(undefined);
+    setEnergy(ENERGY_MAX);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -736,6 +753,7 @@ function App() {
     setInvestmentResults(savedGame.investmentResults ?? []);
     setContactedCustomers(savedGame.contactedCustomers ?? []);
     setActiveNewsId(savedGame.activeNewsId ?? null);
+    setEnergy(savedGame.energy ?? ENERGY_MAX);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -831,7 +849,10 @@ function App() {
     if (newlyEarned.length > 0) setBadgeCelebration(newlyEarned);
 
     let newWeekOutcomes = weekOutcomes;
+    let newEnergy = energy;
     if (isLastHouseOfWeek(index)) {
+      newEnergy = Math.min(ENERGY_MAX, energy + WEEKLY_ENERGY_REGEN);
+      setEnergy(newEnergy);
       const weekIdx = weekIndexForHouse(index);
       const weekResults = newResults.slice(weekIdx * HOUSES_PER_WEEK, weekIdx * HOUSES_PER_WEEK + HOUSES_PER_WEEK);
       let weekOutcome = evaluateWeek(weekIdx, weekResults);
@@ -873,6 +894,8 @@ function App() {
       ownedInvestmentHouses,
       investmentResults,
       newContactedCustomers,
+      activeNewsId,
+      newEnergy,
     );
     setStage("result");
   }
@@ -947,8 +970,46 @@ function App() {
     if (ownedInvestmentHouses.some((o) => o.houseId === houseId)) return;
     const price = Math.round(houseDef.askingPrice * (1 + currentNewsModifier()));
     if (balance < price) return;
-    const newOwned = [...ownedInvestmentHouses, { houseId, purchasePrice: price }];
+    const newOwned = [
+      ...ownedInvestmentHouses,
+      { houseId, purchasePrice: price, condition: rollCondition(), renovationLevel: "yok" as const },
+    ];
     const newSpent = spent + price;
+    setOwnedInvestmentHouses(newOwned);
+    setSpent(newSpent);
+    persist(
+      results,
+      weekOutcomes,
+      badges,
+      index,
+      ownedPerks,
+      newSpent,
+      consumables,
+      unlockedTiers,
+      houseOrder,
+      inbox,
+      castAssignment,
+      dailyQuest,
+      activeSlot,
+      bonusEarnings,
+      pendingLoan,
+      tasksCompleted,
+      chitchatBonuses,
+      premiumResults,
+      pendingInvestment,
+      friendBonds,
+      newOwned,
+    );
+  }
+
+  /** One-time renovation choice per owned flip house — see renovation.ts for the cost/boost math. */
+  function renovateInvestmentHouse(houseId: string, level: RenovationLevel) {
+    const owned = ownedInvestmentHouses.find((o) => o.houseId === houseId);
+    if (!owned || owned.renovationLevel !== "yok") return;
+    const cost = renovationCost(level, owned.purchasePrice);
+    if (balance < cost) return;
+    const newOwned = ownedInvestmentHouses.map((o) => (o.houseId === houseId ? { ...o, renovationLevel: level } : o));
+    const newSpent = spent + cost;
     setOwnedInvestmentHouses(newOwned);
     setSpent(newSpent);
     persist(
@@ -997,6 +1058,9 @@ function App() {
     // Negative news makes buyers negotiate harder on top of the normal contract swing.
     const newsToughness = newsMod < 0 ? Math.abs(newsMod) * NEWS_RESALE_TOUGHNESS_FACTOR : 0;
     const warmLeadBonus = pitchTargetContact ? 0.02 : 0;
+    const gap = renovationGap(owned.condition, owned.renovationLevel);
+    const conditionToughness = gap * RENOVATION_GAP_TOUGHNESS;
+    const renovationBoost = renovationPriceBoost(owned.renovationLevel);
     const sale: SaleResult | null =
       outcome === "sold"
         ? (() => {
@@ -1005,7 +1069,8 @@ function App() {
               finalStats.discountPercent,
               contractModifier + warmLeadBonus,
               owned.purchasePrice,
-              newsToughness,
+              newsToughness + conditionToughness,
+              renovationBoost,
             );
             // `commission` holds net flip profit here, not agency commission — investmentResults is its own isolated array.
             return { finalPrice, commission: profit, discountPercent: finalStats.discountPercent, streakBonus: 0, contractModifier, rankBonus: 0 };
@@ -1115,6 +1180,42 @@ function App() {
   function buyItem(itemId: string) {
     const item = perks.find((p) => p.id === itemId);
     if (!item) return;
+
+    if (item.energyFill) {
+      if (balance < item.cost) return;
+      const newSpent = spent + item.cost;
+      const newEnergy = Math.min(ENERGY_MAX, energy + item.energyFill);
+      setSpent(newSpent);
+      setEnergy(newEnergy);
+      persist(
+        results,
+        weekOutcomes,
+        badges,
+        index,
+        ownedPerks,
+        newSpent,
+        consumables,
+        unlockedTiers,
+        houseOrder,
+        inbox,
+        castAssignment,
+        dailyQuest,
+        activeSlot,
+        bonusEarnings,
+        pendingLoan,
+        tasksCompleted,
+        chitchatBonuses,
+        premiumResults,
+        pendingInvestment,
+        friendBonds,
+        ownedInvestmentHouses,
+        investmentResults,
+        contactedCustomers,
+        activeNewsId,
+        newEnergy,
+      );
+      return;
+    }
 
     if (item.consumable) {
       if (balance < item.cost) return;
@@ -1310,6 +1411,8 @@ function App() {
       // Deliberately silent — a mystery shopper who announced themselves wouldn't be much of a mystery.
       setMysteryShopperHouseId(house.id);
     }
+    // Emlah'ın Enerjisi — depletes a fixed amount per house walked into.
+    setEnergy((e) => Math.max(0, e - ENERGY_DEPLETION_PER_HOUSE));
     if (index === 0) {
       setStage("house");
       return;
@@ -1621,6 +1724,7 @@ function App() {
           currentNewsModifier={currentNewsModifier()}
           onBuyInvestment={buyInvestmentHouse}
           onSellInvestment={openInvestmentSale}
+          onRenovate={renovateInvestmentHouse}
           contactedCustomers={contactedCustomers}
           onPitchInvestment={pitchInvestmentToContact}
         />
@@ -1637,6 +1741,7 @@ function App() {
               results={results}
               allHouses={allHouses}
               onFinish={finishPremiumHouse}
+              energy={energy}
             />
           </div>
         </div>
@@ -1653,6 +1758,11 @@ function App() {
               results={results}
               allHouses={allHouses}
               onFinish={finishInvestmentSale}
+              energy={energy}
+              conditionWarning={(() => {
+                const owned = ownedInvestmentHouses.find((o) => o.houseId === activeInvestmentSaleId);
+                return owned ? renovationGap(owned.condition, owned.renovationLevel) > 0 : false;
+              })()}
             />
           </div>
         </div>
@@ -1716,6 +1826,7 @@ function App() {
           ownedPerks={ownedPerks}
           balance={balance}
           unreadCount={unreadCount}
+          energy={energy}
           onGetJob={() => setShowPhoneOverlay(true)}
           onOpenMessages={() => openEmlahMenu("mesajlar")}
         />

@@ -299,6 +299,32 @@ export const perks: Perk[] = [
     cost: 25000,
     consumable: true,
   },
+
+  // --- Emlah'ın Enerjisi (anında etkili, envantere girmez) ---
+  {
+    id: "enerji-molasi",
+    category: "sarf",
+    title: "Enerji Molası",
+    description: "Hızlı bir mola, enerji barını +30 doldurur.",
+    cost: 8000,
+    energyFill: 30,
+  },
+  {
+    id: "enerji-icecegi-paketi",
+    category: "sarf",
+    title: "Enerji İçeceği Paketi",
+    description: "Daha güçlü bir toparlanma, enerji barını +60 doldurur.",
+    cost: 18000,
+    energyFill: 60,
+  },
+  {
+    id: "enerjizan-ogle-yemegi",
+    category: "sarf",
+    title: "Enerjizan Öğle Yemeği",
+    description: "Doyurucu bir mola, enerji barını tamamen doldurur.",
+    cost: 30000,
+    energyFill: 100,
+  },
 ];
 
 export function hasPerk(owned: string[], id: string): boolean {

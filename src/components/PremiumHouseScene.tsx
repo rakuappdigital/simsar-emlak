@@ -7,6 +7,7 @@ import { suspicionGainFactor, computeFreshStats } from "../data/scoring";
 import { getDifficulty, difficultyMultiplier } from "../data/difficulty";
 import { resolveCustomerNames } from "../data/characterPool";
 import { reputationSuspicionOffset, districtReputationOffset, districtOf } from "../data/introFlavor";
+import { ENERGY_LOW_THRESHOLD, ENERGY_LOW_SUSPICION_MULTIPLIER } from "../data/energy";
 
 interface PremiumHouseSceneProps {
   house: HouseScene;
@@ -16,6 +17,10 @@ interface PremiumHouseSceneProps {
   results: HouseResult[];
   allHouses: HouseScene[];
   onFinish: (outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) => void;
+  /** Emlah'ın Enerjisi — same low-energy suspicion multiplier as the main house flow. */
+  energy?: number;
+  /** Yatırım Evleri only — see renovation.ts. Prepends a warning exchange to the opening dialogue. */
+  conditionWarning?: boolean;
 }
 
 /**
@@ -33,6 +38,8 @@ export default function PremiumHouseScene({
   results,
   allHouses,
   onFinish,
+  energy,
+  conditionWarning,
 }: PremiumHouseSceneProps) {
   const [stats, setStats] = useState<GameStats>(() => {
     const fresh = computeFreshStats(0, ownedPerks, consumables);
@@ -43,7 +50,8 @@ export default function PremiumHouseScene({
   const [stage, setStage] = useState<"dialogue" | "contract">("dialogue");
 
   function applyEffects(effects: ChoiceEffects) {
-    const suspicionFactor = suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()];
+    const energyFactor = energy !== undefined && energy < ENERGY_LOW_THRESHOLD ? ENERGY_LOW_SUSPICION_MULTIPLIER : 1;
+    const suspicionFactor = suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()] * energyFactor;
     setStats((s) => {
       const rawSuspicion = effects.suspicion ?? 0;
       const suspicionDelta = rawSuspicion > 0 ? rawSuspicion * suspicionFactor : rawSuspicion;
@@ -82,6 +90,7 @@ export default function PremiumHouseScene({
       castAssignment={castAssignment}
       onChoiceEffects={applyEffects}
       onSceneEnd={handleSceneEnd}
+      conditionWarning={conditionWarning}
     />
   );
 }

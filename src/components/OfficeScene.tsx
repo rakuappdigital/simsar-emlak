@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { formatTL } from "../data/economy";
 import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
+import { ENERGY_MAX, ENERGY_LOW_THRESHOLD } from "../data/energy";
 import { WalletIcon, ChatIcon } from "./icons";
 
 interface OfficeSceneProps {
@@ -8,6 +9,7 @@ interface OfficeSceneProps {
   ownedPerks: string[];
   balance: number;
   unreadCount: number;
+  energy: number;
   onGetJob: () => void;
   onOpenMessages: () => void;
 }
@@ -21,7 +23,7 @@ interface OfficeSceneProps {
  * something the player opts into from here, either to fetch today's job
  * or to browse past threads.
  */
-export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, onGetJob, onOpenMessages }: OfficeSceneProps) {
+export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, onGetJob, onOpenMessages }: OfficeSceneProps) {
   const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
 
@@ -49,6 +51,18 @@ export default function OfficeScene({ rankTitleText, ownedPerks, balance, unread
         <div className="office-title">
           <span>Emlah'ın Ofisi</span>
           <span className="office-rank-tag">{rankTitleText}</span>
+        </div>
+      </div>
+
+      <div className="energy-bar">
+        <span className="energy-bar-label">
+          ⚡ Enerji {energy < ENERGY_LOW_THRESHOLD && <span className="energy-bar-low">(düşük)</span>}
+        </span>
+        <div className="stat-track">
+          <div
+            className={`stat-fill energy-fill ${energy < ENERGY_LOW_THRESHOLD ? "energy-fill-low" : ""}`}
+            style={{ width: `${Math.min(100, (energy / ENERGY_MAX) * 100)}%` }}
+          />
         </div>
       </div>
 

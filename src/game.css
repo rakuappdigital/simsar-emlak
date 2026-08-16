@@ -1813,6 +1813,37 @@
   margin-top: 6px;
 }
 
+.condition-tag {
+  font-size: 0.68rem;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.condition-tag.condition-iyi {
+  color: var(--c-success);
+}
+
+.condition-tag.condition-orta {
+  color: var(--c-accent);
+}
+
+.condition-tag.condition-kotu {
+  color: var(--c-danger);
+}
+
+.renovation-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.renovation-done-tag {
+  font-size: 0.68rem;
+  color: var(--c-success);
+  margin: 6px 0;
+}
+
 .pixel-btn.small.ghost {
   background: none;
   border: 1px solid var(--c-border-light);
@@ -1859,6 +1890,31 @@
   color: var(--c-accent);
   font-weight: bold;
   white-space: nowrap;
+}
+
+.energy-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 10px 0;
+}
+
+.energy-bar-label {
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+}
+
+.energy-bar-low {
+  color: var(--c-danger);
+  font-weight: bold;
+}
+
+.energy-fill {
+  background: linear-gradient(90deg, var(--c-accent), var(--c-success));
+}
+
+.energy-fill.energy-fill-low {
+  background: var(--c-danger);
 }
 
 .office-panel {
