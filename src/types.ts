@@ -69,7 +69,7 @@ export interface HouseScene {
   /** Optional per-customer personality weighting; falls back to DEFAULT_PROFILE. */
   profile?: CustomerProfile;
   /** Portfolio tier — tier 2/3/4 houses stay out of rotation until unlocked in the market. */
-  tier: 1 | 2 | 3 | 4;
+  tier: 1 | 2 | 3 | 4 | 5;
   /** One entry per customer slot (customer1, customer2, ...) — enables random cast assignment. */
   dynamicCast?: CastSlot[];
   startNode: string;
@@ -164,7 +164,10 @@ export interface Perk {
   /** id of another market item that must already be owned before this one can be bought. */
   requires?: string;
   /** Set on "kilit" items — buying it adds this tier to unlockedTiers. */
-  unlocksTier?: 2 | 3 | 4;
+  unlocksTier?: 2 | 3 | 4 | 5;
+  /** Extra unlock conditions beyond cost, only meaningful for "kilit" items with unlocksTier set — see effectiveCost/MarketPanel. */
+  requiresSoldCount?: number;
+  requiresOfisItemCount?: number;
   /** Set on "kiyafet" items — contributes to the shared Prestij bar instead of a bespoke stat effect. */
   prestige?: number;
 }

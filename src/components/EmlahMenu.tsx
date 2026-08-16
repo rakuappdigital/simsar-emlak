@@ -132,6 +132,7 @@ export default function EmlahMenu({
               unlockedTiers={unlockedTiers}
               badges={badges}
               weekIndex={weekIndexForHouse(currentIndex)}
+              results={results}
               onBuy={onBuy}
             />
           )}

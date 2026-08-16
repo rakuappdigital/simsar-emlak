@@ -211,31 +211,51 @@ export const perks: Perk[] = [
   },
 
   // --- Portföy Kilidi ---
+  // Each tier needs the fee below AND a minimum sold-house count AND a
+  // minimum number of owned "Ofis Ekipmanı" items — pure money can't rush
+  // through tiers, selling houses is what actually unlocks them.
   {
     id: "portfoy-tier2",
     category: "kilit",
     title: "Portföy Yükseltmesi: Orta Segment Evler",
-    description: "Daha yüksek fiyatlı, daha zorlu bir grup ev portföyünüze eklenir.",
+    description: "Daha yüksek fiyatlı, daha zorlu bir grup ev portföyünüze eklenir. Gerekli: en az 3 satış, en az 1 ofis eşyası.",
     cost: 220000,
     unlocksTier: 2,
+    requiresSoldCount: 3,
+    requiresOfisItemCount: 1,
   },
   {
     id: "portfoy-tier3",
     category: "kilit",
     title: "Portföy Yükseltmesi: Lüks Portföy",
-    description: "En değerli ve en zorlu evler portföyünüze eklenir.",
+    description: "Daha değerli ve daha zorlu evler portföyünüze eklenir. Gerekli: en az 8 satış, en az 3 ofis eşyası.",
     cost: 550000,
     requires: "portfoy-tier2",
     unlocksTier: 3,
+    requiresSoldCount: 8,
+    requiresOfisItemCount: 3,
   },
   {
     id: "portfoy-tier4",
     category: "kilit",
-    title: "Portföy Yükseltmesi: Efsanevi Portföy",
-    description: "Şehrin efsaneleşmiş, en ulaşılmaz mülkleri portföyünüze eklenir.",
+    title: "Portföy Yükseltmesi: Elit Portföy",
+    description: "Şehrin en ulaşılmaz mülklerinden bir grup portföyünüze eklenir. Gerekli: en az 15 satış, en az 5 ofis eşyası.",
     cost: 950000,
     requires: "portfoy-tier3",
     unlocksTier: 4,
+    requiresSoldCount: 15,
+    requiresOfisItemCount: 5,
+  },
+  {
+    id: "portfoy-tier5",
+    category: "kilit",
+    title: "Portföy Yükseltmesi: Efsanevi Portföy",
+    description: "Şehrin efsaneleşmiş, en lüks mülkleri portföyünüze eklenir. Gerekli: en az 25 satış, en az 6 ofis eşyası.",
+    cost: 1600000,
+    requires: "portfoy-tier4",
+    unlocksTier: 5,
+    requiresSoldCount: 25,
+    requiresOfisItemCount: 6,
   },
 
   // --- Sarf Malzemesi (tek kullanımlık) ---

@@ -1,7 +1,8 @@
 import { perks, effectiveCost, CAMPAIGN_PERK_ID, isCampaignWeek } from "../data/perks";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
-import type { MarketCategory } from "../types";
+import { countOwnedOfisItems } from "../data/officeImages";
+import type { HouseResult, MarketCategory } from "../types";
 
 interface MarketPanelProps {
   balance: number;
@@ -10,6 +11,7 @@ interface MarketPanelProps {
   unlockedTiers: number[];
   badges: string[];
   weekIndex: number;
+  results: HouseResult[];
   onBuy: (id: string) => void;
 }
 
@@ -31,9 +33,12 @@ export default function MarketPanel({
   unlockedTiers,
   badges,
   weekIndex,
+  results,
   onBuy,
 }: MarketPanelProps) {
   const campaignActive = isCampaignWeek(weekIndex);
+  const soldCount = results.filter((r) => r.outcome === "sold").length;
+  const ownedOfisCount = countOwnedOfisItems(ownedPerks);
   return (
     <div className="market-panel">
       {campaignActive && (
@@ -66,7 +71,9 @@ export default function MarketPanel({
               const price = effectiveCost(item, badges, weekIndex);
               const discounted = price < item.cost;
               const isCampaignItem = item.id === CAMPAIGN_PERK_ID && campaignActive;
-              const disabled = alreadyOwned || tierAlready || !prereqMet || balance < price;
+              const soldCountMet = !item.requiresSoldCount || soldCount >= item.requiresSoldCount;
+              const ofisCountMet = !item.requiresOfisItemCount || ownedOfisCount >= item.requiresOfisItemCount;
+              const disabled = alreadyOwned || tierAlready || !prereqMet || !soldCountMet || !ofisCountMet || balance < price;
               return (
                 <div className="market-item" key={item.id}>
                   <div className="market-item-info">
@@ -74,6 +81,12 @@ export default function MarketPanel({
                     <p className="market-item-description">{item.description}</p>
                     {!prereqMet && prereqItem && (
                       <p className="market-item-requires">Önce gerekli: {prereqItem.title}</p>
+                    )}
+                    {prereqMet && !soldCountMet && (
+                      <p className="market-item-requires">Gerekli: en az {item.requiresSoldCount} satış (şu an {soldCount})</p>
+                    )}
+                    {prereqMet && soldCountMet && !ofisCountMet && (
+                      <p className="market-item-requires">Gerekli: en az {item.requiresOfisItemCount} ofis eşyası (şu an {ownedOfisCount})</p>
                     )}
                     {item.consumable && count > 0 && <p className="market-item-count">Elinde: {count}</p>}
                     {discounted && !alreadyOwned && (

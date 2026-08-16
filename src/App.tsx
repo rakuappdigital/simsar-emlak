@@ -25,6 +25,7 @@ import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait, poolCharacterById } from "./data/characterPool";
 import { injectCelebrities } from "./data/celebrities";
+import { countOwnedOfisItems } from "./data/officeImages";
 import { RIVAL_DUEL_CHANCE, RIVAL_DUEL_BONUS_RATE, pickDuelStartMessage, pickDuelWinMessage, pickDuelLoseMessage } from "./data/rivalDuel";
 import {
   MYSTERY_SHOPPER_CHANCE,
@@ -1128,6 +1129,8 @@ function App() {
     if (ownedPerks.includes(itemId)) return;
     if (item.requires && !ownedPerks.includes(item.requires)) return;
     if (item.unlocksTier && unlockedTiers.includes(item.unlocksTier)) return;
+    if (item.requiresSoldCount && results.filter((r) => r.outcome === "sold").length < item.requiresSoldCount) return;
+    if (item.requiresOfisItemCount && countOwnedOfisItems(ownedPerks) < item.requiresOfisItemCount) return;
     const price = effectiveCost(item, badges, weekIndexForHouse(index));
     if (balance < price) return;
 
@@ -1675,9 +1678,12 @@ function App() {
       {stage === "settings" && <SettingsScreen onBack={() => setStage("menu")} />}
 
       {stage === "locked" && (
-        <div className="result-screen">
-          <p>Bu ev Tier {house.tier} portföyünde — henüz erişimin yok.</p>
-          <p className="menu-empty">Ofis Marketi'nden "Portföy Kilidi" bölümüne bakabilirsin.</p>
+        <div className="result-screen locked-preview">
+          <p className="locked-preview-tag">🔒 Tier {house.tier} — henüz erişimin yok</p>
+          <p className="locked-preview-title">{house.title}</p>
+          <p className="locked-preview-location">{house.location}</p>
+          <p className="locked-preview-price">{formatTL(house.askingPrice)}</p>
+          <p className="menu-empty">Bu evi görebilmek için Ofis Marketi'nden "Portföy Kilidi" bölümüne bakabilirsin.</p>
           <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
             Marketi Aç
           </button>
