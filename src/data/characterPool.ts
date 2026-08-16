@@ -1,5 +1,6 @@
 import type { HouseScene, PoolCharacter } from "../types";
 import { shuffle } from "./shuffle";
+import { celebrities, celebrityPortraits } from "./celebrities";
 
 import k1 from "../assets/portraits/k1.webp";
 import k2 from "../assets/portraits/k2.webp";
@@ -239,7 +240,7 @@ export function assignCast(houses: HouseScene[]): Record<string, string[]> {
 export function resolveCustomerNames(house: HouseScene, assignment: Record<string, string[]>): string[] {
   if (!house.dynamicCast) return house.customerNames;
   const ids = assignment[house.id] ?? [];
-  return ids.map((id) => characterPool.find((c) => c.id === id)?.name ?? "Müşteri");
+  return ids.map((id) => characterPool.find((c) => c.id === id)?.name ?? celebrities.find((c) => c.id === id)?.name ?? "Müşteri");
 }
 
 export function resolvePortrait(name: string, house: HouseScene, assignment: Record<string, string[]>): string | undefined {
@@ -248,7 +249,7 @@ export function resolvePortrait(name: string, house: HouseScene, assignment: Rec
   const names = resolveCustomerNames(house, assignment);
   const slotIndex = names.indexOf(name);
   if (slotIndex === -1) return undefined;
-  return poolPortraits[ids[slotIndex]];
+  return poolPortraits[ids[slotIndex]] ?? celebrityPortraits[ids[slotIndex]];
 }
 
 /** Replaces {isim} / {isim2} tokens in authored dialogue text with the assigned customer name(s). */

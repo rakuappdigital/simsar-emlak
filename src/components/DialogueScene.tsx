@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Choice, ChoiceEffects, GameStats, HouseScene, SceneOutcome } from "../types";
+import type { Choice, ChoiceEffects, DialogueLine, GameStats, HouseScene, SceneOutcome } from "../types";
 import { loadHouseImage, peekHouseImage } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
@@ -7,6 +7,7 @@ import { resolveOutcome, closingBiasMultiplier, personalityHint } from "../data/
 import { shuffle } from "../data/shuffle";
 import { resolveCustomerNames, resolvePortrait, interpolateNames, poolCharacterById } from "../data/characterPool";
 import { FLIRT_FUN_THRESHOLD, FLIRT_CHANCE } from "../data/meetup";
+import { celebrityById, CELEBRITY_DISCOUNT_BONUS, CELEBRITY_FAN_BONUS } from "../data/celebrities";
 
 const FUN_BONUS_THRESHOLD = 30;
 const TYPE_MS_PER_CHAR = 16;
@@ -74,8 +75,28 @@ export default function DialogueScene({
   }, [house]);
 
   const node = house.nodes[nodeId];
-  const linesShown = node.lines.slice(0, lineIndex + 1);
-  const atLastLine = lineIndex >= node.lines.length - 1;
+  // A rare "Özel Davetler" easter egg — see celebrities.ts. Only ever set
+  // for a single-customer house whose assigned character happens to be a
+  // celebrity (injected once at game start, never during play).
+  const celebrityCharacterId = house.dynamicCast?.length === 1 ? castAssignment[house.id]?.[0] : undefined;
+  const celebrity = celebrityCharacterId ? celebrityById(celebrityCharacterId) : undefined;
+  const celebrityIntroLines: DialogueLine[] =
+    celebrity && nodeId === house.startNode
+      ? [
+          { speaker: "thought", text: celebrity.introLine },
+          { speaker: "thought", text: "(içinden) Ünlü biri karşımda, pazarlık payını biraz daha esnek tutabilirim." },
+          { speaker: "emlah", text: celebrity.fanLine },
+          { speaker: "customer1", text: celebrity.fanReplyLine },
+        ]
+      : [];
+  const effectiveLines = celebrityIntroLines.length > 0 ? [...celebrityIntroLines, ...node.lines] : node.lines;
+  const linesShown = effectiveLines.slice(0, lineIndex + 1);
+  const atLastLine = lineIndex >= effectiveLines.length - 1;
+
+  useEffect(() => {
+    if (celebrity) onChoiceEffects(CELEBRITY_FAN_BONUS[celebrity.personality]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [house.id]);
   const portraitOutcomeClass =
     nodeId === house.closingNodes.sold ? "portrait-sold" : nodeId === house.closingNodes.lost ? "portrait-lost" : "";
 
@@ -128,6 +149,13 @@ export default function DialogueScene({
       list = list.map((c) =>
         c.effects?.discountPercent && c.effects.discountPercent > 0
           ? { ...c, text: WON_DEAL_CHOICE_TEXT, effects: { ...c.effects, discountPercent: 0 } }
+          : c,
+      );
+    }
+    if (celebrity) {
+      list = list.map((c) =>
+        c.effects?.discountPercent
+          ? { ...c, effects: { ...c.effects, discountPercent: c.effects.discountPercent + CELEBRITY_DISCOUNT_BONUS } }
           : c,
       );
     }

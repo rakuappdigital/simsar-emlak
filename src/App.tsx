@@ -24,6 +24,7 @@ import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
 import { logMessages, housesSinceLastCallback, pruneInbox } from "./data/inbox";
 import { assignCast, resolveCustomerNames, resolvePortrait, poolCharacterById } from "./data/characterPool";
+import { injectCelebrities } from "./data/celebrities";
 import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
@@ -640,7 +641,9 @@ function App() {
 
   function startNewGame() {
     const order = tieredShuffle(allHouses.map((h) => h.tier));
-    const cast = assignCast([...allHouses, ...premiumHouses, ...investmentHouses]);
+    // Rare celebrity easter egg — only ever swapped into premium houses,
+    // never touches main/investment assignments (see injectCelebrities).
+    const cast = injectCelebrities(assignCast([...allHouses, ...premiumHouses, ...investmentHouses]), premiumHouses);
     const slot = firstAvailableSlot();
     setActiveSlot(slot);
     setHouseOrder(order);
