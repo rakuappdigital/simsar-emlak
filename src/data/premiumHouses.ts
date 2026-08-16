@@ -184,7 +184,7 @@ export const premiumHouses: HouseScene[] = [
     title: "Ünlü Oyuncunun Eski Evi",
     location: "Etiler, site içi villa",
     customerNames: [],
-    dynamicCast: [{}, {}],
+    dynamicCast: [{ gender: "k" }, { gender: "e" }],
     background: "theme-sky",
     askingPrice: 6800000,
     tier: 3,
