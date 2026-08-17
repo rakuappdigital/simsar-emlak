@@ -12,6 +12,8 @@ interface PhoneScreenProps {
   statusText?: string;
   choices?: { id: string; text: string }[];
   onChoice?: (id: string) => void;
+  batteryPercent?: number;
+  statusTime?: string;
 }
 
 const funnyBanner = [
@@ -30,6 +32,8 @@ export default function PhoneScreen({
   statusText = "yazıyor...",
   choices,
   onChoice,
+  batteryPercent = 100,
+  statusTime = "14:47",
 }: PhoneScreenProps) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [banner] = useState(() => funnyBanner[Math.floor(Math.random() * funnyBanner.length)]);
@@ -65,11 +69,11 @@ export default function PhoneScreen({
         <div className="phone-notch" />
 
         <div className="phone-statusbar">
-          <span className="status-time">14:47</span>
+          <span className="status-time">{statusTime}</span>
           <span className="status-icons">
             <SignalIcon size={13} aria-hidden />
-            <span className="battery-low" aria-hidden>
-              <BatteryIcon size={15} /> 8%
+            <span className={batteryPercent <= 20 ? "battery-low" : undefined} aria-hidden>
+              <BatteryIcon size={15} /> {batteryPercent}%
             </span>
           </span>
         </div>

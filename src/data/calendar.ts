@@ -24,6 +24,18 @@ export function formatGameDate(date: Date): string {
   return date.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
 }
 
+/** Fixed appointment slots — deterministic per house so the same save always shows the same time, no extra state needed. */
+const APPOINTMENT_HOURS = ["09:00", "10:15", "11:30", "13:00", "14:15", "15:30", "16:45", "18:00"];
+
+export function gameTimeForIndex(index: number): string {
+  return APPOINTMENT_HOURS[index % APPOINTMENT_HOURS.length];
+}
+
+/** Combined "1 Eylül 2026 • 14:15" label — the general clock/date readout shown across Office/Phone/Stats. */
+export function formatGameDateTime(index: number): string {
+  return `${formatGameDate(gameDateForIndex(index))} • ${gameTimeForIndex(index)}`;
+}
+
 export type DeliveryTermId = "hemen" | "bir-ay" | "uc-ay";
 
 const DELIVERY_OFFSET_DAYS: Record<DeliveryTermId, number> = {

@@ -48,10 +48,20 @@ import {
   type DeliveryTermId,
   gameDateForIndex,
   formatGameDate,
+  formatGameDateTime,
+  gameTimeForIndex,
   deliveryDateForIndex,
   dueIndexForDelivery,
   splitDeliveryPayment,
 } from "./data/calendar";
+import {
+  BATTERY_MAX,
+  BATTERY_LOW_THRESHOLD,
+  LOW_BATTERY_CHOICE_ID,
+  LOW_BATTERY_LINE,
+  maybeDrainBattery,
+  pickLowBatteryReply,
+} from "./data/battery";
 import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
@@ -323,6 +333,8 @@ function App() {
   // Emlah'ın Takvimi — deferred sale payments waiting on their contract's
   // negotiated delivery date. See data/calendar.ts.
   const [pendingDeliveries, setPendingDeliveries] = useState<PendingDelivery[]>([]);
+  // Telefon şarjı — purely cosmetic flavor, not persisted. See data/battery.ts.
+  const [phoneBattery, setPhoneBattery] = useState(BATTERY_MAX);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -441,6 +453,21 @@ function App() {
     setEmlahMenuTab(tab);
     setShowEmlahMenu(true);
     setSeenInboxCount(inbox.length);
+    if (tab === "mesajlar") drainPhoneBattery();
+  }
+
+  // Telefon şarjı — rolled every time a phone-style screen is opened; see data/battery.ts.
+  function drainPhoneBattery() {
+    setPhoneBattery((b) => maybeDrainBattery(b));
+  }
+
+  // Appends the "şarjım bitiyor" flavor option once the battery is low — never changes stats, see data/battery.ts.
+  function withLowBatteryChoice(
+    choices: { id: string; text: string }[] | undefined,
+  ): { id: string; text: string }[] | undefined {
+    if (!choices || choices.length === 0) return choices;
+    if (phoneBattery > BATTERY_LOW_THRESHOLD) return choices;
+    return [...choices, { id: LOW_BATTERY_CHOICE_ID, text: "😩 Şarjım bitiyor, kısa keseyim..." }];
   }
 
   function handleLineChosen(text: string, fun: number) {
@@ -556,6 +583,9 @@ function App() {
     taskReward: { suspicion?: number; interest?: number; fun?: number } | null,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
+
+    // Telefon şarjı — a new house is a new day, so the phone got charged overnight.
+    setPhoneBattery(BATTERY_MAX);
 
     // Resolve any loan to Bora that's come due before anything else this visit.
     let newBonusEarnings = bonusEarnings;
@@ -1376,6 +1406,13 @@ function App() {
 
   function handleNegotiationChoice(choiceId: string) {
     if (!activeCallback) return;
+    drainPhoneBattery();
+    if (choiceId === LOW_BATTERY_CHOICE_ID) {
+      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const reactionMsg: PhoneMessage = { from: activeCallback.contactName, text: pickLowBatteryReply("customer") };
+      setActiveCallback((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], choices: undefined } : prev));
+      return;
+    }
     // Look up from this callback's own (tier-appropriate) choice list, not a
     // hardcoded one — luxury houses use differently-worded replies, and
     // falling back to the plain list would silently use the wrong tone.
@@ -1506,6 +1543,7 @@ function App() {
       choices: targetHouse.tier >= 3 ? luxuryNegotiationChoices : negotiationChoices,
       sessionKey: `retry-${houseId}-${Date.now()}`,
     });
+    drainPhoneBattery();
     setShowEmlahMenu(false);
     setStage("callback");
   }
@@ -1611,6 +1649,13 @@ function App() {
 
   function handleFriendChoice(choiceId: string) {
     if (!activeFriendChat) return;
+    drainPhoneBattery();
+    if (choiceId === LOW_BATTERY_CHOICE_ID) {
+      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: pickLowBatteryReply("casual") };
+      setActiveFriendChat((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], showChoices: false } : prev));
+      return;
+    }
     const choice = activeFriendChat.set.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
@@ -1664,6 +1709,13 @@ function App() {
 
   function handleMeetupChoice(activityId: string) {
     if (!activeMeetup) return;
+    drainPhoneBattery();
+    if (activityId === LOW_BATTERY_CHOICE_ID) {
+      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const reactionMsg: PhoneMessage = { from: activeMeetup.characterName, text: pickLowBatteryReply("casual") };
+      setActiveMeetup((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], showChoices: false } : prev));
+      return;
+    }
     const activity = meetupActivities.find((a) => a.id === activityId);
 
     const threadId = `meetup-${activeMeetup.characterId}`;
@@ -1700,6 +1752,13 @@ function App() {
 
   function handleChitchatChoice(choiceId: string) {
     if (!activeChitchat) return;
+    drainPhoneBattery();
+    if (choiceId === LOW_BATTERY_CHOICE_ID) {
+      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickLowBatteryReply("casual") };
+      setActiveChitchat((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], showChoices: false } : prev));
+      return;
+    }
     const choice = activeChitchat.set.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
@@ -1966,12 +2025,14 @@ function App() {
             castAssignment,
           )}
           statusText="mesaj yazdı"
-          choices={activeCallback.choices?.map((c) => ({ id: c.id, text: c.text }))}
+          choices={withLowBatteryChoice(activeCallback.choices?.map((c) => ({ id: c.id, text: c.text })))}
           onChoice={handleNegotiationChoice}
           onContinue={() => {
             setActiveCallback(null);
             setStage("phone");
           }}
+          batteryPercent={phoneBattery}
+          statusTime={gameTimeForIndex(index)}
         />
       )}
 
@@ -1982,8 +2043,11 @@ function App() {
           balance={balance}
           unreadCount={unreadCount}
           energy={energy}
-          currentDateLabel={formatGameDate(gameDateForIndex(index))}
-          onGetJob={() => setShowPhoneOverlay(true)}
+          currentDateLabel={formatGameDateTime(index)}
+          onGetJob={() => {
+            setShowPhoneOverlay(true);
+            drainPhoneBattery();
+          }}
           onOpenMessages={() => openEmlahMenu("mesajlar")}
         />
       )}
@@ -1994,6 +2058,8 @@ function App() {
           messages={introFlavorMsg ? [introFlavorMsg, ...intro.messages] : intro.messages}
           thought={intro.thought}
           onContinue={afterIntro}
+          batteryPercent={phoneBattery}
+          statusTime={gameTimeForIndex(index)}
         />
       )}
 
@@ -2001,12 +2067,18 @@ function App() {
         <PhoneScreen
           key={`chitchat-${activeChitchat.set.id}-${index}`}
           messages={activeChitchat.messages}
-          choices={activeChitchat.showChoices ? activeChitchat.set.choices.map((c) => ({ id: c.id, text: c.text })) : undefined}
+          choices={
+            activeChitchat.showChoices
+              ? withLowBatteryChoice(activeChitchat.set.choices.map((c) => ({ id: c.id, text: c.text })))
+              : undefined
+          }
           onChoice={handleChitchatChoice}
           onContinue={() => {
             setActiveChitchat(null);
             setStage("house");
           }}
+          batteryPercent={phoneBattery}
+          statusTime={gameTimeForIndex(index)}
         />
       )}
 
@@ -2016,12 +2088,18 @@ function App() {
           contactName={activeFriendChat.set.contactName}
           statusText="yazıyor..."
           messages={activeFriendChat.messages}
-          choices={activeFriendChat.showChoices ? activeFriendChat.set.choices.map((c) => ({ id: c.id, text: c.text })) : undefined}
+          choices={
+            activeFriendChat.showChoices
+              ? withLowBatteryChoice(activeFriendChat.set.choices.map((c) => ({ id: c.id, text: c.text })))
+              : undefined
+          }
           onChoice={handleFriendChoice}
           onContinue={() => {
             setActiveFriendChat(null);
             setStage("house");
           }}
+          batteryPercent={phoneBattery}
+          statusTime={gameTimeForIndex(index)}
         />
       )}
 
@@ -2033,7 +2111,10 @@ function App() {
           messages={activeMeetup.messages}
           choices={
             activeMeetup.showChoices
-              ? [...meetupActivities.map((a) => ({ id: a.id, text: a.label })), { id: "decline", text: "\"Şu an vaktim yok açıkçası.\"" }]
+              ? withLowBatteryChoice([
+                  ...meetupActivities.map((a) => ({ id: a.id, text: a.label })),
+                  { id: "decline", text: "\"Şu an vaktim yok açıkçası.\"" },
+                ])
               : undefined
           }
           onChoice={handleMeetupChoice}
@@ -2041,6 +2122,8 @@ function App() {
             setActiveMeetup(null);
             setStage("house");
           }}
+          batteryPercent={phoneBattery}
+          statusTime={gameTimeForIndex(index)}
         />
       )}
 
