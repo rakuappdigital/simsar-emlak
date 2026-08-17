@@ -16,7 +16,7 @@ interface PremiumHouseSceneProps {
   castAssignment: Record<string, string[]>;
   results: HouseResult[];
   allHouses: HouseScene[];
-  onFinish: (outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) => void;
+  onFinish: (outcome: SceneOutcome, contractModifier: number, finalStats: GameStats, contractSelections?: Record<string, string>) => void;
   /** Emlah'ın Enerjisi — same low-energy suspicion multiplier as the main house flow. */
   energy?: number;
   /** Yatırım Evleri only — see renovation.ts. Prepends a warning exchange to the opening dialogue. */
@@ -77,7 +77,7 @@ export default function PremiumHouseScene({
       <ContractModal
         clauses={generateContract()}
         customerName={resolveCustomerNames(house, castAssignment)[0]}
-        onFinish={(modifier) => onFinish("sold", modifier, stats)}
+        onFinish={(modifier, selections) => onFinish("sold", modifier, stats, selections)}
       />
     );
   }

@@ -1892,6 +1892,17 @@
   white-space: nowrap;
 }
 
+.office-date-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--c-text-dim);
+  font-size: 0.65rem;
+  padding: 3px 6px;
+  white-space: nowrap;
+}
+
 .energy-bar {
   display: flex;
   flex-direction: column;

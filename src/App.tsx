@@ -45,6 +45,14 @@ import {
 } from "./data/renovation";
 import { ENERGY_MAX, ENERGY_DEPLETION_PER_HOUSE, ENERGY_LOW_THRESHOLD, ENERGY_LOW_SUSPICION_MULTIPLIER, WEEKLY_ENERGY_REGEN } from "./data/energy";
 import {
+  type DeliveryTermId,
+  gameDateForIndex,
+  formatGameDate,
+  deliveryDateForIndex,
+  dueIndexForDelivery,
+  splitDeliveryPayment,
+} from "./data/calendar";
+import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
   MEETUP_INVITE_CHANCE,
@@ -92,6 +100,7 @@ import type {
   OwnedInvestmentHouse,
   PendingLoan,
   PendingInvestment,
+  PendingDelivery,
   PhoneMessage,
   SaleResult,
   SaveGame,
@@ -311,6 +320,9 @@ function App() {
   // Emlah'ın Enerjisi — persisted (it's a real resource the player manages
   // across the whole game, unlike the four flavor systems above).
   const [energy, setEnergy] = useState(ENERGY_MAX);
+  // Emlah'ın Takvimi — deferred sale payments waiting on their contract's
+  // negotiated delivery date. See data/calendar.ts.
+  const [pendingDeliveries, setPendingDeliveries] = useState<PendingDelivery[]>([]);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -389,9 +401,10 @@ function App() {
     newContactedCustomers: ContactedCustomer[] = contactedCustomers,
     newActiveNewsId: string | null = activeNewsId,
     newEnergy: number = energy,
+    newPendingDeliveries: PendingDelivery[] = pendingDeliveries,
   ) {
     const save: SaveGame = {
-      version: 12,
+      version: 13,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -416,6 +429,7 @@ function App() {
       contactedCustomers: newContactedCustomers,
       activeNewsId: newActiveNewsId,
       energy: newEnergy,
+      pendingDeliveries: newPendingDeliveries,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -572,6 +586,24 @@ function App() {
     const newPendingInvestment =
       pendingInvestment && newIndex >= pendingInvestment.dueIndex ? null : pendingInvestment;
 
+    // Emlah'ın Takvimi — settle any deferred sale payments whose delivery date has arrived.
+    const maturedDeliveries = pendingDeliveries.filter((d) => newIndex >= d.dueIndex);
+    if (maturedDeliveries.length > 0) {
+      for (const d of maturedDeliveries) {
+        newBonusEarnings += d.deferredAmount;
+        loanInbox = logMessages(
+          loanInbox,
+          "muzaffer",
+          "Muzaffer Bey",
+          [{ from: "Muzaffer Bey", text: `${d.houseTitle} teslimi tamamlandı, bekleyen ödeme hesabına geçti: +${formatTL(d.deferredAmount)}` }],
+          newIndex + 1,
+        );
+      }
+      setBonusEarnings(newBonusEarnings);
+    }
+    const newPendingDeliveries = pendingDeliveries.filter((d) => newIndex < d.dueIndex);
+    if (newPendingDeliveries.length !== pendingDeliveries.length) setPendingDeliveries(newPendingDeliveries);
+
     const currentQuest =
       newIndex % HOUSES_PER_WEEK === 0
         ? applyRecoveryBonus(pickDailyQuest(weekIndexForHouse(newIndex)), weekOutcomes)
@@ -635,7 +667,12 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
+        persist(
+          currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order,
+          newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
+          chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
+          contactedCustomers, activeNewsId, energy, newPendingDeliveries,
+        );
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -643,7 +680,12 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist(currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order, newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
+    persist(
+      currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order,
+      newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
+      chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
+      contactedCustomers, activeNewsId, energy, newPendingDeliveries,
+    );
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -717,6 +759,7 @@ function App() {
     setActiveNewsId(null);
     setLastTipsterId(undefined);
     setEnergy(ENERGY_MAX);
+    setPendingDeliveries([]);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -754,6 +797,7 @@ function App() {
     setContactedCustomers(savedGame.contactedCustomers ?? []);
     setActiveNewsId(savedGame.activeNewsId ?? null);
     setEnergy(savedGame.energy ?? ENERGY_MAX);
+    setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -782,12 +826,39 @@ function App() {
     }
   }
 
-  function finalizeResult(outcome: SceneOutcome, contractModifier: number) {
+  function finalizeResult(outcome: SceneOutcome, contractModifier: number, contractSelections?: Record<string, string>) {
     const priorStreak = computeStreak(results);
-    const sale =
+    const rawSale =
       outcome === "sold"
         ? computeSale(house.askingPrice, stats.discountPercent, priorStreak, contractModifier, rankBonus(earned))
         : null;
+
+    // Emlah'ın Takvimi — a contract's negotiated "Teslim Tarihi" now sets a
+    // real future date. Only the deferred portion waits; the immediate
+    // share pays out right away exactly as before this feature existed
+    // (for "hemen" it's the full amount, 0 behavior change).
+    let sale = rawSale;
+    let newPendingDeliveries = pendingDeliveries;
+    if (rawSale && contractSelections?.teslim) {
+      const term = contractSelections.teslim as DeliveryTermId;
+      const { immediateAmount, deferredAmount } = splitDeliveryPayment(rawSale.commission, term);
+      if (deferredAmount > 0) {
+        sale = { ...rawSale, commission: immediateAmount };
+        const dueIndex = dueIndexForDelivery(index, term, allHouses.length - 1);
+        newPendingDeliveries = [
+          ...pendingDeliveries,
+          {
+            id: `${house.id}-${index}`,
+            houseTitle: house.title,
+            deliveryDateLabel: formatGameDate(deliveryDateForIndex(index, term)),
+            dueIndex,
+            deferredAmount,
+          },
+        ];
+        setPendingDeliveries(newPendingDeliveries);
+      }
+    }
+
     const newResult: HouseResult = {
       houseId: house.id,
       outcome,
@@ -896,6 +967,7 @@ function App() {
       newContactedCustomers,
       activeNewsId,
       newEnergy,
+      newPendingDeliveries,
     );
     setStage("result");
   }
@@ -905,13 +977,36 @@ function App() {
     setShowEmlahMenu(false);
   }
 
-  function finishPremiumHouse(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) {
+  function finishPremiumHouse(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats, contractSelections?: Record<string, string>) {
     const premiumHouse = premiumHouses.find((h) => h.id === activePremiumHouseId);
     if (!premiumHouse) return;
-    const sale =
+    const rawSale =
       outcome === "sold"
         ? computeSale(premiumHouse.askingPrice, finalStats.discountPercent, 0, contractModifier, rankBonus(earned))
         : null;
+
+    let sale = rawSale;
+    let newPendingDeliveries = pendingDeliveries;
+    if (rawSale && contractSelections?.teslim) {
+      const term = contractSelections.teslim as DeliveryTermId;
+      const { immediateAmount, deferredAmount } = splitDeliveryPayment(rawSale.commission, term);
+      if (deferredAmount > 0) {
+        sale = { ...rawSale, commission: immediateAmount };
+        const dueIndex = dueIndexForDelivery(index, term, allHouses.length - 1);
+        newPendingDeliveries = [
+          ...pendingDeliveries,
+          {
+            id: `${premiumHouse.id}-${index}-davet`,
+            houseTitle: premiumHouse.title,
+            deliveryDateLabel: formatGameDate(deliveryDateForIndex(index, term)),
+            dueIndex,
+            deferredAmount,
+          },
+        ];
+        setPendingDeliveries(newPendingDeliveries);
+      }
+    }
+
     const newResult: HouseResult = {
       houseId: premiumHouse.id,
       outcome,
@@ -950,6 +1045,9 @@ function App() {
       ownedInvestmentHouses,
       investmentResults,
       newContactedCustomers,
+      activeNewsId,
+      energy,
+      newPendingDeliveries,
     );
     setActivePremiumHouseId(null);
     setEmlahMenuTab("davet");
@@ -1049,7 +1147,7 @@ function App() {
     openInvestmentSale(houseId);
   }
 
-  function finishInvestmentSale(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) {
+  function finishInvestmentSale(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats, contractSelections?: Record<string, string>) {
     const houseDef = investmentHouses.find((h) => h.id === activeInvestmentSaleId);
     const owned = ownedInvestmentHouses.find((o) => o.houseId === activeInvestmentSaleId);
     if (!houseDef || !owned) return;
@@ -1061,7 +1159,7 @@ function App() {
     const gap = renovationGap(owned.condition, owned.renovationLevel);
     const conditionToughness = gap * RENOVATION_GAP_TOUGHNESS;
     const renovationBoost = renovationPriceBoost(owned.renovationLevel);
-    const sale: SaleResult | null =
+    const rawSale: SaleResult | null =
       outcome === "sold"
         ? (() => {
             const { finalPrice, profit } = computeInvestmentSale(
@@ -1076,6 +1174,30 @@ function App() {
             return { finalPrice, commission: profit, discountPercent: finalStats.discountPercent, streakBonus: 0, contractModifier, rankBonus: 0 };
           })()
         : null;
+
+    // Only positive flip profit is worth deferring — a loss just books immediately as before.
+    let sale = rawSale;
+    let newPendingDeliveries = pendingDeliveries;
+    if (rawSale && rawSale.commission > 0 && contractSelections?.teslim) {
+      const term = contractSelections.teslim as DeliveryTermId;
+      const { immediateAmount, deferredAmount } = splitDeliveryPayment(rawSale.commission, term);
+      if (deferredAmount > 0) {
+        sale = { ...rawSale, commission: immediateAmount };
+        const dueIndex = dueIndexForDelivery(index, term, allHouses.length - 1);
+        newPendingDeliveries = [
+          ...pendingDeliveries,
+          {
+            id: `${houseDef.id}-${index}-yatirim`,
+            houseTitle: houseDef.title,
+            deliveryDateLabel: formatGameDate(deliveryDateForIndex(index, term)),
+            dueIndex,
+            deferredAmount,
+          },
+        ];
+        setPendingDeliveries(newPendingDeliveries);
+      }
+    }
+
     const newResult: HouseResult = {
       houseId: houseDef.id,
       outcome,
@@ -1129,6 +1251,9 @@ function App() {
       newOwnedInvestmentHouses,
       newInvestmentResults,
       newContactedCustomers,
+      activeNewsId,
+      energy,
+      newPendingDeliveries,
     );
     setActiveInvestmentSaleId(null);
     setPitchTargetContact(null);
@@ -1298,12 +1423,35 @@ function App() {
     );
   }
 
-  function finishCallbackContract(modifier: number) {
+  function finishCallbackContract(modifier: number, contractSelections?: Record<string, string>) {
     if (!pendingCallbackSale) return;
     const { resultIndex, targetHouse, projectedStats } = pendingCallbackSale;
     const original = results[resultIndex];
     const priorStreak = computeStreak(results);
-    const sale = computeSale(targetHouse.askingPrice, projectedStats.discountPercent, priorStreak, modifier, rankBonus(earned));
+    const rawSale = computeSale(targetHouse.askingPrice, projectedStats.discountPercent, priorStreak, modifier, rankBonus(earned));
+
+    let sale = rawSale;
+    let newPendingDeliveries = pendingDeliveries;
+    if (contractSelections?.teslim) {
+      const term = contractSelections.teslim as DeliveryTermId;
+      const { immediateAmount, deferredAmount } = splitDeliveryPayment(rawSale.commission, term);
+      if (deferredAmount > 0) {
+        sale = { ...rawSale, commission: immediateAmount };
+        const dueIndex = dueIndexForDelivery(index, term, allHouses.length - 1);
+        newPendingDeliveries = [
+          ...pendingDeliveries,
+          {
+            id: `${targetHouse.id}-${index}-callback`,
+            houseTitle: targetHouse.title,
+            deliveryDateLabel: formatGameDate(deliveryDateForIndex(index, term)),
+            dueIndex,
+            deferredAmount,
+          },
+        ];
+        setPendingDeliveries(newPendingDeliveries);
+      }
+    }
+
     const updatedResult: HouseResult = {
       ...original,
       outcome: "sold",
@@ -1315,7 +1463,12 @@ function App() {
     const newResults = results.map((r, i) => (i === resultIndex ? updatedResult : r));
     setResults(newResults);
     playSale();
-    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox);
+    persist(
+      newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
+      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
+      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
+      activeNewsId, energy, newPendingDeliveries,
+    );
     setPendingCallbackSale(null);
     setStage("phone");
   }
@@ -1727,6 +1880,8 @@ function App() {
           onRenovate={renovateInvestmentHouse}
           contactedCustomers={contactedCustomers}
           onPitchInvestment={pitchInvestmentToContact}
+          pendingDeliveries={pendingDeliveries}
+          currentDateLabel={formatGameDate(gameDateForIndex(index))}
         />
       )}
 
@@ -1827,6 +1982,7 @@ function App() {
           balance={balance}
           unreadCount={unreadCount}
           energy={energy}
+          currentDateLabel={formatGameDate(gameDateForIndex(index))}
           onGetJob={() => setShowPhoneOverlay(true)}
           onOpenMessages={() => openEmlahMenu("mesajlar")}
         />
@@ -1924,7 +2080,7 @@ function App() {
         <ContractModal
           clauses={contractClauses}
           customerName={resolveCustomerNames(house, castAssignment)[0]}
-          onFinish={(modifier) => finalizeResult("sold", modifier)}
+          onFinish={(modifier, selections) => finalizeResult("sold", modifier, selections)}
         />
       )}
 

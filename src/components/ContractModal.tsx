@@ -5,7 +5,7 @@ import { evaluateContract, MAX_CONTRACT_ROUNDS, type ContractOutcome } from "../
 interface ContractModalProps {
   clauses: ContractClause[];
   customerName: string;
-  onFinish: (modifier: number) => void;
+  onFinish: (modifier: number, selections: Record<string, string>) => void;
 }
 
 type Stage = "picking" | "negotiating" | "done";
@@ -140,7 +140,7 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
               {outcome.modifier === 0 && "Sözleşme sorunsuz imzalandı."}
               {outcome.modifier < 0 && "Bazı maddelerde küçük tavizler vermek zorunda kaldınız."}
             </p>
-            <button className="pixel-btn" onClick={() => onFinish(outcome.modifier)}>
+            <button className="pixel-btn" onClick={() => onFinish(outcome.modifier, selections)}>
               İmzayı Tamamla
             </button>
           </div>

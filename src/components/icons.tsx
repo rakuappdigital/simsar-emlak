@@ -105,6 +105,21 @@ export function MedalIcon(props: IconProps) {
   );
 }
 
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="1" y="2" width="14" height="12" />
+      <rect x="1" y="2" width="14" height="3" fill="#0000003d" />
+      <rect x="3" y="0" width="2" height="3" />
+      <rect x="11" y="0" width="2" height="3" />
+      <rect x="4" y="8" width="2" height="2" className="icon-accent" />
+      <rect x="7" y="8" width="2" height="2" className="icon-accent" />
+      <rect x="10" y="8" width="2" height="2" className="icon-accent" />
+      <rect x="4" y="11" width="2" height="2" className="icon-accent" />
+    </Grid>
+  );
+}
+
 export function CloseIcon(props: IconProps) {
   return (
     <Grid {...props}>

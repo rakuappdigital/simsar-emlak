@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import type { Badge, ContactedCustomer, HouseResult, HouseScene, InboxMessage, OwnedInvestmentHouse } from "../types";
+import type { Badge, ContactedCustomer, HouseResult, HouseScene, InboxMessage, OwnedInvestmentHouse, PendingDelivery } from "../types";
 import { formatTL } from "../data/economy";
 import { weekIndexForHouse } from "../data/goals";
 import MarketPanel from "./MarketPanel";
@@ -9,10 +9,11 @@ import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
 import PremiumInvitesPanel from "./PremiumInvitesPanel";
 import InvestmentPanel from "./InvestmentPanel";
+import DeliveriesPanel from "./DeliveriesPanel";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon } from "./icons";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim";
+export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -50,6 +51,8 @@ interface EmlahMenuProps {
   onRenovate: (houseId: string, level: RenovationLevel) => void;
   contactedCustomers: ContactedCustomer[];
   onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
+  pendingDeliveries: PendingDelivery[];
+  currentDateLabel: string;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -59,6 +62,7 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "kariyer", icon: <StarIcon size={14} />, label: "Kariyer" },
   { id: "davet", icon: <MedalIcon size={14} />, label: "Özel Davetler" },
   { id: "yatirim", icon: <HouseIcon size={14} />, label: "Yatırım Evleri" },
+  { id: "teslimler", icon: <CalendarIcon size={14} />, label: "Bekleyen Teslimler" },
 ];
 
 export default function EmlahMenu({
@@ -97,6 +101,8 @@ export default function EmlahMenu({
   onRenovate,
   contactedCustomers,
   onPitchInvestment,
+  pendingDeliveries,
+  currentDateLabel,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -187,6 +193,9 @@ export default function EmlahMenu({
               contactedCustomers={contactedCustomers}
               onPitchInvestment={onPitchInvestment}
             />
+          )}
+          {tab === "teslimler" && (
+            <DeliveriesPanel pendingDeliveries={pendingDeliveries} currentDateLabel={currentDateLabel} />
           )}
         </div>
       </div>

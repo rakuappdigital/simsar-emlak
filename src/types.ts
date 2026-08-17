@@ -220,8 +220,18 @@ export interface ContactedCustomer {
   houseTitle: string;
 }
 
+/** The deferred-payment portion of a sale whose contract set a "1 ay sonra"/"3 ay sonra" delivery term — see data/calendar.ts. */
+export interface PendingDelivery {
+  id: string;
+  houseTitle: string;
+  /** Pre-formatted at creation time so the save doesn't need to store/reserialize a Date. */
+  deliveryDateLabel: string;
+  dueIndex: number;
+  deferredAmount: number;
+}
+
 export interface SaveGame {
-  version: 12;
+  version: 13;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -259,6 +269,8 @@ export interface SaveGame {
   activeNewsId: string | null;
   /** Emlah'ın Enerjisi — 0-100, see data/energy.ts. */
   energy: number;
+  /** Deferred sale payments waiting on their contract's delivery date — see data/calendar.ts. */
+  pendingDeliveries: PendingDelivery[];
   savedAt: string;
 }
 
