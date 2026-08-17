@@ -63,6 +63,17 @@ import {
   pickLowBatteryReply,
 } from "./data/battery";
 import {
+  BOSS_MOOD_START,
+  DISCOUNT_ANGER_THRESHOLD,
+  BOSS_MOOD_WEEK_GOAL_GAIN,
+  BOSS_MOOD_RAISE_THRESHOLD,
+  WEEKLY_RAISE_AMOUNT,
+  clampBossMood,
+  bossMoodDeltaForSale,
+  pickDiscountAngerLine,
+  pickCleanSaleLine,
+} from "./data/bossMood";
+import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
   MEETUP_INVITE_CHANCE,
@@ -335,6 +346,8 @@ function App() {
   const [pendingDeliveries, setPendingDeliveries] = useState<PendingDelivery[]>([]);
   // Telefon şarjı — purely cosmetic flavor, not persisted. See data/battery.ts.
   const [phoneBattery, setPhoneBattery] = useState(BATTERY_MAX);
+  // Patron Memnuniyeti — Muzaffer Bey's mood, persisted. See data/bossMood.ts.
+  const [bossMood, setBossMood] = useState(BOSS_MOOD_START);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -414,9 +427,10 @@ function App() {
     newActiveNewsId: string | null = activeNewsId,
     newEnergy: number = energy,
     newPendingDeliveries: PendingDelivery[] = pendingDeliveries,
+    newBossMood: number = bossMood,
   ) {
     const save: SaveGame = {
-      version: 13,
+      version: 14,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -442,6 +456,7 @@ function App() {
       activeNewsId: newActiveNewsId,
       energy: newEnergy,
       pendingDeliveries: newPendingDeliveries,
+      bossMood: newBossMood,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -790,6 +805,7 @@ function App() {
     setLastTipsterId(undefined);
     setEnergy(ENERGY_MAX);
     setPendingDeliveries([]);
+    setBossMood(BOSS_MOOD_START);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -828,6 +844,7 @@ function App() {
     setActiveNewsId(savedGame.activeNewsId ?? null);
     setEnergy(savedGame.energy ?? ENERGY_MAX);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
+    setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -929,8 +946,19 @@ function App() {
       newInbox = logMessages(newInbox, house.id, "Gizli Müşteri", [{ from: "Gizli Müşteri", text: pickMysteryShopperReveal(verdict) }], index + 1);
       setMysteryShopperHouseId(null);
     }
-    if (newInbox !== inbox) setInbox(newInbox);
-
+    // Patron Memnuniyeti — a heavily discounted sale annoys Muzaffer Bey;
+    // a clean one pleases him. Never feeds back into resolveOutcome/scoring,
+    // only gates the separate weekly "zam" bonus below.
+    let newBossMood = bossMood;
+    if (outcome === "sold" && sale) {
+      const angry = stats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
+      newBossMood = clampBossMood(bossMood + bossMoodDeltaForSale(stats.discountPercent));
+      if (angry) {
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDiscountAngerLine() }], index + 1);
+      } else if (Math.random() < 0.25) {
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickCleanSaleLine() }], index + 1);
+      }
+    }
     // Satış Sonrası Sosyal Medya Tepkisi — purely cosmetic, fires only when
     // this sale is this week's best so far.
     if (outcome === "sold" && sale) {
@@ -965,10 +993,31 @@ function App() {
       newWeekOutcomes = [...weekOutcomes, weekOutcome];
       setWeekOutcomes(newWeekOutcomes);
       setPendingWeekOutcome(weekOutcome);
+
+      // Patron Memnuniyeti — hitting the week's sales target pleases him too,
+      // and at week's end his mood gates a separate small "haftalık zam"
+      // bonus, additive on top of the existing sales/honesty bonus above.
+      if (weekOutcome.salesGoalMet) newBossMood = clampBossMood(newBossMood + BOSS_MOOD_WEEK_GOAL_GAIN);
+      if (newBossMood >= BOSS_MOOD_RAISE_THRESHOLD) {
+        newBonusEarnings += WEEKLY_RAISE_AMOUNT;
+        newInbox = logMessages(
+          newInbox, "muzaffer", "Muzaffer Bey",
+          [{ from: "Muzaffer Bey", text: `Bu hafta senden memnunum Emlah, küçük bir zam yaptım (+${formatTL(WEEKLY_RAISE_AMOUNT)}).` }],
+          index + 1,
+        );
+      } else {
+        newInbox = logMessages(
+          newInbox, "muzaffer", "Muzaffer Bey",
+          [{ from: "Muzaffer Bey", text: "Bu hafta zam yok Emlah, biraz daha dikkatli olmalısın." }],
+          index + 1,
+        );
+      }
     } else {
       setPendingWeekOutcome(null);
     }
 
+    if (newBossMood !== bossMood) setBossMood(newBossMood);
+    if (newInbox !== inbox) setInbox(newInbox);
     if (newBonusEarnings !== bonusEarnings) setBonusEarnings(newBonusEarnings);
 
     persist(
@@ -998,6 +1047,7 @@ function App() {
       activeNewsId,
       newEnergy,
       newPendingDeliveries,
+      newBossMood,
     );
     setStage("result");
   }
@@ -1051,6 +1101,20 @@ function App() {
     if (outcome === "sold") playSale();
     else if (outcome === "lost") playLost();
     else playThinking();
+
+    // Patron Memnuniyeti — same discount consequence as a main-house sale.
+    let newBossMood = bossMood;
+    let newInbox = inbox;
+    if (outcome === "sold" && sale) {
+      const angry = finalStats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
+      newBossMood = clampBossMood(bossMood + bossMoodDeltaForSale(finalStats.discountPercent));
+      if (angry) {
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDiscountAngerLine() }], index + 1);
+      }
+    }
+    if (newBossMood !== bossMood) setBossMood(newBossMood);
+    if (newInbox !== inbox) setInbox(newInbox);
+
     persist(
       results,
       weekOutcomes,
@@ -1061,7 +1125,7 @@ function App() {
       consumables,
       unlockedTiers,
       houseOrder,
-      inbox,
+      newInbox,
       castAssignment,
       dailyQuest,
       activeSlot,
@@ -1078,6 +1142,7 @@ function App() {
       activeNewsId,
       energy,
       newPendingDeliveries,
+      newBossMood,
     );
     setActivePremiumHouseId(null);
     setEmlahMenuTab("davet");
@@ -1500,11 +1565,22 @@ function App() {
     const newResults = results.map((r, i) => (i === resultIndex ? updatedResult : r));
     setResults(newResults);
     playSale();
+
+    // Patron Memnuniyeti — same discount consequence as any other sale.
+    const angry = projectedStats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
+    const newBossMood = clampBossMood(bossMood + bossMoodDeltaForSale(projectedStats.discountPercent));
+    let newInbox = inbox;
+    if (angry) {
+      newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDiscountAngerLine() }], index + 1);
+    }
+    setBossMood(newBossMood);
+    if (newInbox !== inbox) setInbox(newInbox);
+
     persist(
-      newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
+      newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox,
       castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
       premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, energy, newPendingDeliveries,
+      activeNewsId, energy, newPendingDeliveries, newBossMood,
     );
     setPendingCallbackSale(null);
     setStage("phone");
@@ -1941,6 +2017,8 @@ function App() {
           onPitchInvestment={pitchInvestmentToContact}
           pendingDeliveries={pendingDeliveries}
           currentDateLabel={formatGameDate(gameDateForIndex(index))}
+          bossMood={bossMood}
+          friendBonds={friendBonds}
         />
       )}
 
@@ -2043,6 +2121,7 @@ function App() {
           balance={balance}
           unreadCount={unreadCount}
           energy={energy}
+          bossMood={bossMood}
           currentDateLabel={formatGameDateTime(index)}
           onGetJob={() => {
             setShowPhoneOverlay(true);

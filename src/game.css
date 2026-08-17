@@ -1928,6 +1928,23 @@
   background: var(--c-danger);
 }
 
+.boss-mood-fill {
+  background: linear-gradient(90deg, #a78bfa, #f472b6);
+}
+
+.boss-mood-fill.energy-fill-low {
+  background: var(--c-danger);
+}
+
+.relationship-track {
+  margin: 6px 0;
+}
+
+.relationship-pips {
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+}
+
 .office-panel {
   display: flex;
   align-items: center;

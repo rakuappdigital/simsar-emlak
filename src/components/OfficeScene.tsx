@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { formatTL } from "../data/economy";
 import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
 import { ENERGY_MAX, ENERGY_LOW_THRESHOLD } from "../data/energy";
+import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
 import { WalletIcon, ChatIcon } from "./icons";
 
 interface OfficeSceneProps {
@@ -10,6 +11,7 @@ interface OfficeSceneProps {
   balance: number;
   unreadCount: number;
   energy: number;
+  bossMood: number;
   currentDateLabel: string;
   onGetJob: () => void;
   onOpenMessages: () => void;
@@ -24,7 +26,7 @@ interface OfficeSceneProps {
  * something the player opts into from here, either to fetch today's job
  * or to browse past threads.
  */
-export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, currentDateLabel, onGetJob, onOpenMessages }: OfficeSceneProps) {
+export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, bossMood, currentDateLabel, onGetJob, onOpenMessages }: OfficeSceneProps) {
   const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
 
@@ -64,6 +66,18 @@ export default function OfficeScene({ rankTitleText, ownedPerks, balance, unread
           <div
             className={`stat-fill energy-fill ${energy < ENERGY_LOW_THRESHOLD ? "energy-fill-low" : ""}`}
             style={{ width: `${Math.min(100, (energy / ENERGY_MAX) * 100)}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="energy-bar">
+        <span className="energy-bar-label">
+          😊 Patron Memnuniyeti {bossMood < BOSS_MOOD_RAISE_THRESHOLD && <span className="energy-bar-low">(düşük)</span>}
+        </span>
+        <div className="stat-track">
+          <div
+            className={`stat-fill boss-mood-fill ${bossMood < BOSS_MOOD_RAISE_THRESHOLD ? "energy-fill-low" : ""}`}
+            style={{ width: `${Math.min(100, (bossMood / BOSS_MOOD_MAX) * 100)}%` }}
           />
         </div>
       </div>

@@ -231,7 +231,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 13;
+  version: 14;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -271,6 +271,8 @@ export interface SaveGame {
   energy: number;
   /** Deferred sale payments waiting on their contract's delivery date — see data/calendar.ts. */
   pendingDeliveries: PendingDelivery[];
+  /** Patron Memnuniyeti — Muzaffer Bey's mood, 0-100. See data/bossMood.ts. */
+  bossMood: number;
   savedAt: string;
 }
 

@@ -10,10 +10,11 @@ import CareerPanel from "./CareerPanel";
 import PremiumInvitesPanel from "./PremiumInvitesPanel";
 import InvestmentPanel from "./InvestmentPanel";
 import DeliveriesPanel from "./DeliveriesPanel";
+import RelationshipsPanel from "./RelationshipsPanel";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon } from "./icons";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler";
+export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler" | "iliskiler";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -53,6 +54,8 @@ interface EmlahMenuProps {
   onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
   pendingDeliveries: PendingDelivery[];
   currentDateLabel: string;
+  bossMood: number;
+  friendBonds: Record<string, number>;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -63,6 +66,7 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "davet", icon: <MedalIcon size={14} />, label: "Özel Davetler" },
   { id: "yatirim", icon: <HouseIcon size={14} />, label: "Yatırım Evleri" },
   { id: "teslimler", icon: <CalendarIcon size={14} />, label: "Bekleyen Teslimler" },
+  { id: "iliskiler", icon: <HeartIcon size={14} />, label: "İlişkiler" },
 ];
 
 export default function EmlahMenu({
@@ -103,6 +107,8 @@ export default function EmlahMenu({
   onPitchInvestment,
   pendingDeliveries,
   currentDateLabel,
+  bossMood,
+  friendBonds,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -197,6 +203,7 @@ export default function EmlahMenu({
           {tab === "teslimler" && (
             <DeliveriesPanel pendingDeliveries={pendingDeliveries} currentDateLabel={currentDateLabel} />
           )}
+          {tab === "iliskiler" && <RelationshipsPanel bossMood={bossMood} friendBonds={friendBonds} />}
         </div>
       </div>
     </div>

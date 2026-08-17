@@ -105,6 +105,17 @@ export function MedalIcon(props: IconProps) {
   );
 }
 
+export function HeartIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="2" y="3" width="5" height="5" />
+      <rect x="9" y="3" width="5" height="5" />
+      <rect x="4" y="8" width="8" height="3" />
+      <rect x="6" y="11" width="4" height="2" className="icon-accent" />
+    </Grid>
+  );
+}
+
 export function CalendarIcon(props: IconProps) {
   return (
     <Grid {...props}>
