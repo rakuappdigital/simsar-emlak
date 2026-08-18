@@ -73,6 +73,7 @@ import {
   pickDiscountAngerLine,
   pickCleanSaleLine,
 } from "./data/bossMood";
+import { seasonalEventForWeek } from "./data/seasonalEvents";
 import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
@@ -348,6 +349,8 @@ function App() {
   const [phoneBattery, setPhoneBattery] = useState(BATTERY_MAX);
   // Patron Memnuniyeti — Muzaffer Bey's mood, persisted. See data/bossMood.ts.
   const [bossMood, setBossMood] = useState(BOSS_MOOD_START);
+  // Güncel Olaylar — weekIndex values whose scripted event already fired. See data/seasonalEvents.ts.
+  const [firedSeasonalEventWeeks, setFiredSeasonalEventWeeks] = useState<number[]>([]);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -428,9 +431,10 @@ function App() {
     newEnergy: number = energy,
     newPendingDeliveries: PendingDelivery[] = pendingDeliveries,
     newBossMood: number = bossMood,
+    newFiredSeasonalEventWeeks: number[] = firedSeasonalEventWeeks,
   ) {
     const save: SaveGame = {
-      version: 14,
+      version: 15,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -457,6 +461,7 @@ function App() {
       energy: newEnergy,
       pendingDeliveries: newPendingDeliveries,
       bossMood: newBossMood,
+      firedSeasonalEventWeeks: newFiredSeasonalEventWeeks,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -655,6 +660,26 @@ function App() {
         : dailyQuestParam;
     setDailyQuest(currentQuest);
 
+    // Güncel Olaylar — a handful of scripted, date-anchored beats (see
+    // seasonalEvents.ts). Fires at most once per weekIndex, guarded by
+    // firedSeasonalEventWeeks so a locked-gate retry can't double-pay it.
+    let newFiredSeasonalEventWeeks = firedSeasonalEventWeeks;
+    if (newIndex % HOUSES_PER_WEEK === 0) {
+      const weekIdx = weekIndexForHouse(newIndex);
+      const event = seasonalEventForWeek(weekIdx);
+      if (event && !firedSeasonalEventWeeks.includes(weekIdx)) {
+        newBonusEarnings += event.bonusEarnings;
+        setBonusEarnings(newBonusEarnings);
+        loanInbox = logMessages(
+          loanInbox, "muzaffer", "Muzaffer Bey",
+          [{ from: "Muzaffer Bey", text: `📅 ${formatGameDate(gameDateForIndex(newIndex))} — ${event.headline}${event.bonusEarnings !== 0 ? ` (${event.bonusEarnings > 0 ? "+" : ""}${formatTL(event.bonusEarnings)})` : ""}` }],
+          newIndex + 1,
+        );
+        newFiredSeasonalEventWeeks = [...firedSeasonalEventWeeks, weekIdx];
+        setFiredSeasonalEventWeeks(newFiredSeasonalEventWeeks);
+      }
+    }
+
     const positionInWeek = newIndex % HOUSES_PER_WEEK;
     let newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
     const nextDistrict = districtOf(nextHouse.location);
@@ -716,7 +741,7 @@ function App() {
           currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order,
           newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
           chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
-          contactedCustomers, activeNewsId, energy, newPendingDeliveries,
+          contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
         );
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
@@ -729,7 +754,7 @@ function App() {
       currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order,
       newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
       chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
-      contactedCustomers, activeNewsId, energy, newPendingDeliveries,
+      contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
     );
     setActiveCallback(null);
     setIndex(newIndex);
@@ -806,6 +831,7 @@ function App() {
     setEnergy(ENERGY_MAX);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
+    setFiredSeasonalEventWeeks([]);
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -845,6 +871,7 @@ function App() {
     setEnergy(savedGame.energy ?? ENERGY_MAX);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
+    setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,

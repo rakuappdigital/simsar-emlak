@@ -231,7 +231,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 14;
+  version: 15;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -273,6 +273,8 @@ export interface SaveGame {
   pendingDeliveries: PendingDelivery[];
   /** Patron Memnuniyeti — Muzaffer Bey's mood, 0-100. See data/bossMood.ts. */
   bossMood: number;
+  /** weekIndex values whose scripted seasonalEvents.ts entry has already fired, so a locked-gate retry can't double-pay it. */
+  firedSeasonalEventWeeks: number[];
   savedAt: string;
 }
 
