@@ -9,6 +9,7 @@ import { resolveCustomerNames, resolvePortrait, interpolateNames, poolCharacterB
 import { FLIRT_FUN_THRESHOLD, FLIRT_CHANCE } from "../data/meetup";
 import { celebrityById, CELEBRITY_DISCOUNT_BONUS, CELEBRITY_FAN_BONUS } from "../data/celebrities";
 import { pickConditionWarningThought, pickConditionWarningLine } from "../data/renovation";
+import type { EasterEgg } from "../data/easterEggs";
 
 const FUN_BONUS_THRESHOLD = 30;
 const TYPE_MS_PER_CHAR = 16;
@@ -47,6 +48,8 @@ interface DialogueSceneProps {
   isDuel?: boolean;
   /** Yatırım Evleri only — the owned house wasn't renovated enough for its condition (see renovation.ts). Adds a flavor exchange, no stat effect (the price penalty is applied separately in computeInvestmentSale). */
   conditionWarning?: boolean;
+  /** Rare, house-agnostic flavor moment — see data/easterEggs.ts. Adds a tiny one-off fun bonus, nothing else. */
+  easterEgg?: EasterEgg;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -70,6 +73,7 @@ export default function DialogueScene({
   onFlirt,
   isDuel,
   conditionWarning,
+  easterEgg,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -109,13 +113,18 @@ export default function DialogueScene({
           { speaker: "customer1", text: conditionWarningLine },
         ]
       : [];
-  const prependedLines = [...celebrityIntroLines, ...conditionWarningLines];
+  const easterEggLines: DialogueLine[] =
+    easterEgg && nodeId === house.startNode
+      ? easterEgg.lines.map((l) => ({ speaker: l.speaker, text: l.text }))
+      : [];
+  const prependedLines = [...celebrityIntroLines, ...conditionWarningLines, ...easterEggLines];
   const effectiveLines = prependedLines.length > 0 ? [...prependedLines, ...node.lines] : node.lines;
   const linesShown = effectiveLines.slice(0, lineIndex + 1);
   const atLastLine = lineIndex >= effectiveLines.length - 1;
 
   useEffect(() => {
     if (celebrity) onChoiceEffects(CELEBRITY_FAN_BONUS[celebrity.personality]);
+    if (easterEgg) onChoiceEffects({ fun: easterEgg.funBonus });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [house.id]);
   const portraitOutcomeClass =
@@ -271,6 +280,7 @@ export default function DialogueScene({
           <span className="personality-tag">{personalityHint(house.profile)}</span>
         )}
         {isDuel && <span className="duel-tag">⏱️ Fırat Bey de bu evle ilgileniyor!</span>}
+        {easterEgg && nodeId === house.startNode && <span className="easter-egg-tag">{easterEgg.tag}</span>}
         <div className="scene-title">
           <span>{house.title} — {house.location}</span>
           <span className="scene-price">{formatTL(house.askingPrice)}</span>

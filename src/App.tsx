@@ -17,6 +17,8 @@ import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
 import WorkTaskScreen from "./components/WorkTaskScreen";
 import { pickWorkTask, type WorkTaskDef } from "./data/workTasks";
 import { pickQuickCall } from "./data/quickCall";
+import { pickStagingTask } from "./data/staging";
+import { pickSuspiciousDetail } from "./data/suspiciousDetails";
 import QuickCallScreen from "./components/QuickCallScreen";
 import { pickIntroFlavor, reputationLabel, reputationSuspicionOffset, districtOf, districtReputationOffset } from "./data/introFlavor";
 import { generateShareCard } from "./data/shareCard";
@@ -34,6 +36,7 @@ import {
   mysteryShopperVerdict,
   pickMysteryShopperReveal,
 } from "./data/mysteryShopper";
+import { EASTER_EGG_CHANCE, pickEasterEgg, type EasterEgg } from "./data/easterEggs";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
   type RenovationLevel,
@@ -304,6 +307,8 @@ function App() {
   const [activeTask, setActiveTask] = useState<WorkTaskDef | null>(null);
   const [lastTaskId, setLastTaskId] = useState<string | undefined>(undefined);
   const [lastQuickCallId, setLastQuickCallId] = useState<string | undefined>(undefined);
+  const [lastStagingId, setLastStagingId] = useState<string | undefined>(undefined);
+  const [lastSuspiciousDetailId, setLastSuspiciousDetailId] = useState<string | undefined>(undefined);
   const [pendingHouseEntry, setPendingHouseEntry] = useState<PendingHouseEntry | null>(null);
   const [bonusEarnings, setBonusEarnings] = useState(0);
   const [pendingLoan, setPendingLoan] = useState<PendingLoan | null>(null);
@@ -340,6 +345,10 @@ function App() {
   const [activeDuelHouseId, setActiveDuelHouseId] = useState<string | null>(null);
   const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
+  // Nadir, house-agnostic flavor moment — see data/easterEggs.ts. Same
+  // one-house-visit scope as the flavor systems above, not persisted.
+  const [activeEasterEgg, setActiveEasterEgg] = useState<{ houseId: string; egg: EasterEgg } | null>(null);
+  const [lastEasterEggId, setLastEasterEggId] = useState<string | undefined>(undefined);
   // Emlah'ın Enerjisi — persisted (it's a real resource the player manages
   // across the whole game, unlike the four flavor systems above).
   const [energy, setEnergy] = useState(ENERGY_MAX);
@@ -575,17 +584,30 @@ function App() {
         dailyQuestParam,
       });
       // Same interruption slot/frequency as before (WORK_TASK_CHANCE unchanged) —
-      // just a coin flip on which of the two mini-games fills it, for variety.
-      if (Math.random() < 0.5) {
+      // just which of 4 mini-games fills it, for variety. Staging/Şüpheli
+      // Detay reuse WorkTaskScreen (stage "task") exactly like office
+      // chores, just with different content pools.
+      const pick = Math.floor(Math.random() * 4);
+      if (pick === 0) {
         const task = pickWorkTask(lastTaskId);
         setLastTaskId(task.id);
         setActiveTask(task);
         setStage("task");
-      } else {
+      } else if (pick === 1) {
         const quickCall = pickQuickCall(lastQuickCallId);
         setLastQuickCallId(quickCall.id);
         setActiveTask(quickCall);
         setStage("quickcall");
+      } else if (pick === 2) {
+        const staging = pickStagingTask(lastStagingId);
+        setLastStagingId(staging.id);
+        setActiveTask(staging);
+        setStage("task");
+      } else {
+        const detail = pickSuspiciousDetail(lastSuspiciousDetailId);
+        setLastSuspiciousDetailId(detail.id);
+        setActiveTask(detail);
+        setStage("task");
       }
       return;
     }
@@ -979,6 +1001,7 @@ function App() {
       newInbox = logMessages(newInbox, house.id, "Gizli Müşteri", [{ from: "Gizli Müşteri", text: pickMysteryShopperReveal(verdict) }], index + 1);
       setMysteryShopperHouseId(null);
     }
+    if (activeEasterEgg?.houseId === house.id) setActiveEasterEgg(null);
     // Patron Memnuniyeti — a heavily discounted sale annoys Muzaffer Bey;
     // a clean one pleases him. Never feeds back into resolveOutcome/scoring,
     // only gates the separate weekly "zam" bonus below.
@@ -1713,6 +1736,10 @@ function App() {
     } else if (Math.random() < MYSTERY_SHOPPER_CHANCE) {
       // Deliberately silent — a mystery shopper who announced themselves wouldn't be much of a mystery.
       setMysteryShopperHouseId(house.id);
+    } else if (Math.random() < EASTER_EGG_CHANCE) {
+      const egg = pickEasterEgg(lastEasterEggId);
+      setLastEasterEggId(egg.id);
+      setActiveEasterEgg({ houseId: house.id, egg });
     }
     // Emlah'ın Enerjisi — depletes a fixed amount per house walked into.
     setEnergy((e) => Math.max(0, e - ENERGY_DEPLETION_PER_HOUSE));
@@ -2271,6 +2298,7 @@ function App() {
             onLineChosen={handleLineChosen}
             onFlirt={handleFlirt}
             isDuel={activeDuelHouseId === house.id}
+            easterEgg={activeEasterEgg?.houseId === house.id ? activeEasterEgg.egg : undefined}
           />
         </>
       )}

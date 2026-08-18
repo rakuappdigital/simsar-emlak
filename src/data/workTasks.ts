@@ -9,6 +9,8 @@ export interface WorkTaskDef {
   title: string;
   prompt: string;
   choices: WorkTaskChoice[];
+  /** Overrides WorkTaskScreen's default "Muzaffer Bey bir iş verdi" tag — lets the same screen host different flavors of interstitial (staging, suspicious detail, etc). */
+  tag?: string;
 }
 
 /**

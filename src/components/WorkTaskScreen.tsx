@@ -8,7 +8,7 @@ interface WorkTaskScreenProps {
 export default function WorkTaskScreen({ task, onChoice }: WorkTaskScreenProps) {
   return (
     <div className="work-task-screen">
-      <p className="work-task-tag">Muzaffer Bey bir iş verdi</p>
+      <p className="work-task-tag">{task.tag ?? "Muzaffer Bey bir iş verdi"}</p>
       <p className="work-task-title">{task.title}</p>
       <p className="work-task-prompt">{task.prompt}</p>
       <div className="choices">

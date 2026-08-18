@@ -837,6 +837,19 @@
   z-index: 2;
 }
 
+.easter-egg-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #a78bfa;
+  color: #a78bfa;
+  font-size: 0.62rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  z-index: 2;
+}
+
 .scene-title {
   position: absolute;
   bottom: 0;
