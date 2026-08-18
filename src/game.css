@@ -156,6 +156,11 @@
   text-overflow: ellipsis;
 }
 
+.click-milestone-toast {
+  border-color: #a78bfa;
+  top: 100px;
+}
+
 .social-toast-commenter {
   color: var(--c-text-dim);
   white-space: nowrap;

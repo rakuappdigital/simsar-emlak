@@ -37,6 +37,9 @@ import {
   pickMysteryShopperReveal,
 } from "./data/mysteryShopper";
 import { EASTER_EGG_CHANCE, pickEasterEgg, type EasterEgg } from "./data/easterEggs";
+import { REAL_WORLD_FLAVOR_CHANCE, pickRealWorldFlavorLine } from "./data/realWorldFlavor";
+import { recordClick, milestoneMessage } from "./data/clickCounter";
+import { printConsoleEasterEgg } from "./data/consoleEasterEgg";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
   type RenovationLevel,
@@ -301,6 +304,8 @@ function App() {
   const [rankUpUnlockedInvites, setRankUpUnlockedInvites] = useState(false);
   const [badgeCelebration, setBadgeCelebration] = useState<Badge[] | null>(null);
   const lastRankRef = useRef<string | null>(null);
+  // "Oyun senin gerçek saatini biliyor" — at most once per browser session. See data/realWorldFlavor.ts.
+  const realWorldFlavorShownRef = useRef(false);
   const [dailyQuest, setDailyQuest] = useState<DailyQuestDef | null>(null);
   const [dailyQuestResult, setDailyQuestResult] = useState<{ def: DailyQuestDef; completed: boolean } | null>(null);
   const [introFlavorMsg, setIntroFlavorMsg] = useState<PhoneMessage | null>(null);
@@ -345,6 +350,7 @@ function App() {
   const [activeDuelHouseId, setActiveDuelHouseId] = useState<string | null>(null);
   const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
+  const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Nadir, house-agnostic flavor moment — see data/easterEggs.ts. Same
   // one-house-visit scope as the flavor systems above, not persisted.
   const [activeEasterEgg, setActiveEasterEgg] = useState<{ houseId: string; egg: EasterEgg } | null>(null);
@@ -405,8 +411,26 @@ function App() {
     return () => clearTimeout(t);
   }, [socialReaction]);
 
+  // "Sen gerçekten çok tıklıyorsun ha" — counts every click anywhere in the
+  // app, lifetime, across all playthroughs. See data/clickCounter.ts.
+  useEffect(() => {
+    function handleGlobalClick() {
+      const milestone = recordClick();
+      if (milestone !== null) setClickMilestoneMsg(milestoneMessage(milestone));
+    }
+    document.addEventListener("click", handleGlobalClick);
+    return () => document.removeEventListener("click", handleGlobalClick);
+  }, []);
+
+  useEffect(() => {
+    if (!clickMilestoneMsg) return;
+    const t = setTimeout(() => setClickMilestoneMsg(null), 4200);
+    return () => clearTimeout(t);
+  }, [clickMilestoneMsg]);
+
   useEffect(() => {
     setSavedGames(loadAllSaves());
+    printConsoleEasterEgg();
   }, []);
 
   const house = allHouses[houseOrder[index] ?? index];
@@ -1740,6 +1764,12 @@ function App() {
       const egg = pickEasterEgg(lastEasterEggId);
       setLastEasterEggId(egg.id);
       setActiveEasterEgg({ houseId: house.id, egg });
+    } else if (!realWorldFlavorShownRef.current && Math.random() < REAL_WORLD_FLAVOR_CHANCE) {
+      const line = pickRealWorldFlavorLine();
+      if (line) {
+        realWorldFlavorShownRef.current = true;
+        setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: line }], index + 1));
+      }
     }
     // Emlah'ın Enerjisi — depletes a fixed amount per house walked into.
     setEnergy((e) => Math.max(0, e - ENERGY_DEPLETION_PER_HOUSE));
@@ -2038,6 +2068,12 @@ function App() {
           <span className="social-toast-likes">❤️ {socialReaction.likes}</span>
           <span className="social-toast-comment">{socialReaction.comment}</span>
           <span className="social-toast-commenter">— {socialReaction.commenter}</span>
+        </div>
+      )}
+
+      {clickMilestoneMsg && (
+        <div className="social-toast click-milestone-toast">
+          <span className="social-toast-comment">👀 {clickMilestoneMsg}</span>
         </div>
       )}
 
