@@ -56,3 +56,20 @@ export function pickVoiceLine(tone: ToneBucket): string {
   const pool = voiceLines[tone];
   return pool[Math.floor(Math.random() * pool.length)];
 }
+
+const toneLabels: Record<ToneBucket, string> = {
+  eglenceli: "Eğlenceli",
+  samimi: "Samimi",
+  atilgan: "Atılgan",
+};
+
+/** "Emlah'ın Kişilik Profili" — end-game summary of the whole run's tone tally. Null if no signal was ever picked up. */
+export function personalitySummary(tally: Record<ToneBucket, number>): string | null {
+  const total = tally.eglenceli + tally.samimi + tally.atilgan;
+  if (total === 0) return null;
+  const parts = (Object.entries(tally) as [ToneBucket, number][])
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tone, count]) => `%${Math.round((count / total) * 100)} ${toneLabels[tone]}`);
+  return `${parts.join(", ")} bir emlakçıydın.`;
+}

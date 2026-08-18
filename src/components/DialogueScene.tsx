@@ -50,6 +50,8 @@ interface DialogueSceneProps {
   onFlirt?: (characterId: string, characterName: string) => void;
   /** "Emlah'ın Sesi" — reports every picked choice's effects so App.tsx can classify/tally its tone. See data/voiceTone.ts. */
   onToneChoice?: (effects: ChoiceEffects) => void;
+  /** "Son Dakika Baskısı" — fires only when the player actually falls for the trap choice. See data/lastMinutePressure.ts. */
+  onPressureChoicePicked?: () => void;
   /** True when Fırat Bey is also circling this exact house (see rivalDuel.ts) — purely a visible warning tag, no stat effect. */
   isDuel?: boolean;
   /** Yatırım Evleri only — the owned house wasn't renovated enough for its condition (see renovation.ts). Adds a flavor exchange, no stat effect (the price penalty is applied separately in computeInvestmentSale). */
@@ -87,6 +89,7 @@ export default function DialogueScene({
   contactedCustomers = [],
   onToneChoice,
   voiceTally,
+  onPressureChoicePicked,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -285,6 +288,7 @@ export default function DialogueScene({
     if (choice.id === "flirt-bond" && flirtCharacterId && flirtCharacter) {
       onFlirt?.(flirtCharacterId, flirtCharacter.name);
     }
+    if (choice.id.startsWith("son-dakika")) onPressureChoicePicked?.();
 
     if (choice.effects?.closingBias !== undefined) {
       const projected: GameStats = {

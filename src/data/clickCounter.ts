@@ -47,3 +47,8 @@ export function recordClick(): number | null {
 export function milestoneMessage(milestone: number): string {
   return `Sen gerçekten çok tıklıyorsun ha — bu senin ${milestone.toLocaleString("tr-TR")}. tıklaman!`;
 }
+
+/** Read-only — for the Gizli Dokunuş Menüsü secret stats screen. */
+export function getLifetimeClicks(): number {
+  return load().count;
+}

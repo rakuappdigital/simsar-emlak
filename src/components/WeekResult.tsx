@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import type { DailyQuestDef, WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { rivalSalesForWeek } from "../data/rival";
 import { weeklyNewsLine } from "../data/weeklyNews";
 import { generateWeekJournalEntry } from "../data/journal";
+import { pickWeeklyDreamLine } from "../data/weeklyDream";
 import { CartIcon } from "./icons";
 
 interface WeekResultProps {
@@ -15,6 +17,7 @@ interface WeekResultProps {
 
 export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenMarket, onContinue }: WeekResultProps) {
   const rivalSales = rivalSalesForWeek(outcome.weekIndex);
+  const dreamLine = useMemo(() => pickWeeklyDreamLine(outcome), [outcome.weekIndex]);
   return (
     <div className="result-screen">
       <p className="week-result-title">Hafta {outcome.weekIndex + 1} Değerlendirmesi</p>
@@ -58,6 +61,11 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
       <p className="journal-entry">
         <span className="journal-entry-label">📓 Emlah'ın Günlüğü</span>
         <span className="journal-entry-text">{generateWeekJournalEntry(outcome)}</span>
+      </p>
+
+      <p className="journal-entry dream-entry">
+        <span className="journal-entry-label">🌙 Emlah'ın Rüyası</span>
+        <span className="journal-entry-text">{dreamLine}</span>
       </p>
 
       <p className="sale-summary">Bakiye: {formatTL(balance)}</p>

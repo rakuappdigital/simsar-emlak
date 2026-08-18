@@ -40,7 +40,8 @@ import { EASTER_EGG_CHANCE, pickEasterEgg, type EasterEgg } from "./data/easterE
 import { REAL_WORLD_FLAVOR_CHANCE, pickRealWorldFlavorLine } from "./data/realWorldFlavor";
 import { recordClick, milestoneMessage } from "./data/clickCounter";
 import { printConsoleEasterEgg } from "./data/consoleEasterEgg";
-import { classifyChoiceTone } from "./data/voiceTone";
+import { classifyChoiceTone, personalitySummary } from "./data/voiceTone";
+import { triggerHaptic } from "./data/haptics";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
   type RenovationLevel,
@@ -94,6 +95,7 @@ import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
 import PremiumHouseScene from "./components/PremiumHouseScene";
+import SecretStatsScreen from "./components/SecretStatsScreen";
 import { investmentHouses, isInvestmentUnlocked } from "./data/investmentHouses";
 import { marketNews, pickMarketNews } from "./data/marketNews";
 import { pickTipsterMessage } from "./data/tipsters";
@@ -353,6 +355,14 @@ function App() {
   const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
+  // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
+  // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
+  // console easter egg, which no normal player can reach in a wrapped app).
+  const [showSecretStats, setShowSecretStats] = useState(false);
+  const [easterEggsSeenCount, setEasterEggsSeenCount] = useState(0);
+  const [pressureChoicesTaken, setPressureChoicesTaken] = useState(0);
+  const officeTapCountRef = useRef(0);
+  const officeTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Nadir, house-agnostic flavor moment — see data/easterEggs.ts. Same
   // one-house-visit scope as the flavor systems above, not persisted.
   const [activeEasterEgg, setActiveEasterEgg] = useState<{ houseId: string; egg: EasterEgg } | null>(null);
@@ -420,7 +430,10 @@ function App() {
   useEffect(() => {
     function handleGlobalClick() {
       const milestone = recordClick();
-      if (milestone !== null) setClickMilestoneMsg(milestoneMessage(milestone));
+      if (milestone !== null) {
+        setClickMilestoneMsg(milestoneMessage(milestone));
+        triggerHaptic("light");
+      }
     }
     document.addEventListener("click", handleGlobalClick);
     return () => document.removeEventListener("click", handleGlobalClick);
@@ -558,6 +571,23 @@ function App() {
     const tone = classifyChoiceTone(effects);
     if (!tone) return;
     setVoiceTally((prev) => ({ ...prev, [tone]: prev[tone] + 1 }));
+  }
+
+  // Gizli Dokunuş Menüsü — 5 taps within 3 seconds on the office title.
+  const OFFICE_TAP_TARGET = 5;
+  const OFFICE_TAP_WINDOW_MS = 3000;
+  function handleOfficeTitleTap() {
+    officeTapCountRef.current += 1;
+    if (officeTapTimerRef.current) clearTimeout(officeTapTimerRef.current);
+    if (officeTapCountRef.current >= OFFICE_TAP_TARGET) {
+      officeTapCountRef.current = 0;
+      setShowSecretStats(true);
+      triggerHaptic("success");
+      return;
+    }
+    officeTapTimerRef.current = setTimeout(() => {
+      officeTapCountRef.current = 0;
+    }, OFFICE_TAP_WINDOW_MS);
   }
 
   function handleFlirt(characterId: string, _characterName: string) {
@@ -1048,6 +1078,7 @@ function App() {
     // only gates the separate weekly "zam" bonus below.
     let newBossMood = bossMood;
     if (outcome === "sold" && sale) {
+      triggerHaptic("success");
       const angry = stats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
       newBossMood = clampBossMood(bossMood + bossMoodDeltaForSale(stats.discountPercent));
       if (angry) {
@@ -1198,8 +1229,10 @@ function App() {
     setPremiumResults(newPremiumResults);
     const newContactedCustomers = addContactedCustomer(premiumHouse, castAssignment, contactedCustomers);
     setContactedCustomers(newContactedCustomers);
-    if (outcome === "sold") playSale();
-    else if (outcome === "lost") playLost();
+    if (outcome === "sold") {
+      playSale();
+      triggerHaptic("success");
+    } else if (outcome === "lost") playLost();
     else playThinking();
 
     // Patron Memnuniyeti — same discount consequence as a main-house sale.
@@ -1418,8 +1451,10 @@ function App() {
       setBadgeCelebration(newlyEarnedInvestment);
     }
 
-    if (outcome === "sold") playSale();
-    else if (outcome === "lost") playLost();
+    if (outcome === "sold") {
+      playSale();
+      triggerHaptic("success");
+    } else if (outcome === "lost") playLost();
     else playThinking();
 
     persist(
@@ -1665,6 +1700,7 @@ function App() {
     const newResults = results.map((r, i) => (i === resultIndex ? updatedResult : r));
     setResults(newResults);
     playSale();
+    triggerHaptic("success");
 
     // Patron Memnuniyeti — same discount consequence as any other sale.
     const angry = projectedStats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
@@ -1781,6 +1817,8 @@ function App() {
       const egg = pickEasterEgg(lastEasterEggId);
       setLastEasterEggId(egg.id);
       setActiveEasterEgg({ houseId: house.id, egg });
+      setEasterEggsSeenCount((c) => c + 1);
+      triggerHaptic("light");
     } else if (!realWorldFlavorShownRef.current && Math.random() < REAL_WORLD_FLAVOR_CHANCE) {
       const line = pickRealWorldFlavorLine();
       if (line) {
@@ -2094,6 +2132,16 @@ function App() {
         </div>
       )}
 
+      {showSecretStats && (
+        <SecretStatsScreen
+          bossMood={bossMood}
+          voiceTally={voiceTally}
+          easterEggsSeenCount={easterEggsSeenCount}
+          pressureChoicesTaken={pressureChoicesTaken}
+          onClose={() => setShowSecretStats(false)}
+        />
+      )}
+
       {showEmlahMenu && (
         <EmlahMenu
           initialTab={emlahMenuTab}
@@ -2245,6 +2293,7 @@ function App() {
             drainPhoneBattery();
           }}
           onOpenMessages={() => openEmlahMenu("mesajlar")}
+          onTitleTap={handleOfficeTitleTap}
         />
       )}
 
@@ -2355,6 +2404,7 @@ function App() {
             contactedCustomers={contactedCustomers}
             onToneChoice={handleToneChoice}
             voiceTally={voiceTally}
+            onPressureChoicePicked={() => setPressureChoicesTaken((c) => c + 1)}
           />
         </>
       )}
@@ -2457,6 +2507,12 @@ function App() {
             );
           })()}
           <p className="muzaffer-note">Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"</p>
+          {personalitySummary(voiceTally) && (
+            <p className="ending-card">
+              <span className="ending-title">🎭 Emlah'ın Kişilik Profili</span>
+              <span className="ending-description">{personalitySummary(voiceTally)}</span>
+            </p>
+          )}
           <p className="menu-prestige-tag">
             🏆 Bu senin {getPrestigeCompletions()}. turun! Yeni bir oyuna başladığında {formatTL(prestigeStartingBonus(getPrestigeCompletions()))} ile başlayacaksın.
           </p>

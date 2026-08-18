@@ -16,6 +16,8 @@ interface OfficeSceneProps {
   prestigeTitle?: string | null;
   onGetJob: () => void;
   onOpenMessages: () => void;
+  /** Gizli Dokunuş Menüsü — called on every tap of the office title. See App.tsx's handleOfficeTitleTap. */
+  onTitleTap?: () => void;
 }
 
 /**
@@ -27,7 +29,7 @@ interface OfficeSceneProps {
  * something the player opts into from here, either to fetch today's job
  * or to browse past threads.
  */
-export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, bossMood, currentDateLabel, prestigeTitle, onGetJob, onOpenMessages }: OfficeSceneProps) {
+export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, bossMood, currentDateLabel, prestigeTitle, onGetJob, onOpenMessages, onTitleTap }: OfficeSceneProps) {
   const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
 
@@ -52,7 +54,7 @@ export default function OfficeScene({ rankTitleText, ownedPerks, balance, unread
       <div className="office-stage">
         <div className={`pixel-bg office-bg scene-bg-enter ${image ? "" : `office-bg-tier-${tier}`}`} />
         {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})` }} />}
-        <div className="office-title">
+        <div className="office-title" onClick={onTitleTap}>
           <span>Emlah'ın Ofisi</span>
           <span className="office-rank-tag">
             {rankTitleText}
