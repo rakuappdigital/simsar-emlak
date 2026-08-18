@@ -13,6 +13,7 @@ interface OfficeSceneProps {
   energy: number;
   bossMood: number;
   currentDateLabel: string;
+  prestigeTitle?: string | null;
   onGetJob: () => void;
   onOpenMessages: () => void;
 }
@@ -26,7 +27,7 @@ interface OfficeSceneProps {
  * something the player opts into from here, either to fetch today's job
  * or to browse past threads.
  */
-export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, bossMood, currentDateLabel, onGetJob, onOpenMessages }: OfficeSceneProps) {
+export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, bossMood, currentDateLabel, prestigeTitle, onGetJob, onOpenMessages }: OfficeSceneProps) {
   const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
 
@@ -53,7 +54,10 @@ export default function OfficeScene({ rankTitleText, ownedPerks, balance, unread
         {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})` }} />}
         <div className="office-title">
           <span>Emlah'ın Ofisi</span>
-          <span className="office-rank-tag">{rankTitleText}</span>
+          <span className="office-rank-tag">
+            {rankTitleText}
+            {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
+          </span>
         </div>
         <div className="office-date-tag">{currentDateLabel}</div>
       </div>

@@ -74,6 +74,7 @@ import {
   pickCleanSaleLine,
 } from "./data/bossMood";
 import { seasonalEventForWeek } from "./data/seasonalEvents";
+import { getPrestigeCompletions, recordGameCompletion, prestigeStartingBonus, prestigeTitle } from "./data/prestige";
 import {
   FLIRT_BOND_GAIN,
   MEETUP_BOND_THRESHOLD,
@@ -351,6 +352,8 @@ function App() {
   const [bossMood, setBossMood] = useState(BOSS_MOOD_START);
   // Güncel Olaylar — weekIndex values whose scripted event already fired. See data/seasonalEvents.ts.
   const [firedSeasonalEventWeeks, setFiredSeasonalEventWeeks] = useState<number[]>([]);
+  // Efsane Modu — Yeni Oyun+, lives outside SaveGame entirely. See data/prestige.ts.
+  const [prestigeTitleThisRun, setPrestigeTitleThisRun] = useState<string | null>(null);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -813,7 +816,9 @@ function App() {
     setLastFriendId(undefined);
     setLastTaskId(undefined);
     setActiveCallback(null);
-    setBonusEarnings(0);
+    const prestigeCompletions = getPrestigeCompletions();
+    setBonusEarnings(prestigeStartingBonus(prestigeCompletions));
+    setPrestigeTitleThisRun(prestigeTitle(prestigeCompletions));
     setPendingLoan(null);
     setPendingInvestment(null);
     setFriendBonds({});
@@ -845,6 +850,7 @@ function App() {
     const savedGame = savedGames[slot];
     if (!savedGame) return;
     setActiveSlot(slot);
+    setPrestigeTitleThisRun(prestigeTitle(getPrestigeCompletions()));
     setHouseOrder(savedGame.houseOrder);
     setResults(savedGame.results);
     setBadges(savedGame.badges);
@@ -997,6 +1003,9 @@ function App() {
     }
 
     const gameComplete = index === allHouses.length - 1;
+    // Efsane Modu — records once per finished playthrough; lives in its own
+    // localStorage key outside SaveGame, so no version bump needed here.
+    if (gameComplete) recordGameCompletion();
     const newlyEarned = checkNewBadges(newResults, gameComplete, badges, { tasksCompleted, chitchatBonuses });
     const newBadgeIds = newlyEarned.map((b) => b.id);
     const newBadgesState = [...badges, ...newBadgeIds];
@@ -2150,6 +2159,7 @@ function App() {
           energy={energy}
           bossMood={bossMood}
           currentDateLabel={formatGameDateTime(index)}
+          prestigeTitle={prestigeTitleThisRun}
           onGetJob={() => {
             setShowPhoneOverlay(true);
             drainPhoneBattery();
@@ -2363,6 +2373,9 @@ function App() {
             );
           })()}
           <p className="muzaffer-note">Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"</p>
+          <p className="menu-prestige-tag">
+            🏆 Bu senin {getPrestigeCompletions()}. turun! Yeni bir oyuna başladığında {formatTL(prestigeStartingBonus(getPrestigeCompletions()))} ile başlayacaksın.
+          </p>
           <button className="pixel-btn small" onClick={downloadShareCard}>
             Paylaşım Kartını İndir
           </button>

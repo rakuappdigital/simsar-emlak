@@ -1205,6 +1205,12 @@
   font-size: 0.9rem;
 }
 
+.menu-prestige-tag {
+  color: var(--c-accent);
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
 .menu-section-title {
   color: var(--c-accent);
   font-size: 1.3rem;
@@ -1890,6 +1896,11 @@
   color: var(--c-accent);
   font-weight: bold;
   white-space: nowrap;
+}
+
+.office-prestige-tag {
+  color: #ffd166;
+  font-weight: normal;
 }
 
 .office-date-tag {
