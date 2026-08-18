@@ -213,6 +213,9 @@ export interface OwnedInvestmentHouse {
   renovationLevel: "yok" | "basit" | "orta" | "yenileme";
 }
 
+/** "Emlah'ın Sesi" — which flavor of choice the player tends to pick. See data/voiceTone.ts. */
+export type ToneBucket = "eglenceli" | "samimi" | "atilgan";
+
 /** A past customer (from a main, premium, or investment-house sale) Emlah can message again to pitch a flip property. */
 export interface ContactedCustomer {
   characterId: string;
@@ -231,7 +234,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 15;
+  version: 16;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -275,6 +278,8 @@ export interface SaveGame {
   bossMood: number;
   /** weekIndex values whose scripted seasonalEvents.ts entry has already fired, so a locked-gate retry can't double-pay it. */
   firedSeasonalEventWeeks: number[];
+  /** "Emlah'ın Sesi" — running tally of picked-choice tones. See data/voiceTone.ts. */
+  voiceTally: Record<ToneBucket, number>;
   savedAt: string;
 }
 

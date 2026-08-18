@@ -40,6 +40,7 @@ import { EASTER_EGG_CHANCE, pickEasterEgg, type EasterEgg } from "./data/easterE
 import { REAL_WORLD_FLAVOR_CHANCE, pickRealWorldFlavorLine } from "./data/realWorldFlavor";
 import { recordClick, milestoneMessage } from "./data/clickCounter";
 import { printConsoleEasterEgg } from "./data/consoleEasterEgg";
+import { classifyChoiceTone } from "./data/voiceTone";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
   type RenovationLevel,
@@ -135,6 +136,7 @@ import type {
   SaveGame,
   SceneOutcome,
   WeekOutcome,
+  ToneBucket,
 } from "./types";
 import "./game.css";
 
@@ -369,6 +371,8 @@ function App() {
   const [firedSeasonalEventWeeks, setFiredSeasonalEventWeeks] = useState<number[]>([]);
   // Efsane Modu — Yeni Oyun+, lives outside SaveGame entirely. See data/prestige.ts.
   const [prestigeTitleThisRun, setPrestigeTitleThisRun] = useState<string | null>(null);
+  // Emlah'ın Sesi — running tally of picked-choice tones. See data/voiceTone.ts.
+  const [voiceTally, setVoiceTally] = useState<Record<ToneBucket, number>>({ eglenceli: 0, samimi: 0, atilgan: 0 });
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -468,9 +472,10 @@ function App() {
     newPendingDeliveries: PendingDelivery[] = pendingDeliveries,
     newBossMood: number = bossMood,
     newFiredSeasonalEventWeeks: number[] = firedSeasonalEventWeeks,
+    newVoiceTally: Record<ToneBucket, number> = voiceTally,
   ) {
     const save: SaveGame = {
-      version: 15,
+      version: 16,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -498,6 +503,7 @@ function App() {
       pendingDeliveries: newPendingDeliveries,
       bossMood: newBossMood,
       firedSeasonalEventWeeks: newFiredSeasonalEventWeeks,
+      voiceTally: newVoiceTally,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -543,6 +549,15 @@ function App() {
         discountPercent: s.discountPercent + (effects.discountPercent ?? 0),
       };
     });
+  }
+
+  // "Emlah'ın Sesi" — classifies and tallies every picked choice's tone.
+  // Not persisted per-choice (same as stats themselves); it rides along
+  // with whatever persist() call naturally follows house completion.
+  function handleToneChoice(effects: ChoiceEffects) {
+    const tone = classifyChoiceTone(effects);
+    if (!tone) return;
+    setVoiceTally((prev) => ({ ...prev, [tone]: prev[tone] + 1 }));
   }
 
   function handleFlirt(characterId: string, _characterName: string) {
@@ -883,6 +898,7 @@ function App() {
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
+    setVoiceTally({ eglenceli: 0, samimi: 0, atilgan: 0 });
     lastRankRef.current = null;
     enterPhone(0, [], [], {}, [1], order, [], cast, null);
   }
@@ -924,6 +940,7 @@ function App() {
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
+    setVoiceTally(savedGame.voiceTally ?? { eglenceli: 0, samimi: 0, atilgan: 0 });
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -2335,6 +2352,9 @@ function App() {
             onFlirt={handleFlirt}
             isDuel={activeDuelHouseId === house.id}
             easterEgg={activeEasterEgg?.houseId === house.id ? activeEasterEgg.egg : undefined}
+            contactedCustomers={contactedCustomers}
+            onToneChoice={handleToneChoice}
+            voiceTally={voiceTally}
           />
         </>
       )}
