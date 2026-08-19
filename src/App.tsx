@@ -42,7 +42,13 @@ import { recordClick, milestoneMessage } from "./data/clickCounter";
 import { printConsoleEasterEgg } from "./data/consoleEasterEgg";
 import { classifyChoiceTone, personalitySummary } from "./data/voiceTone";
 import { classifyCompassChoice, compassVerdict } from "./data/valuesCompass";
-import { origins, originById } from "./data/origin";
+import { origins, originById, LOYALTY_THRESHOLD } from "./data/origin";
+import {
+  maybeRecordMemory,
+  pushMemory,
+  pickEligibleMemory,
+  MEMORY_REFERENCE_CHANCE,
+} from "./data/significantMemory";
 import OriginSelectScreen from "./components/OriginSelectScreen";
 import { triggerHaptic } from "./data/haptics";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
@@ -144,6 +150,7 @@ import type {
   ToneBucket,
   CompassAxis,
   OriginId,
+  SignificantMemory,
 } from "./types";
 import "./game.css";
 
@@ -393,6 +400,11 @@ function App() {
   const [origin, setOrigin] = useState<OriginId | null>(null);
   // Değerler Pusulası — running tally of picked-choice honesty leanings. See data/valuesCompass.ts.
   const [compassTally, setCompassTally] = useState<Record<CompassAxis, number>>({ durustluk: 0, kurnazlik: 0 });
+  // Karar Anıları — capped store of defining moments, referenced later by unrelated customers. See data/significantMemory.ts.
+  const [significantMemories, setSignificantMemories] = useState<SignificantMemory[]>([]);
+  const [activeMemoryReference, setActiveMemoryReference] = useState<{ houseId: string; memory: SignificantMemory } | null>(null);
+  // Sadakat Rozetleri — lifetime count of the origin closing choice being picked. See data/origin.ts.
+  const [originChoiceCount, setOriginChoiceCount] = useState(0);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -498,9 +510,11 @@ function App() {
     newVoiceTally: Record<ToneBucket, number> = voiceTally,
     newOrigin: OriginId | null = origin,
     newCompassTally: Record<CompassAxis, number> = compassTally,
+    newSignificantMemories: SignificantMemory[] = significantMemories,
+    newOriginChoiceCount: number = originChoiceCount,
   ) {
     const save: SaveGame = {
-      version: 17,
+      version: 18,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -531,6 +545,8 @@ function App() {
       voiceTally: newVoiceTally,
       origin: newOrigin,
       compassTally: newCompassTally,
+      significantMemories: newSignificantMemories,
+      originChoiceCount: newOriginChoiceCount,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -586,6 +602,28 @@ function App() {
     if (tone) setVoiceTally((prev) => ({ ...prev, [tone]: prev[tone] + 1 }));
     const compassAxis = classifyCompassChoice(effects);
     if (compassAxis) setCompassTally((prev) => ({ ...prev, [compassAxis]: prev[compassAxis] + 1 }));
+  }
+
+  // Sadakat Rozetleri — fires a one-time celebratory message exactly when
+  // the count crosses LOYALTY_THRESHOLD; from then on the origin's nickname
+  // shows up in the weekly boss-mood messages (see finalizeResult).
+  function handleOriginChoicePicked() {
+    setOriginChoiceCount((prev) => {
+      const next = prev + 1;
+      if (next === LOYALTY_THRESHOLD) {
+        const def = originById(origin);
+        if (def) {
+          setInbox((inb) =>
+            logMessages(
+              inb, "muzaffer", "Muzaffer Bey",
+              [{ from: "Muzaffer Bey", text: `Artık sana "${def.nickname}" diyeceğim, bu tarzını hak ettin.` }],
+              index + 1,
+            ),
+          );
+        }
+      }
+      return next;
+    });
   }
 
   // Gizli Dokunuş Menüsü — 5 taps within 3 seconds on the office title.
@@ -651,6 +689,8 @@ function App() {
     originParam: OriginId | null = origin,
     voiceTallyParam: Record<ToneBucket, number> = voiceTally,
     compassTallyParam: Record<CompassAxis, number> = compassTally,
+    significantMemoriesParam: SignificantMemory[] = significantMemories,
+    originChoiceCountParam: number = originChoiceCount,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
     loadHouseImage(nextHouse.id);
@@ -708,6 +748,7 @@ function App() {
     proceedToHouseIntro(
       newIndex, currentResults, perksList, consumablesList, tiersList, order, inboxList, castAssignmentParam,
       dailyQuestParam, null, originParam, voiceTallyParam, compassTallyParam,
+      significantMemoriesParam, originChoiceCountParam,
     );
   }
 
@@ -725,6 +766,8 @@ function App() {
     originParam: OriginId | null = origin,
     voiceTallyParam: Record<ToneBucket, number> = voiceTally,
     compassTallyParam: Record<CompassAxis, number> = compassTally,
+    significantMemoriesParam: SignificantMemory[] = significantMemories,
+    originChoiceCountParam: number = originChoiceCount,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
@@ -866,7 +909,7 @@ function App() {
           newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
           chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
           contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
-          voiceTallyParam, originParam, compassTallyParam,
+          voiceTallyParam, originParam, compassTallyParam, significantMemoriesParam, originChoiceCountParam,
         );
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
@@ -880,7 +923,7 @@ function App() {
       newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
       chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
       contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
-      voiceTallyParam, originParam, compassTallyParam,
+      voiceTallyParam, originParam, compassTallyParam, significantMemoriesParam, originChoiceCountParam,
     );
     setActiveCallback(null);
     setIndex(newIndex);
@@ -963,8 +1006,14 @@ function App() {
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
     setVoiceTally({ eglenceli: 0, samimi: 0, atilgan: 0 });
+    setSignificantMemories([]);
+    setActiveMemoryReference(null);
+    setOriginChoiceCount(0);
     lastRankRef.current = null;
-    enterPhone(0, [], [], {}, [1], order, [], cast, null, originId, { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 });
+    enterPhone(
+      0, [], [], {}, [1], order, [], cast, null, originId,
+      { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
+    );
   }
 
   function openSaved() {
@@ -1007,6 +1056,9 @@ function App() {
     setVoiceTally(savedGame.voiceTally ?? { eglenceli: 0, samimi: 0, atilgan: 0 });
     setOrigin(savedGame.origin ?? null);
     setCompassTally(savedGame.compassTally ?? { durustluk: 0, kurnazlik: 0 });
+    setSignificantMemories(savedGame.significantMemories ?? []);
+    setActiveMemoryReference(null);
+    setOriginChoiceCount(savedGame.originChoiceCount ?? 0);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -1018,6 +1070,11 @@ function App() {
       savedGame.inbox,
       savedGame.castAssignment,
       savedGame.dailyQuest,
+      savedGame.origin ?? null,
+      savedGame.voiceTally ?? { eglenceli: 0, samimi: 0, atilgan: 0 },
+      savedGame.compassTally ?? { durustluk: 0, kurnazlik: 0 },
+      savedGame.significantMemories ?? [],
+      savedGame.originChoiceCount ?? 0,
     );
   }
 
@@ -1082,6 +1139,14 @@ function App() {
     setBestLineThisHouse(null);
     const newContactedCustomers = addContactedCustomer(house, castAssignment, contactedCustomers);
     setContactedCustomers(newContactedCustomers);
+
+    // Karar Anıları — record a new defining moment (if this one qualifies),
+    // and clear whichever memory this house may have just referenced.
+    let newSignificantMemories = significantMemories;
+    const newMemory = maybeRecordMemory(outcome, stats, house.id, house.title, index);
+    if (newMemory) newSignificantMemories = pushMemory(significantMemories, newMemory);
+    if (newSignificantMemories !== significantMemories) setSignificantMemories(newSignificantMemories);
+    if (activeMemoryReference?.houseId === house.id) setActiveMemoryReference(null);
 
     // Rakip Emlakçı Düellosu — bonus-only, never an extra penalty beyond
     // whatever outcome already happened.
@@ -1165,17 +1230,19 @@ function App() {
       // and at week's end his mood gates a separate small "haftalık zam"
       // bonus, additive on top of the existing sales/honesty bonus above.
       if (weekOutcome.salesGoalMet) newBossMood = clampBossMood(newBossMood + BOSS_MOOD_WEEK_GOAL_GAIN);
+      // Sadakat Rozetleri — once unlocked, Muzaffer Bey uses the origin's nickname here instead of "Emlah".
+      const addressName = originChoiceCount >= LOYALTY_THRESHOLD ? (originById(origin)?.nickname ?? "Emlah") : "Emlah";
       if (newBossMood >= BOSS_MOOD_RAISE_THRESHOLD) {
         newBonusEarnings += WEEKLY_RAISE_AMOUNT;
         newInbox = logMessages(
           newInbox, "muzaffer", "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: `Bu hafta senden memnunum Emlah, küçük bir zam yaptım (+${formatTL(WEEKLY_RAISE_AMOUNT)}).` }],
+          [{ from: "Muzaffer Bey", text: `Bu hafta senden memnunum ${addressName}, küçük bir zam yaptım (+${formatTL(WEEKLY_RAISE_AMOUNT)}).` }],
           index + 1,
         );
       } else {
         newInbox = logMessages(
           newInbox, "muzaffer", "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: "Bu hafta zam yok Emlah, biraz daha dikkatli olmalısın." }],
+          [{ from: "Muzaffer Bey", text: `Bu hafta zam yok ${addressName}, biraz daha dikkatli olmalısın.` }],
           index + 1,
         );
       }
@@ -1215,6 +1282,12 @@ function App() {
       newEnergy,
       newPendingDeliveries,
       newBossMood,
+      firedSeasonalEventWeeks,
+      voiceTally,
+      origin,
+      compassTally,
+      newSignificantMemories,
+      originChoiceCount,
     );
     setStage("result");
   }
@@ -1861,6 +1934,9 @@ function App() {
         realWorldFlavorShownRef.current = true;
         setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: line }], index + 1));
       }
+    } else if (Math.random() < MEMORY_REFERENCE_CHANCE) {
+      const memory = pickEligibleMemory(significantMemories, index);
+      if (memory) setActiveMemoryReference({ houseId: house.id, memory });
     }
     // Emlah'ın Enerjisi — depletes a fixed amount per house walked into.
     setEnergy((e) => Math.max(0, e - ENERGY_DEPLETION_PER_HOUSE));
@@ -2447,6 +2523,8 @@ function App() {
             onPressureChoicePicked={() => setPressureChoicesTaken((c) => c + 1)}
             origin={originById(origin)}
             showOriginIntro={index === 0}
+            memoryReference={activeMemoryReference?.houseId === house.id ? activeMemoryReference.memory : undefined}
+            onOriginChoicePicked={handleOriginChoicePicked}
           />
         </>
       )}

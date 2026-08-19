@@ -14,7 +14,9 @@ import { ECHO_CHANCE, pickEchoLines } from "../data/echoNetwork";
 import { dominantTone, pickVoiceLine, VOICE_LINE_CHANCE } from "../data/voiceTone";
 import { LAST_MINUTE_PRESSURE_CHANCE, pickPressureChoice } from "../data/lastMinutePressure";
 import type { OriginDef } from "../data/origin";
-import type { ContactedCustomer } from "../types";
+import { pickMemoryReferenceLine } from "../data/significantMemory";
+import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
+import type { ContactedCustomer, SignificantMemory } from "../types";
 
 const FUN_BONUS_THRESHOLD = 30;
 const TYPE_MS_PER_CHAR = 16;
@@ -67,6 +69,10 @@ interface DialogueSceneProps {
   origin?: OriginDef;
   /** True only for the very first house of the game, gates the one-time origin intro line. */
   showOriginIntro?: boolean;
+  /** "Karar Anıları" — a past defining moment being referenced by this (unrelated) customer. See data/significantMemory.ts. */
+  memoryReference?: SignificantMemory;
+  /** Reports when the player picks THIS origin's closing choice, for the loyalty count. */
+  onOriginChoicePicked?: () => void;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -97,8 +103,11 @@ export default function DialogueScene({
   onPressureChoicePicked,
   origin,
   showOriginIntro,
+  memoryReference,
+  onOriginChoicePicked,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
+  const [dialogueStyle] = useState(getDialogueStyle);
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
   const [typedLength, setTypedLength] = useState(0);
@@ -164,6 +173,17 @@ export default function DialogueScene({
   // "Emlah'ın Geçmişi" — one-time, only ever on the very first house.
   const originIntroLines: DialogueLine[] =
     origin && showOriginIntro && nodeId === house.startNode ? [{ speaker: "thought", text: origin.introLine }] : [];
+  // "Karar Anıları" — decided entirely by App.tsx (which memory, if any, is
+  // eligible this house); picked once via useMemo so the line can't change
+  // wording mid-typing across re-renders (same reasoning as
+  // conditionWarningThought/Line above).
+  const memoryReferenceText = useMemo(() => {
+    if (!memoryReference) return null;
+    return pickMemoryReferenceLine(memoryReference);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [house.id]);
+  const memoryLines: DialogueLine[] =
+    memoryReferenceText && nodeId === house.startNode ? [{ speaker: "customer1", text: memoryReferenceText }] : [];
   const prependedLines = [
     ...originIntroLines,
     ...celebrityIntroLines,
@@ -171,6 +191,7 @@ export default function DialogueScene({
     ...easterEggLines,
     ...echoDialogueLines,
     ...voiceDialogueLines,
+    ...memoryLines,
   ];
   const effectiveLines = prependedLines.length > 0 ? [...prependedLines, ...node.lines] : node.lines;
   const linesShown = effectiveLines.slice(0, lineIndex + 1);
@@ -195,6 +216,8 @@ export default function DialogueScene({
     if (isClosingNode && dealAlreadyWon && line.speaker !== "emlah" && line.speaker !== "thought" && DISCOUNT_ASK_PATTERN.test(base)) {
       return WON_DEAL_LINE;
     }
+    // Konuşma Tarzı — purely cosmetic suffix on Emlah's own spoken lines only, see data/dialogueStyle.ts.
+    if (line.speaker === "emlah") return styleEmlahLine(base, dialogueStyle);
     return base;
   }
 
@@ -301,6 +324,7 @@ export default function DialogueScene({
       onFlirt?.(flirtCharacterId, flirtCharacter.name);
     }
     if (choice.id.startsWith("son-dakika")) onPressureChoicePicked?.();
+    if (origin && choice.id === origin.closingChoice.id) onOriginChoicePicked?.();
 
     if (choice.effects?.closingBias !== undefined) {
       const projected: GameStats = {

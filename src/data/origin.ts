@@ -16,7 +16,12 @@ export interface OriginDef {
   description: string;
   introLine: string;
   closingChoice: Choice;
+  /** "Sadakat Rozetleri" — what Muzaffer Bey starts calling Emlah once the origin's closing choice has been picked LOYALTY_THRESHOLD times. */
+  nickname: string;
 }
+
+/** Number of times an origin's closing choice must be picked before Muzaffer Bey starts using the nickname. */
+export const LOYALTY_THRESHOLD = 10;
 
 export const origins: OriginDef[] = [
   {
@@ -30,6 +35,7 @@ export const origins: OriginDef[] = [
       next: "",
       effects: { closingBias: 12, suspicion: -8 },
     },
+    nickname: "Hoca",
   },
   {
     id: "emlakci-ailesi",
@@ -42,6 +48,7 @@ export const origins: OriginDef[] = [
       next: "",
       effects: { closingBias: 15, interest: 8 },
     },
+    nickname: "Usta",
   },
   {
     id: "girisimci",
@@ -54,6 +61,7 @@ export const origins: OriginDef[] = [
       next: "",
       effects: { closingBias: 12, discountPercent: 3 },
     },
+    nickname: "Patron",
   },
   {
     id: "yurtdisi",
@@ -66,6 +74,7 @@ export const origins: OriginDef[] = [
       next: "",
       effects: { closingBias: 10, fun: 10 },
     },
+    nickname: "Gezgin",
   },
 ];
 

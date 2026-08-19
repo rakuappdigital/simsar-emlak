@@ -222,6 +222,17 @@ export type CompassAxis = "durustluk" | "kurnazlik";
 /** "Emlah'ın Geçmişi" — one-time backstory pick at game start. See data/origin.ts. */
 export type OriginId = "ogretmen" | "emlakci-ailesi" | "girisimci" | "yurtdisi";
 
+/** "Karar Anıları" — which defining-moment flavor this memory is. See data/significantMemory.ts. */
+export type MemoryKind = "kurnaz-satis" | "durust-satis" | "buyuk-kayip";
+
+/** A defining moment from Emlah's own past, later referenced by an unrelated customer. See data/significantMemory.ts. */
+export interface SignificantMemory {
+  id: string;
+  kind: MemoryKind;
+  houseTitle: string;
+  recordedAtIndex: number;
+}
+
 /** A past customer (from a main, premium, or investment-house sale) Emlah can message again to pitch a flip property. */
 export interface ContactedCustomer {
   characterId: string;
@@ -240,7 +251,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 17;
+  version: 18;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -290,6 +301,10 @@ export interface SaveGame {
   origin: OriginId | null;
   /** "Değerler Pusulası" — running tally of picked-choice honesty leanings. See data/valuesCompass.ts. */
   compassTally: Record<CompassAxis, number>;
+  /** "Karar Anıları" — capped store of defining moments waiting to be referenced later. See data/significantMemory.ts. */
+  significantMemories: SignificantMemory[];
+  /** "Sadakat Rozetleri" — how many times the origin's closing choice has been picked, lifetime this run. See data/origin.ts. */
+  originChoiceCount: number;
   savedAt: string;
 }
 
