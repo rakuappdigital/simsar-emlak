@@ -181,7 +181,13 @@ const originIcons: Record<OriginId, (props: SVGProps<SVGSVGElement> & { size?: n
 
 const CHITCHAT_CHANCE = 0.27;
 const FRIEND_CHANCE = 0.08;
-const WORK_TASK_CHANCE = 0.4;
+// Lowered from 0.4 and paired with hadWorkTaskThisTransition below — together
+// they cut "at least one detour before reaching the house" from ~61% to
+// ~54.5% and eliminate the ~14% chance of two detour screens stacking on
+// the same transition, without changing the friend/chitchat system's own
+// long-run frequency (loan/investment/bond threads still fire at their
+// normal rate, just never doubled up with an office-task screen).
+const WORK_TASK_CHANCE = 0.3;
 const LOAN_AMOUNT = 20000;
 const LOAN_REPAY_AMOUNT = 28000;
 const LOAN_REPAY_CHANCE = 0.8;
@@ -413,6 +419,9 @@ function App() {
   const [activeMemoryReference, setActiveMemoryReference] = useState<{ houseId: string; memory: SignificantMemory } | null>(null);
   // Sadakat Rozetleri — lifetime count of the origin closing choice being picked. See data/origin.ts.
   const [originChoiceCount, setOriginChoiceCount] = useState(0);
+  // Pacing fix — true only for the one transition right after an office-task-family
+  // screen resolved; not persisted, purely a same-transition guard for afterIntro().
+  const [hadWorkTaskThisTransition, setHadWorkTaskThisTransition] = useState(false);
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -755,7 +764,7 @@ function App() {
 
     proceedToHouseIntro(
       newIndex, currentResults, perksList, consumablesList, tiersList, order, inboxList, castAssignmentParam,
-      dailyQuestParam, null, originParam, voiceTallyParam, compassTallyParam,
+      dailyQuestParam, null, false, originParam, voiceTallyParam, compassTallyParam,
       significantMemoriesParam, originChoiceCountParam,
     );
   }
@@ -771,6 +780,12 @@ function App() {
     castAssignmentParam: Record<string, string[]>,
     dailyQuestParam: DailyQuestDef | null,
     taskReward: { suspicion?: number; interest?: number; fun?: number } | null,
+    // True only when this call is arriving right after an office-task-family
+    // screen (task/quickcall/staging/suspicious detail) resolved — lets
+    // afterIntro() skip the friend/chitchat roll for just this one
+    // transition, so the two detour families can never stack. See
+    // WORK_TASK_CHANCE's comment above for the full reasoning.
+    cameFromWorkTask: boolean = false,
     originParam: OriginId | null = origin,
     voiceTallyParam: Record<ToneBucket, number> = voiceTally,
     compassTallyParam: Record<CompassAxis, number> = compassTally,
@@ -778,6 +793,10 @@ function App() {
     originChoiceCountParam: number = originChoiceCount,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
+
+    // See cameFromWorkTask's doc comment above — read by afterIntro() once
+    // the player clicks through this house's intro messages.
+    setHadWorkTaskThisTransition(cameFromWorkTask);
 
     // Telefon şarjı — a new house is a new day, so the phone got charged overnight.
     setPhoneBattery(BATTERY_MAX);
@@ -956,6 +975,7 @@ function App() {
       p.castAssignmentParam,
       p.dailyQuestParam,
       choice?.reward ?? null,
+      true,
     );
   }
 
@@ -1961,39 +1981,46 @@ function App() {
       return;
     }
     // Single roll picks at most one extra exchange, so friend messages and
-    // boss chitchat never both fire for the same house visit.
-    const roll = Math.random();
-    if (roll < FRIEND_CHANCE) {
-      const set = pickFriendMessage(lastFriendId, pendingLoan !== null, pendingInvestment !== null);
-      setLastFriendId(set.id);
-      const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
-      setActiveFriendChat({ set, messages: openMsg, showChoices: true });
-      const threadId = `friend-${set.contactName.toLowerCase()}`;
-      setInbox((prev) => logMessages(prev, threadId, set.contactName, openMsg, index + 1));
-      setStage("chitchat");
-      return;
-    }
-    if (roll < FRIEND_CHANCE + CHITCHAT_CHANCE) {
-      const set = pickChitchat(lastChitchatId);
-      setLastChitchatId(set.id);
-      const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: set.prompt }];
-      setActiveChitchat({ set, messages: openMsg, showChoices: true });
-      setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", openMsg, index + 1));
-      setStage("chitchat");
-      return;
-    }
-    // Entirely separate, independently-rare layer — a bonded character
-    // reaching out. Only ever fires on top of an otherwise-quiet beat, never
-    // stacked with the friend/chitchat rolls above.
-    const eligibleCharacterId = Object.keys(friendBonds).find((id) => friendBonds[id] >= MEETUP_BOND_THRESHOLD);
-    if (eligibleCharacterId && Math.random() < MEETUP_INVITE_CHANCE) {
-      const character = poolCharacterById(eligibleCharacterId);
-      if (character) {
-        const openMsg: PhoneMessage[] = [{ from: character.name, text: pickInvitePrompt() }];
-        setActiveMeetup({ characterId: eligibleCharacterId, characterName: character.name, messages: openMsg, showChoices: true });
-        setInbox((prev) => logMessages(prev, `meetup-${eligibleCharacterId}`, character.name, openMsg, index + 1));
+    // boss chitchat never both fire for the same house visit. Additionally
+    // skipped entirely when an office-task-family screen already fired this
+    // same transition (hadWorkTaskThisTransition) — this is what keeps the
+    // two detour families from ever stacking into two screens in a row; the
+    // friend/chitchat system's own long-run frequency is untouched, it just
+    // never doubles up with a task screen on the same house.
+    if (!hadWorkTaskThisTransition) {
+      const roll = Math.random();
+      if (roll < FRIEND_CHANCE) {
+        const set = pickFriendMessage(lastFriendId, pendingLoan !== null, pendingInvestment !== null);
+        setLastFriendId(set.id);
+        const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
+        setActiveFriendChat({ set, messages: openMsg, showChoices: true });
+        const threadId = `friend-${set.contactName.toLowerCase()}`;
+        setInbox((prev) => logMessages(prev, threadId, set.contactName, openMsg, index + 1));
         setStage("chitchat");
         return;
+      }
+      if (roll < FRIEND_CHANCE + CHITCHAT_CHANCE) {
+        const set = pickChitchat(lastChitchatId);
+        setLastChitchatId(set.id);
+        const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: set.prompt }];
+        setActiveChitchat({ set, messages: openMsg, showChoices: true });
+        setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", openMsg, index + 1));
+        setStage("chitchat");
+        return;
+      }
+      // Entirely separate, independently-rare layer — a bonded character
+      // reaching out. Only ever fires on top of an otherwise-quiet beat, never
+      // stacked with the friend/chitchat rolls above.
+      const eligibleCharacterId = Object.keys(friendBonds).find((id) => friendBonds[id] >= MEETUP_BOND_THRESHOLD);
+      if (eligibleCharacterId && Math.random() < MEETUP_INVITE_CHANCE) {
+        const character = poolCharacterById(eligibleCharacterId);
+        if (character) {
+          const openMsg: PhoneMessage[] = [{ from: character.name, text: pickInvitePrompt() }];
+          setActiveMeetup({ characterId: eligibleCharacterId, characterName: character.name, messages: openMsg, showChoices: true });
+          setInbox((prev) => logMessages(prev, `meetup-${eligibleCharacterId}`, character.name, openMsg, index + 1));
+          setStage("chitchat");
+          return;
+        }
       }
     }
     setStage("house");
@@ -2325,6 +2352,8 @@ function App() {
           currentDateLabel={formatGameDate(gameDateForIndex(index))}
           bossMood={bossMood}
           friendBonds={friendBonds}
+          voiceTally={voiceTally}
+          compassTally={compassTally}
         />
       )}
 

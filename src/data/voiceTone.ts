@@ -21,7 +21,7 @@ export function classifyChoiceTone(effects: ChoiceEffects | undefined): ToneBuck
   return null;
 }
 
-const MIN_SAMPLES_FOR_DOMINANCE = 8;
+const MIN_SAMPLES_FOR_DOMINANCE = 6;
 
 export function dominantTone(tally: Record<ToneBucket, number>): ToneBucket | null {
   const total = tally.eglenceli + tally.samimi + tally.atilgan;

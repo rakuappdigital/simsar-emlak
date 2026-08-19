@@ -1,6 +1,16 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import type { Badge, ContactedCustomer, HouseResult, HouseScene, InboxMessage, OwnedInvestmentHouse, PendingDelivery } from "../types";
+import type {
+  Badge,
+  ContactedCustomer,
+  HouseResult,
+  HouseScene,
+  InboxMessage,
+  OwnedInvestmentHouse,
+  PendingDelivery,
+  ToneBucket,
+  CompassAxis,
+} from "../types";
 import { formatTL } from "../data/economy";
 import { weekIndexForHouse } from "../data/goals";
 import MarketPanel from "./MarketPanel";
@@ -56,6 +66,8 @@ interface EmlahMenuProps {
   currentDateLabel: string;
   bossMood: number;
   friendBonds: Record<string, number>;
+  voiceTally: Record<ToneBucket, number>;
+  compassTally: Record<CompassAxis, number>;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -109,6 +121,8 @@ export default function EmlahMenu({
   currentDateLabel,
   bossMood,
   friendBonds,
+  voiceTally,
+  compassTally,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -203,7 +217,9 @@ export default function EmlahMenu({
           {tab === "teslimler" && (
             <DeliveriesPanel pendingDeliveries={pendingDeliveries} currentDateLabel={currentDateLabel} />
           )}
-          {tab === "iliskiler" && <RelationshipsPanel bossMood={bossMood} friendBonds={friendBonds} />}
+          {tab === "iliskiler" && (
+            <RelationshipsPanel bossMood={bossMood} friendBonds={friendBonds} voiceTally={voiceTally} compassTally={compassTally} />
+          )}
         </div>
       </div>
     </div>

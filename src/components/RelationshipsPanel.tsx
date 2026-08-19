@@ -1,19 +1,40 @@
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
 import { poolCharacterById } from "../data/characterPool";
+import { dominantTone } from "../data/voiceTone";
+import { compassVerdict } from "../data/valuesCompass";
+import type { ToneBucket, CompassAxis } from "../types";
 
 interface RelationshipsPanelProps {
   bossMood: number;
   friendBonds: Record<string, number>;
+  voiceTally: Record<ToneBucket, number>;
+  compassTally: Record<CompassAxis, number>;
 }
+
+const toneLabels: Record<ToneBucket, string> = {
+  eglenceli: "Eğlenceli",
+  samimi: "Samimi",
+  atilgan: "Atılgan",
+};
 
 /** Small fixed scale for the friendship pips — friendBonds points are rare and small (see meetup.ts), so a 0-100 bar would look broken. */
 const FRIEND_BOND_PIPS = 3;
 
-export default function RelationshipsPanel({ bossMood, friendBonds }: RelationshipsPanelProps) {
+export default function RelationshipsPanel({ bossMood, friendBonds, voiceTally, compassTally }: RelationshipsPanelProps) {
   const bonded = Object.entries(friendBonds).filter(([, points]) => points > 0);
+  const tone = dominantTone(voiceTally);
+  const compass = compassVerdict(compassTally);
 
   return (
     <div className="portfolio-panel">
+      <p className="market-category-title">Karakterin</p>
+      <div className="portfolio-row">
+        <div className="portfolio-row-info">
+          <p className="portfolio-row-location">🎭 Baskın ton: {tone ? toneLabels[tone] : "Henüz belirsiz"}</p>
+          <p className="portfolio-row-location">🧭 {compass ?? "Pusula henüz belirsiz — daha fazla karar vermen gerek."}</p>
+        </div>
+      </div>
+
       <p className="market-category-title">Patron</p>
       <div className="portfolio-row">
         <div className="portfolio-row-info">

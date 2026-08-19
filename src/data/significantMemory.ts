@@ -54,14 +54,20 @@ const referenceLines: Record<MemoryKind, string[]> = {
   "kurnaz-satis": [
     "Bir arkadaşım anlattı, \"{ev}\" için epey kurnaz bir yöntem kullanmışsınız.",
     "\"{ev}\" hikayenizi duydum, cesur bir pazarlıkmış doğrusu.",
+    "Sizi biraz araştırdım açıkçası — \"{ev}\" satışında epey gözü kara davranmışsınız.",
+    "\"{ev}\" konusunda anlatılanlar doğruysa, pazarlıkta hiç taviz vermeyen biriymişsiniz.",
   ],
   "durust-satis": [
     "\"{ev}\" konusunda ne kadar dürüst davrandığınızı anlatmışlar bana.",
     "Sizi \"{ev}\" satışındaki dürüstlüğünüzle tanıyorum, öyle duydum.",
+    "\"{ev}\" alıcısı hâlâ sizden bahsediyormuş, çok şeffaf bir süreç olmuş.",
+    "Referansınızı \"{ev}\" satışındaki dürüstlüğünüzden dolayı vermişler bana.",
   ],
   "buyuk-kayip": [
     "\"{ev}\" elinizden kaçmış diye duydum, gerçekten üzülmüş olmalısınız.",
     "\"{ev}\" konusunda ne kadar uğraştığınızı ama olmadığını duymuştum.",
+    "\"{ev}\" satışını kaybettiğinizi anlatmışlardı, kolay olmamıştır.",
+    "O \"{ev}\" hikayesini duyunca sizin adınıza üzüldüm açıkçası.",
   ],
 };
 

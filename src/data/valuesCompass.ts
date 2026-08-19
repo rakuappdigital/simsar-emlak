@@ -19,7 +19,7 @@ export function classifyCompassChoice(effects: ChoiceEffects | undefined): Compa
   return null;
 }
 
-const MIN_SAMPLES_FOR_VERDICT = 6;
+const MIN_SAMPLES_FOR_VERDICT = 5;
 
 export function compassVerdict(tally: Record<CompassAxis, number>): string | null {
   const total = tally.durustluk + tally.kurnazlik;

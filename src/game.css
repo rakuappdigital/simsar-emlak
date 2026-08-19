@@ -731,6 +731,15 @@
   animation: scene-bg-in 0.7s ease-out;
 }
 
+/* Patron Memnuniyeti'nin ofis ışığına yansıması — smooths the mood-filter
+   value itself changing between renders (the entrance animation above
+   handles the initial blur-in separately and finishes well before this
+   would ever compete with it). */
+.office-bg,
+.office-stage .pixel-bg-photo {
+  transition: filter 0.6s ease;
+}
+
 .pixel-bg-photo {
   position: absolute;
   inset: 0;
