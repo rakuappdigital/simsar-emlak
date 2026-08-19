@@ -237,3 +237,59 @@ export function BellIcon(props: IconProps) {
     </Grid>
   );
 }
+
+/** "Emlah'ın Geçmişi" origin badges — one per backstory, shown at rank-ups. See data/origin.ts. */
+export function ChalkboardIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="1" y="2" width="14" height="9" />
+      <rect x="2" y="3" width="12" height="7" fill="#0000003d" />
+      <rect x="4" y="5" width="6" height="1" className="icon-accent" />
+      <rect x="4" y="7" width="4" height="1" className="icon-accent" />
+      <rect x="7" y="12" width="2" height="3" />
+      <rect x="5" y="15" width="6" height="1" />
+    </Grid>
+  );
+}
+
+export function KeyRingIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="1" y="4" width="6" height="6" fill="#00000000" stroke="none" />
+      <rect x="1" y="4" width="6" height="2" />
+      <rect x="1" y="4" width="2" height="6" />
+      <rect x="1" y="8" width="6" height="2" />
+      <rect x="5" y="4" width="2" height="6" />
+      <rect x="3" y="6" width="2" height="2" className="icon-accent" />
+      <rect x="7" y="6" width="8" height="2" />
+      <rect x="11" y="8" width="2" height="3" />
+      <rect x="13" y="8" width="2" height="2" />
+    </Grid>
+  );
+}
+
+export function BriefcaseIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="6" y="1" width="4" height="2" />
+      <rect x="1" y="4" width="14" height="10" />
+      <rect x="1" y="4" width="14" height="2" fill="#0000003d" />
+      <rect x="6" y="7" width="4" height="3" className="icon-accent" />
+    </Grid>
+  );
+}
+
+export function CompassIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="3" y="3" width="10" height="10" fill="#00000000" stroke="none" />
+      <rect x="5" y="1" width="6" height="2" />
+      <rect x="5" y="13" width="6" height="2" />
+      <rect x="1" y="5" width="2" height="6" />
+      <rect x="13" y="5" width="2" height="6" />
+      <rect x="3" y="3" width="10" height="10" fill="#0000003d" />
+      <rect x="7" y="6" width="2" height="2" className="icon-accent" />
+      <rect x="6" y="9" width="4" height="1" className="icon-accent" />
+    </Grid>
+  );
+}

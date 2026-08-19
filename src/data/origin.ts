@@ -18,6 +18,8 @@ export interface OriginDef {
   closingChoice: Choice;
   /** "Sadakat Rozetleri" — what Muzaffer Bey starts calling Emlah once the origin's closing choice has been picked LOYALTY_THRESHOLD times. */
   nickname: string;
+  /** Origin-themed accent color for the rank-up card glow — pure CSS, no external assets. */
+  accentColor: string;
 }
 
 /** Number of times an origin's closing choice must be picked before Muzaffer Bey starts using the nickname. */
@@ -36,6 +38,7 @@ export const origins: OriginDef[] = [
       effects: { closingBias: 12, suspicion: -8 },
     },
     nickname: "Hoca",
+    accentColor: "#4dd0e1",
   },
   {
     id: "emlakci-ailesi",
@@ -49,6 +52,7 @@ export const origins: OriginDef[] = [
       effects: { closingBias: 15, interest: 8 },
     },
     nickname: "Usta",
+    accentColor: "#a1887f",
   },
   {
     id: "girisimci",
@@ -62,6 +66,7 @@ export const origins: OriginDef[] = [
       effects: { closingBias: 12, discountPercent: 3 },
     },
     nickname: "Patron",
+    accentColor: "#ffd166",
   },
   {
     id: "yurtdisi",
@@ -75,6 +80,7 @@ export const origins: OriginDef[] = [
       effects: { closingBias: 10, fun: 10 },
     },
     nickname: "Gezgin",
+    accentColor: "#81c784",
   },
 ];
 

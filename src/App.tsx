@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type ReactElement, type SVGProps } from "react";
 import PhoneScreen from "./components/PhoneScreen";
 import OfficeScene from "./components/OfficeScene";
 import DialogueScene from "./components/DialogueScene";
@@ -9,7 +9,7 @@ import SettingsScreen from "./components/SettingsScreen";
 import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
 import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
-import { WalletIcon, StarIcon, MedalIcon } from "./components/icons";
+import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward, playThinking } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
@@ -170,6 +170,14 @@ type Stage =
   | "result"
   | "weekGoal"
   | "summary";
+
+// "Emlah'ın Geçmişi" — one hand-drawn pixel icon per origin, shown at rank-ups. See data/origin.ts.
+const originIcons: Record<OriginId, (props: SVGProps<SVGSVGElement> & { size?: number }) => ReactElement> = {
+  ogretmen: ChalkboardIcon,
+  "emlakci-ailesi": KeyRingIcon,
+  girisimci: BriefcaseIcon,
+  yurtdisi: CompassIcon,
+};
 
 const CHITCHAT_CHANCE = 0.27;
 const FRIEND_CHANCE = 0.08;
@@ -1170,7 +1178,15 @@ function App() {
       const verdict = mysteryShopperVerdict(stats.suspicion);
       if (verdict === "honest") newBonusEarnings += MYSTERY_SHOPPER_HONEST_BONUS;
       else if (verdict === "sneaky") newBonusEarnings -= MYSTERY_SHOPPER_SNEAKY_PENALTY;
-      newInbox = logMessages(newInbox, house.id, "Gizli Müşteri", [{ from: "Gizli Müşteri", text: pickMysteryShopperReveal(verdict) }], index + 1);
+      const pastContactName =
+        contactedCustomers.length > 0
+          ? contactedCustomers[Math.floor(Math.random() * contactedCustomers.length)].name
+          : undefined;
+      newInbox = logMessages(
+        newInbox, house.id, "Gizli Müşteri",
+        [{ from: "Gizli Müşteri", text: pickMysteryShopperReveal(verdict, pastContactName) }],
+        index + 1,
+      );
       setMysteryShopperHouseId(null);
     }
     if (activeEasterEgg?.houseId === house.id) setActiveEasterEgg(null);
@@ -2205,8 +2221,22 @@ function App() {
 
       {rankUpTitle && (
         <div className="rankup-overlay" onClick={() => setRankUpTitle(null)}>
-          <div className="rankup-card">
-            <StarIcon size={32} />
+          <div
+            className="rankup-card"
+            style={
+              origin
+                ? { borderColor: originById(origin)?.accentColor, boxShadow: `0 0 24px 4px ${originById(origin)?.accentColor}59` }
+                : undefined
+            }
+          >
+            <div className="rankup-icon-row">
+              <StarIcon size={32} />
+              {origin &&
+                (() => {
+                  const OriginIcon = originIcons[origin];
+                  return <OriginIcon size={26} style={{ color: originById(origin)?.accentColor }} />;
+                })()}
+            </div>
             <p className="rankup-label">Yeni Rütbe!</p>
             <p className="rankup-title">{rankUpTitle}</p>
             {rankUpUnlockedInvites && <p className="rankup-invite-note">🎁 Ününüz yayılıyor — yeni özel davetler açıldı!</p>}
@@ -2410,6 +2440,9 @@ function App() {
           }}
           onOpenMessages={() => openEmlahMenu("mesajlar")}
           onTitleTap={handleOfficeTitleTap}
+          badges={badges}
+          allBadges={allBadges}
+          significantMemories={significantMemories}
         />
       )}
 

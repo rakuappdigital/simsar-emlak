@@ -38,11 +38,30 @@ const neutralReveals = [
   "Aslında bir emlak inceleme sitesi için gizli müşteriydim — ortalama bir görüşmeydi, ne çok iyi ne çok kötü, öylece not düşüyorum.",
 ];
 
+// "Aynı Yüzler, Farklı Bağlamlar" — occasionally the reveal namedrops a real
+// past contact (see App.tsx's contactedCustomers), the same "small world"
+// trick as echoNetwork.ts, just from the Gizli Müşteri's mouth instead of a
+// new customer's. No cast-identity is actually shared (the pool avoids
+// reusing characters on purpose) — this is a claimed connection in the
+// text, exactly like echoNetwork's namedrops.
+const honestRevealsWithName = [
+  "Aslında ben bir emlak inceleme sitesi için gizli müşteriydim — {isim} sizi tavsiye etmişti, haklıymış, gerçekten dürüstsünüz.",
+];
+const sneakyRevealsWithName = [
+  "Aslında bir emlak inceleme sitesi için gizli müşteriydim — {isim} sizi tavsiye etmişti ama açıkçası bazı cevaplarınız pek şeffaf değildi.",
+];
+
+const NAME_REVEAL_CHANCE = 0.3;
+
 function pick(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function pickMysteryShopperReveal(verdict: MysteryShopperVerdict): string {
+export function pickMysteryShopperReveal(verdict: MysteryShopperVerdict, pastContactName?: string): string {
+  if (pastContactName && Math.random() < NAME_REVEAL_CHANCE) {
+    if (verdict === "honest") return pick(honestRevealsWithName).replace("{isim}", pastContactName);
+    if (verdict === "sneaky") return pick(sneakyRevealsWithName).replace("{isim}", pastContactName);
+  }
   if (verdict === "honest") return pick(honestReveals);
   if (verdict === "sneaky") return pick(sneakyReveals);
   return pick(neutralReveals);

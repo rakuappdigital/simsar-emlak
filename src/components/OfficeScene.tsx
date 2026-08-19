@@ -4,6 +4,8 @@ import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../da
 import { ENERGY_MAX, ENERGY_LOW_THRESHOLD } from "../data/energy";
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
 import { WalletIcon, ChatIcon } from "./icons";
+import MemoryWall from "./MemoryWall";
+import type { Badge, SignificantMemory } from "../types";
 
 interface OfficeSceneProps {
   rankTitleText: string;
@@ -18,6 +20,9 @@ interface OfficeSceneProps {
   onOpenMessages: () => void;
   /** Gizli Dokunuş Menüsü — called on every tap of the office title. See App.tsx's handleOfficeTitleTap. */
   onTitleTap?: () => void;
+  badges: string[];
+  allBadges: Record<string, Badge>;
+  significantMemories: SignificantMemory[];
 }
 
 /**
@@ -29,7 +34,22 @@ interface OfficeSceneProps {
  * something the player opts into from here, either to fetch today's job
  * or to browse past threads.
  */
-export default function OfficeScene({ rankTitleText, ownedPerks, balance, unreadCount, energy, bossMood, currentDateLabel, prestigeTitle, onGetJob, onOpenMessages, onTitleTap }: OfficeSceneProps) {
+export default function OfficeScene({
+  rankTitleText,
+  ownedPerks,
+  balance,
+  unreadCount,
+  energy,
+  bossMood,
+  currentDateLabel,
+  prestigeTitle,
+  onGetJob,
+  onOpenMessages,
+  onTitleTap,
+  badges,
+  allBadges,
+  significantMemories,
+}: OfficeSceneProps) {
   const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
 
@@ -49,11 +69,21 @@ export default function OfficeScene({ rankTitleText, ownedPerks, balance, unread
     };
   }, [tier]);
 
+  // Patron Memnuniyeti'nin ofis ışığına yansıması — a purely cosmetic filter
+  // tying the invisible bossMood number to something felt: cold/dim when
+  // he's unhappy, warm/bright when he's pleased. Continuous interpolation,
+  // no discrete "low/high" jump.
+  const moodT = Math.max(0, Math.min(1, bossMood / 100));
+  const moodFilter = `brightness(${(0.72 + moodT * 0.43).toFixed(2)}) saturate(${(0.6 + moodT * 0.6).toFixed(2)}) hue-rotate(${(-8 + moodT * 8).toFixed(1)}deg)`;
+
   return (
     <div className="office-scene">
       <div className="office-stage">
-        <div className={`pixel-bg office-bg scene-bg-enter ${image ? "" : `office-bg-tier-${tier}`}`} />
-        {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})` }} />}
+        <div
+          className={`pixel-bg office-bg scene-bg-enter ${image ? "" : `office-bg-tier-${tier}`}`}
+          style={{ filter: moodFilter }}
+        />
+        {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})`, filter: moodFilter }} />}
         <div className="office-title" onClick={onTitleTap}>
           <span>Emlah'ın Ofisi</span>
           <span className="office-rank-tag">
@@ -62,6 +92,7 @@ export default function OfficeScene({ rankTitleText, ownedPerks, balance, unread
           </span>
         </div>
         <div className="office-date-tag">{currentDateLabel}</div>
+        <MemoryWall badges={badges} allBadges={allBadges} significantMemories={significantMemories} />
       </div>
 
       <div className="energy-bar">
