@@ -41,6 +41,9 @@ import { REAL_WORLD_FLAVOR_CHANCE, pickRealWorldFlavorLine } from "./data/realWo
 import { recordClick, milestoneMessage } from "./data/clickCounter";
 import { printConsoleEasterEgg } from "./data/consoleEasterEgg";
 import { classifyChoiceTone, personalitySummary } from "./data/voiceTone";
+import { classifyCompassChoice, compassVerdict } from "./data/valuesCompass";
+import { origins, originById } from "./data/origin";
+import OriginSelectScreen from "./components/OriginSelectScreen";
 import { triggerHaptic } from "./data/haptics";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
@@ -139,11 +142,14 @@ import type {
   SceneOutcome,
   WeekOutcome,
   ToneBucket,
+  CompassAxis,
+  OriginId,
 } from "./types";
 import "./game.css";
 
 type Stage =
   | "menu"
+  | "origin"
   | "saved"
   | "settings"
   | "callback"
@@ -383,6 +389,10 @@ function App() {
   const [prestigeTitleThisRun, setPrestigeTitleThisRun] = useState<string | null>(null);
   // Emlah'ın Sesi — running tally of picked-choice tones. See data/voiceTone.ts.
   const [voiceTally, setVoiceTally] = useState<Record<ToneBucket, number>>({ eglenceli: 0, samimi: 0, atilgan: 0 });
+  // Emlah'ın Geçmişi — one-time backstory pick at game start. See data/origin.ts.
+  const [origin, setOrigin] = useState<OriginId | null>(null);
+  // Değerler Pusulası — running tally of picked-choice honesty leanings. See data/valuesCompass.ts.
+  const [compassTally, setCompassTally] = useState<Record<CompassAxis, number>>({ durustluk: 0, kurnazlik: 0 });
   // The "phone" stage is the hub landed on between houses/callbacks. Instead
   // of always showing the message thread immediately, it now shows the
   // office first — this flag reveals the phone/message screen on top of it
@@ -486,9 +496,11 @@ function App() {
     newBossMood: number = bossMood,
     newFiredSeasonalEventWeeks: number[] = firedSeasonalEventWeeks,
     newVoiceTally: Record<ToneBucket, number> = voiceTally,
+    newOrigin: OriginId | null = origin,
+    newCompassTally: Record<CompassAxis, number> = compassTally,
   ) {
     const save: SaveGame = {
-      version: 16,
+      version: 17,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -517,6 +529,8 @@ function App() {
       bossMood: newBossMood,
       firedSeasonalEventWeeks: newFiredSeasonalEventWeeks,
       voiceTally: newVoiceTally,
+      origin: newOrigin,
+      compassTally: newCompassTally,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -569,8 +583,9 @@ function App() {
   // with whatever persist() call naturally follows house completion.
   function handleToneChoice(effects: ChoiceEffects) {
     const tone = classifyChoiceTone(effects);
-    if (!tone) return;
-    setVoiceTally((prev) => ({ ...prev, [tone]: prev[tone] + 1 }));
+    if (tone) setVoiceTally((prev) => ({ ...prev, [tone]: prev[tone] + 1 }));
+    const compassAxis = classifyCompassChoice(effects);
+    if (compassAxis) setCompassTally((prev) => ({ ...prev, [compassAxis]: prev[compassAxis] + 1 }));
   }
 
   // Gizli Dokunuş Menüsü — 5 taps within 3 seconds on the office title.
@@ -627,6 +642,15 @@ function App() {
     inboxList: InboxMessage[] = inbox,
     castAssignmentParam: Record<string, string[]> = castAssignment,
     dailyQuestParam: DailyQuestDef | null = dailyQuest,
+    // Explicit overrides so a brand-new game's very first save (persisted
+    // synchronously inside proceedToHouseIntro, before this render's state
+    // updates have committed) can't read stale pre-reset closure values —
+    // same stale-closure class of bug fixed elsewhere in this file, just
+    // caught proactively here since startNewGame() resets all three right
+    // before this call chain runs.
+    originParam: OriginId | null = origin,
+    voiceTallyParam: Record<ToneBucket, number> = voiceTally,
+    compassTallyParam: Record<CompassAxis, number> = compassTally,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
     loadHouseImage(nextHouse.id);
@@ -681,7 +705,10 @@ function App() {
       return;
     }
 
-    proceedToHouseIntro(newIndex, currentResults, perksList, consumablesList, tiersList, order, inboxList, castAssignmentParam, dailyQuestParam, null);
+    proceedToHouseIntro(
+      newIndex, currentResults, perksList, consumablesList, tiersList, order, inboxList, castAssignmentParam,
+      dailyQuestParam, null, originParam, voiceTallyParam, compassTallyParam,
+    );
   }
 
   function proceedToHouseIntro(
@@ -695,6 +722,9 @@ function App() {
     castAssignmentParam: Record<string, string[]>,
     dailyQuestParam: DailyQuestDef | null,
     taskReward: { suspicion?: number; interest?: number; fun?: number } | null,
+    originParam: OriginId | null = origin,
+    voiceTallyParam: Record<ToneBucket, number> = voiceTally,
+    compassTallyParam: Record<CompassAxis, number> = compassTally,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
@@ -836,6 +866,7 @@ function App() {
           newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
           chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
           contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
+          voiceTallyParam, originParam, compassTallyParam,
         );
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
@@ -849,6 +880,7 @@ function App() {
       newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
       chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
       contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
+      voiceTallyParam, originParam, compassTallyParam,
     );
     setActiveCallback(null);
     setIndex(newIndex);
@@ -884,7 +916,9 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlockedTiers, stage]);
 
-  function startNewGame() {
+  function startNewGame(originId: OriginId) {
+    setOrigin(originId);
+    setCompassTally({ durustluk: 0, kurnazlik: 0 });
     const order = tieredShuffle(allHouses.map((h) => h.tier));
     // Rare celebrity easter egg — only ever swapped into premium houses,
     // never touches main/investment assignments (see injectCelebrities).
@@ -930,7 +964,7 @@ function App() {
     setFiredSeasonalEventWeeks([]);
     setVoiceTally({ eglenceli: 0, samimi: 0, atilgan: 0 });
     lastRankRef.current = null;
-    enterPhone(0, [], [], {}, [1], order, [], cast, null);
+    enterPhone(0, [], [], {}, [1], order, [], cast, null, originId, { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 });
   }
 
   function openSaved() {
@@ -971,6 +1005,8 @@ function App() {
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
     setVoiceTally(savedGame.voiceTally ?? { eglenceli: 0, samimi: 0, atilgan: 0 });
+    setOrigin(savedGame.origin ?? null);
+    setCompassTally(savedGame.compassTally ?? { durustluk: 0, kurnazlik: 0 });
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -2234,7 +2270,11 @@ function App() {
 
       <div key={stage} className="stage-transition">
       {stage === "menu" && (
-        <MainMenu hasSave={hasSave} onNewGame={startNewGame} onOpenSaved={openSaved} onSettings={() => setStage("settings")} />
+        <MainMenu hasSave={hasSave} onNewGame={() => setStage("origin")} onOpenSaved={openSaved} onSettings={() => setStage("settings")} />
+      )}
+
+      {stage === "origin" && (
+        <OriginSelectScreen origins={origins} onSelect={startNewGame} onBack={() => setStage("menu")} />
       )}
 
       {stage === "saved" && (
@@ -2405,6 +2445,8 @@ function App() {
             onToneChoice={handleToneChoice}
             voiceTally={voiceTally}
             onPressureChoicePicked={() => setPressureChoicesTaken((c) => c + 1)}
+            origin={originById(origin)}
+            showOriginIntro={index === 0}
           />
         </>
       )}
@@ -2511,6 +2553,12 @@ function App() {
             <p className="ending-card">
               <span className="ending-title">🎭 Emlah'ın Kişilik Profili</span>
               <span className="ending-description">{personalitySummary(voiceTally)}</span>
+            </p>
+          )}
+          {compassVerdict(compassTally) && (
+            <p className="ending-card">
+              <span className="ending-title">🧭 Değerler Pusulası</span>
+              <span className="ending-description">{compassVerdict(compassTally)}</span>
             </p>
           )}
           <p className="menu-prestige-tag">

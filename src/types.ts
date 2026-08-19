@@ -216,6 +216,12 @@ export interface OwnedInvestmentHouse {
 /** "Emlah'ın Sesi" — which flavor of choice the player tends to pick. See data/voiceTone.ts. */
 export type ToneBucket = "eglenceli" | "samimi" | "atilgan";
 
+/** "Değerler Pusulası" — which flavor of choice the player tends to pick, honesty-wise. See data/valuesCompass.ts. */
+export type CompassAxis = "durustluk" | "kurnazlik";
+
+/** "Emlah'ın Geçmişi" — one-time backstory pick at game start. See data/origin.ts. */
+export type OriginId = "ogretmen" | "emlakci-ailesi" | "girisimci" | "yurtdisi";
+
 /** A past customer (from a main, premium, or investment-house sale) Emlah can message again to pitch a flip property. */
 export interface ContactedCustomer {
   characterId: string;
@@ -234,7 +240,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 16;
+  version: 17;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -280,6 +286,10 @@ export interface SaveGame {
   firedSeasonalEventWeeks: number[];
   /** "Emlah'ın Sesi" — running tally of picked-choice tones. See data/voiceTone.ts. */
   voiceTally: Record<ToneBucket, number>;
+  /** "Emlah'ın Geçmişi" — one-time backstory pick, null until chosen at new-game start. See data/origin.ts. */
+  origin: OriginId | null;
+  /** "Değerler Pusulası" — running tally of picked-choice honesty leanings. See data/valuesCompass.ts. */
+  compassTally: Record<CompassAxis, number>;
   savedAt: string;
 }
 

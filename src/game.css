@@ -1323,6 +1323,45 @@
   font-style: italic;
 }
 
+.origin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin: 14px 0;
+}
+
+.origin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  background: var(--c-surface-alt);
+  border: 2px solid var(--c-border-light);
+  color: var(--c-text);
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.1s ease-out, transform 0.1s ease-out;
+}
+
+.origin-card:hover {
+  border-color: var(--c-accent);
+  transform: translateY(-2px);
+}
+
+.origin-card-title {
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: var(--c-accent);
+}
+
+.origin-card-description {
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+}
+
 .save-slot {
   background: var(--c-surface);
   border: 2px solid var(--c-border-light);

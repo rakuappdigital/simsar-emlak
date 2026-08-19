@@ -13,6 +13,7 @@ import type { EasterEgg } from "../data/easterEggs";
 import { ECHO_CHANCE, pickEchoLines } from "../data/echoNetwork";
 import { dominantTone, pickVoiceLine, VOICE_LINE_CHANCE } from "../data/voiceTone";
 import { LAST_MINUTE_PRESSURE_CHANCE, pickPressureChoice } from "../data/lastMinutePressure";
+import type { OriginDef } from "../data/origin";
 import type { ContactedCustomer } from "../types";
 
 const FUN_BONUS_THRESHOLD = 30;
@@ -62,6 +63,10 @@ interface DialogueSceneProps {
   contactedCustomers?: ContactedCustomer[];
   /** "Emlah'ın Sesi" — running tone tally, occasionally colors an opening thought line. See data/voiceTone.ts. */
   voiceTally?: Record<ToneBucket, number>;
+  /** "Emlah'ın Geçmişi" — one-time backstory pick. Adds an always-available closing choice + a one-time intro line on the very first house. See data/origin.ts. */
+  origin?: OriginDef;
+  /** True only for the very first house of the game, gates the one-time origin intro line. */
+  showOriginIntro?: boolean;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -90,6 +95,8 @@ export default function DialogueScene({
   onToneChoice,
   voiceTally,
   onPressureChoicePicked,
+  origin,
+  showOriginIntro,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [nodeId, setNodeId] = useState(house.startNode);
@@ -154,7 +161,11 @@ export default function DialogueScene({
   }, [house.id]);
   const voiceDialogueLines: DialogueLine[] =
     voiceLine && nodeId === house.startNode ? [{ speaker: "thought", text: voiceLine }] : [];
+  // "Emlah'ın Geçmişi" — one-time, only ever on the very first house.
+  const originIntroLines: DialogueLine[] =
+    origin && showOriginIntro && nodeId === house.startNode ? [{ speaker: "thought", text: origin.introLine }] : [];
   const prependedLines = [
+    ...originIntroLines,
     ...celebrityIntroLines,
     ...conditionWarningLines,
     ...easterEggLines,
@@ -242,9 +253,10 @@ export default function DialogueScene({
     let finalList = bonusUnlocked ? [...list, bonusChoice] : list;
     if (flirtUnlocked) finalList = [...finalList, flirtChoice];
     if (pressureUnlocked) finalList = [...finalList, pressureChoice];
+    if (isClosingNode && origin) finalList = [...finalList, origin.closingChoice];
     return shuffle(finalList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked, pressureUnlocked, pressureChoice]);
+  }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked, pressureUnlocked, pressureChoice, origin]);
 
   function advanceLine() {
     if (!atLastLine) {

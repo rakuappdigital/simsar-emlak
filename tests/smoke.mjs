@@ -70,6 +70,10 @@ await page.waitForTimeout(600);
 assert(await page.locator("text=Oyuna Başla").count() > 0, "main menu shows 'Oyuna Başla'");
 
 await page.locator("button", { hasText: "Oyuna Başla" }).click();
+await page.waitForTimeout(400);
+
+assert((await page.locator(".origin-card").count()) === 4, "origin select screen shows 4 backstory options");
+await page.locator(".origin-card").first().click();
 await page.waitForTimeout(800);
 
 let sawDialogue = false;
