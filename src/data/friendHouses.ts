@@ -7,7 +7,10 @@ import type { HouseScene } from "../types";
  * (PremiumHouseScene, one-off, never touches houseOrder/results), just from
  * a separate menu tab so they read as "people you know," not random invites.
  * Every customer line carries an explicit `name` since these houses use a
- * fixed customerNames array, not dynamicCast.
+ * fixed customerNames array, not dynamicCast. Dialogue is written to match
+ * each friend's portrait/prop (see characterImages.ts): Ecrin with her
+ * blueprint, Kutay with his notarized document, Bengisu with her camera,
+ * Alperen with his phone, Duru in her scrubs.
  */
 export const friendHouses: HouseScene[] = [
   {
@@ -25,20 +28,20 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Emlah, bak bu benim tasarladığım loft — ışık kuyusunu görmeden gitme diyorum." },
-          { speaker: "customer1", name: "Ecrin", text: "Bir müşterim satmak istiyor, ben de direkt seni düşündüm." },
+          { speaker: "customer1", name: "Ecrin", text: "(gözlüğünü düzeltip elindeki ruloyu masaya açar) Emlah, bak, bu benim çizdiğim loft — ışık kuyusunu görmeden gitme diyorum." },
+          { speaker: "customer1", name: "Ecrin", text: "Müşterim satmak istiyor, ben de çizimleri elimden bırakmadan direkt seni aradım." },
         ],
         choices: [
-          { id: "a", text: "\"Mimar tavsiyesi güven verir, hemen bakalım.\"", next: "enter", effects: { interest: 10 } },
-          { id: "b", text: "\"Işık kuyusu ne demek tam olarak?\"", next: "enter", effects: { fun: 6 } },
-          { id: "c", text: "\"Umarım fiyatı da tasarımı kadar iyidir.\"", next: "enter", effects: { suspicion: 4 } },
+          { id: "a", text: "\"Mimarından ilk elden çizim, güven verir — hemen bakalım.\"", next: "enter", effects: { interest: 10 } },
+          { id: "b", text: "\"Işık kuyusu tam olarak ne demek, anlat bana.\"", next: "enter", effects: { fun: 6 } },
+          { id: "c", text: "\"Umarım fiyatı da çizimin kadar iyidir.\"", next: "enter", effects: { suspicion: 4 } },
         ],
       },
       enter: {
         id: "enter",
         lines: [
           { speaker: "emlah", text: "Gerçekten de tavan boşluğundan gün ışığı direkt salona düşüyor." },
-          { speaker: "customer1", name: "Ecrin", text: "Aynen öyle — üç kat boyunca ışığı aşağı taşıyan bir boşluk bıraktım bilerek." },
+          { speaker: "customer1", name: "Ecrin", text: "Aynen öyle — üç kat boyunca ışığı aşağı taşıyan bir boşluk bıraktım bilerek, kağıt üzerinde de öyleydi." },
         ],
         choices: [
           { id: "a", text: "\"Bu detay evin değerini gerçekten artırır.\"", next: "surpriz", effects: { interest: 12 } },
@@ -49,7 +52,7 @@ export const friendHouses: HouseScene[] = [
       surpriz: {
         id: "surpriz",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Çift camlı, merak etme, ısı kaybı hesaplandı — mühendisim de kontrol etti." },
+          { speaker: "customer1", name: "Ecrin", text: "(rulodaki kesiti gösterir) Çift camlı, merak etme — ısı kaybını buraya kadar hesapladım, mühendisim de onayladı." },
           { speaker: "emlah", text: "O zaman gerçekten elden çıkarılacak bir detay değil." },
         ],
         next: "price",
@@ -66,7 +69,7 @@ export const friendHouses: HouseScene[] = [
       closing_sold: {
         id: "closing_sold",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Anlaştık — bu loftu sana emanet ediyorum, iyi yaşa." },
+          { speaker: "customer1", name: "Ecrin", text: "(çizimleri toparlarken gülümser) Anlaştık — bu loftu sana emanet ediyorum, iyi yaşa." },
           { speaker: "emlah", text: "Tavsiyen için sağ ol Ecrin, gerçekten güzel bir yerdi." },
         ],
         end: "sold",
@@ -74,14 +77,14 @@ export const friendHouses: HouseScene[] = [
       closing_thinking: {
         id: "closing_thinking",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Tabii, acele etme — bir kez daha bakmak istersen haber ver." },
+          { speaker: "customer1", name: "Ecrin", text: "Tabii, acele etme — bir kez daha çizimlere bakmak istersen haber ver." },
         ],
         end: "thinking",
       },
       closing_lost: {
         id: "closing_lost",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Emlah, beni aceleye getirmene gerek yok, arkadaşız sonuçta." },
+          { speaker: "customer1", name: "Ecrin", text: "(ruloyu tekrar sararken) Emlah, beni aceleye getirmene gerek yok, arkadaşız sonuçta." },
           { speaker: "customer1", name: "Ecrin", text: "Sanırım bu sefer olmadı." },
         ],
         end: "lost",
@@ -103,12 +106,12 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Bu sefer kendi işim değil, meslektaşımın projesi ama gözüm ondan ayrılmıyor." },
-          { speaker: "customer1", name: "Ecrin", text: "İki simetrik daireden biri boşaldı, plan tam kare — çok nadir bulunur." },
+          { speaker: "customer1", name: "Ecrin", text: "(elindeki başka bir rulo çizimi açar) Bu sefer benim işim değil, meslektaşımın projesi ama gözüm ondan ayrılmıyor." },
+          { speaker: "customer1", name: "Ecrin", text: "İki simetrik daireden biri boşaldı, plan tam kare — bu kadar temiz bir simetri nadir bulunur." },
         ],
         choices: [
           { id: "a", text: "\"Simetri her zaman satar, hemen görelim.\"", next: "enter", effects: { interest: 10 } },
-          { id: "b", text: "\"Meslektaşın projesiyse komisyon nasıl işliyor?\"", next: "enter", effects: { suspicion: 6 } },
+          { id: "b", text: "\"Meslektaşının projesiyse komisyon nasıl işliyor?\"", next: "enter", effects: { suspicion: 6 } },
           { id: "c", text: "\"İkiz daire denince aklıma hep filmler geliyor.\"", next: "enter", effects: { fun: 8 } },
         ],
       },
@@ -116,7 +119,7 @@ export const friendHouses: HouseScene[] = [
         id: "enter",
         lines: [
           { speaker: "emlah", text: "Gerçekten de her oda karşılıklı eşit ölçülerde." },
-          { speaker: "customer1", name: "Ecrin", text: "Mobilya yerleştirmek çok kolay oluyor böyle, boşa yer kaybı yok." },
+          { speaker: "customer1", name: "Ecrin", text: "Mobilya yerleştirmek çok kolay oluyor böyle, milimetre boşa gitmiyor — mimar gözüyle söylüyorum." },
         ],
         choices: [
           { id: "a", text: "\"Bu düzen özellikle çalışanlar için ideal.\"", next: "surpriz", effects: { interest: 12 } },
@@ -127,7 +130,7 @@ export const friendHouses: HouseScene[] = [
       surpriz: {
         id: "surpriz",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: "Ortak duvar özel yalıtımlı, meslektaşım bu konuda çok titizdir." },
+          { speaker: "customer1", name: "Ecrin", text: "Ortak duvar özel yalıtımlı, meslektaşım bu konuda benden bile titizdir." },
           { speaker: "emlah", text: "O zaman endişelenecek bir şey yok." },
         ],
         next: "price",
@@ -175,8 +178,8 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Kutay", text: "Emlah, mesleğim gereği söylüyorum — bu tapunun geçmişi kristal gibi temiz." },
-          { speaker: "customer1", name: "Kutay", text: "Otuz yıllık kayıtları tek tek kontrol ettim, hiçbir sorun yok." },
+          { speaker: "customer1", name: "Kutay", text: "(elindeki mühürlü belgeyi kaldırıp gösterir) Emlah, mesleğim gereği söylüyorum — bu tapunun geçmişi kristal gibi temiz." },
+          { speaker: "customer1", name: "Kutay", text: "Otuz yıllık kayıtları tek tek kontrol ettim, imzası bende, mührü bende, hiçbir sorun yok." },
         ],
         choices: [
           { id: "a", text: "\"Noter onayı en güvenilir referanstır zaten.\"", next: "enter", effects: { interest: 10, suspicion: -6 } },
@@ -188,7 +191,7 @@ export const friendHouses: HouseScene[] = [
         id: "enter",
         lines: [
           { speaker: "emlah", text: "Konak gerçekten bakımlı, taş işçiliği de orijinal görünüyor." },
-          { speaker: "customer1", name: "Kutay", text: "Restorasyon belgeleri de dosyada, hepsi mevzuata uygun yapılmış." },
+          { speaker: "customer1", name: "Kutay", text: "Restorasyon belgeleri de dosyada, hepsi mevzuata uygun yapılmış — istersen şimdi imzayı gösteririm." },
         ],
         choices: [
           { id: "a", text: "\"Belgeli restorasyon değerini ikiye katlar.\"", next: "surpriz", effects: { interest: 14 } },
@@ -215,7 +218,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Kutay", text: "İşte bu, doğru kararı verdin — tebrikler Emlah." }],
+        lines: [{ speaker: "customer1", name: "Kutay", text: "(belgeyi imzalar) İşte bu, doğru kararı verdin — tebrikler Emlah." }],
         end: "sold",
       },
       closing_thinking: {
@@ -245,8 +248,8 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Kutay", text: "Bu daire biraz karmaşık bir miras sürecinden çıktı, ben de anlaşmayı ben hazırladım." },
-          { speaker: "customer1", name: "Kutay", text: "Şimdi tüm mirasçılar anlaştı, satışa tamamen açık — endişelenecek bir şey kalmadı." },
+          { speaker: "customer1", name: "Kutay", text: "(dosyayı masaya bırakır) Bu daire biraz karmaşık bir miras sürecinden çıktı, anlaşmayı ben hazırladım." },
+          { speaker: "customer1", name: "Kutay", text: "Şimdi tüm mirasçılar imzaladı, satışa tamamen açık — endişelenecek bir şey kalmadı." },
         ],
         choices: [
           { id: "a", text: "\"Mirasçılar arası anlaşma her zaman kritik bir detaydır.\"", next: "enter", effects: { interest: 10 } },
@@ -269,7 +272,7 @@ export const friendHouses: HouseScene[] = [
       surpriz: {
         id: "surpriz",
         lines: [
-          { speaker: "customer1", name: "Kutay", text: "Tüm imzalar elimde, dosyayı istersen şimdi gösterebilirim." },
+          { speaker: "customer1", name: "Kutay", text: "(dosyayı açar) Tüm imzalar elimde, istersen şimdi tek tek gösterebilirim." },
           { speaker: "emlah", text: "Bu şeffaflık gerçekten işimi kolaylaştırıyor." },
         ],
         next: "price",
@@ -315,7 +318,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Bengisu", text: "Emlah! Bu terasın gün batımını görünce çıldıracaksın, yemin ederim en iyi kareler burada." },
+          { speaker: "customer1", name: "Bengisu", text: "(kameranın ekranını çevirip gösterir) Emlah! Bu terasın gün batımını görünce çıldıracaksın, yemin ederim en iyi kareler burada." },
           { speaker: "customer1", name: "Bengisu", text: "Takipçilerim bile sordu \"bu neresi\" diye, o kadar güzel." },
         ],
         choices: [
@@ -328,7 +331,7 @@ export const friendHouses: HouseScene[] = [
         id: "enter",
         lines: [
           { speaker: "emlah", text: "Gerçekten de teras güneye bakıyor, ışık müthiş." },
-          { speaker: "customer1", name: "Bengisu", text: "Akşamları burada oturup içki içmek başlı başına bir terapi." },
+          { speaker: "customer1", name: "Bengisu", text: "Akşamları burada oturup içki içmek başlı başına bir terapi, kamerayı bile bırakmak istemiyorum." },
         ],
         choices: [
           { id: "a", text: "\"Bu tarz detaylar alıcıyı duygusal olarak bağlar.\"", next: "surpriz", effects: { interest: 12 } },
@@ -339,7 +342,7 @@ export const friendHouses: HouseScene[] = [
       surpriz: {
         id: "surpriz",
         lines: [
-          { speaker: "customer1", name: "Bengisu", text: "Geçen yıl teras yenilendi, statik raporu da var, merak etme." },
+          { speaker: "customer1", name: "Bengisu", text: "Geçen yıl teras yenilendi, statik raporu da var, merak etme — çekim yaparken sordurdum zaten." },
           { speaker: "emlah", text: "O zaman görüntü kadar sağlam bir yer de demek." },
         ],
         next: "price",
@@ -355,7 +358,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Bengisu", text: "Yaşasın! İlk gün batımı fotoğrafını bana da at, tamam mı?" }],
+        lines: [{ speaker: "customer1", name: "Bengisu", text: "(kamerayı kaldırır) Yaşasın! İlk gün batımı fotoğrafını bana da at, tamam mı?" }],
         end: "sold",
       },
       closing_thinking: {
@@ -385,7 +388,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Bengisu", text: "Bu daireyi çekim için kiralamıştım, sahibi de satmak istiyor, seni aradım hemen." },
+          { speaker: "customer1", name: "Bengisu", text: "(kamerasını omzuna asar) Bu daireyi çekim için kiralamıştım, sahibi de satmak istiyor, seni aradım hemen." },
           { speaker: "customer1", name: "Bengisu", text: "Cepheler o kadar renkli ki, sokak başlı başına bir set gibi." },
         ],
         choices: [
@@ -455,7 +458,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Alperen", text: "Emlah dostum, kendi lofttumu satıyorum — yeni bir işe girişiyorum, nakit lazım." },
+          { speaker: "customer1", name: "Alperen", text: "(telefonundaki grafiğe bakarken başını kaldırmadan konuşur) Emlah dostum, kendi lofttumu satıyorum — yeni bir işe girişiyorum, nakit lazım." },
           { speaker: "customer1", name: "Alperen", text: "Hem ev hem ofis olarak tasarladım, gerçek bir fırsat bu." },
         ],
         choices: [
@@ -479,7 +482,7 @@ export const friendHouses: HouseScene[] = [
       surpriz: {
         id: "surpriz",
         lines: [
-          { speaker: "customer1", name: "Alperen", text: "Söylemesi henüz erken ama sana ilk haber veririm, söz." },
+          { speaker: "customer1", name: "Alperen", text: "(telefonu cebine atar) Söylemesi henüz erken ama sana ilk haber veririm, söz." },
           { speaker: "emlah", text: "Tamam, o zaman şimdilik eve odaklanalım." },
         ],
         next: "price",
@@ -525,7 +528,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Alperen", text: "Bu sefer benim değil ama bir yatırımcı arkadaşımın stüdyosu — kiraya vermek isteyenler için ideal." },
+          { speaker: "customer1", name: "Alperen", text: "(telefonda bir tabloyu kaydırarak gösterir) Bu sefer benim değil ama bir yatırımcı arkadaşımın stüdyosu — kiraya vermek isteyenler için ideal." },
           { speaker: "customer1", name: "Alperen", text: "Küçük ama kirası çok iyi, sayıları da hazırladım." },
         ],
         choices: [
@@ -595,7 +598,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Duru", text: "Emlah, biliyorsun yurt dışına taşınıyorum — kendi evimi sana bırakmak istiyorum." },
+          { speaker: "customer1", name: "Duru", text: "(sakin bir sesle, ellerini kavuşturmuş) Emlah, biliyorsun yurt dışına taşınıyorum — kendi evimi sana bırakmak istiyorum." },
           { speaker: "customer1", name: "Duru", text: "Bahçe katı, çok sessiz, uzun nöbetlerden sonra beni hep dinlendirdi burası." },
         ],
         choices: [
@@ -635,7 +638,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Duru", text: "Teşekkür ederim Emlah, içim rahat şimdi. İyi bakarsın biliyorum." }],
+        lines: [{ speaker: "customer1", name: "Duru", text: "(gülümser) Teşekkür ederim Emlah, içim rahat şimdi. İyi bakarsın biliyorum." }],
         end: "sold",
       },
       closing_thinking: {
@@ -665,7 +668,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Duru", text: "Bu ev bir meslektaşımın — hastanede beraber çalışıyoruz, o da vardiyalardan yorgun." },
+          { speaker: "customer1", name: "Duru", text: "(forması hâlâ üzerinde, nöbetten yeni çıkmış gibi) Bu ev bir meslektaşımın — hastanede beraber çalışıyoruz, o da vardiyalardan yorgun." },
           { speaker: "customer1", name: "Duru", text: "Orman manzarası var, sabahları kuş sesiyle uyanıyormuş." },
         ],
         choices: [

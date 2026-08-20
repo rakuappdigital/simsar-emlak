@@ -24,6 +24,11 @@ import ayten from "../assets/portraits/ayten.webp";
 import ozan from "../assets/portraits/ozan.webp";
 import zeynep from "../assets/portraits/zeynep.webp";
 import derin from "../assets/portraits/derin.webp";
+import ecrin from "../assets/portraits/ecrin.webp";
+import kutay from "../assets/portraits/kutay.webp";
+import bengisu from "../assets/portraits/bengisu.webp";
+import alperen from "../assets/portraits/alperen.webp";
+import duru from "../assets/portraits/duru.webp";
 
 export const characterImages: Record<string, string> = {
   Emlah: emlah,
@@ -52,4 +57,9 @@ export const characterImages: Record<string, string> = {
   Ozan: ozan,
   Zeynep: zeynep,
   Derin: derin,
+  Ecrin: ecrin,
+  Kutay: kutay,
+  Bengisu: bengisu,
+  Alperen: alperen,
+  Duru: duru,
 };
