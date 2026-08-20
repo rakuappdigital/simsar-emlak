@@ -29,6 +29,10 @@ import { assignCast, resolveCustomerNames, resolvePortrait, poolCharacterById } 
 import { injectCelebrities } from "./data/celebrities";
 import { countOwnedOfisItems } from "./data/officeImages";
 import { RIVAL_DUEL_CHANCE, RIVAL_DUEL_BONUS_RATE, pickDuelStartMessage, pickDuelWinMessage, pickDuelLoseMessage } from "./data/rivalDuel";
+import { rivalTotalSales } from "./data/rival";
+import { firatMoodFor, type FiratMoodDef } from "./data/rivalCharacter";
+import { friendHouses, friendHouseById } from "./data/friendHouses";
+import { checkSelfReflectionTrigger, selfReflectionText, type ReflectionKind } from "./data/selfReflection";
 import {
   MYSTERY_SHOPPER_CHANCE,
   MYSTERY_SHOPPER_HONEST_BONUS,
@@ -365,6 +369,16 @@ function App() {
   const [chitchatBonuses, setChitchatBonuses] = useState(0);
   const [premiumResults, setPremiumResults] = useState<HouseResult[]>([]);
   const [activePremiumHouseId, setActivePremiumHouseId] = useState<string | null>(null);
+  // "Arkadaş Tavsiyeleri" — friend-house ids unlocked via houseTip accept +
+  // their resolved results, persisted. activeFriendHouseId itself (which one
+  // is being played right now) is ephemeral, same as activePremiumHouseId.
+  const [unlockedFriendHouseIds, setUnlockedFriendHouseIds] = useState<string[]>([]);
+  const [friendHouseResults, setFriendHouseResults] = useState<HouseResult[]>([]);
+  const [activeFriendHouseId, setActiveFriendHouseId] = useState<string | null>(null);
+  // "Emlah'ın Boş Sayfası" — one-time self-reflection moment, gated by the
+  // persisted `selfReflectionShown` flag; the active modal itself is ephemeral.
+  const [selfReflectionShown, setSelfReflectionShown] = useState(false);
+  const [activeSelfReflection, setActiveSelfReflection] = useState<ReflectionKind | null>(null);
   const [pendingCallbackSale, setPendingCallbackSale] = useState<{
     resultIndex: number;
     targetHouse: HouseScene;
@@ -383,6 +397,10 @@ function App() {
   // time that visit's result screen shows), so none of them touch
   // SaveGame/persist() at all.
   const [activeDuelHouseId, setActiveDuelHouseId] = useState<string | null>(null);
+  // Fırat Bey'in yüzü — set alongside activeDuelHouseId, purely a richer
+  // presentation layer on the same silent bonus mechanic (rivalDuel.ts is
+  // untouched). Not persisted, scoped to the one house visit.
+  const [activeFiratMood, setActiveFiratMood] = useState<FiratMoodDef | null>(null);
   const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
@@ -533,9 +551,12 @@ function App() {
     newCompassTally: Record<CompassAxis, number> = compassTally,
     newSignificantMemories: SignificantMemory[] = significantMemories,
     newOriginChoiceCount: number = originChoiceCount,
+    newSelfReflectionShown: boolean = selfReflectionShown,
+    newUnlockedFriendHouseIds: string[] = unlockedFriendHouseIds,
+    newFriendHouseResults: HouseResult[] = friendHouseResults,
   ) {
     const save: SaveGame = {
-      version: 18,
+      version: 19,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -568,6 +589,9 @@ function App() {
       compassTally: newCompassTally,
       significantMemories: newSignificantMemories,
       originChoiceCount: newOriginChoiceCount,
+      selfReflectionShown: newSelfReflectionShown,
+      unlockedFriendHouseIds: newUnlockedFriendHouseIds,
+      friendHouseResults: newFriendHouseResults,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -622,7 +646,19 @@ function App() {
     const tone = classifyChoiceTone(effects);
     if (tone) setVoiceTally((prev) => ({ ...prev, [tone]: prev[tone] + 1 }));
     const compassAxis = classifyCompassChoice(effects);
-    if (compassAxis) setCompassTally((prev) => ({ ...prev, [compassAxis]: prev[compassAxis] + 1 }));
+    if (compassAxis) {
+      setCompassTally((prev) => {
+        const next = { ...prev, [compassAxis]: prev[compassAxis] + 1 };
+        if (!selfReflectionShown) {
+          const kind = checkSelfReflectionTrigger(next);
+          if (kind) {
+            setActiveSelfReflection(kind);
+            setSelfReflectionShown(true);
+          }
+        }
+        return next;
+      });
+    }
   }
 
   // Sadakat Rozetleri — fires a one-time celebratory message exactly when
@@ -1041,6 +1077,11 @@ function App() {
     setSignificantMemories([]);
     setActiveMemoryReference(null);
     setOriginChoiceCount(0);
+    setSelfReflectionShown(false);
+    setActiveSelfReflection(null);
+    setUnlockedFriendHouseIds([]);
+    setFriendHouseResults([]);
+    setActiveFriendHouseId(null);
     lastRankRef.current = null;
     enterPhone(
       0, [], [], {}, [1], order, [], cast, null, originId,
@@ -1091,6 +1132,11 @@ function App() {
     setSignificantMemories(savedGame.significantMemories ?? []);
     setActiveMemoryReference(null);
     setOriginChoiceCount(savedGame.originChoiceCount ?? 0);
+    setSelfReflectionShown(savedGame.selfReflectionShown ?? false);
+    setActiveSelfReflection(null);
+    setUnlockedFriendHouseIds(savedGame.unlockedFriendHouseIds ?? []);
+    setFriendHouseResults(savedGame.friendHouseResults ?? []);
+    setActiveFriendHouseId(null);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -1193,6 +1239,7 @@ function App() {
         newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDuelLoseMessage() }], index + 1);
       }
       setActiveDuelHouseId(null);
+      setActiveFiratMood(null);
     }
 
     // Gizli Müşteri — silent until now; reveals itself only in the reaction
@@ -1428,6 +1475,81 @@ function App() {
     );
     setActivePremiumHouseId(null);
     setEmlahMenuTab("davet");
+    setShowEmlahMenu(true);
+  }
+
+  function openFriendHouse(houseId: string) {
+    setActiveFriendHouseId(houseId);
+    setShowEmlahMenu(false);
+  }
+
+  function finishFriendHouse(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats, contractSelections?: Record<string, string>) {
+    const friendHouse = friendHouseById(activeFriendHouseId ?? "");
+    if (!friendHouse) return;
+    const rawSale =
+      outcome === "sold"
+        ? computeSale(friendHouse.askingPrice, finalStats.discountPercent, 0, contractModifier, rankBonus(earned))
+        : null;
+
+    let sale = rawSale;
+    let newPendingDeliveries = pendingDeliveries;
+    if (rawSale && contractSelections?.teslim) {
+      const term = contractSelections.teslim as DeliveryTermId;
+      const { immediateAmount, deferredAmount } = splitDeliveryPayment(rawSale.commission, term);
+      if (deferredAmount > 0) {
+        sale = { ...rawSale, commission: immediateAmount };
+        const dueIndex = dueIndexForDelivery(index, term, allHouses.length - 1);
+        newPendingDeliveries = [
+          ...pendingDeliveries,
+          {
+            id: `${friendHouse.id}-${index}-arkadas`,
+            houseTitle: friendHouse.title,
+            deliveryDateLabel: formatGameDate(deliveryDateForIndex(index, term)),
+            dueIndex,
+            deferredAmount,
+          },
+        ];
+        setPendingDeliveries(newPendingDeliveries);
+      }
+    }
+
+    const newResult: HouseResult = {
+      houseId: friendHouse.id,
+      outcome,
+      sale,
+      finalStats,
+      finalSuspicion: finalStats.suspicion,
+    };
+    const newFriendHouseResults = [...friendHouseResults, newResult];
+    setFriendHouseResults(newFriendHouseResults);
+    if (outcome === "sold") {
+      playSale();
+      triggerHaptic("success");
+    } else if (outcome === "lost") playLost();
+    else playThinking();
+
+    let newBossMood = bossMood;
+    let newInbox = inbox;
+    if (outcome === "sold" && sale) {
+      const angry = finalStats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
+      newBossMood = clampBossMood(bossMood + bossMoodDeltaForSale(finalStats.discountPercent));
+      if (angry) {
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDiscountAngerLine() }], index + 1);
+      }
+    }
+    if (newBossMood !== bossMood) setBossMood(newBossMood);
+    if (newInbox !== inbox) setInbox(newInbox);
+
+    persist(
+      results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox,
+      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
+      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
+      activeNewsId, energy, newPendingDeliveries, newBossMood, firedSeasonalEventWeeks, voiceTally, origin,
+      compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds,
+      newFriendHouseResults,
+    );
+    setActiveFriendHouseId(null);
+    setEmlahMenuTab("arkadaslar");
     setShowEmlahMenu(true);
   }
 
@@ -1957,6 +2079,7 @@ function App() {
     // anything below or leave a dangling state across house visits.
     if (Math.random() < RIVAL_DUEL_CHANCE) {
       setActiveDuelHouseId(house.id);
+      setActiveFiratMood(firatMoodFor(results.filter((r) => r.outcome === "sold").length, rivalTotalSales(weekOutcomes.length)));
       const duelMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickDuelStartMessage(house.title) };
       setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", [duelMsg], index + 1));
     } else if (Math.random() < MYSTERY_SHOPPER_CHANCE) {
@@ -2003,7 +2126,7 @@ function App() {
     if (!hadWorkTaskThisTransition) {
       const roll = Math.random();
       if (roll < FRIEND_CHANCE) {
-        const set = pickFriendMessage(lastFriendId, pendingLoan !== null, pendingInvestment !== null);
+        const set = pickFriendMessage(lastFriendId, pendingLoan !== null, pendingInvestment !== null, unlockedFriendHouseIds);
         setLastFriendId(set.id);
         const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
         setActiveFriendChat({ set, messages: openMsg, showChoices: true });
@@ -2073,8 +2196,18 @@ function App() {
       setPendingInvestment(newPendingInvestment);
     }
 
+    let newUnlockedFriendHouseIds = unlockedFriendHouseIds;
+    let houseTipReaction = choice.reaction;
+    if (choice.houseTipAction === "accept" && choice.houseTipHouseId && !unlockedFriendHouseIds.includes(choice.houseTipHouseId)) {
+      newUnlockedFriendHouseIds = [...unlockedFriendHouseIds, choice.houseTipHouseId];
+      setUnlockedFriendHouseIds(newUnlockedFriendHouseIds);
+      const apptIndex = index + (choice.houseTipWeekOffset ?? 0) * HOUSES_PER_WEEK;
+      const dateLabel = formatGameDate(gameDateForIndex(apptIndex));
+      houseTipReaction = `${choice.reaction} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin.)`;
+    }
+
     let newBonusEarnings = bonusEarnings;
-    let bulkDealReaction = choice.reaction;
+    let bulkDealReaction = houseTipReaction;
     if (choice.bulkDealAction === "safe") {
       newBonusEarnings = bonusEarnings + BULK_DEAL_SAFE_AMOUNT;
       setBonusEarnings(newBonusEarnings);
@@ -2096,7 +2229,13 @@ function App() {
     setActiveFriendChat((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
-    persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, newPendingInvestment);
+    persist(
+      results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox,
+      castAssignment, dailyQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses,
+      premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
+      activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally,
+      significantMemories, originChoiceCount, selfReflectionShown, newUnlockedFriendHouseIds,
+    );
   }
 
   function handleMeetupChoice(activityId: string) {
@@ -2298,6 +2437,19 @@ function App() {
         </div>
       )}
 
+      {activeSelfReflection && (
+        <div className="rankup-overlay" onClick={() => setActiveSelfReflection(null)}>
+          <div className="rankup-card self-reflection-card">
+            <p className="rankup-label">{selfReflectionText[activeSelfReflection].title}</p>
+            {selfReflectionText[activeSelfReflection].paragraphs.map((p, i) => (
+              <p className="self-reflection-paragraph" key={i}>
+                {p}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
       {showSavedToast && <div className="saved-toast">Kaydedildi ✓</div>}
 
       {socialReaction && (
@@ -2367,6 +2519,10 @@ function App() {
           friendBonds={friendBonds}
           voiceTally={voiceTally}
           compassTally={compassTally}
+          friendHouses={friendHouses}
+          unlockedFriendHouseIds={unlockedFriendHouseIds}
+          friendHouseResults={friendHouseResults}
+          onOpenFriendHouse={openFriendHouse}
         />
       )}
 
@@ -2381,6 +2537,23 @@ function App() {
               results={results}
               allHouses={allHouses}
               onFinish={finishPremiumHouse}
+              energy={energy}
+            />
+          </div>
+        </div>
+      )}
+
+      {activeFriendHouseId && (
+        <div className="premium-overlay">
+          <div className="premium-overlay-inner">
+            <PremiumHouseScene
+              house={friendHouseById(activeFriendHouseId)!}
+              ownedPerks={ownedPerks}
+              consumables={consumables}
+              castAssignment={castAssignment}
+              results={results}
+              allHouses={allHouses}
+              onFinish={finishFriendHouse}
               energy={energy}
             />
           </div>
@@ -2592,6 +2765,7 @@ function App() {
             onLineChosen={handleLineChosen}
             onFlirt={handleFlirt}
             isDuel={activeDuelHouseId === house.id}
+            firatEncounter={activeDuelHouseId === house.id ? (activeFiratMood ?? undefined) : undefined}
             easterEgg={activeEasterEgg?.houseId === house.id ? activeEasterEgg.egg : undefined}
             contactedCustomers={contactedCustomers}
             onToneChoice={handleToneChoice}

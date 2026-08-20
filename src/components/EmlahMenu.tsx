@@ -21,10 +21,11 @@ import PremiumInvitesPanel from "./PremiumInvitesPanel";
 import InvestmentPanel from "./InvestmentPanel";
 import DeliveriesPanel from "./DeliveriesPanel";
 import RelationshipsPanel from "./RelationshipsPanel";
+import FriendHousesPanel from "./FriendHousesPanel";
 import type { RenovationLevel } from "../data/renovation";
 import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler" | "iliskiler";
+export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler" | "iliskiler" | "arkadaslar";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -68,6 +69,10 @@ interface EmlahMenuProps {
   friendBonds: Record<string, number>;
   voiceTally: Record<ToneBucket, number>;
   compassTally: Record<CompassAxis, number>;
+  friendHouses: HouseScene[];
+  unlockedFriendHouseIds: string[];
+  friendHouseResults: HouseResult[];
+  onOpenFriendHouse: (houseId: string) => void;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -79,6 +84,7 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "yatirim", icon: <HouseIcon size={14} />, label: "Yatırım Evleri" },
   { id: "teslimler", icon: <CalendarIcon size={14} />, label: "Bekleyen Teslimler" },
   { id: "iliskiler", icon: <HeartIcon size={14} />, label: "İlişkiler" },
+  { id: "arkadaslar", icon: <HouseIcon size={14} />, label: "Arkadaşlarım" },
 ];
 
 export default function EmlahMenu({
@@ -123,6 +129,10 @@ export default function EmlahMenu({
   friendBonds,
   voiceTally,
   compassTally,
+  friendHouses,
+  unlockedFriendHouseIds,
+  friendHouseResults,
+  onOpenFriendHouse,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -219,6 +229,14 @@ export default function EmlahMenu({
           )}
           {tab === "iliskiler" && (
             <RelationshipsPanel bossMood={bossMood} friendBonds={friendBonds} voiceTally={voiceTally} compassTally={compassTally} />
+          )}
+          {tab === "arkadaslar" && (
+            <FriendHousesPanel
+              friendHouses={friendHouses}
+              unlockedIds={unlockedFriendHouseIds}
+              friendHouseResults={friendHouseResults}
+              onOpen={onOpenFriendHouse}
+            />
           )}
         </div>
       </div>

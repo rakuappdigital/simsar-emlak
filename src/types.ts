@@ -251,7 +251,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 18;
+  version: 19;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -305,6 +305,12 @@ export interface SaveGame {
   significantMemories: SignificantMemory[];
   /** "Sadakat Rozetleri" — how many times the origin's closing choice has been picked, lifetime this run. See data/origin.ts. */
   originChoiceCount: number;
+  /** "Emlah'ın Boş Sayfası" — true once the one-time self-reflection moment has fired. See data/selfReflection.ts. */
+  selfReflectionShown: boolean;
+  /** "Arkadaş Tavsiyeleri" — friend-house ids the player has scheduled/accepted. See data/friendHouses.ts. */
+  unlockedFriendHouseIds: string[];
+  /** Every resolved friend-house visit — separate from `results`, never touches week grouping (same pattern as premiumResults). */
+  friendHouseResults: HouseResult[];
   savedAt: string;
 }
 

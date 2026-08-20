@@ -3,6 +3,8 @@ import { formatTL } from "../data/economy";
 import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
 import { ENERGY_MAX, ENERGY_LOW_THRESHOLD } from "../data/energy";
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
+import { emlahMoodFor, emlahMoodLabel } from "../data/emlahMood";
+import { characterImages } from "../data/characterImages";
 import { WalletIcon, ChatIcon } from "./icons";
 import MemoryWall from "./MemoryWall";
 import type { Badge, SignificantMemory } from "../types";
@@ -81,6 +83,7 @@ export default function OfficeScene({
   // CSS only takes one `filter` value per element, so the mood tint and the
   // seasonal tint are combined into a single string here.
   const combinedFilter = `${moodFilter} ${seasonalFilter}`;
+  const emlahMood = emlahMoodFor(energy, bossMood);
 
   return (
     <div className="office-scene">
@@ -96,6 +99,13 @@ export default function OfficeScene({
             {rankTitleText}
             {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
           </span>
+        </div>
+        <div className="emlah-mood-portrait" title={`Emlah şu an ${emlahMoodLabel[emlahMood]}`}>
+          {emlahMood === "notr" ? (
+            <img className="emlah-mood-portrait-img" src={characterImages.Emlah} alt="Emlah" />
+          ) : (
+            <div className="emlah-mood-portrait-placeholder">{emlahMoodLabel[emlahMood].split(" ")[1]}</div>
+          )}
         </div>
         <div className="office-date-tag">
           <span key={currentDateLabel} className="office-date-tag-inner">
