@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DistrictPin } from "../data/istanbulMap";
 import { TOTAL_DISTRICT_COUNT } from "../data/istanbulMap";
+import istanbulMapImg from "../assets/istanbul-map.webp";
 
 interface CityMapPanelProps {
   pins: DistrictPin[];
@@ -23,10 +24,7 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
       <p className="menu-empty">
         Şehir, her satışla birlikte yavaş yavaş senin oluyor. Keşfedilen semt: {pins.length} / {TOTAL_DISTRICT_COUNT}
       </p>
-      <div className="city-map-canvas">
-        <div className="city-map-landmass city-map-landmass-west" />
-        <div className="city-map-landmass city-map-landmass-east" />
-        <div className="city-map-strait" />
+      <div className="city-map-canvas" style={{ backgroundImage: `url(${istanbulMapImg})` }}>
         {pins.map((pin) => (
           <button
             key={pin.district}

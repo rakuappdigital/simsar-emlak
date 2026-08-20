@@ -2512,40 +2512,14 @@
 .city-map-canvas {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1408 / 768;
   border: 3px solid var(--c-border-light);
   border-radius: 8px;
   overflow: hidden;
-  background: linear-gradient(180deg, #1a2b4a, #14213a);
+  background-color: #14213a;
+  background-size: cover;
+  background-position: center;
   margin-bottom: 10px;
-}
-
-.city-map-landmass {
-  position: absolute;
-  top: -10%;
-  bottom: -10%;
-  background: linear-gradient(135deg, #3a5a3a, #2c452c);
-  border-radius: 44% 40% 46% 42% / 40% 44% 42% 46%;
-}
-
-.city-map-landmass-west {
-  left: -15%;
-  width: 62%;
-}
-
-.city-map-landmass-east {
-  right: -15%;
-  width: 58%;
-}
-
-.city-map-strait {
-  position: absolute;
-  top: -5%;
-  bottom: -5%;
-  left: 47%;
-  width: 8%;
-  background: linear-gradient(180deg, #1a2b4a, #2c5a8a, #1a2b4a);
-  transform: skewX(-6deg);
 }
 
 .city-map-pin {

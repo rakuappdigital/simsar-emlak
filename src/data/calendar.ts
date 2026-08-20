@@ -80,9 +80,3 @@ export function splitDeliveryPayment(totalAmount: number, term: DeliveryTermId):
   const immediateAmount = Math.round(totalAmount * share);
   return { immediateAmount, deferredAmount: totalAmount - immediateAmount };
 }
-
-export function deliveryTermLabel(term: DeliveryTermId): string {
-  if (term === "hemen") return "Hemen (1 hafta içinde)";
-  if (term === "bir-ay") return "1 ay sonra";
-  return "3 ay sonra";
-}

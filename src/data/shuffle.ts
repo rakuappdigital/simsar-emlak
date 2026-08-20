@@ -7,10 +7,6 @@ export function shuffle<T>(items: T[]): T[] {
   return arr;
 }
 
-export function shuffledRange(n: number): number[] {
-  return shuffle(Array.from({ length: n }, (_, i) => i));
-}
-
 /**
  * Shuffles indices within each tier, then concatenates tiers in order (tier 1
  * first, tier 3 last). Guarantees cheap houses come first as a natural

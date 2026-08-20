@@ -14,7 +14,7 @@ import { ECHO_CHANCE, pickEchoLines } from "../data/echoNetwork";
 import { dominantTone, pickVoiceLine, VOICE_LINE_CHANCE } from "../data/voiceTone";
 import { LAST_MINUTE_PRESSURE_CHANCE, pickPressureChoice } from "../data/lastMinutePressure";
 import type { OriginDef } from "../data/origin";
-import type { FiratMoodDef } from "../data/rivalCharacter";
+import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
 import type { ContactedCustomer, SignificantMemory } from "../types";
@@ -405,7 +405,10 @@ export default function DialogueScene({
               </div>
             );
           }
-          const portrait = resolvePortrait(displayName, house, castAssignment) ?? characterImages[displayName];
+          const portrait =
+            (firatEncounter && displayName === "Fırat Bey" ? firatPortraits[firatEncounter.portraitKey] : undefined) ??
+            resolvePortrait(displayName, house, castAssignment) ??
+            characterImages[displayName];
           return (
             <div key={i} className={`dialogue-line speaker-${line.speaker}`}>
               {portrait ? (

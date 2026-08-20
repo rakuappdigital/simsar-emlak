@@ -23,10 +23,6 @@ export const friendCharacters: FriendCharacterDef[] = [
   { id: "duru", name: "Duru", profession: "Hemşire", houseIds: ["duru-sessiz-bahce-kati", "duru-huzurlu-manzarali-ev"] },
 ];
 
-export function friendCharacterById(id: string): FriendCharacterDef | undefined {
-  return friendCharacters.find((f) => f.id === id);
-}
-
 /** Given a house id from friendHouses.ts, which friend it's connected to (for the "🤝 Arkadaşın" tag). */
 export function friendCharacterForHouseId(houseId: string): FriendCharacterDef | undefined {
   return friendCharacters.find((f) => f.houseIds.includes(houseId));

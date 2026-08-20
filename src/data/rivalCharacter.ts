@@ -1,4 +1,7 @@
 import type { DialogueLine } from "../types";
+import firatKendindenEmin from "../assets/portraits/firat-kendinden-emin.webp";
+import firatGergin from "../assets/portraits/firat-gergin.webp";
+import firatNotr from "../assets/portraits/firat-notr.webp";
 
 /**
  * Fırat Bey — previously just a name in flavor text (weekly news, the silent
@@ -13,10 +16,15 @@ export type FiratMood = "kendinden-emin" | "gergin" | "notr";
 
 export interface FiratMoodDef {
   mood: FiratMood;
-  /** Filename key for the (not-yet-created) portrait — see the art prompt this feature ships with. */
   portraitKey: string;
   lines: DialogueLine[];
 }
+
+export const firatPortraits: Record<string, string> = {
+  "firat-kendinden-emin": firatKendindenEmin,
+  "firat-gergin": firatGergin,
+  "firat-notr": firatNotr,
+};
 
 const kendindenEminLines: DialogueLine[] = [
   { speaker: "system", name: "Fırat Bey", text: "(kapıdan başını uzatır) Emlah'ım, sen de mi bu daireye göz koydun?" },

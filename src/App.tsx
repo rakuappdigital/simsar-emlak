@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactElement, type SVGProps } from "react";
+import { useEffect, useRef, useState, lazy, Suspense, type MouseEvent, type ReactElement, type SVGProps } from "react";
 import PhoneScreen from "./components/PhoneScreen";
 import OfficeScene from "./components/OfficeScene";
 import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
 import MainMenu from "./components/MainMenu";
-import SavedGames from "./components/SavedGames";
-import SettingsScreen from "./components/SettingsScreen";
+const SavedGames = lazy(() => import("./components/SavedGames"));
+const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
-import EmlahMenu, { type EmlahTab } from "./components/EmlahMenu";
+import type { EmlahTab } from "./components/EmlahMenu";
+const EmlahMenu = lazy(() => import("./components/EmlahMenu"));
 import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward, playThinking } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
@@ -34,7 +35,8 @@ import { firatMoodFor, type FiratMoodDef } from "./data/rivalCharacter";
 import { friendHouses, friendHouseById } from "./data/friendHouses";
 import { buildContactBook } from "./data/contactBook";
 import { buildDistrictPins } from "./data/istanbulMap";
-import EndingSequence, { type EndingSlide } from "./components/EndingSequence";
+import type { EndingSlide } from "./components/EndingSequence";
+const EndingSequence = lazy(() => import("./components/EndingSequence"));
 import RadioTicker from "./components/RadioTicker";
 import { pickCityPulseLine } from "./data/cityPulse";
 import { checkSelfReflectionTrigger, selfReflectionText, type ReflectionKind } from "./data/selfReflection";
@@ -61,7 +63,7 @@ import {
   memoryReputationSuspicionNudge,
   MEMORY_REFERENCE_CHANCE,
 } from "./data/significantMemory";
-import OriginSelectScreen from "./components/OriginSelectScreen";
+const OriginSelectScreen = lazy(() => import("./components/OriginSelectScreen"));
 import { triggerHaptic } from "./data/haptics";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
@@ -115,9 +117,9 @@ import {
 import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
-import PremiumHouseScene from "./components/PremiumHouseScene";
+const PremiumHouseScene = lazy(() => import("./components/PremiumHouseScene"));
 import SaleStamp from "./components/SaleStamp";
-import SecretStatsScreen from "./components/SecretStatsScreen";
+const SecretStatsScreen = lazy(() => import("./components/SecretStatsScreen"));
 import { investmentHouses, isInvestmentUnlocked } from "./data/investmentHouses";
 import { marketNews, pickMarketNews } from "./data/marketNews";
 import { pickTipsterMessage } from "./data/tipsters";
@@ -2491,6 +2493,7 @@ function App() {
 
   return (
     <div className="game-root" onClick={handleRootClick}>
+      <Suspense fallback={null}>
       {marketVisible && (
         <header className="game-header">
           <h1>Simsar Emlak</h1>
@@ -3028,6 +3031,7 @@ function App() {
         </div>
       )}
       </div>
+      </Suspense>
     </div>
   );
 }
