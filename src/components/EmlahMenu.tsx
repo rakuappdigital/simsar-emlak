@@ -22,10 +22,14 @@ import InvestmentPanel from "./InvestmentPanel";
 import DeliveriesPanel from "./DeliveriesPanel";
 import RelationshipsPanel from "./RelationshipsPanel";
 import FriendHousesPanel from "./FriendHousesPanel";
+import RehberPanel from "./RehberPanel";
+import CityMapPanel from "./CityMapPanel";
+import type { ContactEntry } from "../data/contactBook";
+import type { DistrictPin } from "../data/istanbulMap";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon } from "./icons";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler" | "iliskiler" | "arkadaslar";
+export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler" | "iliskiler" | "arkadaslar" | "rehber" | "harita";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -73,6 +77,8 @@ interface EmlahMenuProps {
   unlockedFriendHouseIds: string[];
   friendHouseResults: HouseResult[];
   onOpenFriendHouse: (houseId: string) => void;
+  contacts: ContactEntry[];
+  districtPins: DistrictPin[];
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -85,6 +91,8 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "teslimler", icon: <CalendarIcon size={14} />, label: "Bekleyen Teslimler" },
   { id: "iliskiler", icon: <HeartIcon size={14} />, label: "İlişkiler" },
   { id: "arkadaslar", icon: <HouseIcon size={14} />, label: "Arkadaşlarım" },
+  { id: "rehber", icon: <BriefcaseIcon size={14} />, label: "Rehber" },
+  { id: "harita", icon: <CompassIcon size={14} />, label: "Şehir Haritası" },
 ];
 
 export default function EmlahMenu({
@@ -133,6 +141,8 @@ export default function EmlahMenu({
   unlockedFriendHouseIds,
   friendHouseResults,
   onOpenFriendHouse,
+  contacts,
+  districtPins,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -238,6 +248,8 @@ export default function EmlahMenu({
               onOpen={onOpenFriendHouse}
             />
           )}
+          {tab === "rehber" && <RehberPanel contacts={contacts} />}
+          {tab === "harita" && <CityMapPanel pins={districtPins} />}
         </div>
       </div>
     </div>

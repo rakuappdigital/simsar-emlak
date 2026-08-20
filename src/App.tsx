@@ -32,6 +32,11 @@ import { RIVAL_DUEL_CHANCE, RIVAL_DUEL_BONUS_RATE, pickDuelStartMessage, pickDue
 import { rivalTotalSales } from "./data/rival";
 import { firatMoodFor, type FiratMoodDef } from "./data/rivalCharacter";
 import { friendHouses, friendHouseById } from "./data/friendHouses";
+import { buildContactBook } from "./data/contactBook";
+import { buildDistrictPins } from "./data/istanbulMap";
+import EndingSequence, { type EndingSlide } from "./components/EndingSequence";
+import RadioTicker from "./components/RadioTicker";
+import { pickCityPulseLine } from "./data/cityPulse";
 import { checkSelfReflectionTrigger, selfReflectionText, type ReflectionKind } from "./data/selfReflection";
 import {
   MYSTERY_SHOPPER_CHANCE,
@@ -189,6 +194,9 @@ const originIcons: Record<OriginId, (props: SVGProps<SVGSVGElement> & { size?: n
 
 const CHITCHAT_CHANCE = 0.27;
 const FRIEND_CHANCE = 0.08;
+// Purely a background toast, never a screen — can safely roll independently
+// of every other detour system without any collision guard.
+const CITY_PULSE_CHANCE = 0.22;
 // Lowered from 0.4 and paired with hadWorkTaskThisTransition below — together
 // they cut "at least one detour before reaching the house" from ~61% to
 // ~54.5% and eliminate the ~14% chance of two detour screens stacking on
@@ -379,6 +387,10 @@ function App() {
   // persisted `selfReflectionShown` flag; the active modal itself is ephemeral.
   const [selfReflectionShown, setSelfReflectionShown] = useState(false);
   const [activeSelfReflection, setActiveSelfReflection] = useState<ReflectionKind | null>(null);
+  // Kapanış Sekansı — plays once, right before the existing "summary" stats
+  // screen. Not persisted: purely a one-shot presentation layer over data
+  // App.tsx already computes for that screen.
+  const [showEndingSequence, setShowEndingSequence] = useState(false);
   const [pendingCallbackSale, setPendingCallbackSale] = useState<{
     resultIndex: number;
     targetHouse: HouseScene;
@@ -403,6 +415,8 @@ function App() {
   const [activeFiratMood, setActiveFiratMood] = useState<FiratMoodDef | null>(null);
   const [mysteryShopperHouseId, setMysteryShopperHouseId] = useState<string | null>(null);
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
+  // Canlı Şehir Nabzı — ambient office-radio toast, not persisted. See data/cityPulse.ts.
+  const [cityPulseMsg, setCityPulseMsg] = useState<string | null>(null);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -485,6 +499,12 @@ function App() {
     const t = setTimeout(() => setSocialReaction(null), 3200);
     return () => clearTimeout(t);
   }, [socialReaction]);
+
+  useEffect(() => {
+    if (!cityPulseMsg) return;
+    const t = setTimeout(() => setCityPulseMsg(null), 6500);
+    return () => clearTimeout(t);
+  }, [cityPulseMsg]);
 
   // "Sen gerçekten çok tıklıyorsun ha" — counts every click anywhere in the
   // app, lifetime, across all playthroughs. See data/clickCounter.ts.
@@ -1082,6 +1102,7 @@ function App() {
     setUnlockedFriendHouseIds([]);
     setFriendHouseResults([]);
     setActiveFriendHouseId(null);
+    setShowEndingSequence(false);
     lastRankRef.current = null;
     enterPhone(
       0, [], [], {}, [1], order, [], cast, null, originId,
@@ -1137,6 +1158,7 @@ function App() {
     setUnlockedFriendHouseIds(savedGame.unlockedFriendHouseIds ?? []);
     setFriendHouseResults(savedGame.friendHouseResults ?? []);
     setActiveFriendHouseId(null);
+    setShowEndingSequence(false);
     lastRankRef.current = null;
     enterPhone(
       savedGame.index,
@@ -1768,6 +1790,7 @@ function App() {
       return;
     }
     if (isLastHouse) {
+      setShowEndingSequence(true);
       setStage("summary");
     } else {
       enterPhone(index + 1, results, ownedPerks, consumables, unlockedTiers);
@@ -1778,6 +1801,7 @@ function App() {
     setPendingWeekOutcome(null);
     setDailyQuestResult(null);
     if (isLastHouse) {
+      setShowEndingSequence(true);
       setStage("summary");
     } else {
       enterPhone(index + 1, results, ownedPerks, consumables, unlockedTiers);
@@ -1801,6 +1825,87 @@ function App() {
     a.href = dataUrl;
     a.download = "simsar-emlak-sonuc.png";
     a.click();
+  }
+
+  /** Builds the one-shot cinematic reel shown right before the plain summary screen — pure presentation over data already computed for that screen. */
+  function buildEndingSlides(): EndingSlide[] {
+    const slides: EndingSlide[] = [];
+    const soldCount = results.filter((r) => r.outcome === "sold").length;
+
+    slides.push({
+      icon: "🏁",
+      eyebrow: "Kariyerinin Sonu",
+      title: rankTitle(earned),
+      body: [`${soldCount} ev sattın, toplamda ${formatTL(earned)} kazandın.`],
+    });
+
+    const allResultsWithSale = [...results, ...premiumResults, ...investmentResults, ...friendHouseResults].filter(
+      (r) => r.outcome === "sold" && r.sale,
+    );
+    if (allResultsWithSale.length > 0) {
+      const best = allResultsWithSale.reduce((a, b) => ((b.sale?.commission ?? 0) > (a.sale?.commission ?? 0) ? b : a));
+      const bestHouse = [...allHouses, ...premiumHouses, ...investmentHouses, ...friendHouses].find((h) => h.id === best.houseId);
+      if (bestHouse) {
+        slides.push({
+          icon: "💰",
+          eyebrow: "En İyi Satışın",
+          title: bestHouse.title,
+          body: [`${formatTL(best.sale?.commission ?? 0)} komisyonla kariyerinin en iyi anlaşmasıydı.`],
+        });
+      }
+    }
+
+    const allResultsWithLine = [...results, ...premiumResults, ...investmentResults, ...friendHouseResults].filter((r) => r.bestLine);
+    if (allResultsWithLine.length > 0) {
+      const best = allResultsWithLine.reduce((a, b) => ((b.bestLineFun ?? 0) > (a.bestLineFun ?? 0) ? b : a));
+      slides.push({
+        icon: "💬",
+        eyebrow: "En Akılda Kalan Anın",
+        title: `"${best.bestLine}"`,
+        body: [],
+      });
+    }
+
+    if (badges.length > 0) {
+      slides.push({
+        icon: "🏅",
+        eyebrow: "Kazanılan Rozetler",
+        title: `${badges.length} rozet`,
+        body: badges.slice(0, 3).map((id) => allBadges[id]?.title ?? id),
+      });
+    }
+
+    const personality = personalitySummary(voiceTally);
+    const compass = compassVerdict(compassTally);
+    if (personality || compass) {
+      slides.push({
+        icon: "🎭",
+        eyebrow: "Karakterin",
+        title: "Emlah Kimdi?",
+        body: [personality, compass].filter((s): s is string => !!s),
+      });
+    }
+
+    const ending = computeEnding(results, earned);
+    const epilogue = originEndingLine(origin, ending.title);
+    slides.push({
+      icon: "🎬",
+      eyebrow: "Son",
+      title: ending.title,
+      body: [ending.description, epilogue].filter((s): s is string => !!s),
+    });
+
+    slides.push({
+      icon: "🚀",
+      eyebrow: "Hikaye Burada Bitmiyor",
+      title: "Simsar Emlak Gelişmeye Devam Ediyor",
+      body: [
+        "Emlah'ın hikayesi bu turla kapanmıyor — yeni semtler, yeni karakterler ve yeni mekaniklerle düzenli güncellemeler almaya devam edecek.",
+        "Bir sonraki turunda seni neyin beklediğini görmek için yakında tekrar uğra.",
+      ],
+    });
+
+    return slides;
   }
 
   function buyItem(itemId: string) {
@@ -2072,6 +2177,22 @@ function App() {
         const threadId = `tipster-${tip.from.toLowerCase().replace(/\s+/g, "-")}`;
         setInbox((prev) => logMessages(prev, threadId, tip.from, [{ from: tip.from, text: tip.text }], index + 1));
       }
+    }
+    // Canlı Şehir Nabzı — ambient office-radio toast, entirely independent
+    // of stage/detour screens (it floats over whatever's already on
+    // screen), so it never needs a hadWorkTaskThisTransition-style guard.
+    if (Math.random() < CITY_PULSE_CHANCE) {
+      const lastSold = [...results].reverse().find((r) => r.outcome === "sold" && r.sale);
+      const lastSoldHouse = lastSold ? allHouses.find((h) => h.id === lastSold.houseId) : undefined;
+      setCityPulseMsg(
+        pickCityPulseLine({
+          lastSaleAmount: lastSold?.sale?.commission,
+          lastSaleDistrict: lastSoldHouse ? districtOf(lastSoldHouse.location) : undefined,
+          soldCount: results.filter((r) => r.outcome === "sold").length,
+          rivalTotal: rivalTotalSales(weekOutcomes.length),
+          bossMoodHigh: bossMood >= 75,
+        }),
+      );
     }
     // Two more independent, silent flags for the upcoming house — neither
     // touches `stage`, and both resolve entirely within finalizeResult()
@@ -2452,6 +2573,8 @@ function App() {
 
       {showSavedToast && <div className="saved-toast">Kaydedildi ✓</div>}
 
+      <RadioTicker text={cityPulseMsg} />
+
       {socialReaction && (
         <div className="social-toast">
           <span className="social-toast-likes">❤️ {socialReaction.likes}</span>
@@ -2523,6 +2646,8 @@ function App() {
           unlockedFriendHouseIds={unlockedFriendHouseIds}
           friendHouseResults={friendHouseResults}
           onOpenFriendHouse={openFriendHouse}
+          contacts={buildContactBook(results, premiumResults, investmentResults, castAssignment)}
+          districtPins={buildDistrictPins(results, premiumResults, investmentResults, friendHouseResults)}
         />
       )}
 
@@ -2836,7 +2961,11 @@ function App() {
         />
       )}
 
-      {stage === "summary" && (
+      {stage === "summary" && showEndingSequence && (
+        <EndingSequence slides={buildEndingSlides()} onFinish={() => setShowEndingSequence(false)} />
+      )}
+
+      {stage === "summary" && !showEndingSequence && (
         <div className="result-screen">
           <p>Bugünün özeti:</p>
           {allHouses.map((h) => {

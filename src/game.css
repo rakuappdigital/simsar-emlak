@@ -2463,3 +2463,282 @@
 .career-stat-value.career-stat-negative {
   color: var(--c-danger);
 }
+
+/* Emlah'ın Rehberi */
+.rehber-search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--c-surface-dark);
+  border: 2px solid var(--c-border-light);
+  border-radius: 6px;
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+
+.rehber-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.rehber-portrait {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--c-border-light);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.rehber-portrait-placeholder {
+  background: var(--c-surface-dark);
+}
+
+.rehber-note {
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+  font-style: italic;
+  margin: 3px 0 0;
+}
+
+.rehber-bestline {
+  color: var(--c-accent);
+}
+
+/* Şehir Haritası */
+.city-map-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 3px solid var(--c-border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #1a2b4a, #14213a);
+  margin-bottom: 10px;
+}
+
+.city-map-landmass {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  background: linear-gradient(135deg, #3a5a3a, #2c452c);
+  border-radius: 44% 40% 46% 42% / 40% 44% 42% 46%;
+}
+
+.city-map-landmass-west {
+  left: -15%;
+  width: 62%;
+}
+
+.city-map-landmass-east {
+  right: -15%;
+  width: 58%;
+}
+
+.city-map-strait {
+  position: absolute;
+  top: -5%;
+  bottom: -5%;
+  left: 47%;
+  width: 8%;
+  background: linear-gradient(180deg, #1a2b4a, #2c5a8a, #1a2b4a);
+  transform: skewX(-6deg);
+}
+
+.city-map-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  animation: map-pin-drop 0.4s ease-out;
+}
+
+.city-map-pin-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 6px 1px rgba(0, 0, 0, 0.4);
+}
+
+.map-pin-sold .city-map-pin-dot {
+  background: #4caf50;
+}
+
+.map-pin-thinking .city-map-pin-dot {
+  background: #ffd166;
+}
+
+.map-pin-lost .city-map-pin-dot {
+  background: #e05555;
+}
+
+.city-map-pin-active .city-map-pin-dot {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.35);
+}
+
+@keyframes map-pin-drop {
+  from {
+    transform: translate(-50%, -140%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -100%);
+    opacity: 1;
+  }
+}
+
+.city-map-detail {
+  background: var(--c-surface-dark);
+  border: 2px solid var(--c-border-light);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.city-map-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-top: 1px solid var(--c-divider);
+  font-size: 0.76rem;
+}
+
+.city-map-detail-row:first-of-type {
+  border-top: none;
+}
+
+/* Kapanış Sekansı */
+.ending-sequence-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: radial-gradient(circle at 50% 30%, #2a2a4a, #0f0f1e 75%);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.ending-sequence-skip {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: var(--c-text-dim);
+  font-family: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 6px 10px;
+}
+
+.ending-sequence-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 420px;
+  text-align: center;
+  animation: ending-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ending-sequence-icon {
+  font-size: 2.4rem;
+}
+
+.ending-sequence-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  margin: 0;
+}
+
+.ending-sequence-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--c-text);
+  margin: 4px 0;
+}
+
+.ending-sequence-body {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--c-text-dim);
+  margin: 0;
+}
+
+@keyframes ending-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ending-sequence-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.ending-sequence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-border-light);
+}
+
+.ending-sequence-dot-active {
+  background: var(--c-accent);
+}
+
+.ending-sequence-next {
+  min-width: 140px;
+}
+
+/* Canlı Şehir Nabzı */
+.radio-ticker-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(92vw, 420px);
+  background: rgba(20, 20, 30, 0.92);
+  border: 2px solid var(--c-accent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  animation: fade-in 0.3s ease-out;
+}
+
+.radio-ticker-tag {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.radio-ticker-text {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--c-text-dim);
+}
