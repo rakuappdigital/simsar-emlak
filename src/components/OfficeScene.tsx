@@ -3,8 +3,7 @@ import { formatTL } from "../data/economy";
 import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
 import { ENERGY_MAX, ENERGY_LOW_THRESHOLD } from "../data/energy";
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
-import { emlahMoodFor, emlahMoodLabel } from "../data/emlahMood";
-import { characterImages } from "../data/characterImages";
+import { emlahMoodFor, emlahMoodLabel, emlahMoodPortrait } from "../data/emlahMood";
 import { WalletIcon, ChatIcon } from "./icons";
 import MemoryWall from "./MemoryWall";
 import type { Badge, SignificantMemory } from "../types";
@@ -101,11 +100,7 @@ export default function OfficeScene({
           </span>
         </div>
         <div className="emlah-mood-portrait" title={`Emlah şu an ${emlahMoodLabel[emlahMood]}`}>
-          {emlahMood === "notr" ? (
-            <img className="emlah-mood-portrait-img" src={characterImages.Emlah} alt="Emlah" />
-          ) : (
-            <div className="emlah-mood-portrait-placeholder">{emlahMoodLabel[emlahMood].split(" ")[1]}</div>
-          )}
+          <img className="emlah-mood-portrait-img" src={emlahMoodPortrait[emlahMood]} alt="Emlah" />
         </div>
         <div className="office-date-tag">
           <span key={currentDateLabel} className="office-date-tag-inner">

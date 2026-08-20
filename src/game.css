@@ -2021,15 +2021,6 @@
   object-fit: cover;
 }
 
-.emlah-mood-portrait-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-}
-
 .office-date-tag {
   position: absolute;
   top: 6px;

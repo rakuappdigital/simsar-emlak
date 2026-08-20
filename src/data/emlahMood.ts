@@ -1,12 +1,13 @@
 import { ENERGY_LOW_THRESHOLD, ENERGY_MAX } from "./energy";
 import { BOSS_MOOD_RAISE_THRESHOLD, BOSS_MOOD_MAX } from "./bossMood";
+import emlahNotr from "../assets/portraits/emlah-notr.webp";
+import emlahYorgun from "../assets/portraits/emlah-yorgun.webp";
+import emlahGergin from "../assets/portraits/emlah-gergin.webp";
+import emlahEnerjik from "../assets/portraits/emlah-enerjik.webp";
 
 /**
  * Emlah'ın kendi portresi — 4 mood variants read straight off two numbers
- * already tracked (energy, bossMood), no new state. "notr" reuses the
- * existing emlah.webp; the other three are new art (see prompts delivered
- * to the user) referenced only as string keys until the files exist, same
- * build-safety rule as rivalCharacter.ts's Fırat portraits.
+ * already tracked (energy, bossMood), no new state.
  */
 export type EmlahMood = "yorgun" | "gergin" | "enerjik" | "notr";
 
@@ -20,11 +21,11 @@ export function emlahMoodFor(energy: number, bossMood: number): EmlahMood {
   return "notr";
 }
 
-export const emlahMoodPortraitKey: Record<EmlahMood, string> = {
-  yorgun: "emlah-yorgun",
-  gergin: "emlah-gergin",
-  enerjik: "emlah-enerjik",
-  notr: "emlah-notr",
+export const emlahMoodPortrait: Record<EmlahMood, string> = {
+  yorgun: emlahYorgun,
+  gergin: emlahGergin,
+  enerjik: emlahEnerjik,
+  notr: emlahNotr,
 };
 
 export const emlahMoodLabel: Record<EmlahMood, string> = {
