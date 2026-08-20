@@ -8,9 +8,9 @@
  */
 export const BATTERY_MAX = 100;
 export const BATTERY_LOW_THRESHOLD = 20;
-const BATTERY_DRAIN_CHANCE = 0.4;
-const BATTERY_DRAIN_MIN = 8;
-const BATTERY_DRAIN_MAX = 20;
+const BATTERY_DRAIN_CHANCE = 0.75;
+const BATTERY_DRAIN_MIN = 5;
+const BATTERY_DRAIN_MAX = 14;
 
 export function maybeDrainBattery(current: number): number {
   if (Math.random() > BATTERY_DRAIN_CHANCE) return current;

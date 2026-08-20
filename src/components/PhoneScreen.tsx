@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { PhoneMessage } from "../types";
 import { SignalIcon, BatteryIcon, BellIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
 import { playMessage } from "../data/sound";
+import { pickPhoneNotificationText } from "../data/phoneNotifications";
 
 interface PhoneScreenProps {
   messages: PhoneMessage[];
@@ -16,12 +17,16 @@ interface PhoneScreenProps {
   statusTime?: string;
 }
 
-const funnyBanner = [
-  "🏦 XBank: Ekstreniz hazır, bakmasanız da olur 💳",
-  "🔋 Pil %8 kaldı — şarj cihazını unuttun yine",
-  "📸 Anne: Bu ne kılık böyle, düzgün giyin",
-  "📢 Kirve İnşaat: Havuzlu villa, peşinatsız, hemen ara!",
-];
+/** "HH:MM" + minutesToAdd, wrapping within a day — used to derive per-bubble timestamps from the real in-game clock instead of a hardcoded string. */
+function addMinutes(time: string, minutesToAdd: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = (h * 60 + m + minutesToAdd + 24 * 60) % (24 * 60);
+  const hh = Math.floor(total / 60)
+    .toString()
+    .padStart(2, "0");
+  const mm = (total % 60).toString().padStart(2, "0");
+  return `${hh}:${mm}`;
+}
 
 export default function PhoneScreen({
   messages,
@@ -36,7 +41,7 @@ export default function PhoneScreen({
   statusTime = "14:47",
 }: PhoneScreenProps) {
   const [visibleCount, setVisibleCount] = useState(0);
-  const [banner] = useState(() => funnyBanner[Math.floor(Math.random() * funnyBanner.length)]);
+  const [banner] = useState(() => pickPhoneNotificationText());
   const [showBanner, setShowBanner] = useState(true);
 
   // Deliberately no reset-on-`messages`-change here: when the same
@@ -121,7 +126,7 @@ export default function PhoneScreen({
           {messages.slice(0, visibleCount).map((m, i) => (
             <div className={`wa-bubble ${m.from === "Emlah" ? "outgoing" : "incoming"}`} key={i}>
               {m.text}
-              <span className="wa-time">14:4{Math.min(9, i)}</span>
+              <span className="wa-time">{addMinutes(statusTime, i)}</span>
             </div>
           ))}
           {thought && visibleCount > messages.length && (

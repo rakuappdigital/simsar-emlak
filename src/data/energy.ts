@@ -13,6 +13,8 @@ export const ENERGY_MAX = 100;
 /** Tuned so ~3 houses in a row without a refill pushes you into the low zone (matches "2-3 ev satamayacak şekilde"). */
 export const ENERGY_DEPLETION_PER_HOUSE = 35;
 export const ENERGY_LOW_THRESHOLD = 30;
+/** Below this, Emlah can't take on today's job at all — he has to take an Enerji Molası first. See data/energyBreak.ts. */
+export const ENERGY_WORK_MIN_THRESHOLD = 20;
 export const ENERGY_LOW_SUSPICION_MULTIPLIER = 1.2;
 /** A little energy comes back naturally each week, so the drink shop is a boost, not the only way forward. */
 export const WEEKLY_ENERGY_REGEN = 25;

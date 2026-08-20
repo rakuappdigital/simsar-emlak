@@ -74,7 +74,16 @@ import {
   renovationPriceBoost,
   RENOVATION_GAP_TOUGHNESS,
 } from "./data/renovation";
-import { ENERGY_MAX, ENERGY_DEPLETION_PER_HOUSE, ENERGY_LOW_THRESHOLD, ENERGY_LOW_SUSPICION_MULTIPLIER, WEEKLY_ENERGY_REGEN } from "./data/energy";
+import {
+  ENERGY_MAX,
+  ENERGY_DEPLETION_PER_HOUSE,
+  ENERGY_LOW_THRESHOLD,
+  ENERGY_LOW_SUSPICION_MULTIPLIER,
+  WEEKLY_ENERGY_REGEN,
+  ENERGY_WORK_MIN_THRESHOLD,
+} from "./data/energy";
+import { energyBreakActivities } from "./data/energyBreak";
+const EnergyBreakScreen = lazy(() => import("./components/EnergyBreakScreen"));
 import {
   type DeliveryTermId,
   gameDateForIndex,
@@ -419,6 +428,8 @@ function App() {
   const [socialReaction, setSocialReaction] = useState<SocialReaction | null>(null);
   // Canlı Şehir Nabzı — ambient office-radio toast, not persisted. See data/cityPulse.ts.
   const [cityPulseMsg, setCityPulseMsg] = useState<string | null>(null);
+  // Enerji Molası — blocks "Bugünün İşini Al" while energy is critically low. Not persisted, purely a gate on the existing energy state.
+  const [showEnergyBreak, setShowEnergyBreak] = useState(false);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -1910,6 +1921,20 @@ function App() {
     return slides;
   }
 
+  function handleEnergyBreakChoice(activityId: string) {
+    const activity = energyBreakActivities.find((a) => a.id === activityId);
+    if (!activity) return;
+    const newEnergy = Math.min(ENERGY_MAX, energy + activity.energyGain);
+    setEnergy(newEnergy);
+    setShowEnergyBreak(false);
+    persist(
+      results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
+      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
+      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
+      activeNewsId, newEnergy,
+    );
+  }
+
   function buyItem(itemId: string) {
     const item = perks.find((p) => p.id === itemId);
     if (!item) return;
@@ -2578,6 +2603,10 @@ function App() {
 
       <RadioTicker text={cityPulseMsg} />
 
+      {showEnergyBreak && (
+        <EnergyBreakScreen energy={energy} onChoose={handleEnergyBreakChoice} onClose={() => setShowEnergyBreak(false)} />
+      )}
+
       {socialReaction && (
         <div className="social-toast">
           <span className="social-toast-likes">❤️ {socialReaction.likes}</span>
@@ -2779,6 +2808,10 @@ function App() {
           seasonalFilter={seasonalFilterFragment(gameDateForIndex(index))}
           prestigeTitle={prestigeTitleThisRun}
           onGetJob={() => {
+            if (energy < ENERGY_WORK_MIN_THRESHOLD) {
+              setShowEnergyBreak(true);
+              return;
+            }
             setShowPhoneOverlay(true);
             drainPhoneBattery();
           }}
