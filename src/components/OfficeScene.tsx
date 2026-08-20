@@ -15,6 +15,8 @@ interface OfficeSceneProps {
   energy: number;
   bossMood: number;
   currentDateLabel: string;
+  /** Takvime Bağlı Mevsimsel Ton — a CSS filter fragment from data/seasonalTint.ts, combined with the mood filter below. */
+  seasonalFilter: string;
   prestigeTitle?: string | null;
   onGetJob: () => void;
   onOpenMessages: () => void;
@@ -42,6 +44,7 @@ export default function OfficeScene({
   energy,
   bossMood,
   currentDateLabel,
+  seasonalFilter,
   prestigeTitle,
   onGetJob,
   onOpenMessages,
@@ -75,15 +78,18 @@ export default function OfficeScene({
   // no discrete "low/high" jump.
   const moodT = Math.max(0, Math.min(1, bossMood / 100));
   const moodFilter = `brightness(${(0.72 + moodT * 0.43).toFixed(2)}) saturate(${(0.6 + moodT * 0.6).toFixed(2)}) hue-rotate(${(-8 + moodT * 8).toFixed(1)}deg)`;
+  // CSS only takes one `filter` value per element, so the mood tint and the
+  // seasonal tint are combined into a single string here.
+  const combinedFilter = `${moodFilter} ${seasonalFilter}`;
 
   return (
     <div className="office-scene">
       <div className="office-stage">
         <div
           className={`pixel-bg office-bg scene-bg-enter ${image ? "" : `office-bg-tier-${tier}`}`}
-          style={{ filter: moodFilter }}
+          style={{ filter: combinedFilter }}
         />
-        {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})`, filter: moodFilter }} />}
+        {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})`, filter: combinedFilter }} />}
         <div className="office-title" onClick={onTitleTap}>
           <span>Emlah'ın Ofisi</span>
           <span className="office-rank-tag">
@@ -91,7 +97,11 @@ export default function OfficeScene({
             {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
           </span>
         </div>
-        <div className="office-date-tag">{currentDateLabel}</div>
+        <div className="office-date-tag">
+          <span key={currentDateLabel} className="office-date-tag-inner">
+            {currentDateLabel}
+          </span>
+        </div>
         <MemoryWall badges={badges} allBadges={allBadges} significantMemories={significantMemories} />
       </div>
 

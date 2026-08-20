@@ -50,6 +50,27 @@ export function pickEligibleMemory(store: SignificantMemory[], currentIndex: num
   return eligible.reduce((oldest, m) => (m.recordedAtIndex < oldest.recordedAtIndex ? m : oldest));
 }
 
+/** Once a memory has been referenced, remove it — otherwise the same
+ *  (still-oldest) memory would just keep getting picked again forever. */
+export function consumeMemory(store: SignificantMemory[], memoryId: string): SignificantMemory[] {
+  return store.filter((m) => m.id !== memoryId);
+}
+
+/**
+ * "Reputation precedes you" — a small, deliberately modest starting-suspicion
+ * nudge applied to the CURRENT house the moment a memory gets referenced.
+ * kurnaz-satis makes new customers a little warier; durust-satis earns a
+ * little starting trust. buyuk-kayip is left as pure flavor (a lost sale
+ * elsewhere doesn't obviously map to how much a new customer trusts you).
+ * Small relative to fatigue's own per-house swing (goals.ts), never enough
+ * to swing an outcome on its own.
+ */
+export function memoryReputationSuspicionNudge(kind: MemoryKind): number {
+  if (kind === "kurnaz-satis") return 10;
+  if (kind === "durust-satis") return -6;
+  return 0;
+}
+
 const referenceLines: Record<MemoryKind, string[]> = {
   "kurnaz-satis": [
     "Bir arkadaşım anlattı, \"{ev}\" için epey kurnaz bir yöntem kullanmışsınız.",

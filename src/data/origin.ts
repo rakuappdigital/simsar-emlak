@@ -87,3 +87,45 @@ export const origins: OriginDef[] = [
 export function originById(id: OriginId | null | undefined): OriginDef | undefined {
   return origins.find((o) => o.id === id);
 }
+
+/**
+ * A one-line origin-flavored epilogue appended to whichever of the 5
+ * endings.ts endings was reached — never changes WHICH ending is picked
+ * (that logic in endings.ts is untouched), just colors it. "Yarım Kalan
+ * Hikaye" (an unstarted run) has no origin epilogue on purpose.
+ */
+const endingEpilogues: Record<OriginId, Record<string, string>> = {
+  ogretmen: {
+    "Kendi Ofisini Açtı": "Sınıfta öğrettiği sabrı, şimdi kendi ofisinde çalışanlarına öğretiyor.",
+    "Az Kazandı Ama Huzurlu": "Zengin olmadı ama hâlâ bir öğretmen gibi, iyi bir iş çıkardığını biliyor.",
+    "Muzaffer Bey'in Ortağı Oldu": "Eski öğrencileri bu haberi duysa şaşırırdı — ama bu iş başka kurallarla işliyor.",
+    "Kovuldu": "Belki sınıfa dönmenin vakti gelmiştir, orada daha iyiydi.",
+    "Sektörde Sağlam Bir İsim Oldu": "Öğretmenlik günlerinden kalma dengeyi, bu işte de kurmayı başardı.",
+  },
+  "emlakci-ailesi": {
+    "Kendi Ofisini Açtı": "Ailesinin adını taşıyan bir ofis kurdu — büyükbabası gururlanırdı.",
+    "Az Kazandı Ama Huzurlu": "Aile mesleğinde büyük para her zaman gelmez, ama isim temiz kaldı.",
+    "Muzaffer Bey'in Ortağı Oldu": "Ailesinin öğrettiği kurnazlık, sonunda işe yaradı.",
+    "Kovuldu": "Ailesinin mesleğinde bile başarısız oldu — bu ağır bir yüktü.",
+    "Sektörde Sağlam Bir İsim Oldu": "Ailesinin bıraktığı mirası, kendi tarzıyla sürdürdü.",
+  },
+  girisimci: {
+    "Kendi Ofisini Açtı": "Bir kez battı, bu kez kazandı — ikinci şansını sonuna kadar kullandı.",
+    "Az Kazandı Ama Huzurlu": "Zengin olamadı ama bu kez en azından batmadı, bu bile bir zaferdi.",
+    "Muzaffer Bey'in Ortağı Oldu": "Eski girişimci içgüdüleri, sonunda ona bir ortaklık kazandırdı.",
+    "Kovuldu": "İkinci iflasını yaşadı — bu sefer telafisi daha zor olacak.",
+    "Sektörde Sağlam Bir İsim Oldu": "Battığı işin dersini almış, bu kez daha dengeli ilerledi.",
+  },
+  yurtdisi: {
+    "Kendi Ofisini Açtı": "Yurt dışında gördüğü örnekleri burada hayata geçirdi.",
+    "Az Kazandı Ama Huzurlu": "Belki yurt dışına dönmeyi düşünecek, ama burada bulduğu huzuru bırakmak istemiyor.",
+    "Muzaffer Bey'in Ortağı Oldu": "Farklı bir kültürden gelen bakış açısı, burada işine yaradı — ama hangi bedelle?",
+    "Kovuldu": "Belki bu iş, gördüğü örneklerden farklı işliyordu.",
+    "Sektörde Sağlam Bir İsim Oldu": "Getirdiği farklı bakış açısı, sektörde kalıcı bir iz bıraktı.",
+  },
+};
+
+export function originEndingLine(originId: OriginId | null, endingTitle: string): string | null {
+  if (!originId) return null;
+  return endingEpilogues[originId][endingTitle] ?? null;
+}

@@ -37,16 +37,19 @@ import {
   pickMysteryShopperReveal,
 } from "./data/mysteryShopper";
 import { EASTER_EGG_CHANCE, pickEasterEgg, type EasterEgg } from "./data/easterEggs";
+import { seasonalFilterFragment } from "./data/seasonalTint";
 import { REAL_WORLD_FLAVOR_CHANCE, pickRealWorldFlavorLine } from "./data/realWorldFlavor";
 import { recordClick, milestoneMessage } from "./data/clickCounter";
 import { printConsoleEasterEgg } from "./data/consoleEasterEgg";
 import { classifyChoiceTone, personalitySummary } from "./data/voiceTone";
 import { classifyCompassChoice, compassVerdict } from "./data/valuesCompass";
-import { origins, originById, LOYALTY_THRESHOLD } from "./data/origin";
+import { origins, originById, originEndingLine, LOYALTY_THRESHOLD } from "./data/origin";
 import {
   maybeRecordMemory,
   pushMemory,
   pickEligibleMemory,
+  consumeMemory,
+  memoryReputationSuspicionNudge,
   MEMORY_REFERENCE_CHANCE,
 } from "./data/significantMemory";
 import OriginSelectScreen from "./components/OriginSelectScreen";
@@ -104,6 +107,7 @@ import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
 import PremiumHouseScene from "./components/PremiumHouseScene";
+import SaleStamp from "./components/SaleStamp";
 import SecretStatsScreen from "./components/SecretStatsScreen";
 import { investmentHouses, isInvestmentUnlocked } from "./data/investmentHouses";
 import { marketNews, pickMarketNews } from "./data/marketNews";
@@ -1972,7 +1976,16 @@ function App() {
       }
     } else if (Math.random() < MEMORY_REFERENCE_CHANCE) {
       const memory = pickEligibleMemory(significantMemories, index);
-      if (memory) setActiveMemoryReference({ houseId: house.id, memory });
+      if (memory) {
+        setActiveMemoryReference({ houseId: house.id, memory });
+        // Consumed on use — otherwise the same (still-oldest) memory would
+        // just keep getting referenced forever instead of cycling through.
+        setSignificantMemories(consumeMemory(significantMemories, memory.id));
+        // "Reputation precedes you" — a small, one-off starting-suspicion
+        // nudge for the customer we're about to walk in on.
+        const nudge = memoryReputationSuspicionNudge(memory.kind);
+        if (nudge !== 0) setStats((s) => ({ ...s, suspicion: Math.max(0, s.suspicion + nudge) }));
+      }
     }
     // Emlah'ın Enerjisi — depletes a fixed amount per house walked into.
     setEnergy((e) => Math.max(0, e - ENERGY_DEPLETION_PER_HOUSE));
@@ -2462,6 +2475,7 @@ function App() {
           energy={energy}
           bossMood={bossMood}
           currentDateLabel={formatGameDateTime(index)}
+          seasonalFilter={seasonalFilterFragment(gameDateForIndex(index))}
           prestigeTitle={prestigeTitleThisRun}
           onGetJob={() => {
             setShowPhoneOverlay(true);
@@ -2601,12 +2615,8 @@ function App() {
 
       {stage === "result" && lastResult && (
         <div className={`result-screen ${lastResult.outcome === "sold" ? "result-sold" : ""}`}>
-          {lastResult.outcome === "sold" && (
-            <div className="confetti" aria-hidden>
-              {Array.from({ length: 14 }).map((_, i) => (
-                <span key={i} className="confetti-piece" />
-              ))}
-            </div>
+          {lastResult.outcome === "sold" && lastResult.sale && (
+            <SaleStamp discountPercent={lastResult.sale.discountPercent} />
           )}
           <p>{outcomeText[lastResult.outcome]}</p>
           {lastResult.sale && (
@@ -2681,10 +2691,12 @@ function App() {
           )}
           {(() => {
             const ending = computeEnding(results, earned);
+            const epilogue = originEndingLine(origin, ending.title);
             return (
               <div className="ending-card">
                 <p className="ending-title">{ending.title}</p>
                 <p className="ending-description">{ending.description}</p>
+                {epilogue && <p className="ending-description ending-epilogue">{epilogue}</p>}
               </div>
             );
           })()}
