@@ -102,11 +102,24 @@ export default function OfficeScene({
         <div className="emlah-mood-portrait" title={`Emlah şu an ${emlahMoodLabel[emlahMood]}`}>
           <img className="emlah-mood-portrait-img" src={emlahMoodPortrait[emlahMood]} alt="Emlah" />
         </div>
-        <div className="office-date-tag">
-          <span key={currentDateLabel} className="office-date-tag-inner">
-            {currentDateLabel}
-          </span>
-        </div>
+        {(() => {
+          const [datePart, timePart] = currentDateLabel.split(" • ");
+          const [day, month, year] = (datePart ?? currentDateLabel).split(" ");
+          return (
+            <div className="office-calendar" key={currentDateLabel} title={currentDateLabel}>
+              <div className="office-calendar-rings">
+                <span />
+                <span />
+              </div>
+              <div className="office-calendar-header">{month ? month.slice(0, 3).toLocaleUpperCase("tr-TR") : ""}</div>
+              <div className="office-calendar-day">{day}</div>
+              <div className="office-calendar-footer">
+                {year && <span className="office-calendar-year">{year}</span>}
+                {timePart && <span className="office-calendar-time">🕐 {timePart}</span>}
+              </div>
+            </div>
+          );
+        })()}
         <MemoryWall badges={badges} allBadges={allBadges} significantMemories={significantMemories} />
       </div>
 
