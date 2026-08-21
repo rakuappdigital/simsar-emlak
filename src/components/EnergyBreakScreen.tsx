@@ -1,13 +1,36 @@
+import { useEffect, useState } from "react";
 import { energyBreakActivities } from "../data/energyBreak";
+import { MINIGAME_MAX_PLAYS } from "../data/energy";
 
 interface EnergyBreakScreenProps {
   energy: number;
+  /** Already resolved against the real-time cooldown — see App.tsx's effectiveMinigamePlaysRemaining() call. */
+  playsRemaining: number;
+  /** Real wall-clock timestamp the plays next refill to MINIGAME_MAX_PLAYS, only meaningful while playsRemaining is 0. */
+  nextAvailableAt: number;
   onChoose: (activityId: string) => void;
   onClose: () => void;
 }
 
-/** Shown when energy is too low to take on today's job — a small menu of quick breaks that restore some energy before work can continue. */
-export default function EnergyBreakScreen({ energy, onChoose, onClose }: EnergyBreakScreenProps) {
+function formatCountdown(ms: number): string {
+  const totalMinutes = Math.max(0, Math.ceil(ms / 60000));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h > 0) return `${h} sa ${m} dk`;
+  return `${m} dk`;
+}
+
+/** Shown when energy is too low to take on today's job — three recovery paths: mini oyunlar (live), reklam izleme and satın alma (placeholders, wired later). */
+export default function EnergyBreakScreen({ energy, playsRemaining, nextAvailableAt, onChoose, onClose }: EnergyBreakScreenProps) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (playsRemaining > 0) return;
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, [playsRemaining]);
+
+  const locked = playsRemaining <= 0;
+
   return (
     <div className="modal-overlay">
       <div className="market-modal energy-break-modal">
@@ -20,16 +43,36 @@ export default function EnergyBreakScreen({ energy, onChoose, onClose }: EnergyB
         <p className="menu-empty">
           Emlah bugün çok yorgun (%{Math.round(energy)} enerji) — bir işe girişmeden önce biraz toparlanması lazım.
         </p>
-        <div className="energy-break-list">
-          {energyBreakActivities.map((a) => (
-            <button key={a.id} className="energy-break-card" onClick={() => onChoose(a.id)}>
-              <span className="energy-break-icon">{a.icon}</span>
-              <span className="energy-break-label">{a.label}</span>
-              <span className="energy-break-gain">+{a.energyGain} Enerji</span>
-            </button>
-          ))}
-        </div>
+
+        <p className="market-category-title">
+          🎮 Mini Oyunlar {!locked && <span className="energy-break-plays">({playsRemaining}/{MINIGAME_MAX_PLAYS} hak)</span>}
+        </p>
+        {locked ? (
+          <p className="rehber-note">Mini oyun hakların bitti — {formatCountdown(nextAvailableAt - now)} sonra yenilenecek.</p>
+        ) : (
+          <div className="energy-break-list">
+            {energyBreakActivities.map((a) => (
+              <button key={a.id} className="energy-break-card" onClick={() => onChoose(a.id)}>
+                <span className="energy-break-icon">{a.icon}</span>
+                <span className="energy-break-label">{a.label}</span>
+                <span className="energy-break-gain">+{a.energyGain} Enerji</span>
+              </button>
+            ))}
+          </div>
+        )}
         <p className="rehber-note">Yakında bu molalar gerçek mini oyunlara dönüşecek.</p>
+
+        <p className="market-category-title">Diğer Yollar</p>
+        <div className="energy-break-other-list">
+          <button className="energy-break-other-btn" disabled title="Yakında aktif olacak">
+            <span>📺 Reklam İzle</span>
+            <span className="energy-break-soon">Yakında</span>
+          </button>
+          <button className="energy-break-other-btn" disabled title="Yakında aktif olacak">
+            <span>💳 Enerji Satın Al</span>
+            <span className="energy-break-soon">Yakında</span>
+          </button>
+        </div>
       </div>
     </div>
   );

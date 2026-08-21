@@ -1,10 +1,12 @@
+import { MINIGAME_ENERGY_GAIN } from "./energy";
+
 /**
- * "Enerji Molası" — when energy drops below ENERGY_WORK_MIN_THRESHOLD,
- * Emlah can't take on today's job until he recovers a bit. These four
- * quick breaks are the placeholder activities for that recovery window;
- * later they can each become a real mini-game (their id/energyGain shape
- * is designed to survive that swap unchanged — just replace what happens
- * on selection).
+ * "Mini Oyunlar" — one of the three energy-recovery paths (see
+ * EnergyBreakScreen.tsx). Placeholder activities for now — a click is an
+ * automatic "win" since no real mini-game mechanic exists yet; later each
+ * card's onSelect can be swapped for a real skill-based mini-game without
+ * touching the surrounding cooldown/plays-remaining system, which already
+ * only cares about win/no-win.
  */
 export interface EnergyBreakActivity {
   id: string;
@@ -19,28 +21,28 @@ export const energyBreakActivities: EnergyBreakActivity[] = [
     id: "kahve",
     label: "Kahve Molası",
     icon: "☕",
-    energyGain: 18,
+    energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: "Sertçe bir kahve içti, gözleri hemen açıldı.",
   },
   {
     id: "muzik",
     label: "Müzik Dinle",
     icon: "🎧",
-    energyGain: 14,
+    energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: "Birkaç şarkı dinleyince kafası toparlandı.",
   },
   {
     id: "yuruyus",
     label: "Kısa Yürüyüş",
     icon: "🚶",
-    energyGain: 24,
+    energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: "Dışarıda birkaç tur attı, ferahladı.",
   },
   {
     id: "sekerleme",
     label: "Masada Şekerleme",
     icon: "😴",
-    energyGain: 30,
+    energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: "On dakikalık bir şekerleme her şeyi değiştirdi.",
   },
 ];

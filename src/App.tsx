@@ -81,6 +81,10 @@ import {
   ENERGY_LOW_SUSPICION_MULTIPLIER,
   WEEKLY_ENERGY_REGEN,
   ENERGY_WORK_MIN_THRESHOLD,
+  MINIGAME_MAX_PLAYS,
+  MINIGAME_COOLDOWN_MS,
+  computePassiveEnergyRegen,
+  effectiveMinigamePlaysRemaining,
 } from "./data/energy";
 import { energyBreakActivities } from "./data/energyBreak";
 const EnergyBreakScreen = lazy(() => import("./components/EnergyBreakScreen"));
@@ -430,6 +434,10 @@ function App() {
   const [cityPulseMsg, setCityPulseMsg] = useState<string | null>(null);
   // Enerji Molası — blocks "Bugünün İşini Al" while energy is critically low. Not persisted, purely a gate on the existing energy state.
   const [showEnergyBreak, setShowEnergyBreak] = useState(false);
+  // Real wall-clock energy timers — device time, not the in-game calendar. See data/energy.ts.
+  const [energyLastRegenAt, setEnergyLastRegenAt] = useState(() => Date.now());
+  const [minigameNextAvailableAt, setMinigameNextAvailableAt] = useState(() => Date.now());
+  const [minigamePlaysRemaining, setMinigamePlaysRemaining] = useState(MINIGAME_MAX_PLAYS);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -587,9 +595,12 @@ function App() {
     newSelfReflectionShown: boolean = selfReflectionShown,
     newUnlockedFriendHouseIds: string[] = unlockedFriendHouseIds,
     newFriendHouseResults: HouseResult[] = friendHouseResults,
+    newEnergyLastRegenAt: number = energyLastRegenAt,
+    newMinigameNextAvailableAt: number = minigameNextAvailableAt,
+    newMinigamePlaysRemaining: number = minigamePlaysRemaining,
   ) {
     const save: SaveGame = {
-      version: 19,
+      version: 20,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -625,6 +636,9 @@ function App() {
       selfReflectionShown: newSelfReflectionShown,
       unlockedFriendHouseIds: newUnlockedFriendHouseIds,
       friendHouseResults: newFriendHouseResults,
+      energyLastRegenAt: newEnergyLastRegenAt,
+      minigameNextAvailableAt: newMinigameNextAvailableAt,
+      minigamePlaysRemaining: newMinigamePlaysRemaining,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -784,6 +798,15 @@ function App() {
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
     loadHouseImage(nextHouse.id);
+
+    // Real-clock passive energy drip — checked on every house transition
+    // rather than a background timer, so it costs nothing while idle but
+    // still feels "always running" during actual play. See data/energy.ts.
+    const { gained: regenGained, newLastRegenAt: regenAt } = computePassiveEnergyRegen(energyLastRegenAt, Date.now());
+    if (regenGained > 0) {
+      setEnergy((e) => Math.min(ENERGY_MAX, e + regenGained));
+      setEnergyLastRegenAt(regenAt);
+    }
 
     if (nextHouse.tier > Math.max(...tiersList)) {
       setIndex(newIndex);
@@ -1103,6 +1126,9 @@ function App() {
     setActiveNewsId(null);
     setLastTipsterId(undefined);
     setEnergy(ENERGY_MAX);
+    setEnergyLastRegenAt(Date.now());
+    setMinigameNextAvailableAt(Date.now());
+    setMinigamePlaysRemaining(MINIGAME_MAX_PLAYS);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1156,7 +1182,15 @@ function App() {
     setInvestmentResults(savedGame.investmentResults ?? []);
     setContactedCustomers(savedGame.contactedCustomers ?? []);
     setActiveNewsId(savedGame.activeNewsId ?? null);
-    setEnergy(savedGame.energy ?? ENERGY_MAX);
+    // Passive energy regen accrues in real time even while the app was
+    // closed — catch it up here against the device clock, same math as
+    // the in-session check in enterPhone().
+    const savedRegenAt = savedGame.energyLastRegenAt ?? Date.now();
+    const { gained: catchUpGain, newLastRegenAt: catchUpRegenAt } = computePassiveEnergyRegen(savedRegenAt, Date.now());
+    setEnergy(Math.min(ENERGY_MAX, (savedGame.energy ?? ENERGY_MAX) + catchUpGain));
+    setEnergyLastRegenAt(catchUpRegenAt);
+    setMinigameNextAvailableAt(savedGame.minigameNextAvailableAt ?? Date.now());
+    setMinigamePlaysRemaining(savedGame.minigamePlaysRemaining ?? MINIGAME_MAX_PLAYS);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -1924,14 +1958,24 @@ function App() {
   function handleEnergyBreakChoice(activityId: string) {
     const activity = energyBreakActivities.find((a) => a.id === activityId);
     if (!activity) return;
+    const now = Date.now();
+    const playsNow = effectiveMinigamePlaysRemaining(minigamePlaysRemaining, minigameNextAvailableAt, now);
+    if (playsNow <= 0) return;
+
     const newEnergy = Math.min(ENERGY_MAX, energy + activity.energyGain);
+    const newPlaysRemaining = playsNow - 1;
+    const newNextAvailableAt = newPlaysRemaining <= 0 ? now + MINIGAME_COOLDOWN_MS : minigameNextAvailableAt;
     setEnergy(newEnergy);
+    setMinigamePlaysRemaining(newPlaysRemaining);
+    setMinigameNextAvailableAt(newNextAvailableAt);
     setShowEnergyBreak(false);
     persist(
       results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
       castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
       premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, newEnergy,
+      activeNewsId, newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin,
+      compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds,
+      friendHouseResults, energyLastRegenAt, newNextAvailableAt, newPlaysRemaining,
     );
   }
 
@@ -2604,7 +2648,13 @@ function App() {
       <RadioTicker text={cityPulseMsg} />
 
       {showEnergyBreak && (
-        <EnergyBreakScreen energy={energy} onChoose={handleEnergyBreakChoice} onClose={() => setShowEnergyBreak(false)} />
+        <EnergyBreakScreen
+          energy={energy}
+          playsRemaining={effectiveMinigamePlaysRemaining(minigamePlaysRemaining, minigameNextAvailableAt, Date.now())}
+          nextAvailableAt={minigameNextAvailableAt}
+          onChoose={handleEnergyBreakChoice}
+          onClose={() => setShowEnergyBreak(false)}
+        />
       )}
 
       {socialReaction && (

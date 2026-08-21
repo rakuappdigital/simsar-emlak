@@ -251,7 +251,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 19;
+  version: 20;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -311,6 +311,12 @@ export interface SaveGame {
   unlockedFriendHouseIds: string[];
   /** Every resolved friend-house visit — separate from `results`, never touches week grouping (same pattern as premiumResults). */
   friendHouseResults: HouseResult[];
+  /** Real wall-clock timestamp (Date.now()) the passive hourly energy drip last accounted for. See data/energy.ts. */
+  energyLastRegenAt: number;
+  /** Real wall-clock timestamp the mini-game plays-remaining next refills to MINIGAME_MAX_PLAYS. See data/energy.ts. */
+  minigameNextAvailableAt: number;
+  /** Mini-game plays left in the current window — resolve via effectiveMinigamePlaysRemaining(), not this raw value directly. */
+  minigamePlaysRemaining: number;
   savedAt: string;
 }
 
