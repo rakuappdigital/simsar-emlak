@@ -335,6 +335,59 @@ function consumeOneOfEach(consumables: Record<string, number>): Record<string, n
   return remaining;
 }
 
+interface PersistRequired {
+  results: HouseResult[];
+  weekOutcomes: WeekOutcome[];
+  badges: string[];
+  index: number;
+  ownedPerks: string[];
+  spent: number;
+}
+
+interface PersistOptional {
+  consumables: Record<string, number>;
+  unlockedTiers: number[];
+  houseOrder: number[];
+  inbox: InboxMessage[];
+  castAssignment: Record<string, string[]>;
+  dailyQuest: DailyQuestDef | null;
+  slot: number;
+  bonusEarnings: number;
+  pendingLoan: PendingLoan | null;
+  tasksCompleted: number;
+  chitchatBonuses: number;
+  premiumResults: HouseResult[];
+  pendingInvestment: PendingInvestment | null;
+  friendBonds: Record<string, number>;
+  ownedInvestmentHouses: OwnedInvestmentHouse[];
+  investmentResults: HouseResult[];
+  contactedCustomers: ContactedCustomer[];
+  activeNewsId: string | null;
+  energy: number;
+  pendingDeliveries: PendingDelivery[];
+  bossMood: number;
+  firedSeasonalEventWeeks: number[];
+  voiceTally: Record<ToneBucket, number>;
+  origin: OriginId | null;
+  compassTally: Record<CompassAxis, number>;
+  significantMemories: SignificantMemory[];
+  originChoiceCount: number;
+  selfReflectionShown: boolean;
+  unlockedFriendHouseIds: string[];
+  friendHouseResults: HouseResult[];
+  energyLastRegenAt: number;
+  minigameNextAvailableAt: number;
+  minigamePlaysRemaining: number;
+  ownedSkillIds: string[];
+  skillXP: number;
+  defeatedRivalIds: string[];
+  friendBondCounts: Record<string, number>;
+  friendBondMilestonesShown: string[];
+  flashbackShown: boolean;
+}
+
+type PersistOverrides = PersistRequired & Partial<PersistOptional>;
+
 function App() {
   const [stage, setStage] = useState<Stage>("menu");
   const [index, setIndex] = useState(0);
@@ -580,103 +633,58 @@ function App() {
   const lastResult = results[results.length - 1];
   const maxUnlockedTier = Math.max(...unlockedTiers);
 
-  function persist(
-    newResults: HouseResult[],
-    newWeekOutcomes: WeekOutcome[],
-    newBadges: string[],
-    newIndex: number,
-    newOwnedPerks: string[],
-    newSpent: number,
-    newConsumables: Record<string, number> = consumables,
-    newUnlockedTiers: number[] = unlockedTiers,
-    newHouseOrder: number[] = houseOrder,
-    newInbox: InboxMessage[] = inbox,
-    newCastAssignment: Record<string, string[]> = castAssignment,
-    newDailyQuest: DailyQuestDef | null = dailyQuest,
-    slot: number = activeSlot,
-    newBonusEarnings: number = bonusEarnings,
-    newPendingLoan: PendingLoan | null = pendingLoan,
-    newTasksCompleted: number = tasksCompleted,
-    newChitchatBonuses: number = chitchatBonuses,
-    newPremiumResults: HouseResult[] = premiumResults,
-    newPendingInvestment: PendingInvestment | null = pendingInvestment,
-    newFriendBonds: Record<string, number> = friendBonds,
-    newOwnedInvestmentHouses: OwnedInvestmentHouse[] = ownedInvestmentHouses,
-    newInvestmentResults: HouseResult[] = investmentResults,
-    newContactedCustomers: ContactedCustomer[] = contactedCustomers,
-    newActiveNewsId: string | null = activeNewsId,
-    newEnergy: number = energy,
-    newPendingDeliveries: PendingDelivery[] = pendingDeliveries,
-    newBossMood: number = bossMood,
-    newFiredSeasonalEventWeeks: number[] = firedSeasonalEventWeeks,
-    newVoiceTally: Record<ToneBucket, number> = voiceTally,
-    newOrigin: OriginId | null = origin,
-    newCompassTally: Record<CompassAxis, number> = compassTally,
-    newSignificantMemories: SignificantMemory[] = significantMemories,
-    newOriginChoiceCount: number = originChoiceCount,
-    newSelfReflectionShown: boolean = selfReflectionShown,
-    newUnlockedFriendHouseIds: string[] = unlockedFriendHouseIds,
-    newFriendHouseResults: HouseResult[] = friendHouseResults,
-    newEnergyLastRegenAt: number = energyLastRegenAt,
-    newMinigameNextAvailableAt: number = minigameNextAvailableAt,
-    newMinigamePlaysRemaining: number = minigamePlaysRemaining,
-    newOwnedSkillIds: string[] = ownedSkillIds,
-    newSkillXP: number = skillXP,
-    newDefeatedRivalIds: string[] = defeatedRivalIds,
-    newFriendBondCounts: Record<string, number> = friendBondCounts,
-    newFriendBondMilestonesShown: string[] = friendBondMilestonesShown,
-    newFlashbackShown: boolean = flashbackShown,
-  ) {
+  function persist(p: PersistOverrides) {
     const save: SaveGame = {
       version: 21,
-      index: newIndex,
-      houseOrder: newHouseOrder,
-      results: newResults,
-      weekOutcomes: newWeekOutcomes,
-      badges: newBadges,
-      ownedPerks: newOwnedPerks,
-      consumables: newConsumables,
-      unlockedTiers: newUnlockedTiers,
-      spent: newSpent,
-      inbox: newInbox,
-      castAssignment: newCastAssignment,
-      dailyQuest: newDailyQuest,
-      bonusEarnings: newBonusEarnings,
-      pendingLoan: newPendingLoan,
-      tasksCompleted: newTasksCompleted,
-      chitchatBonuses: newChitchatBonuses,
-      premiumResults: newPremiumResults,
-      pendingInvestment: newPendingInvestment,
-      friendBonds: newFriendBonds,
-      ownedInvestmentHouses: newOwnedInvestmentHouses,
-      investmentResults: newInvestmentResults,
-      contactedCustomers: newContactedCustomers,
-      activeNewsId: newActiveNewsId,
-      energy: newEnergy,
-      pendingDeliveries: newPendingDeliveries,
-      bossMood: newBossMood,
-      firedSeasonalEventWeeks: newFiredSeasonalEventWeeks,
-      voiceTally: newVoiceTally,
-      origin: newOrigin,
-      compassTally: newCompassTally,
-      significantMemories: newSignificantMemories,
-      originChoiceCount: newOriginChoiceCount,
-      selfReflectionShown: newSelfReflectionShown,
-      unlockedFriendHouseIds: newUnlockedFriendHouseIds,
-      friendHouseResults: newFriendHouseResults,
-      energyLastRegenAt: newEnergyLastRegenAt,
-      minigameNextAvailableAt: newMinigameNextAvailableAt,
-      minigamePlaysRemaining: newMinigamePlaysRemaining,
-      ownedSkillIds: newOwnedSkillIds,
-      skillXP: newSkillXP,
-      defeatedRivalIds: newDefeatedRivalIds,
-      friendBondCounts: newFriendBondCounts,
-      friendBondMilestonesShown: newFriendBondMilestonesShown,
-      flashbackShown: newFlashbackShown,
+      index: p.index,
+      houseOrder: p.houseOrder ?? houseOrder,
+      results: p.results,
+      weekOutcomes: p.weekOutcomes,
+      badges: p.badges,
+      ownedPerks: p.ownedPerks,
+      consumables: p.consumables ?? consumables,
+      unlockedTiers: p.unlockedTiers ?? unlockedTiers,
+      spent: p.spent,
+      inbox: p.inbox ?? inbox,
+      castAssignment: p.castAssignment ?? castAssignment,
+      dailyQuest: p.dailyQuest ?? dailyQuest,
+      bonusEarnings: p.bonusEarnings ?? bonusEarnings,
+      pendingLoan: p.pendingLoan ?? pendingLoan,
+      tasksCompleted: p.tasksCompleted ?? tasksCompleted,
+      chitchatBonuses: p.chitchatBonuses ?? chitchatBonuses,
+      premiumResults: p.premiumResults ?? premiumResults,
+      pendingInvestment: p.pendingInvestment ?? pendingInvestment,
+      friendBonds: p.friendBonds ?? friendBonds,
+      ownedInvestmentHouses: p.ownedInvestmentHouses ?? ownedInvestmentHouses,
+      investmentResults: p.investmentResults ?? investmentResults,
+      contactedCustomers: p.contactedCustomers ?? contactedCustomers,
+      activeNewsId: p.activeNewsId ?? activeNewsId,
+      energy: p.energy ?? energy,
+      pendingDeliveries: p.pendingDeliveries ?? pendingDeliveries,
+      bossMood: p.bossMood ?? bossMood,
+      firedSeasonalEventWeeks: p.firedSeasonalEventWeeks ?? firedSeasonalEventWeeks,
+      voiceTally: p.voiceTally ?? voiceTally,
+      origin: p.origin ?? origin,
+      compassTally: p.compassTally ?? compassTally,
+      significantMemories: p.significantMemories ?? significantMemories,
+      originChoiceCount: p.originChoiceCount ?? originChoiceCount,
+      selfReflectionShown: p.selfReflectionShown ?? selfReflectionShown,
+      unlockedFriendHouseIds: p.unlockedFriendHouseIds ?? unlockedFriendHouseIds,
+      friendHouseResults: p.friendHouseResults ?? friendHouseResults,
+      energyLastRegenAt: p.energyLastRegenAt ?? energyLastRegenAt,
+      minigameNextAvailableAt: p.minigameNextAvailableAt ?? minigameNextAvailableAt,
+      minigamePlaysRemaining: p.minigamePlaysRemaining ?? minigamePlaysRemaining,
+      ownedSkillIds: p.ownedSkillIds ?? ownedSkillIds,
+      skillXP: p.skillXP ?? skillXP,
+      defeatedRivalIds: p.defeatedRivalIds ?? defeatedRivalIds,
+      friendBondCounts: p.friendBondCounts ?? friendBondCounts,
+      friendBondMilestonesShown: p.friendBondMilestonesShown ?? friendBondMilestonesShown,
+      flashbackShown: p.flashbackShown ?? flashbackShown,
       savedAt: new Date().toISOString(),
     };
-    writeSave(save, slot);
-    setSavedGames((prev) => prev.map((s, i) => (i === slot ? save : s)));
+    const targetSlot = p.slot ?? activeSlot;
+    writeSave(save, targetSlot);
+    setSavedGames((prev) => prev.map((s, i) => (i === targetSlot ? save : s)));
     setLastSavedAt(Date.now());
   }
 
@@ -785,28 +793,7 @@ function App() {
   function handleFlirt(characterId: string, _characterName: string) {
     const newFriendBonds = { ...friendBonds, [characterId]: (friendBonds[characterId] ?? 0) + FLIRT_BOND_GAIN };
     setFriendBonds(newFriendBonds);
-    persist(
-      results,
-      weekOutcomes,
-      badges,
-      index,
-      ownedPerks,
-      spent,
-      consumables,
-      unlockedTiers,
-      houseOrder,
-      inbox,
-      castAssignment,
-      dailyQuest,
-      activeSlot,
-      bonusEarnings,
-      pendingLoan,
-      tasksCompleted,
-      chitchatBonuses,
-      premiumResults,
-      pendingInvestment,
-      newFriendBonds,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds: newFriendBonds });
   }
 
   function enterPhone(
@@ -1117,16 +1104,7 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist(
-          currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order,
-          newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
-          chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
-          contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
-          voiceTallyParam, originParam, compassTallyParam, significantMemoriesParam, originChoiceCountParam,
-          selfReflectionShownParam, unlockedFriendHouseIdsParam, friendHouseResultsParam, energyLastRegenAtParam,
-          minigameNextAvailableAtParam, minigamePlaysRemainingParam, ownedSkillIdsParam, skillXPParam,
-          defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam, flashbackShownParam,
-        );
+        persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam });
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -1134,16 +1112,7 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist(
-      currentResults, weekOutcomes, badges, newIndex, perksList, spent, remainingConsumables, tiersList, order,
-      newInbox, castAssignmentParam, currentQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted,
-      chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
-      contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
-      voiceTallyParam, originParam, compassTallyParam, significantMemoriesParam, originChoiceCountParam,
-      selfReflectionShownParam, unlockedFriendHouseIdsParam, friendHouseResultsParam, energyLastRegenAtParam,
-      minigameNextAvailableAtParam, minigamePlaysRemainingParam, ownedSkillIdsParam, skillXPParam,
-      defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam, flashbackShownParam,
-    );
+    persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam });
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -1553,53 +1522,7 @@ function App() {
     if (newInbox !== inbox) setInbox(newInbox);
     if (newBonusEarnings !== bonusEarnings) setBonusEarnings(newBonusEarnings);
 
-    persist(
-      newResults,
-      newWeekOutcomes,
-      newBadgesState,
-      index,
-      ownedPerks,
-      spent,
-      consumables,
-      unlockedTiers,
-      houseOrder,
-      newInbox,
-      castAssignment,
-      dailyQuest,
-      activeSlot,
-      newBonusEarnings,
-      pendingLoan,
-      tasksCompleted,
-      chitchatBonuses,
-      premiumResults,
-      pendingInvestment,
-      friendBonds,
-      ownedInvestmentHouses,
-      investmentResults,
-      newContactedCustomers,
-      activeNewsId,
-      newEnergy,
-      newPendingDeliveries,
-      newBossMood,
-      firedSeasonalEventWeeks,
-      voiceTally,
-      origin,
-      compassTally,
-      newSignificantMemories,
-      originChoiceCount,
-      selfReflectionShown,
-      unlockedFriendHouseIds,
-      friendHouseResults,
-      energyLastRegenAt,
-      minigameNextAvailableAt,
-      minigamePlaysRemaining,
-      ownedSkillIds,
-      newSkillXP,
-      newDefeatedRivalIds,
-      friendBondCounts,
-      friendBondMilestonesShown,
-      flashbackShown,
-    );
+    persist({ results: newResults, weekOutcomes: newWeekOutcomes, badges: newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers: newContactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries: newPendingDeliveries, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories: newSignificantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP: newSkillXP, defeatedRivalIds: newDefeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown });
     setStage("result");
   }
 
@@ -1668,35 +1591,7 @@ function App() {
     if (newBossMood !== bossMood) setBossMood(newBossMood);
     if (newInbox !== inbox) setInbox(newInbox);
 
-    persist(
-      results,
-      weekOutcomes,
-      badges,
-      index,
-      ownedPerks,
-      spent,
-      consumables,
-      unlockedTiers,
-      houseOrder,
-      newInbox,
-      castAssignment,
-      dailyQuest,
-      activeSlot,
-      bonusEarnings,
-      pendingLoan,
-      tasksCompleted,
-      chitchatBonuses,
-      newPremiumResults,
-      pendingInvestment,
-      friendBonds,
-      ownedInvestmentHouses,
-      investmentResults,
-      newContactedCustomers,
-      activeNewsId,
-      energy,
-      newPendingDeliveries,
-      newBossMood,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults: newPremiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers: newContactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood: newBossMood });
     setActivePremiumHouseId(null);
     setEmlahMenuTab("davet");
     setShowEmlahMenu(true);
@@ -1764,14 +1659,7 @@ function App() {
     if (newBossMood !== bossMood) setBossMood(newBossMood);
     if (newInbox !== inbox) setInbox(newInbox);
 
-    persist(
-      results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox,
-      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
-      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, energy, newPendingDeliveries, newBossMood, firedSeasonalEventWeeks, voiceTally, origin,
-      compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds,
-      newFriendHouseResults,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults: newFriendHouseResults });
     setActiveFriendHouseId(null);
     setEmlahMenuTab("arkadaslar");
     setShowEmlahMenu(true);
@@ -1798,29 +1686,7 @@ function App() {
     const newSpent = spent + price;
     setOwnedInvestmentHouses(newOwned);
     setSpent(newSpent);
-    persist(
-      results,
-      weekOutcomes,
-      badges,
-      index,
-      ownedPerks,
-      newSpent,
-      consumables,
-      unlockedTiers,
-      houseOrder,
-      inbox,
-      castAssignment,
-      dailyQuest,
-      activeSlot,
-      bonusEarnings,
-      pendingLoan,
-      tasksCompleted,
-      chitchatBonuses,
-      premiumResults,
-      pendingInvestment,
-      friendBonds,
-      newOwned,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses: newOwned });
   }
 
   /** One-time renovation choice per owned flip house — see renovation.ts for the cost/boost math. */
@@ -1833,29 +1699,7 @@ function App() {
     const newSpent = spent + cost;
     setOwnedInvestmentHouses(newOwned);
     setSpent(newSpent);
-    persist(
-      results,
-      weekOutcomes,
-      badges,
-      index,
-      ownedPerks,
-      newSpent,
-      consumables,
-      unlockedTiers,
-      houseOrder,
-      inbox,
-      castAssignment,
-      dailyQuest,
-      activeSlot,
-      bonusEarnings,
-      pendingLoan,
-      tasksCompleted,
-      chitchatBonuses,
-      premiumResults,
-      pendingInvestment,
-      friendBonds,
-      newOwned,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses: newOwned });
   }
 
   function openInvestmentSale(houseId: string) {
@@ -1952,34 +1796,7 @@ function App() {
     } else if (outcome === "lost") playLost();
     else playThinking();
 
-    persist(
-      results,
-      weekOutcomes,
-      newBadgesState,
-      index,
-      ownedPerks,
-      spent,
-      consumables,
-      unlockedTiers,
-      houseOrder,
-      inbox,
-      castAssignment,
-      dailyQuest,
-      activeSlot,
-      bonusEarnings,
-      pendingLoan,
-      tasksCompleted,
-      chitchatBonuses,
-      premiumResults,
-      pendingInvestment,
-      friendBonds,
-      newOwnedInvestmentHouses,
-      newInvestmentResults,
-      newContactedCustomers,
-      activeNewsId,
-      energy,
-      newPendingDeliveries,
-    );
+    persist({ results, weekOutcomes, badges: newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses: newOwnedInvestmentHouses, investmentResults: newInvestmentResults, contactedCustomers: newContactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries });
     setActiveInvestmentSaleId(null);
     setPitchTargetContact(null);
     setEmlahMenuTab("yatirim");
@@ -2124,14 +1941,7 @@ function App() {
     setMinigamePlaysRemaining(newPlaysRemaining);
     setMinigameNextAvailableAt(newNextAvailableAt);
     setShowEnergyBreak(false);
-    persist(
-      results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
-      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
-      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin,
-      compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds,
-      friendHouseResults, energyLastRegenAt, newNextAvailableAt, newPlaysRemaining,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt: newNextAvailableAt, minigamePlaysRemaining: newPlaysRemaining });
   }
 
   function unlockSkill(skillId: string) {
@@ -2141,15 +1951,7 @@ function App() {
     const newSkillXP = skillXP - skill.cost;
     setOwnedSkillIds(newOwnedSkillIds);
     setSkillXP(newSkillXP);
-    persist(
-      results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
-      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
-      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally,
-      significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults,
-      energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, newOwnedSkillIds, newSkillXP,
-      defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds: newOwnedSkillIds, skillXP: newSkillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown });
   }
 
   function buyItem(itemId: string) {
@@ -2162,33 +1964,7 @@ function App() {
       const newEnergy = Math.min(ENERGY_MAX, energy + item.energyFill);
       setSpent(newSpent);
       setEnergy(newEnergy);
-      persist(
-        results,
-        weekOutcomes,
-        badges,
-        index,
-        ownedPerks,
-        newSpent,
-        consumables,
-        unlockedTiers,
-        houseOrder,
-        inbox,
-        castAssignment,
-        dailyQuest,
-        activeSlot,
-        bonusEarnings,
-        pendingLoan,
-        tasksCompleted,
-        chitchatBonuses,
-        premiumResults,
-        pendingInvestment,
-        friendBonds,
-        ownedInvestmentHouses,
-        investmentResults,
-        contactedCustomers,
-        activeNewsId,
-        newEnergy,
-      );
+      persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy });
       return;
     }
 
@@ -2198,7 +1974,7 @@ function App() {
       const newSpent = spent + item.cost;
       setConsumables(newConsumables);
       setSpent(newSpent);
-      persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, newConsumables, unlockedTiers);
+      persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables: newConsumables, unlockedTiers });
       return;
     }
 
@@ -2221,7 +1997,7 @@ function App() {
       setUnlockedTiers(newUnlockedTiers);
     }
 
-    persist(results, weekOutcomes, badges, index, newOwned, newSpent, consumables, newUnlockedTiers);
+    persist({ results, weekOutcomes, badges, index, ownedPerks: newOwned, spent: newSpent, consumables, unlockedTiers: newUnlockedTiers });
   }
 
   function handleNegotiationChoice(choiceId: string) {
@@ -2263,7 +2039,7 @@ function App() {
     let newInbox = logMessages(inbox, targetHouse.id, "Emlah", [playerMsg], index + 1, true);
     newInbox = logMessages(newInbox, targetHouse.id, activeCallback.contactName, [confirmMsg], index + 1);
     setInbox(newInbox);
-    persist(newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
+    persist({ results: newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox });
 
     if (outcome2 === "sold") {
       setPendingCallbackSale({ resultIndex: activeCallback.resultIndex, targetHouse, projectedStats: projected });
@@ -2332,12 +2108,7 @@ function App() {
     setBossMood(newBossMood);
     if (newInbox !== inbox) setInbox(newInbox);
 
-    persist(
-      newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox,
-      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
-      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, energy, newPendingDeliveries, newBossMood,
-    );
+    persist({ results: newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood: newBossMood });
     setPendingCallbackSale(null);
     setStage("phone");
   }
@@ -2366,7 +2137,7 @@ function App() {
           ];
     const newInbox = logMessages(inbox, houseId, contactName, openingMessages, index + 1);
     setInbox(newInbox);
-    persist(updatedResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, newInbox);
+    persist({ results: updatedResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox });
 
     setActiveCallback({
       resultIndex,
@@ -2388,32 +2159,7 @@ function App() {
       if (Math.random() < NEWS_CHANCE) {
         const news = pickMarketNews(activeNewsId ?? undefined);
         setActiveNewsId(news.id);
-        persist(
-          results,
-          weekOutcomes,
-          badges,
-          index,
-          ownedPerks,
-          spent,
-          consumables,
-          unlockedTiers,
-          houseOrder,
-          inbox,
-          castAssignment,
-          dailyQuest,
-          activeSlot,
-          bonusEarnings,
-          pendingLoan,
-          tasksCompleted,
-          chitchatBonuses,
-          premiumResults,
-          pendingInvestment,
-          friendBonds,
-          ownedInvestmentHouses,
-          investmentResults,
-          contactedCustomers,
-          news.id,
-        );
+        persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId: news.id });
       }
       if (Math.random() < TIPSTER_CHANCE) {
         const tip = pickTipsterMessage(lastTipsterId);
@@ -2625,15 +2371,7 @@ function App() {
     setActiveFriendChat((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
-    persist(
-      results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox,
-      castAssignment, dailyQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses,
-      premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
-      activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally,
-      significantMemories, originChoiceCount, selfReflectionShown, newUnlockedFriendHouseIds, friendHouseResults,
-      energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds,
-      newFriendBondCounts, newFriendBondMilestonesShown, flashbackShown,
-    );
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds: newUnlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown: newFriendBondMilestonesShown, flashbackShown });
   }
 
   function handleMeetupChoice(activityId: string) {
@@ -2676,7 +2414,7 @@ function App() {
     setActiveMeetup((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
-    persist(results, weekOutcomes, badges, index, ownedPerks, newSpent, consumables, unlockedTiers, houseOrder, newInbox, castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, newFriendBonds);
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds: newFriendBonds });
   }
 
   function handleChitchatChoice(choiceId: string) {
