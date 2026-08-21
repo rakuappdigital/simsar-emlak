@@ -111,6 +111,9 @@
   z-index: 60;
   animation: saved-toast-in 0.25s ease-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* Purely informational — must never steal a tap from a choice/continue
+     button sitting underneath it near the bottom of the screen. */
+  pointer-events: none;
 }
 
 @keyframes saved-toast-in {
@@ -142,6 +145,7 @@
   animation: saved-toast-in 0.25s ease-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   max-width: 90vw;
+  pointer-events: none;
 }
 
 .social-toast-likes {
@@ -2761,6 +2765,9 @@
   padding: 8px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   animation: fade-in 0.3s ease-out;
+  /* Purely informational — must never steal a tap from a choice/continue
+     button sitting underneath it near the bottom of the screen. */
+  pointer-events: none;
 }
 
 .radio-ticker-tag {
