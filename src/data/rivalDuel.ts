@@ -11,35 +11,35 @@ export const RIVAL_DUEL_CHANCE = 0.05;
 export const RIVAL_DUEL_BONUS_RATE = 0.02;
 
 const startMessages = [
-  (title: string) => `Emlah'ım, Fırat Bey de "${title}" ile ilgileniyormuş, çabuk davran!`,
-  (title: string) => `Duyduğuma göre Fırat Bey "${title}" için de görüşme ayarlamış, aman geç kalma.`,
-  (title: string) => `Fırat Bey yine peşimizde — "${title}" konusunda ondan önce davranmalısın.`,
+  (title: string, rival: string) => `Emlah'ım, ${rival} de "${title}" ile ilgileniyormuş, çabuk davran!`,
+  (title: string, rival: string) => `Duyduğuma göre ${rival} "${title}" için de görüşme ayarlamış, aman geç kalma.`,
+  (title: string, rival: string) => `${rival} yine peşimizde — "${title}" konusunda ondan önce davranmalısın.`,
 ];
 
 const winMessages = [
-  "Fırat Bey'i bu sefer geçtin, tebrikler!",
-  "Duydun mu, Fırat Bey bu satışı kaçırdığına çok üzülmüş.",
-  "İyi iş çıkardın, Fırat Bey'e bir puan önde bitirdin bu turu.",
+  (rival: string) => `${rival}'i bu sefer geçtin, tebrikler!`,
+  (rival: string) => `Duydun mu, ${rival} bu satışı kaçırdığına çok üzülmüş.`,
+  (rival: string) => `İyi iş çıkardın, ${rival}'e bir puan önde bitirdin bu turu.`,
 ];
 
 const loseMessages = [
-  "Bu sefer Fırat Bey önden gitti, dert etme, başka fırsat çıkar.",
-  "Fırat Bey bu evi kapmış görünüyor, bir dahakine yakalarız.",
-  "Olsun, Fırat Bey de her zaman kazanmıyor zaten.",
+  (rival: string) => `Bu sefer ${rival} önden gitti, dert etme, başka fırsat çıkar.`,
+  (rival: string) => `${rival} bu evi kapmış görünüyor, bir dahakine yakalarız.`,
+  (rival: string) => `Olsun, ${rival} de her zaman kazanmıyor zaten.`,
 ];
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function pickDuelStartMessage(houseTitle: string): string {
-  return pick(startMessages)(houseTitle);
+export function pickDuelStartMessage(houseTitle: string, rivalName = "Fırat Bey"): string {
+  return pick(startMessages)(houseTitle, rivalName);
 }
 
-export function pickDuelWinMessage(): string {
-  return pick(winMessages);
+export function pickDuelWinMessage(rivalName = "Fırat Bey"): string {
+  return pick(winMessages)(rivalName);
 }
 
-export function pickDuelLoseMessage(): string {
-  return pick(loseMessages);
+export function pickDuelLoseMessage(rivalName = "Fırat Bey"): string {
+  return pick(loseMessages)(rivalName);
 }

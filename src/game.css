@@ -2617,6 +2617,19 @@
   background: #e05555;
 }
 
+.map-pin-dominated .city-map-pin-dot {
+  background: #ffd700;
+  box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.65);
+}
+
+.city-map-pin-crown {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+}
+
 .city-map-pin-active .city-map-pin-dot {
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.35);
 }
@@ -2862,4 +2875,32 @@
   border: 1px solid var(--c-accent);
   border-radius: 999px;
   padding: 2px 8px;
+}
+
+/* Şehrin Kurtları + Emlah'ın İç Sesi */
+.rival-ladder-row {
+  align-items: center;
+}
+
+.rival-ladder-title {
+  color: var(--c-text-dim);
+  font-weight: normal;
+  font-size: 0.68rem;
+}
+
+.skill-row {
+  align-items: flex-start;
+}
+
+/* Zaman Yolcusu Emlah */
+.flashback-card {
+  border-color: #8a6fd8;
+  box-shadow: 0 0 24px 4px rgba(138, 111, 216, 0.35);
+}
+
+.flashback-paragraph {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--c-text-dim);
+  margin: 6px 0;
 }

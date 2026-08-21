@@ -251,7 +251,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 20;
+  version: 21;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -317,6 +317,18 @@ export interface SaveGame {
   minigameNextAvailableAt: number;
   /** Mini-game plays left in the current window — resolve via effectiveMinigamePlaysRemaining(), not this raw value directly. */
   minigamePlaysRemaining: number;
+  /** "Emlah'ın İç Sesi" — unlocked skill node ids. See data/skillTree.ts. */
+  ownedSkillIds: string[];
+  /** Deneyim Puanı balance available to spend on the skill tree. */
+  skillXP: number;
+  /** "Şehrin Kurtları" — rival ladder ids retired so far, in order. See data/rivalLadder.ts. */
+  defeatedRivalIds: string[];
+  /** Sosyal Bağ — silent per-friend interaction counters (easter egg, no gameplay effect). See data/friendBondMilestones.ts. */
+  friendBondCounts: Record<string, number>;
+  /** Composite "friendId-milestone" keys already celebrated, so a threshold only fires once. */
+  friendBondMilestonesShown: string[];
+  /** "Zaman Yolcusu Emlah" — true once the one-time flashback easter egg has fired. See data/timeTravelerFlashback.ts. */
+  flashbackShown: boolean;
   savedAt: string;
 }
 

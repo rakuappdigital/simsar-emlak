@@ -56,8 +56,10 @@ interface DialogueSceneProps {
   onToneChoice?: (effects: ChoiceEffects) => void;
   /** "Son Dakika Baskısı" — fires only when the player actually falls for the trap choice. See data/lastMinutePressure.ts. */
   onPressureChoicePicked?: () => void;
-  /** True when Fırat Bey is also circling this exact house (see rivalDuel.ts) — purely a visible warning tag, no stat effect. */
+  /** True when a rival ladder opponent is also circling this exact house (see rivalDuel.ts) — purely a visible warning tag, no stat effect. */
   isDuel?: boolean;
+  /** Name shown in the duel tag — the current rival ladder rung. See data/rivalLadder.ts. */
+  duelRivalName?: string;
   /** Fırat Bey's face-to-face mood for this same encounter — see data/rivalCharacter.ts. Prepends a short exchange, no stat effect. */
   firatEncounter?: FiratMoodDef;
   /** Yatırım Evleri only — the owned house wasn't renovated enough for its condition (see renovation.ts). Adds a flavor exchange, no stat effect (the price penalty is applied separately in computeInvestmentSale). */
@@ -98,6 +100,7 @@ export default function DialogueScene({
   onLineChosen,
   onFlirt,
   isDuel,
+  duelRivalName,
   firatEncounter,
   conditionWarning,
   easterEgg,
@@ -376,7 +379,7 @@ export default function DialogueScene({
         {personalityHint(house.profile) && (
           <span className="personality-tag">{personalityHint(house.profile)}</span>
         )}
-        {isDuel && <span className="duel-tag">⏱️ Fırat Bey de bu evle ilgileniyor!</span>}
+        {isDuel && <span className="duel-tag">⏱️ {duelRivalName ?? "Fırat Bey"} de bu evle ilgileniyor!</span>}
         {easterEgg && nodeId === house.startNode && <span className="easter-egg-tag">{easterEgg.tag}</span>}
         <div className="scene-title">
           <span>{house.title} — {house.location}</span>

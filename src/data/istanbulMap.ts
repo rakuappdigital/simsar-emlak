@@ -82,6 +82,31 @@ export interface DistrictPin {
   lost: number;
   total: number;
   houses: { title: string; outcome: SceneOutcome; bestLine?: string }[];
+  /** True once DISTRICT_DOMINANCE_THRESHOLD houses have been sold here — see isDistrictDominated below. */
+  dominated: boolean;
+}
+
+/**
+ * "Bölge Hakimiyeti" — selling enough houses in one district gives future
+ * houses THERE a small suspicion discount, applied in enterPhone() exactly
+ * like the existing districtReputationOffset nudge (introFlavor.ts) sits
+ * alongside it — an additive nudge to starting suspicion, never touches
+ * resolveOutcome's formula. Purely derived from `results`, no new save
+ * state needed.
+ */
+export const DISTRICT_DOMINANCE_THRESHOLD = 3;
+export const DISTRICT_DOMINANCE_SUSPICION_DISCOUNT = -8;
+
+export function soldCountInDistrict(results: HouseResult[], allHousesList: HouseScene[], district: string): number {
+  return results.filter((r) => {
+    if (r.outcome !== "sold") return false;
+    const h = allHousesList.find((house) => house.id === r.houseId);
+    return h ? normalizeDistrict(districtOf(h.location)) === district : false;
+  }).length;
+}
+
+export function isDistrictDominated(results: HouseResult[], allHousesList: HouseScene[], district: string): boolean {
+  return soldCountInDistrict(results, allHousesList, district) >= DISTRICT_DOMINANCE_THRESHOLD;
 }
 
 function findHouse(houseId: string): HouseScene | undefined {
@@ -111,12 +136,16 @@ export function buildDistrictPins(
 
     let pin = byDistrict.get(district);
     if (!pin) {
-      pin = { district, x: coords.x, y: coords.y, sold: 0, thinking: 0, lost: 0, total: 0, houses: [] };
+      pin = { district, x: coords.x, y: coords.y, sold: 0, thinking: 0, lost: 0, total: 0, houses: [], dominated: false };
       byDistrict.set(district, pin);
     }
     pin[result.outcome] += 1;
     pin.total += 1;
     pin.houses.push({ title: house.title, outcome: result.outcome, bestLine: result.bestLine });
+  }
+
+  for (const pin of byDistrict.values()) {
+    pin.dominated = pin.sold >= DISTRICT_DOMINANCE_THRESHOLD;
   }
 
   return Array.from(byDistrict.values());

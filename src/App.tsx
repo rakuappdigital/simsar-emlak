@@ -34,7 +34,7 @@ import { rivalTotalSales } from "./data/rival";
 import { firatMoodFor, type FiratMoodDef } from "./data/rivalCharacter";
 import { friendHouses, friendHouseById } from "./data/friendHouses";
 import { buildContactBook } from "./data/contactBook";
-import { buildDistrictPins } from "./data/istanbulMap";
+import { buildDistrictPins, isDistrictDominated, DISTRICT_DOMINANCE_SUSPICION_DISCOUNT } from "./data/istanbulMap";
 import type { EndingSlide } from "./components/EndingSequence";
 const EndingSequence = lazy(() => import("./components/EndingSequence"));
 import RadioTicker from "./components/RadioTicker";
@@ -142,11 +142,22 @@ import {
   resolveOutcome,
   streakMultiplier,
   suspicionGainFactor,
+  skillSuspicionFactor,
   closingBiasMultiplier,
   rankBonus,
   rankTitle,
   computeFreshStats,
 } from "./data/scoring";
+import { skillTree, canUnlockSkill, xpForOutcome, startingBonusForSkills } from "./data/skillTree";
+import { activeRivalFor } from "./data/rivalLadder";
+import { FRIEND_BOND_MILESTONES, friendBondMilestoneLine } from "./data/friendBondMilestones";
+import { friendCharacterForHouseId } from "./data/friendCharacters";
+import {
+  FLASHBACK_CHANCE,
+  FLASHBACK_MIN_INDEX,
+  pickFlashbackMemory,
+  flashbackTextFor,
+} from "./data/timeTravelerFlashback";
 import { computeStreak, checkNewBadges, checkNewInvestmentBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, pickNegotiationReply, type CallbackEvent } from "./data/callbacks";
@@ -438,6 +449,17 @@ function App() {
   const [energyLastRegenAt, setEnergyLastRegenAt] = useState(() => Date.now());
   const [minigameNextAvailableAt, setMinigameNextAvailableAt] = useState(() => Date.now());
   const [minigamePlaysRemaining, setMinigamePlaysRemaining] = useState(MINIGAME_MAX_PLAYS);
+  // "Emlah'ın İç Sesi" — skill tree, paid for with a separate XP currency. See data/skillTree.ts.
+  const [ownedSkillIds, setOwnedSkillIds] = useState<string[]>([]);
+  const [skillXP, setSkillXP] = useState(0);
+  // "Şehrin Kurtları" — rival ladder, Fırat Bey is just the first rung now. See data/rivalLadder.ts.
+  const [defeatedRivalIds, setDefeatedRivalIds] = useState<string[]>([]);
+  // Sosyal Bağ — silent per-friend counters, easter egg only, no gameplay effect. See data/friendBondMilestones.ts.
+  const [friendBondCounts, setFriendBondCounts] = useState<Record<string, number>>({});
+  const [friendBondMilestonesShown, setFriendBondMilestonesShown] = useState<string[]>([]);
+  // "Zaman Yolcusu Emlah" — one-time flashback easter egg. activeFlashback itself is ephemeral. See data/timeTravelerFlashback.ts.
+  const [flashbackShown, setFlashbackShown] = useState(false);
+  const [activeFlashback, setActiveFlashback] = useState<SignificantMemory | null>(null);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -598,9 +620,15 @@ function App() {
     newEnergyLastRegenAt: number = energyLastRegenAt,
     newMinigameNextAvailableAt: number = minigameNextAvailableAt,
     newMinigamePlaysRemaining: number = minigamePlaysRemaining,
+    newOwnedSkillIds: string[] = ownedSkillIds,
+    newSkillXP: number = skillXP,
+    newDefeatedRivalIds: string[] = defeatedRivalIds,
+    newFriendBondCounts: Record<string, number> = friendBondCounts,
+    newFriendBondMilestonesShown: string[] = friendBondMilestonesShown,
+    newFlashbackShown: boolean = flashbackShown,
   ) {
     const save: SaveGame = {
-      version: 20,
+      version: 21,
       index: newIndex,
       houseOrder: newHouseOrder,
       results: newResults,
@@ -639,6 +667,12 @@ function App() {
       energyLastRegenAt: newEnergyLastRegenAt,
       minigameNextAvailableAt: newMinigameNextAvailableAt,
       minigamePlaysRemaining: newMinigamePlaysRemaining,
+      ownedSkillIds: newOwnedSkillIds,
+      skillXP: newSkillXP,
+      defeatedRivalIds: newDefeatedRivalIds,
+      friendBondCounts: newFriendBondCounts,
+      friendBondMilestonesShown: newFriendBondMilestonesShown,
+      flashbackShown: newFlashbackShown,
       savedAt: new Date().toISOString(),
     };
     writeSave(save, slot);
@@ -673,7 +707,8 @@ function App() {
 
   function applyEffects(effects: ChoiceEffects) {
     const energyFactor = energy < ENERGY_LOW_THRESHOLD ? ENERGY_LOW_SUSPICION_MULTIPLIER : 1;
-    const suspicionFactor = suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()] * energyFactor;
+    const suspicionFactor =
+      suspicionGainFactor(ownedPerks) * difficultyMultiplier[getDifficulty()] * energyFactor * skillSuspicionFactor(ownedSkillIds);
     setStats((s) => {
       const rawSuspicion = effects.suspicion ?? 0;
       const suspicionDelta = rawSuspicion > 0 ? rawSuspicion * suspicionFactor : rawSuspicion;
@@ -795,6 +830,22 @@ function App() {
     compassTallyParam: Record<CompassAxis, number> = compassTally,
     significantMemoriesParam: SignificantMemory[] = significantMemories,
     originChoiceCountParam: number = originChoiceCount,
+    // Same explicit-override reasoning as above, extended to every field
+    // added since — continueSaved() passes the freshly-loaded save's
+    // values here so the synchronous persist() inside proceedToHouseIntro
+    // can't read stale pre-restore closure state.
+    selfReflectionShownParam: boolean = selfReflectionShown,
+    unlockedFriendHouseIdsParam: string[] = unlockedFriendHouseIds,
+    friendHouseResultsParam: HouseResult[] = friendHouseResults,
+    energyLastRegenAtParam: number = energyLastRegenAt,
+    minigameNextAvailableAtParam: number = minigameNextAvailableAt,
+    minigamePlaysRemainingParam: number = minigamePlaysRemaining,
+    ownedSkillIdsParam: string[] = ownedSkillIds,
+    skillXPParam: number = skillXP,
+    defeatedRivalIdsParam: string[] = defeatedRivalIds,
+    friendBondCountsParam: Record<string, number> = friendBondCounts,
+    friendBondMilestonesShownParam: string[] = friendBondMilestonesShown,
+    flashbackShownParam: boolean = flashbackShown,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
     loadHouseImage(nextHouse.id);
@@ -861,7 +912,10 @@ function App() {
     proceedToHouseIntro(
       newIndex, currentResults, perksList, consumablesList, tiersList, order, inboxList, castAssignmentParam,
       dailyQuestParam, null, false, originParam, voiceTallyParam, compassTallyParam,
-      significantMemoriesParam, originChoiceCountParam,
+      significantMemoriesParam, originChoiceCountParam, selfReflectionShownParam, unlockedFriendHouseIdsParam,
+      friendHouseResultsParam, energyLastRegenAtParam, minigameNextAvailableAtParam, minigamePlaysRemainingParam,
+      ownedSkillIdsParam, skillXPParam, defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam,
+      flashbackShownParam,
     );
   }
 
@@ -887,6 +941,18 @@ function App() {
     compassTallyParam: Record<CompassAxis, number> = compassTally,
     significantMemoriesParam: SignificantMemory[] = significantMemories,
     originChoiceCountParam: number = originChoiceCount,
+    selfReflectionShownParam: boolean = selfReflectionShown,
+    unlockedFriendHouseIdsParam: string[] = unlockedFriendHouseIds,
+    friendHouseResultsParam: HouseResult[] = friendHouseResults,
+    energyLastRegenAtParam: number = energyLastRegenAt,
+    minigameNextAvailableAtParam: number = minigameNextAvailableAt,
+    minigamePlaysRemainingParam: number = minigamePlaysRemaining,
+    ownedSkillIdsParam: string[] = ownedSkillIds,
+    skillXPParam: number = skillXP,
+    defeatedRivalIdsParam: string[] = defeatedRivalIds,
+    friendBondCountsParam: Record<string, number> = friendBondCounts,
+    friendBondMilestonesShownParam: string[] = friendBondMilestonesShown,
+    flashbackShownParam: boolean = flashbackShown,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
@@ -973,15 +1039,39 @@ function App() {
     const positionInWeek = newIndex % HOUSES_PER_WEEK;
     let newStats = computeFreshStats(positionInWeek, perksList, consumablesList);
     const nextDistrict = districtOf(nextHouse.location);
+    // Bölge Hakimiyeti — same additive-nudge shape as districtReputationOffset right
+    // beside it; dominance itself is purely derived from `currentResults`, no new state.
+    const dominanceDiscount = isDistrictDominated(currentResults, allHouses, nextDistrict)
+      ? DISTRICT_DOMINANCE_SUSPICION_DISCOUNT
+      : 0;
     newStats = {
       ...newStats,
       suspicion: Math.max(
         0,
         newStats.suspicion +
           reputationSuspicionOffset(currentResults) +
-          districtReputationOffset(currentResults, allHouses, nextDistrict),
+          districtReputationOffset(currentResults, allHouses, nextDistrict) +
+          dominanceDiscount,
       ),
     };
+    // "Emlah'ın İç Sesi" — skill tree's flat starting-stat nudges, same shape as the prestige bonus already baked into computeFreshStats.
+    const skillBonus = startingBonusForSkills(ownedSkillIds);
+    if (skillBonus.fun > 0 || skillBonus.interest > 0) {
+      newStats = {
+        ...newStats,
+        fun: Math.min(100, newStats.fun + skillBonus.fun),
+        interest: Math.min(100, newStats.interest + skillBonus.interest),
+      };
+    }
+
+    // "Zaman Yolcusu Emlah" — rare, one-time-per-run easter egg, purely a modal shown between houses. No stats/results are touched by it.
+    if (!flashbackShown && newIndex >= FLASHBACK_MIN_INDEX && significantMemories.length > 0 && Math.random() < FLASHBACK_CHANCE) {
+      const memory = pickFlashbackMemory(significantMemories);
+      if (memory) {
+        setActiveFlashback(memory);
+        setFlashbackShown(true);
+      }
+    }
     const flavor = newIndex > 0 ? pickIntroFlavor(currentResults, allHouses, nextDistrict) : { message: null, isLucky: false };
     setIntroFlavorMsg(flavor.message);
     if (flavor.isLucky) {
@@ -1033,6 +1123,9 @@ function App() {
           chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
           contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
           voiceTallyParam, originParam, compassTallyParam, significantMemoriesParam, originChoiceCountParam,
+          selfReflectionShownParam, unlockedFriendHouseIdsParam, friendHouseResultsParam, energyLastRegenAtParam,
+          minigameNextAvailableAtParam, minigamePlaysRemainingParam, ownedSkillIdsParam, skillXPParam,
+          defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam, flashbackShownParam,
         );
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
@@ -1047,6 +1140,9 @@ function App() {
       chitchatBonuses, premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults,
       contactedCustomers, activeNewsId, energy, newPendingDeliveries, bossMood, newFiredSeasonalEventWeeks,
       voiceTallyParam, originParam, compassTallyParam, significantMemoriesParam, originChoiceCountParam,
+      selfReflectionShownParam, unlockedFriendHouseIdsParam, friendHouseResultsParam, energyLastRegenAtParam,
+      minigameNextAvailableAtParam, minigamePlaysRemainingParam, ownedSkillIdsParam, skillXPParam,
+      defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam, flashbackShownParam,
     );
     setActiveCallback(null);
     setIndex(newIndex);
@@ -1129,6 +1225,13 @@ function App() {
     setEnergyLastRegenAt(Date.now());
     setMinigameNextAvailableAt(Date.now());
     setMinigamePlaysRemaining(MINIGAME_MAX_PLAYS);
+    setOwnedSkillIds([]);
+    setSkillXP(0);
+    setDefeatedRivalIds([]);
+    setFriendBondCounts({});
+    setFriendBondMilestonesShown([]);
+    setFlashbackShown(false);
+    setActiveFlashback(null);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1146,6 +1249,7 @@ function App() {
     enterPhone(
       0, [], [], {}, [1], order, [], cast, null, originId,
       { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
+      false, [], [], Date.now(), Date.now(), MINIGAME_MAX_PLAYS, [], 0, [], {}, [], false,
     );
   }
 
@@ -1191,6 +1295,13 @@ function App() {
     setEnergyLastRegenAt(catchUpRegenAt);
     setMinigameNextAvailableAt(savedGame.minigameNextAvailableAt ?? Date.now());
     setMinigamePlaysRemaining(savedGame.minigamePlaysRemaining ?? MINIGAME_MAX_PLAYS);
+    setOwnedSkillIds(savedGame.ownedSkillIds ?? []);
+    setSkillXP(savedGame.skillXP ?? 0);
+    setDefeatedRivalIds(savedGame.defeatedRivalIds ?? []);
+    setFriendBondCounts(savedGame.friendBondCounts ?? {});
+    setFriendBondMilestonesShown(savedGame.friendBondMilestonesShown ?? []);
+    setFlashbackShown(savedGame.flashbackShown ?? false);
+    setActiveFlashback(null);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -1222,6 +1333,18 @@ function App() {
       savedGame.compassTally ?? { durustluk: 0, kurnazlik: 0 },
       savedGame.significantMemories ?? [],
       savedGame.originChoiceCount ?? 0,
+      savedGame.selfReflectionShown ?? false,
+      savedGame.unlockedFriendHouseIds ?? [],
+      savedGame.friendHouseResults ?? [],
+      catchUpRegenAt,
+      savedGame.minigameNextAvailableAt ?? Date.now(),
+      savedGame.minigamePlaysRemaining ?? MINIGAME_MAX_PLAYS,
+      savedGame.ownedSkillIds ?? [],
+      savedGame.skillXP ?? 0,
+      savedGame.defeatedRivalIds ?? [],
+      savedGame.friendBondCounts ?? {},
+      savedGame.friendBondMilestonesShown ?? [],
+      savedGame.flashbackShown ?? false,
     );
   }
 
@@ -1284,6 +1407,10 @@ function App() {
     const newResults = [...results, newResult];
     setResults(newResults);
     setBestLineThisHouse(null);
+
+    // "Emlah'ın İç Sesi" — a small, guaranteed XP trickle regardless of outcome.
+    const newSkillXP = skillXP + xpForOutcome(outcome);
+    setSkillXP(newSkillXP);
     const newContactedCustomers = addContactedCustomer(house, castAssignment, contactedCustomers);
     setContactedCustomers(newContactedCustomers);
 
@@ -1295,6 +1422,11 @@ function App() {
     if (newSignificantMemories !== significantMemories) setSignificantMemories(newSignificantMemories);
     if (activeMemoryReference?.houseId === house.id) setActiveMemoryReference(null);
 
+    // "Şehrin Kurtları" — the active ladder rival's name drives the same
+    // bonus-only duel messages Fırat Bey always used; only Fırat (ladder
+    // rung 1) also gets the richer in-dialogue mood encounter.
+    const activeRival = activeRivalFor(defeatedRivalIds);
+
     // Rakip Emlakçı Düellosu — bonus-only, never an extra penalty beyond
     // whatever outcome already happened.
     let newBonusEarnings = bonusEarnings;
@@ -1303,12 +1435,23 @@ function App() {
       if (outcome === "sold" && sale) {
         const duelBonus = Math.round(house.askingPrice * RIVAL_DUEL_BONUS_RATE);
         newBonusEarnings += duelBonus;
-        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: `${pickDuelWinMessage()} (+${formatTL(duelBonus)})` }], index + 1);
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: `${pickDuelWinMessage(activeRival.name)} (+${formatTL(duelBonus)})` }], index + 1);
       } else {
-        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDuelLoseMessage() }], index + 1);
+        newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDuelLoseMessage(activeRival.name) }], index + 1);
       }
       setActiveDuelHouseId(null);
       setActiveFiratMood(null);
+    }
+
+    // "Şehrin Kurtları" ladder advancement — lifetime sold count reaching
+    // the active rival's threshold retires them, purely a flavor message
+    // + save-state advance, never touches suspicion/interest/fun/closingBias.
+    let newDefeatedRivalIds = defeatedRivalIds;
+    const totalSoldCount = newResults.filter((r) => r.outcome === "sold").length;
+    if (totalSoldCount >= activeRival.threshold && !defeatedRivalIds.includes(activeRival.id)) {
+      newDefeatedRivalIds = [...defeatedRivalIds, activeRival.id];
+      setDefeatedRivalIds(newDefeatedRivalIds);
+      newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: activeRival.victoryLine }], index + 1);
     }
 
     // Gizli Müşteri — silent until now; reveals itself only in the reaction
@@ -1444,6 +1587,18 @@ function App() {
       compassTally,
       newSignificantMemories,
       originChoiceCount,
+      selfReflectionShown,
+      unlockedFriendHouseIds,
+      friendHouseResults,
+      energyLastRegenAt,
+      minigameNextAvailableAt,
+      minigamePlaysRemaining,
+      ownedSkillIds,
+      newSkillXP,
+      newDefeatedRivalIds,
+      friendBondCounts,
+      friendBondMilestonesShown,
+      flashbackShown,
     );
     setStage("result");
   }
@@ -1979,6 +2134,24 @@ function App() {
     );
   }
 
+  function unlockSkill(skillId: string) {
+    const skill = skillTree.find((s) => s.id === skillId);
+    if (!skill || !canUnlockSkill(skill, ownedSkillIds, skillXP)) return;
+    const newOwnedSkillIds = [...ownedSkillIds, skillId];
+    const newSkillXP = skillXP - skill.cost;
+    setOwnedSkillIds(newOwnedSkillIds);
+    setSkillXP(newSkillXP);
+    persist(
+      results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox,
+      castAssignment, dailyQuest, activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses,
+      premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
+      activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally,
+      significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults,
+      energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, newOwnedSkillIds, newSkillXP,
+      defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown,
+    );
+  }
+
   function buyItem(itemId: string) {
     const item = perks.find((p) => p.id === itemId);
     if (!item) return;
@@ -2271,8 +2444,16 @@ function App() {
     // anything below or leave a dangling state across house visits.
     if (Math.random() < RIVAL_DUEL_CHANCE) {
       setActiveDuelHouseId(house.id);
-      setActiveFiratMood(firatMoodFor(results.filter((r) => r.outcome === "sold").length, rivalTotalSales(weekOutcomes.length)));
-      const duelMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickDuelStartMessage(house.title) };
+      const activeRival = activeRivalFor(defeatedRivalIds);
+      // Only Fırat Bey (ladder rung 1) has the richer in-dialogue mood
+      // encounter — other rivals still fire the same bonus-only duel via
+      // the inbox heads-up + small tag, just without the face-to-face scene.
+      setActiveFiratMood(
+        activeRival.id === "firat"
+          ? firatMoodFor(results.filter((r) => r.outcome === "sold").length, rivalTotalSales(weekOutcomes.length))
+          : null,
+      );
+      const duelMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickDuelStartMessage(house.title, activeRival.name) };
       setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", [duelMsg], index + 1));
     } else if (Math.random() < MYSTERY_SHOPPER_CHANCE) {
       // Deliberately silent — a mystery shopper who announced themselves wouldn't be much of a mystery.
@@ -2389,6 +2570,8 @@ function App() {
     }
 
     let newUnlockedFriendHouseIds = unlockedFriendHouseIds;
+    let newFriendBondCounts = friendBondCounts;
+    let newFriendBondMilestonesShown = friendBondMilestonesShown;
     let houseTipReaction = choice.reaction;
     if (choice.houseTipAction === "accept" && choice.houseTipHouseId && !unlockedFriendHouseIds.includes(choice.houseTipHouseId)) {
       newUnlockedFriendHouseIds = [...unlockedFriendHouseIds, choice.houseTipHouseId];
@@ -2396,6 +2579,27 @@ function App() {
       const apptIndex = index + (choice.houseTipWeekOffset ?? 0) * HOUSES_PER_WEEK;
       const dateLabel = formatGameDate(gameDateForIndex(apptIndex));
       houseTipReaction = `${choice.reaction} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin.)`;
+
+      // Sosyal Bağ — silent counter, easter egg only. See data/friendBondMilestones.ts.
+      const friend = friendCharacterForHouseId(choice.houseTipHouseId);
+      if (friend) {
+        const newCount = (friendBondCounts[friend.id] ?? 0) + 1;
+        newFriendBondCounts = { ...friendBondCounts, [friend.id]: newCount };
+        setFriendBondCounts(newFriendBondCounts);
+        if (FRIEND_BOND_MILESTONES.includes(newCount)) {
+          const milestoneKey = `${friend.id}-${newCount}`;
+          if (!friendBondMilestonesShown.includes(milestoneKey)) {
+            newFriendBondMilestonesShown = [...friendBondMilestonesShown, milestoneKey];
+            setFriendBondMilestonesShown(newFriendBondMilestonesShown);
+            const line = friendBondMilestoneLine(friend.name, newCount);
+            if (line) {
+              setInbox((prev) =>
+                logMessages(prev, `friend-${friend.name.toLowerCase()}`, friend.name, [{ from: friend.name, text: line }], index + 1),
+              );
+            }
+          }
+        }
+      }
     }
 
     let newBonusEarnings = bonusEarnings;
@@ -2426,7 +2630,9 @@ function App() {
       castAssignment, dailyQuest, activeSlot, newBonusEarnings, newPendingLoan, tasksCompleted, chitchatBonuses,
       premiumResults, newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers,
       activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally,
-      significantMemories, originChoiceCount, selfReflectionShown, newUnlockedFriendHouseIds,
+      significantMemories, originChoiceCount, selfReflectionShown, newUnlockedFriendHouseIds, friendHouseResults,
+      energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds,
+      newFriendBondCounts, newFriendBondMilestonesShown, flashbackShown,
     );
   }
 
@@ -2643,6 +2849,19 @@ function App() {
         </div>
       )}
 
+      {activeFlashback && (
+        <div className="rankup-overlay" onClick={() => setActiveFlashback(null)}>
+          <div className="rankup-card self-reflection-card flashback-card">
+            <p className="rankup-label">{flashbackTextFor(activeFlashback).title}</p>
+            {flashbackTextFor(activeFlashback).paragraphs.map((p, i) => (
+              <p className="flashback-paragraph" key={i}>
+                {p}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
       {showSavedToast && <div className="saved-toast">Kaydedildi ✓</div>}
 
       <RadioTicker text={cityPulseMsg} />
@@ -2702,7 +2921,6 @@ function App() {
           allBadges={allBadges}
           tasksCompleted={tasksCompleted}
           chitchatBonuses={chitchatBonuses}
-          completedWeeks={weekOutcomes.length}
           onClose={() => setShowEmlahMenu(false)}
           premiumHouses={premiumHouses}
           unlockedPremiumIds={unlockedPremiumHouseIds(rankTitle(earned))}
@@ -2730,6 +2948,10 @@ function App() {
           onOpenFriendHouse={openFriendHouse}
           contacts={buildContactBook(results, premiumResults, investmentResults, castAssignment)}
           districtPins={buildDistrictPins(results, premiumResults, investmentResults, friendHouseResults)}
+          defeatedRivalIds={defeatedRivalIds}
+          ownedSkillIds={ownedSkillIds}
+          skillXP={skillXP}
+          onUnlockSkill={unlockSkill}
         />
       )}
 
@@ -2976,6 +3198,7 @@ function App() {
             onLineChosen={handleLineChosen}
             onFlirt={handleFlirt}
             isDuel={activeDuelHouseId === house.id}
+            duelRivalName={activeDuelHouseId === house.id ? activeRivalFor(defeatedRivalIds).name : undefined}
             firatEncounter={activeDuelHouseId === house.id ? (activeFiratMood ?? undefined) : undefined}
             easterEgg={activeEasterEgg?.houseId === house.id ? activeEasterEgg.egg : undefined}
             contactedCustomers={contactedCustomers}

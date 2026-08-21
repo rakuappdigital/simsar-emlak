@@ -1,7 +1,7 @@
 import type { Badge, HouseResult } from "../types";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
-import { rivalTotalSales } from "../data/rival";
+import { rivalLadder, activeRivalFor } from "../data/rivalLadder";
 import { MedalIcon } from "./icons";
 
 interface CareerPanelProps {
@@ -15,8 +15,8 @@ interface CareerPanelProps {
   results: HouseResult[];
   tasksCompleted: number;
   chitchatBonuses: number;
-  completedWeeks: number;
   investmentResults: HouseResult[];
+  defeatedRivalIds: string[];
 }
 
 export default function CareerPanel({
@@ -30,12 +30,13 @@ export default function CareerPanel({
   results,
   tasksCompleted,
   chitchatBonuses,
-  completedWeeks,
   investmentResults,
+  defeatedRivalIds,
 }: CareerPanelProps) {
   const prestige = computePrestige(ownedPerks);
   const soldResults = results.filter((r) => r.outcome === "sold" && r.sale);
-  const rivalSales = rivalTotalSales(completedWeeks);
+  const soldCount = soldResults.length;
+  const activeRival = activeRivalFor(defeatedRivalIds);
   const investmentNet = investmentResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
   const bestSale = soldResults.reduce(
     (max, r) => (r.sale!.finalPrice > max ? r.sale!.finalPrice : max),
@@ -90,12 +91,22 @@ export default function CareerPanel({
         <span className="career-stat-label">Yakalanan Sohbet Bonusu</span>
         <span className="career-stat-value">{chitchatBonuses}</span>
       </div>
-      {completedWeeks > 0 && (
-        <div className="career-stat-row">
-          <span className="career-stat-label">Fırat Bey (rakip)</span>
-          <span className="career-stat-value">{rivalSales} satış</span>
-        </div>
-      )}
+      <p className="market-category-title">Şehrin Kurtları</p>
+      {rivalLadder.map((rival, i) => {
+        const defeated = defeatedRivalIds.includes(rival.id);
+        const isActive = !defeated && activeRival.id === rival.id;
+        return (
+          <div className="career-stat-row rival-ladder-row" key={rival.id}>
+            <span className="career-stat-label">
+              {i + 1}. {rival.name} <span className="rival-ladder-title">— {rival.title}</span>
+            </span>
+            <span className="career-stat-value">
+              {defeated ? "✅ Geçildi" : isActive ? `${soldCount}/${rival.threshold}` : "🔒"}
+            </span>
+          </div>
+        );
+      })}
+
       {investmentResults.length > 0 && (
         <div className="career-stat-row">
           <span className="career-stat-label">Yatırımlardan Net Kazanç</span>

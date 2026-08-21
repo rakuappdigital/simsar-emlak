@@ -93,6 +93,18 @@ export function suspicionGainFactor(owned: string[]): number {
   return factor;
 }
 
+/** "Emlah'ın İç Sesi" skill tree — owned suspicionFactor skills stack multiplicatively, same shape as suspicionGainFactor above. See data/skillTree.ts. */
+export function skillSuspicionFactor(ownedSkillIds: string[]): number {
+  if (ownedSkillIds.includes("sakin-kafa-1") || ownedSkillIds.includes("sakin-kafa-2") || ownedSkillIds.includes("sakin-kafa-3")) {
+    let factor = 1;
+    if (ownedSkillIds.includes("sakin-kafa-1")) factor *= 0.95;
+    if (ownedSkillIds.includes("sakin-kafa-2")) factor *= 0.93;
+    if (ownedSkillIds.includes("sakin-kafa-3")) factor *= 0.9;
+    return factor;
+  }
+  return 1;
+}
+
 /** Negotiation certifications amplify how much a closing choice's bias swings the outcome. */
 export function closingBiasMultiplier(owned: string[]): number {
   if (owned.includes("muzakere-3")) return 1.3;

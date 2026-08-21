@@ -24,12 +24,25 @@ import RelationshipsPanel from "./RelationshipsPanel";
 import FriendHousesPanel from "./FriendHousesPanel";
 import RehberPanel from "./RehberPanel";
 import CityMapPanel from "./CityMapPanel";
+import SkillTreePanel from "./SkillTreePanel";
 import type { ContactEntry } from "../data/contactBook";
 import type { DistrictPin } from "../data/istanbulMap";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon } from "./icons";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon } from "./icons";
 
-export type EmlahTab = "market" | "mesajlar" | "portfoy" | "kariyer" | "davet" | "yatirim" | "teslimler" | "iliskiler" | "arkadaslar" | "rehber" | "harita";
+export type EmlahTab =
+  | "market"
+  | "mesajlar"
+  | "portfoy"
+  | "kariyer"
+  | "davet"
+  | "yatirim"
+  | "teslimler"
+  | "iliskiler"
+  | "arkadaslar"
+  | "rehber"
+  | "harita"
+  | "beceri";
 
 interface EmlahMenuProps {
   initialTab: EmlahTab;
@@ -51,7 +64,6 @@ interface EmlahMenuProps {
   allBadges: Record<string, Badge>;
   tasksCompleted: number;
   chitchatBonuses: number;
-  completedWeeks: number;
   onClose: () => void;
   premiumHouses: HouseScene[];
   unlockedPremiumIds: string[];
@@ -79,6 +91,10 @@ interface EmlahMenuProps {
   onOpenFriendHouse: (houseId: string) => void;
   contacts: ContactEntry[];
   districtPins: DistrictPin[];
+  defeatedRivalIds: string[];
+  ownedSkillIds: string[];
+  skillXP: number;
+  onUnlockSkill: (skillId: string) => void;
 }
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
@@ -93,6 +109,7 @@ const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "arkadaslar", icon: <HouseIcon size={14} />, label: "Arkadaşlarım" },
   { id: "rehber", icon: <BriefcaseIcon size={14} />, label: "Rehber" },
   { id: "harita", icon: <CompassIcon size={14} />, label: "Şehir Haritası" },
+  { id: "beceri", icon: <ChalkboardIcon size={14} />, label: "Beceriler" },
 ];
 
 export default function EmlahMenu({
@@ -115,7 +132,6 @@ export default function EmlahMenu({
   allBadges,
   tasksCompleted,
   chitchatBonuses,
-  completedWeeks,
   onClose,
   premiumHouses,
   unlockedPremiumIds,
@@ -143,6 +159,10 @@ export default function EmlahMenu({
   onOpenFriendHouse,
   contacts,
   districtPins,
+  defeatedRivalIds,
+  ownedSkillIds,
+  skillXP,
+  onUnlockSkill,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
 
@@ -207,8 +227,8 @@ export default function EmlahMenu({
               results={results}
               tasksCompleted={tasksCompleted}
               chitchatBonuses={chitchatBonuses}
-              completedWeeks={completedWeeks}
               investmentResults={investmentResults}
+              defeatedRivalIds={defeatedRivalIds}
             />
           )}
           {tab === "davet" && (
@@ -250,6 +270,7 @@ export default function EmlahMenu({
           )}
           {tab === "rehber" && <RehberPanel contacts={contacts} />}
           {tab === "harita" && <CityMapPanel pins={districtPins} />}
+          {tab === "beceri" && <SkillTreePanel ownedSkillIds={ownedSkillIds} skillXP={skillXP} onUnlock={onUnlockSkill} />}
         </div>
       </div>
     </div>

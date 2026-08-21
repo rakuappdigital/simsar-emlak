@@ -8,6 +8,7 @@ interface CityMapPanelProps {
 }
 
 function dominantClass(pin: DistrictPin): string {
+  if (pin.dominated) return "map-pin-dominated";
   if (pin.sold >= pin.thinking && pin.sold >= pin.lost) return "map-pin-sold";
   if (pin.thinking >= pin.lost) return "map-pin-thinking";
   return "map-pin-lost";
@@ -34,13 +35,16 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
             title={pin.district}
           >
             <span className="city-map-pin-dot" />
+            {pin.dominated && <span className="city-map-pin-crown">👑</span>}
           </button>
         ))}
       </div>
 
       {selectedPin && (
         <div className="city-map-detail">
-          <p className="portfolio-row-title">{selectedPin.district}</p>
+          <p className="portfolio-row-title">
+            {selectedPin.district} {selectedPin.dominated && <span className="rival-ladder-title">👑 Hakimiyetin var</span>}
+          </p>
           <p className="portfolio-row-location">
             ✅ {selectedPin.sold} · 🤔 {selectedPin.thinking} · ❌ {selectedPin.lost}
           </p>
