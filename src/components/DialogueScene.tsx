@@ -16,6 +16,7 @@ import { LAST_MINUTE_PRESSURE_CHANCE, pickPressureChoice } from "../data/lastMin
 import type { OriginDef } from "../data/origin";
 import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
+import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
 import type { ContactedCustomer, SignificantMemory } from "../types";
 
@@ -177,6 +178,18 @@ export default function DialogueScene({
   }, [house.id]);
   const voiceDialogueLines: DialogueLine[] =
     voiceLine && nodeId === house.startNode ? [{ speaker: "thought", text: voiceLine }] : [];
+  // "Geçmişini Hatırlıyor" — same one-flavor-moment-per-intro guard as
+  // echo/voice above, plus never on the very first house (that one already
+  // has its own dedicated originIntroLines below).
+  const originRecognitionLine = useMemo(() => {
+    if (celebrity || easterEgg || echoLines || voiceLine) return null;
+    if (!origin || showOriginIntro) return null;
+    if (Math.random() >= ORIGIN_RECOGNITION_CHANCE) return null;
+    return pickOriginRecognitionLine(origin.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [house.id]);
+  const originRecognitionLines: DialogueLine[] =
+    originRecognitionLine && nodeId === house.startNode ? [{ speaker: "customer1", text: originRecognitionLine }] : [];
   // "Emlah'ın Geçmişi" — one-time, only ever on the very first house.
   const originIntroLines: DialogueLine[] =
     origin && showOriginIntro && nodeId === house.startNode ? [{ speaker: "thought", text: origin.introLine }] : [];
@@ -201,6 +214,7 @@ export default function DialogueScene({
     ...easterEggLines,
     ...echoDialogueLines,
     ...voiceDialogueLines,
+    ...originRecognitionLines,
     ...memoryLines,
     ...firatLines,
   ];

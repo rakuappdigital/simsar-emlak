@@ -158,6 +158,20 @@ import {
   pickFlashbackMemory,
   flashbackTextFor,
 } from "./data/timeTravelerFlashback";
+import {
+  SECOND_CHANCE_CHANCE,
+  SECOND_CHANCE_MIN_INDEX,
+  pickSecondChanceCandidateIndex,
+  pickSecondChanceLine,
+} from "./data/secondChanceEvent";
+import {
+  POST_SALE_CALL_MIN_INDEX,
+  pickPostSaleCallCandidateIndex,
+  pickPostSaleCall,
+  type PostSaleCallDef,
+} from "./data/postSaleCall";
+import { suspiciousDetailConfessions } from "./data/suspiciousDetails";
+import PostSaleCallScreen from "./components/PostSaleCallScreen";
 import { computeStreak, checkNewBadges, checkNewInvestmentBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, pickNegotiationReply, type CallbackEvent } from "./data/callbacks";
@@ -203,6 +217,7 @@ type Stage =
   | "chitchat"
   | "task"
   | "quickcall"
+  | "postsalecall"
   | "house"
   | "contract"
   | "locked"
@@ -384,6 +399,7 @@ interface PersistOptional {
   friendBondCounts: Record<string, number>;
   friendBondMilestonesShown: string[];
   flashbackShown: boolean;
+  secondChanceOffered: boolean;
 }
 
 type PersistOverrides = PersistRequired & Partial<PersistOptional>;
@@ -513,6 +529,11 @@ function App() {
   // "Zaman Yolcusu Emlah" — one-time flashback easter egg. activeFlashback itself is ephemeral. See data/timeTravelerFlashback.ts.
   const [flashbackShown, setFlashbackShown] = useState(false);
   const [activeFlashback, setActiveFlashback] = useState<SignificantMemory | null>(null);
+  // "İkinci Şans" — one-time surprise lost-customer callback. See data/secondChanceEvent.ts.
+  const [secondChanceOffered, setSecondChanceOffered] = useState(false);
+  // "Satış Sonrası Arama" — no persisted state, same "avoid immediate repeat" pattern as lastTaskId. See data/postSaleCall.ts.
+  const [activePostSaleCall, setActivePostSaleCall] = useState<{ def: PostSaleCallDef; contactName: string; houseId: string } | null>(null);
+  const [lastPostSaleCallId, setLastPostSaleCallId] = useState<string | undefined>(undefined);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -635,7 +656,7 @@ function App() {
 
   function persist(p: PersistOverrides) {
     const save: SaveGame = {
-      version: 21,
+      version: 22,
       index: p.index,
       houseOrder: p.houseOrder ?? houseOrder,
       results: p.results,
@@ -680,6 +701,7 @@ function App() {
       friendBondCounts: p.friendBondCounts ?? friendBondCounts,
       friendBondMilestonesShown: p.friendBondMilestonesShown ?? friendBondMilestonesShown,
       flashbackShown: p.flashbackShown ?? flashbackShown,
+      secondChanceOffered: p.secondChanceOffered ?? secondChanceOffered,
       savedAt: new Date().toISOString(),
     };
     const targetSlot = p.slot ?? activeSlot;
@@ -833,6 +855,7 @@ function App() {
     friendBondCountsParam: Record<string, number> = friendBondCounts,
     friendBondMilestonesShownParam: string[] = friendBondMilestonesShown,
     flashbackShownParam: boolean = flashbackShown,
+    secondChanceOfferedParam: boolean = secondChanceOffered,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
     loadHouseImage(nextHouse.id);
@@ -868,10 +891,14 @@ function App() {
         dailyQuestParam,
       });
       // Same interruption slot/frequency as before (WORK_TASK_CHANCE unchanged) —
-      // just which of 4 mini-games fills it, for variety. Staging/Şüpheli
-      // Detay reuse WorkTaskScreen (stage "task") exactly like office
-      // chores, just with different content pools.
-      const pick = Math.floor(Math.random() * 4);
+      // just which mini-game fills it, for variety. Staging/Şüpheli Detay
+      // reuse WorkTaskScreen (stage "task") exactly like office chores,
+      // just with different content pools. "Satış Sonrası Arama" only
+      // joins the rotation when a sold house actually exists to call about.
+      const postSaleCandidateIdx =
+        newIndex >= POST_SALE_CALL_MIN_INDEX ? pickPostSaleCallCandidateIndex(currentResults) : null;
+      const pickPoolSize = postSaleCandidateIdx !== null ? 5 : 4;
+      const pick = Math.floor(Math.random() * pickPoolSize);
       if (pick === 0) {
         const task = pickWorkTask(lastTaskId);
         setLastTaskId(task.id);
@@ -887,11 +914,18 @@ function App() {
         setLastStagingId(staging.id);
         setActiveTask(staging);
         setStage("task");
-      } else {
+      } else if (pick === 3) {
         const detail = pickSuspiciousDetail(lastSuspiciousDetailId);
         setLastSuspiciousDetailId(detail.id);
         setActiveTask(detail);
         setStage("task");
+      } else {
+        const call = pickPostSaleCall(lastPostSaleCallId);
+        setLastPostSaleCallId(call.id);
+        const targetHouse = allHouses.find((h) => h.id === currentResults[postSaleCandidateIdx!].houseId)!;
+        const contactName = resolveCustomerNames(targetHouse, castAssignmentParam)[0];
+        setActivePostSaleCall({ def: call, contactName, houseId: targetHouse.id });
+        setStage("postsalecall");
       }
       return;
     }
@@ -902,7 +936,7 @@ function App() {
       significantMemoriesParam, originChoiceCountParam, selfReflectionShownParam, unlockedFriendHouseIdsParam,
       friendHouseResultsParam, energyLastRegenAtParam, minigameNextAvailableAtParam, minigamePlaysRemainingParam,
       ownedSkillIdsParam, skillXPParam, defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam,
-      flashbackShownParam,
+      flashbackShownParam, secondChanceOfferedParam,
     );
   }
 
@@ -940,6 +974,7 @@ function App() {
     friendBondCountsParam: Record<string, number> = friendBondCounts,
     friendBondMilestonesShownParam: string[] = friendBondMilestonesShown,
     flashbackShownParam: boolean = flashbackShown,
+    secondChanceOfferedParam: boolean = secondChanceOffered,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
@@ -1104,7 +1139,7 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam });
+        persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam, secondChanceOffered: secondChanceOfferedParam });
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -1112,7 +1147,7 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam });
+    persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam, secondChanceOffered: secondChanceOfferedParam });
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -1125,6 +1160,17 @@ function App() {
     setActiveTask(null);
     setPendingHouseEntry(null);
     setTasksCompleted((c) => c + 1);
+    // "Gizli Gündem" — pressing on a suspicious detail occasionally earns a
+    // one-line confession about the upcoming customer's real motive, logged
+    // straight into their inbox thread before the visit even starts. The
+    // reward numbers above are untouched — this is flavor only.
+    let inboxForNextHouse = p.inboxList;
+    const confession = choiceId === "uzerine-git" ? suspiciousDetailConfessions[activeTask.id] : undefined;
+    if (confession) {
+      const nextHouse = allHouses[p.order[p.newIndex] ?? p.newIndex];
+      const contactName = resolveCustomerNames(nextHouse, p.castAssignmentParam)[0];
+      inboxForNextHouse = logMessages(p.inboxList, nextHouse.id, contactName, [{ from: contactName, text: confession }], p.newIndex + 1);
+    }
     proceedToHouseIntro(
       p.newIndex,
       p.currentResults,
@@ -1132,10 +1178,42 @@ function App() {
       p.consumablesList,
       p.tiersList,
       p.order,
-      p.inboxList,
+      inboxForNextHouse,
       p.castAssignmentParam,
       p.dailyQuestParam,
       choice?.reward ?? null,
+      true,
+    );
+  }
+
+  function completePostSaleCall(choiceId: string) {
+    if (!activePostSaleCall || !pendingHouseEntry) return;
+    const choice = activePostSaleCall.def.choices.find((c) => c.id === choiceId);
+    const p = pendingHouseEntry;
+    setActivePostSaleCall(null);
+    setPendingHouseEntry(null);
+    const newBossMood = choice?.bossMoodDelta ? clampBossMood(bossMood + choice.bossMoodDelta) : bossMood;
+    if (choice?.bossMoodDelta) setBossMood(newBossMood);
+    const newBonusEarnings = choice?.bonusEarningsDelta ? bonusEarnings + choice.bonusEarningsDelta : bonusEarnings;
+    if (choice?.bonusEarningsDelta) setBonusEarnings(newBonusEarnings);
+    let newInbox = p.inboxList;
+    if (choice) {
+      const playerMsg: PhoneMessage = { from: "Emlah", text: choice.text };
+      const replyMsg: PhoneMessage = { from: activePostSaleCall.contactName, text: choice.reply };
+      newInbox = logMessages(p.inboxList, activePostSaleCall.houseId, "Emlah", [playerMsg], p.newIndex + 1, true);
+      newInbox = logMessages(newInbox, activePostSaleCall.houseId, activePostSaleCall.contactName, [replyMsg], p.newIndex + 1);
+    }
+    proceedToHouseIntro(
+      p.newIndex,
+      p.currentResults,
+      p.perksList,
+      p.consumablesList,
+      p.tiersList,
+      p.order,
+      newInbox,
+      p.castAssignmentParam,
+      p.dailyQuestParam,
+      null,
       true,
     );
   }
@@ -1201,6 +1279,7 @@ function App() {
     setFriendBondMilestonesShown([]);
     setFlashbackShown(false);
     setActiveFlashback(null);
+    setSecondChanceOffered(false);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1218,7 +1297,7 @@ function App() {
     enterPhone(
       0, [], [], {}, [1], order, [], cast, null, originId,
       { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
-      false, [], [], Date.now(), Date.now(), MINIGAME_MAX_PLAYS, [], 0, [], {}, [], false,
+      false, [], [], Date.now(), Date.now(), MINIGAME_MAX_PLAYS, [], 0, [], {}, [], false, false,
     );
   }
 
@@ -1271,6 +1350,7 @@ function App() {
     setFriendBondMilestonesShown(savedGame.friendBondMilestonesShown ?? []);
     setFlashbackShown(savedGame.flashbackShown ?? false);
     setActiveFlashback(null);
+    setSecondChanceOffered(savedGame.secondChanceOffered ?? false);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -1314,6 +1394,7 @@ function App() {
       savedGame.friendBondCounts ?? {},
       savedGame.friendBondMilestonesShown ?? [],
       savedGame.flashbackShown ?? false,
+      savedGame.secondChanceOffered ?? false,
     );
   }
 
@@ -2168,6 +2249,24 @@ function App() {
         setInbox((prev) => logMessages(prev, threadId, tip.from, [{ from: tip.from, text: tip.text }], index + 1));
       }
     }
+    // "İkinci Şans" — a surprise, unprompted version of the existing manual
+    // "Tekrar Dene" flow. Fires at most once per game; just drops a message
+    // into that lost house's existing inbox thread — the player still has
+    // to open it and pick "Tekrar Dene" themselves, so it never touches
+    // `stage`. See data/secondChanceEvent.ts.
+    if (!secondChanceOffered && index >= SECOND_CHANCE_MIN_INDEX && Math.random() < SECOND_CHANCE_CHANCE) {
+      const candidateIdx = pickSecondChanceCandidateIndex(results);
+      if (candidateIdx !== null) {
+        const targetHouse = allHouses.find((h) => h.id === results[candidateIdx].houseId);
+        if (targetHouse) {
+          const contactName = resolveCustomerNames(targetHouse, castAssignment)[0];
+          const newInbox = logMessages(inbox, targetHouse.id, contactName, [{ from: contactName, text: pickSecondChanceLine() }], index + 1);
+          setInbox(newInbox);
+          setSecondChanceOffered(true);
+          persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered: true });
+        }
+      }
+    }
     // Canlı Şehir Nabzı — ambient office-radio toast, entirely independent
     // of stage/detour screens (it floats over whatever's already on
     // screen), so it never needs a hadWorkTaskThisTransition-style guard.
@@ -2911,6 +3010,10 @@ function App() {
       {stage === "task" && activeTask && <WorkTaskScreen task={activeTask} onChoice={completeWorkTask} />}
 
       {stage === "quickcall" && activeTask && <QuickCallScreen task={activeTask} onChoice={completeWorkTask} />}
+
+      {stage === "postsalecall" && activePostSaleCall && (
+        <PostSaleCallScreen call={activePostSaleCall.def} contactName={activePostSaleCall.contactName} onChoice={completePostSaleCall} />
+      )}
 
       {stage === "house" && (
         <>

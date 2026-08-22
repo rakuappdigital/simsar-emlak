@@ -55,3 +55,17 @@ export function pickSuspiciousDetail(excludeId?: string): WorkTaskDef {
   const pool = excludeId ? suspiciousDetails.filter((t) => t.id !== excludeId) : suspiciousDetails;
   return pool[Math.floor(Math.random() * pool.length)];
 }
+
+/**
+ * "Gizli Gündem" — pressing on a suspicious detail ("Üzerine Git") doesn't
+ * just move the numbers, it occasionally earns a one-line confession about
+ * the upcoming customer's real reason for buying. Purely a flavor payoff
+ * logged into that house's inbox thread before the visit even starts — the
+ * existing reward numbers above are completely untouched.
+ */
+export const suspiciousDetailConfessions: Record<string, string> = {
+  "butce-tutarsizligi": "Aslında boşanma sürecindeyim, bütçemi tam bilmiyorum daha. Kusura bakmayın.",
+  "aciliyet-blöfü": "Doğrusu acele yok, sadece pazarlıkta elim güçlü dursun istedim.",
+  "baska-yer-blöfü": "Açıkçası başka bir yer yok, sadece indirim koparmaya çalışıyordum.",
+  "referans-iddiasi": "Doğrusu kimse yönlendirmedi, ilanı internetten buldum ama daha güvenilir dursun istedim.",
+};

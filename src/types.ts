@@ -251,7 +251,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 21;
+  version: 22;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -329,6 +329,8 @@ export interface SaveGame {
   friendBondMilestonesShown: string[];
   /** "Zaman Yolcusu Emlah" — true once the one-time flashback easter egg has fired. See data/timeTravelerFlashback.ts. */
   flashbackShown: boolean;
+  /** "İkinci Şans" — true once the one-time surprise lost-customer callback has fired. See data/secondChanceEvent.ts. */
+  secondChanceOffered: boolean;
   savedAt: string;
 }
 
