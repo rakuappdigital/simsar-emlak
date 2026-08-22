@@ -1,15 +1,12 @@
 import { pickWhatsAppNotification } from "./whatsappNotifications";
-import { pickAppNotification } from "./appNotifications";
 
 /**
- * The single entry point PhoneScreen.tsx uses for its top iOS-style banner.
- * Mostly WhatsApp-style contact/group messages, occasionally a notification
- * from one of the parody apps instead — purely cosmetic, no gameplay effect.
+ * The single entry point PhoneScreen.tsx uses for its top WhatsApp-style
+ * notification banner. Always a WhatsApp contact/group message — showing
+ * an unrelated app's notification while already sitting inside WhatsApp
+ * read as visually meaningless, so the banner is WhatsApp-only content,
+ * styled to match (see .wa-notification in game.css).
  */
-const APP_NOTIFICATION_CHANCE = 0.35;
-
-export function pickPhoneNotificationText(): string {
-  const { icon, name, text } =
-    Math.random() < APP_NOTIFICATION_CHANCE ? pickAppNotification() : pickWhatsAppNotification();
-  return `${icon} ${name}: ${text}`;
+export function pickPhoneNotificationText(): { icon: string; name: string; text: string } {
+  return pickWhatsAppNotification();
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { PhoneMessage } from "../types";
-import { SignalIcon, BatteryIcon, BellIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
+import { SignalIcon, BatteryIcon, ChatIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
 import { playMessage } from "../data/sound";
 import { pickPhoneNotificationText } from "../data/phoneNotifications";
 
@@ -84,11 +84,16 @@ export default function PhoneScreen({
         </div>
 
         {showBanner && (
-          <div className="ios-banner">
-            <span className="ios-banner-icon">
-              <BellIcon size={14} />
+          <div className="wa-notification">
+            <span className="wa-notification-icon">
+              <ChatIcon size={13} />
             </span>
-            <span className="ios-banner-text">{banner}</span>
+            <span className="wa-notification-body">
+              <span className="wa-notification-name">
+                {banner.icon} {banner.name}
+              </span>
+              <span className="wa-notification-text">{banner.text}</span>
+            </span>
           </div>
         )}
 

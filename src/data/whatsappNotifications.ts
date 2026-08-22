@@ -1,9 +1,9 @@
 /**
- * "Telefon Bildirimleri" — the iOS-style banner shown briefly at the top of
- * every PhoneScreen visit (see PhoneScreen.tsx's `showBanner`). Purely
- * cosmetic flavor, zero gameplay effect — 18 imaginary WhatsApp
- * contacts/groups, 20 short messages each, picked at random. Combined with
- * data/appNotifications.ts in data/phoneNotifications.ts for the full pool.
+ * "Telefon Bildirimleri" — the WhatsApp-style notification banner shown
+ * briefly at the top of every PhoneScreen visit (see PhoneScreen.tsx's
+ * `showBanner`). Purely cosmetic flavor, zero gameplay effect — 18
+ * imaginary WhatsApp contacts/groups, 20 short messages each, picked at
+ * random.
  */
 export interface WhatsAppSender {
   name: string;
