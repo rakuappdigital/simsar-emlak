@@ -88,6 +88,7 @@ import {
 } from "./data/energy";
 import { energyBreakActivities } from "./data/energyBreak";
 const EnergyBreakScreen = lazy(() => import("./components/EnergyBreakScreen"));
+import type { MiniGameTier } from "./components/EnergyMiniGames";
 import {
   type DeliveryTermId,
   gameDateForIndex,
@@ -2008,14 +2009,17 @@ function App() {
     return slides;
   }
 
-  function handleEnergyBreakChoice(activityId: string) {
+  function handleEnergyBreakChoice(activityId: string, tier: MiniGameTier) {
     const activity = energyBreakActivities.find((a) => a.id === activityId);
     if (!activity) return;
     const now = Date.now();
     const playsNow = effectiveMinigamePlaysRemaining(minigamePlaysRemaining, minigameNextAvailableAt, now);
     if (playsNow <= 0) return;
 
-    const newEnergy = Math.min(ENERGY_MAX, energy + activity.energyGain);
+    // "great" = full reward, "ok" = a partial one, "fail" still grants a
+    // small floor so a spent play never feels wasted — see EnergyMiniGames.tsx.
+    const tierGain = tier === "great" ? activity.energyGain : tier === "ok" ? Math.round(activity.energyGain * 0.6) : Math.round(activity.energyGain * 0.3);
+    const newEnergy = Math.min(ENERGY_MAX, energy + tierGain);
     const newPlaysRemaining = playsNow - 1;
     const newNextAvailableAt = newPlaysRemaining <= 0 ? now + MINIGAME_COOLDOWN_MS : minigameNextAvailableAt;
     setEnergy(newEnergy);

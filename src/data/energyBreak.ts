@@ -2,11 +2,11 @@ import { MINIGAME_ENERGY_GAIN } from "./energy";
 
 /**
  * "Mini Oyunlar" — one of the three energy-recovery paths (see
- * EnergyBreakScreen.tsx). Placeholder activities for now — a click is an
- * automatic "win" since no real mini-game mechanic exists yet; later each
- * card's onSelect can be swapped for a real skill-based mini-game without
- * touching the surrounding cooldown/plays-remaining system, which already
- * only cares about win/no-win.
+ * EnergyBreakScreen.tsx). Each activity id maps to a real skill-based
+ * mini-game in EnergyMiniGames.tsx; `energyGain` here is the maximum
+ * ("great" tier) reward — a weaker "ok"/"fail" result still grants a
+ * smaller amount so a play is never wasted. See handleEnergyBreakChoice
+ * in App.tsx for the tier → energy mapping.
  */
 export interface EnergyBreakActivity {
   id: string;

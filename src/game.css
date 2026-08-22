@@ -2898,6 +2898,101 @@
   padding: 2px 8px;
 }
 
+/* Enerji Molası mini oyunları — see EnergyMiniGames.tsx */
+.minigame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 10px 22px;
+  text-align: center;
+}
+
+.minigame-prompt {
+  font-size: 0.85rem;
+  color: var(--c-text);
+  margin: 0;
+}
+
+.minigame-track {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--c-divider);
+  overflow: hidden;
+}
+
+.minigame-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(129, 199, 132, 0.35);
+  border-left: 2px solid var(--c-success);
+  border-right: 2px solid var(--c-success);
+}
+
+.minigame-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--c-accent);
+  transform: translateX(-50%);
+  transition: left 0.016s linear;
+}
+
+.minigame-beats {
+  display: flex;
+  gap: 10px;
+  font-size: 1.3rem;
+}
+
+.minigame-beat {
+  opacity: 0.3;
+  transform: scale(0.85);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.minigame-beat-active {
+  opacity: 1;
+  transform: scale(1.25);
+}
+
+.minigame-beat-passed {
+  opacity: 0.55;
+  transform: scale(0.95);
+}
+
+.minigame-step-count {
+  font-size: 0.8rem;
+  color: var(--c-text-dim);
+  margin: 0;
+}
+
+.minigame-action-btn {
+  min-width: 140px;
+}
+
+.minigame-result {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.minigame-result-great {
+  color: var(--c-success);
+}
+
+.minigame-result-ok {
+  color: var(--c-accent);
+}
+
+.minigame-result-fail {
+  color: var(--c-danger);
+}
+
 /* Şehrin Kurtları + Emlah'ın İç Sesi */
 .rival-ladder-row {
   align-items: center;

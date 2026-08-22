@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { energyBreakActivities } from "../data/energyBreak";
 import { MINIGAME_MAX_PLAYS } from "../data/energy";
+import { miniGameByActivityId, type MiniGameTier } from "./EnergyMiniGames";
 
 interface EnergyBreakScreenProps {
   energy: number;
@@ -8,7 +9,7 @@ interface EnergyBreakScreenProps {
   playsRemaining: number;
   /** Real wall-clock timestamp the plays next refill to MINIGAME_MAX_PLAYS, only meaningful while playsRemaining is 0. */
   nextAvailableAt: number;
-  onChoose: (activityId: string) => void;
+  onChoose: (activityId: string, tier: MiniGameTier) => void;
   onClose: () => void;
 }
 
@@ -20,9 +21,10 @@ function formatCountdown(ms: number): string {
   return `${m} dk`;
 }
 
-/** Shown when energy is too low to take on today's job — three recovery paths: mini oyunlar (live), reklam izleme and satın alma (placeholders, wired later). */
+/** Shown when energy is too low to take on today's job — three recovery paths: mini oyunlar (real skill-based games, see EnergyMiniGames.tsx), reklam izleme and satın alma (placeholders, wired later). */
 export default function EnergyBreakScreen({ energy, playsRemaining, nextAvailableAt, onChoose, onClose }: EnergyBreakScreenProps) {
   const [now, setNow] = useState(() => Date.now());
+  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
   useEffect(() => {
     if (playsRemaining > 0) return;
     const t = setInterval(() => setNow(Date.now()), 15000);
@@ -30,6 +32,22 @@ export default function EnergyBreakScreen({ energy, playsRemaining, nextAvailabl
   }, [playsRemaining]);
 
   const locked = playsRemaining <= 0;
+  const ActiveMiniGame = activeActivityId ? miniGameByActivityId[activeActivityId] : null;
+
+  if (ActiveMiniGame && activeActivityId) {
+    return (
+      <div className="modal-overlay">
+        <div className="market-modal energy-break-modal">
+          <ActiveMiniGame
+            onComplete={(tier) => {
+              onChoose(activeActivityId, tier);
+              setActiveActivityId(null);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-overlay">
@@ -52,15 +70,14 @@ export default function EnergyBreakScreen({ energy, playsRemaining, nextAvailabl
         ) : (
           <div className="energy-break-list">
             {energyBreakActivities.map((a) => (
-              <button key={a.id} className="energy-break-card" onClick={() => onChoose(a.id)}>
+              <button key={a.id} className="energy-break-card" onClick={() => setActiveActivityId(a.id)}>
                 <span className="energy-break-icon">{a.icon}</span>
                 <span className="energy-break-label">{a.label}</span>
-                <span className="energy-break-gain">+{a.energyGain} Enerji</span>
+                <span className="energy-break-gain">en fazla +{a.energyGain} Enerji</span>
               </button>
             ))}
           </div>
         )}
-        <p className="rehber-note">Yakında bu molalar gerçek mini oyunlara dönüşecek.</p>
 
         <p className="market-category-title">Diğer Yollar</p>
         <div className="energy-break-other-list">
