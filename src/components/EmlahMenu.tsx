@@ -86,6 +86,8 @@ interface EmlahMenuProps {
   currentDateLabel: string;
   bossMood: number;
   friendBonds: Record<string, number>;
+  friendBondCounts: Record<string, number>;
+  friendFavorAccepted: Record<string, boolean>;
   voiceTally: Record<ToneBucket, number>;
   compassTally: Record<CompassAxis, number>;
   friendHouses: HouseScene[];
@@ -157,6 +159,8 @@ export default function EmlahMenu({
   currentDateLabel,
   bossMood,
   friendBonds,
+  friendBondCounts,
+  friendFavorAccepted,
   voiceTally,
   compassTally,
   friendHouses,
@@ -273,7 +277,14 @@ export default function EmlahMenu({
             <DeliveriesPanel pendingDeliveries={pendingDeliveries} currentDateLabel={currentDateLabel} />
           )}
           {tab === "iliskiler" && (
-            <RelationshipsPanel bossMood={bossMood} friendBonds={friendBonds} voiceTally={voiceTally} compassTally={compassTally} />
+            <RelationshipsPanel
+              bossMood={bossMood}
+              friendBonds={friendBonds}
+              friendBondCounts={friendBondCounts}
+              friendFavorAccepted={friendFavorAccepted}
+              voiceTally={voiceTally}
+              compassTally={compassTally}
+            />
           )}
           {tab === "arkadaslar" && (
             <FriendHousesPanel

@@ -249,6 +249,12 @@ const originIcons: Record<OriginId, (props: SVGProps<SVGSVGElement> & { size?: n
 
 const CHITCHAT_CHANCE = 0.27;
 const FRIEND_CHANCE = 0.08;
+// "Zaman Kıtlığı" — a small, unconditional energy cost for accepting a
+// friend's house tip. Without this, deepening every friendship was
+// completely free — accepting was always the strictly dominant choice.
+// This gives relationship investment a real, if modest, opportunity cost
+// against the SAME energy budget everything else competes for.
+const FRIEND_TIP_ENERGY_COST = 5;
 // Purely a background toast, never a screen — can safely roll independently
 // of every other detour system without any collision guard.
 const CITY_PULSE_CHANCE = 0.22;
@@ -2036,6 +2042,25 @@ function App() {
       body: [ending.description, epilogue].filter((s): s is string => !!s),
     });
 
+    // Efsane Modu already counts EVERY completed playthrough (recordGameCompletion()
+    // fires purely on reaching the last house, regardless of which ending —
+    // "Kovuldu" included) but this was never actually surfaced anywhere, so
+    // players had no idea a rough run still carried something forward. Read
+    // fresh since recordGameCompletion() already ran for THIS run by now.
+    const completions = getPrestigeCompletions();
+    const nextBonus = prestigeStartingBonus(completions);
+    slides.push({
+      icon: "♾️",
+      eyebrow: "Bu Hikaye Burada Bitse De",
+      title: prestigeTitle(completions) ?? "Efsane",
+      body: [
+        `Bu, ${completions}. tamamladığın oyun — ister parlak bir kariyer, ister kovulma ile bitsin, hepsi sayılıyor.`,
+        nextBonus > 0
+          ? `Bir sonraki oyununa ${formatTL(nextBonus)} başlangıç bonusuyla başlayacaksın.`
+          : "Bir sonraki oyunun bu turdan bir iz taşıyacak.",
+      ],
+    });
+
     slides.push({
       icon: "🚀",
       eyebrow: "Hikaye Burada Bitmiyor",
@@ -2562,12 +2587,15 @@ function App() {
     // land right alongside the milestone line.
     let milestoneMessages: PhoneMessage[] = [];
     let milestoneFriendName: string | null = null;
+    let newEnergy = energy;
     if (choice.houseTipAction === "accept" && choice.houseTipHouseId && !unlockedFriendHouseIds.includes(choice.houseTipHouseId)) {
       newUnlockedFriendHouseIds = [...unlockedFriendHouseIds, choice.houseTipHouseId];
       setUnlockedFriendHouseIds(newUnlockedFriendHouseIds);
+      newEnergy = Math.max(0, energy - FRIEND_TIP_ENERGY_COST);
+      setEnergy(newEnergy);
       const apptIndex = index + (choice.houseTipWeekOffset ?? 0) * HOUSES_PER_WEEK;
       const dateLabel = formatGameDate(gameDateForIndex(apptIndex));
-      houseTipReaction = `${choice.reaction} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin.)`;
+      houseTipReaction = `${choice.reaction} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin. -${FRIEND_TIP_ENERGY_COST} enerji)`;
 
       // "İlişki Evreleri" — see data/relationshipStages.ts. Milestone 3
       // (Güven) now also opens a real favor choice; milestone 10
@@ -2623,7 +2651,7 @@ function App() {
     setActiveFriendChat((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
-    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds: newUnlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown: newFriendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors: newPendingFriendFavors, friendFavorAccepted, breadthConfrontationShown });
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds: newUnlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown: newFriendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors: newPendingFriendFavors, friendFavorAccepted, breadthConfrontationShown });
   }
 
   function resolveFriendFavor(friendId: string, accepted: boolean) {
@@ -2964,6 +2992,8 @@ function App() {
           currentDateLabel={formatGameDate(gameDateForIndex(index))}
           bossMood={bossMood}
           friendBonds={friendBonds}
+          friendBondCounts={friendBondCounts}
+          friendFavorAccepted={friendFavorAccepted}
           voiceTally={voiceTally}
           compassTally={compassTally}
           friendHouses={friendHouses}

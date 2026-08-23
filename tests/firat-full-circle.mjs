@@ -73,11 +73,11 @@ await page.evaluate(async () => {
   localStorage.setItem("simsar-emlak-save-v24-slot0", JSON.stringify(save));
 });
 await page.reload();
-await page.waitForTimeout(500);
-await page.locator("text=Kayıtlı Oyunlar").click({ timeout: 5000 });
-await page.waitForTimeout(300);
-await page.locator(".pixel-btn").first().click({ timeout: 5000 });
 await page.waitForTimeout(800);
+await page.locator("text=Kayıtlı Oyunlar").click({ timeout: 15000 });
+await page.waitForTimeout(500);
+await page.locator(".pixel-btn").first().click({ timeout: 15000 });
+await page.waitForTimeout(1000);
 
 // afterIntro() (where the Tam Çember check lives) only fires once the
 // player reaches the phone intro and taps "Devam Et" — but continuing a
@@ -86,18 +86,21 @@ await page.waitForTimeout(800);
 // any other house transition. Clear at most one of those before waiting
 // for the phone screen.
 const detourChoice = page.locator(".work-task-screen .choice-btn, .quick-call-screen .choice-btn");
+await detourChoice.first().waitFor({ timeout: 4000 }).catch(() => {});
 if ((await detourChoice.count()) > 0) {
-  await detourChoice.first().click({ timeout: 3000 }).catch(() => {});
-  await page.waitForTimeout(500);
+  await detourChoice.first().click({ timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(800);
 }
 // The office screen shows first; "Bugünün İşini Al" reveals the phone
 // overlay (afterIntro only fires once its messages are read through).
-await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(300);
+const officeBtn = page.locator(".office-get-job-btn");
+await officeBtn.first().waitFor({ timeout: 10000 }).catch(() => {});
+await officeBtn.first().click({ timeout: 10000 }).catch(() => {});
+await page.waitForTimeout(500);
 const continueBtn = page.locator("button.phone-continue");
-await continueBtn.first().waitFor({ timeout: 8000 }).catch(() => {});
-await continueBtn.first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(800);
+await continueBtn.first().waitFor({ timeout: 15000 }).catch(() => {});
+await continueBtn.first().click({ timeout: 10000 }).catch(() => {});
+await page.waitForTimeout(1000);
 
 const restored = await page.evaluate(() => {
   const raw = localStorage.getItem("simsar-emlak-save-v24-slot0");

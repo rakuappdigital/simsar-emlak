@@ -2,6 +2,8 @@ import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
 import { poolCharacterById } from "../data/characterPool";
 import { dominantTone } from "../data/voiceTone";
 import { compassVerdict } from "../data/valuesCompass";
+import { friendCharacters } from "../data/friendCharacters";
+import { stageForBondCount, type RelationshipStage } from "../data/relationshipStages";
 import type { ToneBucket, CompassAxis } from "../types";
 
 interface RelationshipsPanelProps {
@@ -9,7 +11,15 @@ interface RelationshipsPanelProps {
   friendBonds: Record<string, number>;
   voiceTally: Record<ToneBucket, number>;
   compassTally: Record<CompassAxis, number>;
+  friendBondCounts: Record<string, number>;
+  friendFavorAccepted: Record<string, boolean>;
 }
+
+const stageLabel: Record<RelationshipStage, string> = {
+  taniskilik: "Tanışıklık",
+  guven: "Güven",
+  yakinlik: "Yakınlık",
+};
 
 const toneLabels: Record<ToneBucket, string> = {
   eglenceli: "Eğlenceli",
@@ -20,7 +30,14 @@ const toneLabels: Record<ToneBucket, string> = {
 /** Small fixed scale for the friendship pips — friendBonds points are rare and small (see meetup.ts), so a 0-100 bar would look broken. */
 const FRIEND_BOND_PIPS = 3;
 
-export default function RelationshipsPanel({ bossMood, friendBonds, voiceTally, compassTally }: RelationshipsPanelProps) {
+export default function RelationshipsPanel({
+  bossMood,
+  friendBonds,
+  voiceTally,
+  compassTally,
+  friendBondCounts,
+  friendFavorAccepted,
+}: RelationshipsPanelProps) {
   const bonded = Object.entries(friendBonds).filter(([, points]) => points > 0);
   const tone = dominantTone(voiceTally);
   const compass = compassVerdict(compassTally);
@@ -52,6 +69,33 @@ export default function RelationshipsPanel({ bossMood, friendBonds, voiceTally, 
           </p>
         </div>
       </div>
+
+      <p className="market-category-title">Arkadaşların</p>
+      {friendCharacters.map((friend) => {
+        const count = friendBondCounts[friend.id] ?? 0;
+        const stage = stageForBondCount(count);
+        const nextThreshold = stage === "taniskilik" ? 3 : stage === "guven" ? 10 : null;
+        return (
+          <div className="portfolio-row" key={friend.id}>
+            <div className="portfolio-row-info">
+              <p className="portfolio-row-title">
+                {friend.name} <span className="rival-ladder-title">— {friend.profession}</span>
+              </p>
+              <div className="stat-track relationship-track">
+                <div
+                  className="stat-fill prestige-fill"
+                  style={{ width: `${Math.min(100, (count / 10) * 100)}%` }}
+                />
+              </div>
+              <p className="portfolio-row-location">
+                {stageLabel[stage]}
+                {nextThreshold !== null && ` — sıradaki evreye ${Math.max(0, nextThreshold - count)} adım`}
+                {friendFavorAccepted[friend.id] && " · 🤝 bir iyilik yaptın"}
+              </p>
+            </div>
+          </div>
+        );
+      })}
 
       <p className="market-category-title">Bağlantılar</p>
       {bonded.length === 0 && <p className="menu-empty">Henüz kimseyle özel bir bağın yok.</p>}
