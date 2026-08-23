@@ -57,6 +57,9 @@ interface EmlahMenuProps {
   onFollowUp: (houseId: string) => void;
   pendingFriendFavors: Record<string, boolean>;
   onFriendFavor: (friendId: string, accepted: boolean) => void;
+  hardTimesUsed: Record<string, boolean>;
+  emlahStruggling: boolean;
+  onAskForHelp: (friendId: string) => void;
   allHouses: HouseScene[];
   houseOrder: number[];
   currentIndex: number;
@@ -130,6 +133,9 @@ export default function EmlahMenu({
   onFollowUp,
   pendingFriendFavors,
   onFriendFavor,
+  hardTimesUsed,
+  emlahStruggling,
+  onAskForHelp,
   allHouses,
   houseOrder,
   currentIndex,
@@ -223,6 +229,10 @@ export default function EmlahMenu({
               onFollowUp={onFollowUp}
               pendingFriendFavors={pendingFriendFavors}
               onFriendFavor={onFriendFavor}
+              friendBondCounts={friendBondCounts}
+              hardTimesUsed={hardTimesUsed}
+              emlahStruggling={emlahStruggling}
+              onAskForHelp={onAskForHelp}
             />
           )}
           {tab === "portfoy" && (

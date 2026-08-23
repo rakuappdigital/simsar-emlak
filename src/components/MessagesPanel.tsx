@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { HouseResult, InboxMessage } from "../types";
 import { groupThreads } from "../data/inbox";
 import { ChevronLeftIcon } from "./icons";
+import { HARD_TIMES_BOND_THRESHOLD } from "../data/relationshipStages";
 
 interface MessagesPanelProps {
   inbox: InboxMessage[];
@@ -11,9 +12,25 @@ interface MessagesPanelProps {
   /** "İlişki Evreleri" — friend id -> a Güven-stage favor is awaiting a reply. See data/relationshipStages.ts. */
   pendingFriendFavors: Record<string, boolean>;
   onFriendFavor: (friendId: string, accepted: boolean) => void;
+  /** "Zor Zamanlar" — see data/relationshipStages.ts. */
+  friendBondCounts: Record<string, number>;
+  hardTimesUsed: Record<string, boolean>;
+  emlahStruggling: boolean;
+  onAskForHelp: (friendId: string) => void;
 }
 
-export default function MessagesPanel({ inbox, results, onRetry, onFollowUp, pendingFriendFavors, onFriendFavor }: MessagesPanelProps) {
+export default function MessagesPanel({
+  inbox,
+  results,
+  onRetry,
+  onFollowUp,
+  pendingFriendFavors,
+  onFriendFavor,
+  friendBondCounts,
+  hardTimesUsed,
+  emlahStruggling,
+  onAskForHelp,
+}: MessagesPanelProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   const threads = groupThreads(inbox);
@@ -23,6 +40,11 @@ export default function MessagesPanel({ inbox, results, onRetry, onFollowUp, pen
   const canFollowUp = activeResult?.outcome === "thinking" && !activeResult.followedUpThinking;
   const friendIdFromThread = selected?.startsWith("friend-") ? selected.slice(7) : null;
   const hasPendingFavor = friendIdFromThread ? !!pendingFriendFavors[friendIdFromThread] : false;
+  const canAskForHelp =
+    !!friendIdFromThread &&
+    emlahStruggling &&
+    !hardTimesUsed[friendIdFromThread] &&
+    (friendBondCounts[friendIdFromThread] ?? 0) >= HARD_TIMES_BOND_THRESHOLD;
 
   if (!selected) {
     return (
@@ -88,6 +110,11 @@ export default function MessagesPanel({ inbox, results, onRetry, onFollowUp, pen
             Şimdi Olmaz
           </button>
         </div>
+      )}
+      {canAskForHelp && friendIdFromThread && (
+        <button className="pixel-btn small" onClick={() => onAskForHelp(friendIdFromThread)}>
+          Yardım İste
+        </button>
       )}
     </div>
   );

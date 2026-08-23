@@ -188,6 +188,14 @@ import {
   FAVOR_ACCEPT_BOND_BONUS,
   BREADTH_CONFRONTATION_MIN_FRIENDS,
   breadthConfrontationLine,
+  stageForBondCount,
+  hardTimesAskLine,
+  hardTimesReplyLine,
+  hardTimesReward,
+  HARD_TIMES_BOND_THRESHOLD,
+  HARD_TIMES_BOSS_MOOD_THRESHOLD,
+  HARD_TIMES_LOSS_STREAK,
+  HARD_TIMES_BOND_BONUS,
 } from "./data/relationshipStages";
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
 import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dailyQuest";
@@ -249,6 +257,11 @@ const originIcons: Record<OriginId, (props: SVGProps<SVGSVGElement> & { size?: n
 
 const CHITCHAT_CHANCE = 0.27;
 const FRIEND_CHANCE = 0.08;
+// "Arkadaş Desteği" — Yakınlık-stage friends occasionally help before a
+// visit. See the stat-nudge block in proceedToHouseIntro.
+const FRIEND_ASSIST_CHANCE = 0.2;
+const FRIEND_ASSIST_INTEREST_BONUS = 6;
+const FRIEND_ASSIST_SUSPICION_DISCOUNT = 5;
 // "Zaman Kıtlığı" — a small, unconditional energy cost for accepting a
 // friend's house tip. Without this, deepening every friendship was
 // completely free — accepting was always the strictly dominant choice.
@@ -279,6 +292,11 @@ const BULK_DEAL_RISKY_BIG_AMOUNT = 160000;
 const BULK_DEAL_RISKY_SMALL_AMOUNT = 25000;
 const BULK_DEAL_RISKY_BIG_CHANCE = 0.5;
 const RANK_ORDER = ["Stajyer", "Emlakçı", "Kıdemli Emlakçı", "Ofis Ortağı"];
+// A real agency moment at every promotion instead of a purely passive
+// number crossing a threshold — a real, if modest, injection into the
+// skill tree's XP economy right when the rank-up card already has the
+// player's attention.
+const RANK_UP_SKILL_XP_BONUS = 10;
 // Independent, non-interrupting ambient rolls — never touch `stage`, so they
 // can't collide with the friend/chitchat/meetup roll chain in afterIntro().
 const NEWS_CHANCE = 0.12;
@@ -424,6 +442,7 @@ interface PersistOptional {
   friendFavorAccepted: Record<string, boolean>;
   breadthConfrontationShown: boolean;
   firatFullCircleShown: boolean;
+  hardTimesUsed: Record<string, boolean>;
 }
 
 type PersistOverrides = PersistRequired & Partial<PersistOptional>;
@@ -468,6 +487,7 @@ function App() {
   } | null>(null);
   const [rankUpTitle, setRankUpTitle] = useState<string | null>(null);
   const [rankUpUnlockedInvites, setRankUpUnlockedInvites] = useState(false);
+  const [rankUpSkillBonus, setRankUpSkillBonus] = useState<number | null>(null);
   const [badgeCelebration, setBadgeCelebration] = useState<Badge[] | null>(null);
   const lastRankRef = useRef<string | null>(null);
   // "Oyun senin gerçek saatini biliyor" — at most once per browser session. See data/realWorldFlavor.ts.
@@ -564,6 +584,8 @@ function App() {
   const [breadthConfrontationShown, setBreadthConfrontationShown] = useState(false);
   // "Tam Çember" — one-time Fırat Bey closure once the full rival ladder is cleared. See data/rivalCharacter.ts.
   const [firatFullCircleShown, setFiratFullCircleShown] = useState(false);
+  // "Zor Zamanlar" — friend id -> already used. See data/relationshipStages.ts.
+  const [hardTimesUsed, setHardTimesUsed] = useState<Record<string, boolean>>({});
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -686,7 +708,7 @@ function App() {
 
   function persist(p: PersistOverrides) {
     const save: SaveGame = {
-      version: 24,
+      version: 25,
       index: p.index,
       houseOrder: p.houseOrder ?? houseOrder,
       results: p.results,
@@ -736,6 +758,7 @@ function App() {
       friendFavorAccepted: p.friendFavorAccepted ?? friendFavorAccepted,
       breadthConfrontationShown: p.breadthConfrontationShown ?? breadthConfrontationShown,
       firatFullCircleShown: p.firatFullCircleShown ?? firatFullCircleShown,
+      hardTimesUsed: p.hardTimesUsed ?? hardTimesUsed,
       savedAt: new Date().toISOString(),
     };
     const targetSlot = p.slot ?? activeSlot;
@@ -1124,6 +1147,22 @@ function App() {
     if (rankInterest > 0) {
       newStats = { ...newStats, interest: Math.min(100, newStats.interest + rankInterest) };
     }
+    // "Arkadaş Desteği" — the first system that actually feeds İlişki
+    // Evreleri BACK into the live sales loop instead of running in
+    // parallel to it: a Yakınlık-stage friend occasionally gives real,
+    // if small, help before a visit. Same silent additive-nudge shape as
+    // the skill/prestige/rank bonuses right above it (see the Arkadaşların
+    // section in RelationshipsPanel for the one place this is explained
+    // to the player, same as skill/prestige bonuses never get a per-house
+    // announcement either).
+    const yakinlikFriendIds = friendCharacters.filter((f) => (friendBondCounts[f.id] ?? 0) >= 10);
+    if (yakinlikFriendIds.length > 0 && Math.random() < FRIEND_ASSIST_CHANCE) {
+      newStats = {
+        ...newStats,
+        interest: Math.min(100, newStats.interest + FRIEND_ASSIST_INTEREST_BONUS),
+        suspicion: Math.max(0, newStats.suspicion - FRIEND_ASSIST_SUSPICION_DISCOUNT),
+      };
+    }
 
     // "Zaman Yolcusu Emlah" — rare, one-time-per-run easter egg, purely a modal shown between houses. No stats/results are touched by it.
     if (!flashbackShown && newIndex >= FLASHBACK_MIN_INDEX && significantMemories.length > 0 && Math.random() < FLASHBACK_CHANCE) {
@@ -1323,6 +1362,7 @@ function App() {
     setFriendFavorAccepted({});
     setBreadthConfrontationShown(false);
     setFiratFullCircleShown(false);
+    setHardTimesUsed({});
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1398,6 +1438,7 @@ function App() {
     setFriendFavorAccepted(savedGame.friendFavorAccepted ?? {});
     setBreadthConfrontationShown(savedGame.breadthConfrontationShown ?? false);
     setFiratFullCircleShown(savedGame.firatFullCircleShown ?? false);
+    setHardTimesUsed(savedGame.hardTimesUsed ?? {});
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -2685,6 +2726,38 @@ function App() {
     persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors: newPendingFriendFavors, friendFavorAccepted: newFriendFavorAccepted, breadthConfrontationShown });
   }
 
+  /** "Zor Zamanlar" — the reverse of resolveFriendFavor: Emlah reaches out to a Güven+ friend when genuinely struggling. Eligibility is fully derived (no persisted "pending" state needed) — see hardTimesEligibleFriendIds below. */
+  function resolveHardTimesAsk(friendId: string) {
+    if (hardTimesUsed[friendId]) return;
+    const friend = friendCharacters.find((f) => f.id === friendId);
+    if (!friend) return;
+    const count = friendBondCounts[friendId] ?? 0;
+    if (count < HARD_TIMES_BOND_THRESHOLD) return;
+
+    const newHardTimesUsed = { ...hardTimesUsed, [friendId]: true };
+    setHardTimesUsed(newHardTimesUsed);
+
+    const stage = stageForBondCount(count);
+    const reward = hardTimesReward(stage);
+    const newBonusEarnings = bonusEarnings + reward.bonusEarnings;
+    const newEnergy = Math.min(ENERGY_MAX, energy + reward.energy);
+    const newBossMood = clampBossMood(bossMood + reward.bossMood);
+    setBonusEarnings(newBonusEarnings);
+    setEnergy(newEnergy);
+    setBossMood(newBossMood);
+    const newFriendBondCounts = { ...friendBondCounts, [friendId]: count + HARD_TIMES_BOND_BONUS };
+    setFriendBondCounts(newFriendBondCounts);
+
+    const askMsg: PhoneMessage = { from: "Emlah", text: hardTimesAskLine(friend.name) };
+    const replyMsg: PhoneMessage = { from: friend.name, text: hardTimesReplyLine(friend.name, stage) };
+    const threadId = `friend-${friend.name.toLowerCase()}`;
+    let newInbox = logMessages(inbox, threadId, "Emlah", [askMsg], index + 1, true);
+    newInbox = logMessages(newInbox, threadId, friend.name, [replyMsg], index + 1);
+    setInbox(newInbox);
+
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors, friendFavorAccepted, breadthConfrontationShown, firatFullCircleShown, hardTimesUsed: newHardTimesUsed });
+  }
+
   function handleMeetupChoice(activityId: string) {
     if (!activeMeetup) return;
     drainPhoneBattery();
@@ -2767,6 +2840,11 @@ function App() {
     investmentResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
   const balance = earned - spent;
   const anySold = results.some((r) => r.outcome === "sold");
+  // "Zor Zamanlar" — eligibility is fully derived, no persisted "pending" flag needed.
+  const recentLossStreak =
+    results.length >= HARD_TIMES_LOSS_STREAK &&
+    results.slice(-HARD_TIMES_LOSS_STREAK).every((r) => r.outcome === "lost");
+  const emlahStruggling = bossMood < HARD_TIMES_BOSS_MOOD_THRESHOLD || recentLossStreak;
   const unreadCount = inbox.slice(seenInboxCount).filter((m) => !m.fromPlayer).length;
 
   function handleRootClick(e: MouseEvent<HTMLDivElement>) {
@@ -2796,9 +2874,14 @@ function App() {
     if (previousRank !== null && RANK_ORDER.indexOf(currentRank) > RANK_ORDER.indexOf(previousRank)) {
       setRankUpTitle(currentRank);
       setRankUpUnlockedInvites(ranksUnlockNewPremium(previousRank, currentRank));
+      setRankUpSkillBonus(RANK_UP_SKILL_XP_BONUS);
+      const newSkillXP = skillXP + RANK_UP_SKILL_XP_BONUS;
+      setSkillXP(newSkillXP);
+      persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP: newSkillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors, friendFavorAccepted, breadthConfrontationShown, firatFullCircleShown, hardTimesUsed });
       playReward();
     }
     lastRankRef.current = currentRank;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [earned]);
 
   useEffect(() => {
@@ -2867,6 +2950,7 @@ function App() {
             <p className="rankup-label">Yeni Rütbe!</p>
             <p className="rankup-title">{rankUpTitle}</p>
             {rankUpUnlockedInvites && <p className="rankup-invite-note">🎁 Ününüz yayılıyor — yeni özel davetler açıldı!</p>}
+            {rankUpSkillBonus && <p className="rankup-invite-note">🧠 +{rankUpSkillBonus} Deneyim Puanı kazandın!</p>}
           </div>
         </div>
       )}
@@ -2963,6 +3047,9 @@ function App() {
           onFollowUp={followUpThinking}
           pendingFriendFavors={pendingFriendFavors}
           onFriendFavor={resolveFriendFavor}
+          hardTimesUsed={hardTimesUsed}
+          emlahStruggling={emlahStruggling}
+          onAskForHelp={resolveHardTimesAsk}
           allHouses={allHouses}
           houseOrder={houseOrder}
           currentIndex={index}

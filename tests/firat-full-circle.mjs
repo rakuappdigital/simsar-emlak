@@ -45,7 +45,7 @@ assert(data.ladderSize === 5, "rival ladder still has 5 rungs");
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 24, index: 20,
+    version: 25, index: 20,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: Array.from({ length: 20 }, (_, i) => ({
       houseId: housesMod.allHouses[i].id,
@@ -55,7 +55,14 @@ await page.evaluate(async () => {
       finalSuspicion: 20,
     })),
     weekOutcomes: [], badges: [], ownedPerks: [], consumables: {}, unlockedTiers: [1, 2, 3, 4, 5], spent: 0,
-    inbox: [], castAssignment: {}, dailyQuest: null, bonusEarnings: 0, pendingLoan: null, tasksCompleted: 0,
+    // A recent customer-thread message keeps housesSinceLastCallback() low
+    // (see data/inbox.ts) — with an empty inbox it returns 99, which pushes
+    // maybeGenerateCallback()'s chance up near its 0.55 cap and can divert
+    // the whole flow into a random customer callback instead of ever
+    // reaching the phone screen this test depends on. Not related to Tam
+    // Çember itself, just an artifact of the fixture's otherwise-empty inbox.
+    inbox: [{ id: "seed", threadId: housesMod.allHouses[0].id, contactName: "Test", text: "merhaba", fromPlayer: false, day: 20 }],
+    castAssignment: {}, dailyQuest: null, bonusEarnings: 0, pendingLoan: null, tasksCompleted: 0,
     chitchatBonuses: 0, premiumResults: [], pendingInvestment: null, friendBonds: {}, ownedInvestmentHouses: [],
     investmentResults: [], contactedCustomers: [], activeNewsId: null, energy: 80, pendingDeliveries: [],
     bossMood: 60, firedSeasonalEventWeeks: [], voiceTally: { eglenceli: 0, samimi: 0, atilgan: 0 },
@@ -70,7 +77,7 @@ await page.evaluate(async () => {
     firatFullCircleShown: false,
     savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v24-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v25-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(800);
@@ -83,27 +90,42 @@ await page.waitForTimeout(1000);
 // player reaches the phone intro and taps "Devam Et" — but continuing a
 // save with index > 0 has a chance of landing on an office-task detour
 // screen FIRST (work/quickcall/staging/post-sale-call), same rotation as
-// any other house transition. Clear at most one of those before waiting
-// for the phone screen.
-const detourChoice = page.locator(".work-task-screen .choice-btn, .quick-call-screen .choice-btn");
-await detourChoice.first().waitFor({ timeout: 4000 }).catch(() => {});
-if ((await detourChoice.count()) > 0) {
-  await detourChoice.first().click({ timeout: 5000 }).catch(() => {});
-  await page.waitForTimeout(800);
+// any other house transition, plus real asset/animation load time. Poll
+// for whichever actionable button shows up next instead of a fixed wait
+// sequence — same resilience approach as smoke.mjs's tick().
+async function clickNextStep() {
+  const continueBtn = page.locator("button.phone-continue").first();
+  if (await continueBtn.isVisible().catch(() => false)) {
+    await continueBtn.click({ timeout: 3000 }).catch(() => {});
+    return "continue";
+  }
+  const detourBtn = page.locator(".work-task-screen .choice-btn, .quick-call-screen .choice-btn").first();
+  if (await detourBtn.isVisible().catch(() => false)) {
+    await detourBtn.click({ timeout: 3000 }).catch(() => {});
+    return "detour";
+  }
+  const officeBtn = page.locator(".office-get-job-btn").first();
+  if (await officeBtn.isVisible().catch(() => false)) {
+    await officeBtn.click({ timeout: 3000 }).catch(() => {});
+    return "office";
+  }
+  return null;
 }
-// The office screen shows first; "Bugünün İşini Al" reveals the phone
-// overlay (afterIntro only fires once its messages are read through).
-const officeBtn = page.locator(".office-get-job-btn");
-await officeBtn.first().waitFor({ timeout: 10000 }).catch(() => {});
-await officeBtn.first().click({ timeout: 10000 }).catch(() => {});
-await page.waitForTimeout(500);
-const continueBtn = page.locator("button.phone-continue");
-await continueBtn.first().waitFor({ timeout: 15000 }).catch(() => {});
-await continueBtn.first().click({ timeout: 10000 }).catch(() => {});
+
+let reachedContinue = false;
+for (let i = 0; i < 40; i++) {
+  const clicked = await clickNextStep();
+  if (clicked === "continue") {
+    reachedContinue = true;
+    break;
+  }
+  await page.waitForTimeout(400);
+}
+assert(reachedContinue, "reached and clicked the phone screen's 'Devam Et' button");
 await page.waitForTimeout(1000);
 
 const restored = await page.evaluate(() => {
-  const raw = localStorage.getItem("simsar-emlak-save-v24-slot0");
+  const raw = localStorage.getItem("simsar-emlak-save-v25-slot0");
   return raw ? JSON.parse(raw) : null;
 });
 assert(restored?.firatFullCircleShown === true, "firatFullCircleShown flips to true on the very next transition");

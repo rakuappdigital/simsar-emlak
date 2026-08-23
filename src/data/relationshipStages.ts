@@ -60,3 +60,41 @@ export const BREADTH_CONFRONTATION_MIN_FRIENDS = 3;
 export function breadthConfrontationLine(friendName: string): string {
   return `${friendName}: Bazen herkese aynı ilgiyi gösteriyormuşsun gibi hissediyorum, sadece belirtmek istedim.`;
 }
+
+/**
+ * "Zor Zamanlar" — the mirror image of the Güven-stage favor: instead of a
+ * friend asking Emlah for help, EMLAH can reach out when he's genuinely
+ * struggling (low bossMood or a losing streak) to a Güven+ friend. One-time
+ * per friend (hardTimesUsed), same MessagesPanel accept/decline-button
+ * pattern reused in reverse — this is what turns the relationship into a
+ * real two-way bond instead of Emlah only ever being the one who's asked.
+ */
+export const HARD_TIMES_BOND_THRESHOLD = 3;
+export const HARD_TIMES_BOSS_MOOD_THRESHOLD = 30;
+export const HARD_TIMES_LOSS_STREAK = 2;
+export const HARD_TIMES_BOND_BONUS = 1;
+
+export function hardTimesAskLine(friendName: string): string {
+  return `Merhaba ${friendName}, açıkçası bu aralar işler pek iyi gitmiyor. Bir tavsiyen ya da yardımın olur mu?`;
+}
+
+export function hardTimesReplyLine(friendName: string, stage: RelationshipStage): string {
+  if (stage === "yakinlik") {
+    const lines = [
+      `${friendName}: Elbette, senin için her zaman vaktim var. Hemen yardımcı olayım.`,
+      `${friendName}: Bunu sormana gerek bile yoktu, tabii ki yanındayım.`,
+    ];
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+  const lines = [
+    `${friendName}: Tabii, elimden geleni yaparım.`,
+    `${friendName}: Bu aralar ben de yoğunum ama sana biraz zaman ayırabilirim.`,
+  ];
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+/** Yakınlık-stage friends give a stronger real reward than Güven-stage ones — same "the deeper the bond, the more it's actually worth" principle as the favor system. */
+export function hardTimesReward(stage: RelationshipStage): { bonusEarnings: number; energy: number; bossMood: number } {
+  if (stage === "yakinlik") return { bonusEarnings: 20000, energy: 15, bossMood: 4 };
+  return { bonusEarnings: 10000, energy: 8, bossMood: 2 };
+}

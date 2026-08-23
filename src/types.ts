@@ -255,7 +255,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 24;
+  version: 25;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -343,6 +343,8 @@ export interface SaveGame {
   breadthConfrontationShown: boolean;
   /** "Tam Çember" — true once Fırat Bey's one-time full-ladder-cleared closure message has fired. See data/rivalCharacter.ts. */
   firatFullCircleShown: boolean;
+  /** "Zor Zamanlar" — friend id -> Emlah has already used his one lifetime "ask for help" with that friend. See data/relationshipStages.ts. */
+  hardTimesUsed: Record<string, boolean>;
   savedAt: string;
 }
 

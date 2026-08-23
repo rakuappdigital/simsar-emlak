@@ -33,7 +33,7 @@ await page.goto(BASE_URL);
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 24, index: 0,
+    version: 25, index: 0,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: [], weekOutcomes: [], badges: [], ownedPerks: [], consumables: {}, unlockedTiers: [1, 2, 3, 4, 5], spent: 0,
     inbox: [], castAssignment: {}, dailyQuest: null, bonusEarnings: 0, pendingLoan: null, tasksCompleted: 0,
@@ -46,7 +46,7 @@ await page.evaluate(async () => {
     ownedSkillIds: [], skillXP: 0, defeatedRivalIds: [], friendBondCounts: {}, friendBondMilestonesShown: [],
     flashbackShown: false, secondChanceOffered: false, savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v24-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v25-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(500);
@@ -78,13 +78,13 @@ while (Date.now() < tapDeadline) {
 await page.waitForTimeout(1200);
 
 const energyAfter = await page.evaluate(() => {
-  const raw = localStorage.getItem("simsar-emlak-save-v24-slot0");
+  const raw = localStorage.getItem("simsar-emlak-save-v25-slot0");
   return raw ? JSON.parse(raw).energy : null;
 });
 assert(energyAfter !== null && energyAfter > 5, `energy actually increased after playing (was 5, now ${energyAfter})`);
 
 const playsAfter = await page.evaluate(() => {
-  const raw = localStorage.getItem("simsar-emlak-save-v24-slot0");
+  const raw = localStorage.getItem("simsar-emlak-save-v25-slot0");
   return raw ? JSON.parse(raw).minigamePlaysRemaining : null;
 });
 assert(playsAfter === 1, `one play was consumed (now ${playsAfter}/2)`);

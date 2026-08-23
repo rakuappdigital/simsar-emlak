@@ -71,6 +71,7 @@ export default function RelationshipsPanel({
       </div>
 
       <p className="market-category-title">Arkadaşların</p>
+      <p className="menu-empty">Yakınlık seviyesindeki arkadaşların, evlere girmeden önce bazen sana gerçek bir tüyo veriyor.</p>
       {friendCharacters.map((friend) => {
         const count = friendBondCounts[friend.id] ?? 0;
         const stage = stageForBondCount(count);
