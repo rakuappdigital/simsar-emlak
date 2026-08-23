@@ -31,7 +31,7 @@ import { injectCelebrities } from "./data/celebrities";
 import { countOwnedOfisItems } from "./data/officeImages";
 import { RIVAL_DUEL_CHANCE, RIVAL_DUEL_BONUS_RATE, pickDuelStartMessage, pickDuelWinMessage, pickDuelLoseMessage } from "./data/rivalDuel";
 import { rivalTotalSales } from "./data/rival";
-import { firatMoodFor, type FiratMoodDef } from "./data/rivalCharacter";
+import { firatMoodFor, firatFullCircleLines, type FiratMoodDef } from "./data/rivalCharacter";
 import { friendHouses, friendHouseById } from "./data/friendHouses";
 import { buildContactBook } from "./data/contactBook";
 import { buildDistrictPins, isDistrictDominated, DISTRICT_DOMINANCE_SUSPICION_DISCOUNT } from "./data/istanbulMap";
@@ -151,7 +151,7 @@ import {
   computeFreshStats,
 } from "./data/scoring";
 import { skillTree, canUnlockSkill, xpForOutcome, startingBonusForSkills } from "./data/skillTree";
-import { activeRivalFor } from "./data/rivalLadder";
+import { activeRivalFor, rivalLadder } from "./data/rivalLadder";
 import { FRIEND_BOND_MILESTONES, friendBondMilestoneLine } from "./data/friendBondMilestones";
 import { friendCharacters, friendCharacterForHouseId } from "./data/friendCharacters";
 import {
@@ -417,6 +417,7 @@ interface PersistOptional {
   pendingFriendFavors: Record<string, boolean>;
   friendFavorAccepted: Record<string, boolean>;
   breadthConfrontationShown: boolean;
+  firatFullCircleShown: boolean;
 }
 
 type PersistOverrides = PersistRequired & Partial<PersistOptional>;
@@ -555,6 +556,8 @@ function App() {
   const [pendingFriendFavors, setPendingFriendFavors] = useState<Record<string, boolean>>({});
   const [friendFavorAccepted, setFriendFavorAccepted] = useState<Record<string, boolean>>({});
   const [breadthConfrontationShown, setBreadthConfrontationShown] = useState(false);
+  // "Tam Çember" — one-time Fırat Bey closure once the full rival ladder is cleared. See data/rivalCharacter.ts.
+  const [firatFullCircleShown, setFiratFullCircleShown] = useState(false);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -677,7 +680,7 @@ function App() {
 
   function persist(p: PersistOverrides) {
     const save: SaveGame = {
-      version: 23,
+      version: 24,
       index: p.index,
       houseOrder: p.houseOrder ?? houseOrder,
       results: p.results,
@@ -726,6 +729,7 @@ function App() {
       pendingFriendFavors: p.pendingFriendFavors ?? pendingFriendFavors,
       friendFavorAccepted: p.friendFavorAccepted ?? friendFavorAccepted,
       breadthConfrontationShown: p.breadthConfrontationShown ?? breadthConfrontationShown,
+      firatFullCircleShown: p.firatFullCircleShown ?? firatFullCircleShown,
       savedAt: new Date().toISOString(),
     };
     const targetSlot = p.slot ?? activeSlot;
@@ -1312,6 +1316,7 @@ function App() {
     setPendingFriendFavors({});
     setFriendFavorAccepted({});
     setBreadthConfrontationShown(false);
+    setFiratFullCircleShown(false);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1386,6 +1391,7 @@ function App() {
     setPendingFriendFavors(savedGame.pendingFriendFavors ?? {});
     setFriendFavorAccepted(savedGame.friendFavorAccepted ?? {});
     setBreadthConfrontationShown(savedGame.breadthConfrontationShown ?? false);
+    setFiratFullCircleShown(savedGame.firatFullCircleShown ?? false);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -2378,6 +2384,23 @@ function App() {
           persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally: { ...compassTally, kurnazlik: compassTally.kurnazlik + 1 }, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors, friendFavorAccepted, breadthConfrontationShown: true });
         }
       }
+    }
+    // "Tam Çember" — a one-time closure message from Fırat Bey once the
+    // WHOLE rival ladder is cleared, not just his own early defeat. Fires
+    // unconditionally the first house-transition after the condition is
+    // met (no random roll — this is a guaranteed payoff for a real
+    // milestone, not ambient flavor). See data/rivalCharacter.ts.
+    if (!firatFullCircleShown && defeatedRivalIds.length >= rivalLadder.length) {
+      const newInbox = logMessages(
+        inbox,
+        "rival-firat",
+        "Fırat Bey",
+        firatFullCircleLines.map((text) => ({ from: "Fırat Bey", text })),
+        index + 1,
+      );
+      setInbox(newInbox);
+      setFiratFullCircleShown(true);
+      persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors, friendFavorAccepted, breadthConfrontationShown, firatFullCircleShown: true });
     }
     // Canlı Şehir Nabzı — ambient office-radio toast, entirely independent
     // of stage/detour screens (it floats over whatever's already on

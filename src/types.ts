@@ -255,7 +255,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 23;
+  version: 24;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -341,6 +341,8 @@ export interface SaveGame {
   friendFavorAccepted: Record<string, boolean>;
   /** True once the one-time "Herkese aynı şeyi mi söylüyorsun?" breadth-confrontation beat has fired. */
   breadthConfrontationShown: boolean;
+  /** "Tam Çember" — true once Fırat Bey's one-time full-ladder-cleared closure message has fired. See data/rivalCharacter.ts. */
+  firatFullCircleShown: boolean;
   savedAt: string;
 }
 

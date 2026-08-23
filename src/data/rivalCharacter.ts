@@ -61,3 +61,20 @@ export function firatMoodFor(playerSoldCount: number, rivalTotal: number): Firat
   if (diff <= -3) return firatMoods[0]; // kendinden emin — açıkça önde
   return firatMoods[2]; // notr — baş başa
 }
+
+/**
+ * "Tam Çember" — Fırat kicked off the rival ladder (rivalLadder.ts) as its
+ * first, richest-voiced rung; once the WHOLE ladder is cleared (all 5
+ * rivals retired), he gets a one-time narrative close instead of just
+ * fading out after his own early defeat. Delivered as a plain inbox
+ * message sequence (same pattern as secondChanceEvent.ts/breadth
+ * confrontation) rather than a live in-dialogue encounter — no house
+ * context needed for this, and it keeps the risk to a single new file
+ * addition instead of touching the duel/encounter machinery.
+ */
+export const firatFullCircleLines: string[] = [
+  "Emlah, bir dakikan var mı?",
+  "Bu şehirdeki herkesi geçtiğini duydum. Başta biraz canım sıkıldı, itiraf edeyim.",
+  "Ama artık seni rakip değil, meslektaş olarak görüyorum. Hakkını verdin.",
+  "Belki bir gün birlikte iş yaparız, kim bilir. Kolay gelsin, şampiyon.",
+];

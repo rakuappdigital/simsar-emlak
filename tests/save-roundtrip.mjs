@@ -36,7 +36,7 @@ await page.goto(BASE_URL);
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 23, index: 16,
+    version: 24, index: 16,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: Array.from({ length: 16 }, (_, i) => ({
       houseId: housesMod.allHouses[i].id,
@@ -62,7 +62,7 @@ await page.evaluate(async () => {
     secondChanceOffered: false,
     savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v23-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v24-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(500);
@@ -72,7 +72,7 @@ await page.locator(".pixel-btn").first().click({ timeout: 5000 });
 // Deliberately no wait here — the bug this guards against corrupted the
 // save in the SAME synchronous tick as the click, before any render.
 const restored = await page.evaluate(() => {
-  const raw = localStorage.getItem("simsar-emlak-save-v23-slot0");
+  const raw = localStorage.getItem("simsar-emlak-save-v24-slot0");
   return raw ? JSON.parse(raw) : null;
 });
 
