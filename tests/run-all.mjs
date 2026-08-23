@@ -6,7 +6,7 @@
 import { spawn, spawnSync } from "child_process";
 import { setTimeout as sleep } from "timers/promises";
 
-const TEST_FILES = ["smoke.mjs", "energy.mjs", "energy-minigames.mjs", "rpg-systems.mjs", "save-roundtrip.mjs", "mobile-viewport.mjs", "surprise-conversations.mjs"];
+const TEST_FILES = ["smoke.mjs", "energy.mjs", "energy-minigames.mjs", "rpg-systems.mjs", "save-roundtrip.mjs", "mobile-viewport.mjs", "surprise-conversations.mjs", "relationship-features.mjs"];
 const BASE_URL = "http://localhost:5173";
 
 console.log("Starting dev server...");

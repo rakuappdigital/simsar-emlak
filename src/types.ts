@@ -120,6 +120,8 @@ export interface HouseResult {
   converted?: boolean;
   /** True once the player has used their one manual "Tekrar Dene" attempt from the inbox on a lost sale. */
   retriedLost?: boolean;
+  /** True once the player has used their one manual follow-up message from the inbox on a "thinking" sale. See data/followUp.ts. */
+  followedUpThinking?: boolean;
   /** Text of the highest-fun choice picked during this house's dialogue, if any. */
   bestLine?: string;
   /** The `fun` value of `bestLine`, kept alongside it to compare across houses when picking a week's best. */

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Choice, ChoiceEffects, DialogueLine, GameStats, HouseScene, SceneOutcome, ToneBucket } from "../types";
+import type { Choice, ChoiceEffects, DialogueLine, DialogueNode, GameStats, HouseScene, SceneOutcome, ToneBucket } from "../types";
 import { loadHouseImage, peekHouseImage } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
 import { formatTL } from "../data/economy";
@@ -7,6 +7,7 @@ import { resolveOutcome, closingBiasMultiplier, personalityHint } from "../data/
 import { shuffle } from "../data/shuffle";
 import { resolveCustomerNames, resolvePortrait, interpolateNames, poolCharacterById } from "../data/characterPool";
 import { FLIRT_FUN_THRESHOLD, FLIRT_CHANCE } from "../data/meetup";
+import { pickFlirtExchangeLines, pickFlirtClosingLine } from "../data/flirtDialogue";
 import { celebrityById, CELEBRITY_DISCOUNT_BONUS, CELEBRITY_FAN_BONUS } from "../data/celebrities";
 import { pickConditionWarningThought, pickConditionWarningLine } from "../data/renovation";
 import type { EasterEgg } from "../data/easterEggs";
@@ -119,13 +120,16 @@ export default function DialogueScene({
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
   const [typedLength, setTypedLength] = useState(0);
+  // "Flörtöz Kapanış" — a short bonus exchange overlaid on top of the real
+  // node graph instead of a new authored node id (see flirtDialogue.ts).
+  const [syntheticNode, setSyntheticNode] = useState<DialogueNode | null>(null);
 
   useEffect(() => {
     setNodeId(house.startNode);
     setLineIndex(0);
   }, [house]);
 
-  const node = house.nodes[nodeId];
+  const node = syntheticNode ?? house.nodes[nodeId];
   // A rare "Özel Davetler" easter egg — see celebrities.ts. Only ever set
   // for a single-customer house whose assigned character happens to be a
   // celebrity (injected once at game start, never during play).
@@ -305,6 +309,10 @@ export default function DialogueScene({
     return shuffle(finalList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked, pressureUnlocked, pressureChoice, origin]);
+  // The synthetic flirt-exchange node carries its own single resolving
+  // choice — bypass the bonus/flirt/pressure/origin augmentation above so
+  // nothing stacks on top of it a second time.
+  const choicesToShow = syntheticNode ? syntheticNode.choices : displayChoices;
 
   function advanceLine() {
     if (!atLastLine) {
@@ -332,14 +340,14 @@ export default function DialogueScene({
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.code !== "Space" && e.code !== "Enter") return;
-      if (displayChoices) return;
+      if (choicesToShow) return;
       e.preventDefault();
       handleBoxClick();
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTyping, atLastLine, currentText, displayChoices]);
+  }, [isTyping, atLastLine, currentText, choicesToShow]);
 
   function pickChoice(choice: Choice) {
     if (choice.effects) onChoiceEffects(choice.effects);
@@ -347,7 +355,18 @@ export default function DialogueScene({
     if (choice.effects) onToneChoice?.(choice.effects);
     if (choice.id === "flirt-bond" && flirtCharacterId && flirtCharacter) {
       onFlirt?.(flirtCharacterId, flirtCharacter.name);
+      // Defer the actual sale resolution to a short bonus exchange instead
+      // of resolving instantly — same closingBias, just felt as a scene
+      // instead of an invisible number. See flirtDialogue.ts.
+      setSyntheticNode({
+        id: "flirt-extra",
+        lines: pickFlirtExchangeLines(),
+        choices: [{ id: "flirt-bond-resolve", text: pickFlirtClosingLine(), next: "", effects: { closingBias: choice.effects?.closingBias ?? 0 } }],
+      });
+      setLineIndex(0);
+      return;
     }
+    setSyntheticNode(null);
     if (choice.id.startsWith("son-dakika")) onPressureChoicePicked?.();
     if (origin && choice.id === origin.closingChoice.id) onOriginChoicePicked?.();
 
@@ -450,9 +469,9 @@ export default function DialogueScene({
           </button>
         )}
 
-        {atLastLine && !isTyping && displayChoices && (
+        {atLastLine && !isTyping && choicesToShow && (
           <div className="choices">
-            {displayChoices.map((c) => (
+            {choicesToShow.map((c) => (
               <button
                 key={c.id}
                 className="choice-btn"

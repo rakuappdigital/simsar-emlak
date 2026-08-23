@@ -146,6 +146,7 @@ import {
   skillSuspicionFactor,
   closingBiasMultiplier,
   rankBonus,
+  rankInterestBonus,
   rankTitle,
   computeFreshStats,
 } from "./data/scoring";
@@ -176,6 +177,7 @@ import PostSaleCallScreen from "./components/PostSaleCallScreen";
 import { computeStreak, checkNewBadges, checkNewInvestmentBadges, allBadges } from "./data/badges";
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, pickNegotiationReply, type CallbackEvent } from "./data/callbacks";
+import { rollFollowUpReaction, pickEmlahFollowUpLine, pickFollowUpReply, FOLLOWUP_WARM_SUSPICION_DELTA, FOLLOWUP_WARM_INTEREST_DELTA, FOLLOWUP_ANNOYED_SUSPICION_DELTA, FOLLOWUP_ANNOYED_INTEREST_DELTA } from "./data/followUp";
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
 import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
@@ -1085,6 +1087,11 @@ function App() {
         fun: Math.min(100, newStats.fun + skillBonus.fun),
         interest: Math.min(100, newStats.interest + skillBonus.interest),
       };
+    }
+    // Kişisel puan (kariyer rütbesi) yükseldikçe küçük bir satış şansı nudge'ı — same additive shape as the prestige/skill bonuses above.
+    const rankInterest = rankInterestBonus(earned);
+    if (rankInterest > 0) {
+      newStats = { ...newStats, interest: Math.min(100, newStats.interest + rankInterest) };
     }
 
     // "Zaman Yolcusu Emlah" — rare, one-time-per-run easter egg, purely a modal shown between houses. No stats/results are touched by it.
@@ -2236,6 +2243,50 @@ function App() {
     setStage("callback");
   }
 
+  function followUpThinking(houseId: string) {
+    const resultIndex = results.findIndex((r) => r.houseId === houseId);
+    if (resultIndex === -1) return;
+    const result = results[resultIndex];
+    if (result.outcome !== "thinking" || result.followedUpThinking) return;
+    const targetHouse = allHouses.find((h) => h.id === houseId);
+    if (!targetHouse) return;
+    const contactName = resolveCustomerNames(targetHouse, castAssignment)[0];
+
+    const reaction = rollFollowUpReaction(result.finalStats);
+    const openingMsg: PhoneMessage = { from: "Emlah", text: pickEmlahFollowUpLine() };
+    const replyMsg: PhoneMessage = { from: contactName, text: pickFollowUpReply(reaction) };
+    let newInbox = logMessages(inbox, houseId, "Emlah", [openingMsg], index + 1, true);
+    newInbox = logMessages(newInbox, houseId, contactName, [replyMsg], index + 1);
+    setInbox(newInbox);
+
+    if (reaction === "instant-lost") {
+      const updatedResults = results.map((r, i) => (i === resultIndex ? { ...r, outcome: "lost" as SceneOutcome, followedUpThinking: true } : r));
+      setResults(updatedResults);
+      persist({ results: updatedResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox });
+      return;
+    }
+
+    const nudgedStats: GameStats = {
+      ...result.finalStats,
+      suspicion: Math.max(0, result.finalStats.suspicion + (reaction === "warm" ? FOLLOWUP_WARM_SUSPICION_DELTA : FOLLOWUP_ANNOYED_SUSPICION_DELTA)),
+      interest: Math.max(0, result.finalStats.interest + (reaction === "warm" ? FOLLOWUP_WARM_INTEREST_DELTA : FOLLOWUP_ANNOYED_INTEREST_DELTA)),
+    };
+    const updatedResults = results.map((r, i) => (i === resultIndex ? { ...r, finalStats: nudgedStats, followedUpThinking: true } : r));
+    setResults(updatedResults);
+    persist({ results: updatedResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox });
+
+    setActiveCallback({
+      resultIndex,
+      contactName,
+      messages: [openingMsg, replyMsg],
+      choices: targetHouse.tier >= 3 ? luxuryNegotiationChoices : negotiationChoices,
+      sessionKey: `followup-${houseId}-${Date.now()}`,
+    });
+    drainPhoneBattery();
+    setShowEmlahMenu(false);
+    setStage("callback");
+  }
+
   function afterIntro() {
     // Independent, non-interrupting ambient side effects — market news (a
     // banner, not a phone message) and tipster pings (a passive inbox log)
@@ -2752,6 +2803,7 @@ function App() {
           inbox={inbox}
           results={results}
           onRetry={retryFromInbox}
+          onFollowUp={followUpThinking}
           allHouses={allHouses}
           houseOrder={houseOrder}
           currentIndex={index}

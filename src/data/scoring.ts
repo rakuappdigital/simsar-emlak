@@ -65,6 +65,20 @@ export function rankBonus(earned: number): number {
   return 0;
 }
 
+/**
+ * Small passive starting-interest bump from career rank — same additive
+ * shape as prestigeBonus/startingBonusForSkills, just tied to a different
+ * "kişisel puan" ladder (lifetime earnings instead of skill points or
+ * kıyafet purchases). Deliberately modest — rank is a slow-earned ladder,
+ * this should read as a felt nudge, not a shortcut.
+ */
+export function rankInterestBonus(earned: number): number {
+  if (earned >= 1500000) return 6;
+  if (earned >= 800000) return 4;
+  if (earned >= 300000) return 2;
+  return 0;
+}
+
 const FATIGUE_PER_HOUSE = 3;
 
 /** Starting suspicion penalty from showing houses back-to-back without a break, within the same week. */
