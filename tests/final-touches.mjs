@@ -63,7 +63,7 @@ assert(data.hardTimesLossStreakIsTwo, "loss-streak trigger is 2 in a row");
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 25, index: 5,
+    version: 26, index: 5,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: [], weekOutcomes: [], badges: [], ownedPerks: [], consumables: {}, unlockedTiers: [1, 2, 3, 4, 5], spent: 0,
     inbox: [{ id: "m1", threadId: "friend-ecrin", contactName: "Ecrin", text: "Merhaba!", fromPlayer: false, day: 1 }],
@@ -81,7 +81,7 @@ await page.evaluate(async () => {
     firatFullCircleShown: false, hardTimesUsed: {},
     savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v25-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v26-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(600);
@@ -101,13 +101,13 @@ assert((await helpBtn.count()) > 0, "'Yardım İste' button shows for a Güven+ 
 
 if ((await helpBtn.count()) > 0) {
   const balanceBefore = await page.evaluate(() => {
-    const raw = localStorage.getItem("simsar-emlak-save-v25-slot0");
+    const raw = localStorage.getItem("simsar-emlak-save-v26-slot0");
     return raw ? JSON.parse(raw).bonusEarnings : null;
   });
   await helpBtn.first().click({ timeout: 5000 }).catch(() => {});
   await page.waitForTimeout(500);
   const restored = await page.evaluate(() => {
-    const raw = localStorage.getItem("simsar-emlak-save-v25-slot0");
+    const raw = localStorage.getItem("simsar-emlak-save-v26-slot0");
     return raw ? JSON.parse(raw) : null;
   });
   assert(restored?.hardTimesUsed?.ecrin === true, "hardTimesUsed flips to true after asking");

@@ -160,6 +160,7 @@ import {
   pickFlashbackMemory,
   flashbackTextFor,
 } from "./data/timeTravelerFlashback";
+import { FATEFUL_MOMENT_INDICES, fatefulMomentFor } from "./data/fatefulMoments";
 import {
   SECOND_CHANCE_CHANCE,
   SECOND_CHANCE_MIN_INDEX,
@@ -443,6 +444,7 @@ interface PersistOptional {
   breadthConfrontationShown: boolean;
   firatFullCircleShown: boolean;
   hardTimesUsed: Record<string, boolean>;
+  firedFatefulMomentIndices: number[];
 }
 
 type PersistOverrides = PersistRequired & Partial<PersistOptional>;
@@ -586,6 +588,9 @@ function App() {
   const [firatFullCircleShown, setFiratFullCircleShown] = useState(false);
   // "Zor Zamanlar" — friend id -> already used. See data/relationshipStages.ts.
   const [hardTimesUsed, setHardTimesUsed] = useState<Record<string, boolean>>({});
+  // "Kader Anları" — one-time, origin-specific beats at fixed house indices. See data/fatefulMoments.ts.
+  const [firedFatefulMomentIndices, setFiredFatefulMomentIndices] = useState<number[]>([]);
+  const [activeFatefulMoment, setActiveFatefulMoment] = useState<{ title: string; paragraphs: string[] } | null>(null);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -708,7 +713,7 @@ function App() {
 
   function persist(p: PersistOverrides) {
     const save: SaveGame = {
-      version: 25,
+      version: 26,
       index: p.index,
       houseOrder: p.houseOrder ?? houseOrder,
       results: p.results,
@@ -759,6 +764,7 @@ function App() {
       breadthConfrontationShown: p.breadthConfrontationShown ?? breadthConfrontationShown,
       firatFullCircleShown: p.firatFullCircleShown ?? firatFullCircleShown,
       hardTimesUsed: p.hardTimesUsed ?? hardTimesUsed,
+      firedFatefulMomentIndices: p.firedFatefulMomentIndices ?? firedFatefulMomentIndices,
       savedAt: new Date().toISOString(),
     };
     const targetSlot = p.slot ?? activeSlot;
@@ -913,6 +919,7 @@ function App() {
     friendBondMilestonesShownParam: string[] = friendBondMilestonesShown,
     flashbackShownParam: boolean = flashbackShown,
     secondChanceOfferedParam: boolean = secondChanceOffered,
+    firedFatefulMomentIndicesParam: number[] = firedFatefulMomentIndices,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
     loadHouseImage(nextHouse.id);
@@ -993,7 +1000,7 @@ function App() {
       significantMemoriesParam, originChoiceCountParam, selfReflectionShownParam, unlockedFriendHouseIdsParam,
       friendHouseResultsParam, energyLastRegenAtParam, minigameNextAvailableAtParam, minigamePlaysRemainingParam,
       ownedSkillIdsParam, skillXPParam, defeatedRivalIdsParam, friendBondCountsParam, friendBondMilestonesShownParam,
-      flashbackShownParam, secondChanceOfferedParam,
+      flashbackShownParam, secondChanceOfferedParam, firedFatefulMomentIndicesParam,
     );
   }
 
@@ -1032,6 +1039,7 @@ function App() {
     friendBondMilestonesShownParam: string[] = friendBondMilestonesShown,
     flashbackShownParam: boolean = flashbackShown,
     secondChanceOfferedParam: boolean = secondChanceOffered,
+    firedFatefulMomentIndicesParam: number[] = firedFatefulMomentIndices,
   ) {
     const nextHouse = allHouses[order[newIndex] ?? newIndex];
 
@@ -1172,6 +1180,21 @@ function App() {
         setFlashbackShown(true);
       }
     }
+    // "Kader Anları" — guaranteed (not a random roll), origin-specific,
+    // one-time-per-index beats at 3 fixed points across the run. Reads
+    // from the explicit Param override (not the bare closure) for the
+    // exact same stale-closure reason flashbackShownParam etc. do —
+    // continueSaved's very first synchronous transition must see the
+    // freshly-restored list, not a pre-restore default.
+    let newFiredFatefulMomentIndices = firedFatefulMomentIndicesParam;
+    if (originParam && FATEFUL_MOMENT_INDICES.includes(newIndex as (typeof FATEFUL_MOMENT_INDICES)[number]) && !firedFatefulMomentIndicesParam.includes(newIndex)) {
+      const moment = fatefulMomentFor(newIndex, originParam);
+      if (moment) {
+        setActiveFatefulMoment(moment);
+        newFiredFatefulMomentIndices = [...firedFatefulMomentIndicesParam, newIndex];
+        setFiredFatefulMomentIndices(newFiredFatefulMomentIndices);
+      }
+    }
     const flavor = newIndex > 0 ? pickIntroFlavor(currentResults, allHouses, nextDistrict) : { message: null, isLucky: false };
     setIntroFlavorMsg(flavor.message);
     if (flavor.isLucky) {
@@ -1217,7 +1240,7 @@ function App() {
         const callbackHouse = allHouses.find((h) => h.id === currentResults[callback.resultIndex].houseId);
         newInbox = logMessages(newInbox, callbackHouse?.id ?? "muzaffer", callback.contactName, callback.messages, newIndex + 1);
         setInbox(newInbox);
-        persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam, secondChanceOffered: secondChanceOfferedParam });
+        persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam, secondChanceOffered: secondChanceOfferedParam, firedFatefulMomentIndices: newFiredFatefulMomentIndices });
         setActiveCallback({ ...callback, sessionKey: `${newIndex}-${callback.resultIndex}-${Date.now()}` });
         setIndex(newIndex);
         setStage("callback");
@@ -1225,7 +1248,7 @@ function App() {
       }
     }
     setInbox(newInbox);
-    persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam, secondChanceOffered: secondChanceOfferedParam });
+    persist({ results: currentResults, weekOutcomes, badges, index: newIndex, ownedPerks: perksList, spent, consumables: remainingConsumables, unlockedTiers: tiersList, houseOrder: order, inbox: newInbox, castAssignment: castAssignmentParam, dailyQuest: currentQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries: newPendingDeliveries, bossMood, firedSeasonalEventWeeks: newFiredSeasonalEventWeeks, voiceTally: voiceTallyParam, origin: originParam, compassTally: compassTallyParam, significantMemories: significantMemoriesParam, originChoiceCount: originChoiceCountParam, selfReflectionShown: selfReflectionShownParam, unlockedFriendHouseIds: unlockedFriendHouseIdsParam, friendHouseResults: friendHouseResultsParam, energyLastRegenAt: energyLastRegenAtParam, minigameNextAvailableAt: minigameNextAvailableAtParam, minigamePlaysRemaining: minigamePlaysRemainingParam, ownedSkillIds: ownedSkillIdsParam, skillXP: skillXPParam, defeatedRivalIds: defeatedRivalIdsParam, friendBondCounts: friendBondCountsParam, friendBondMilestonesShown: friendBondMilestonesShownParam, flashbackShown: flashbackShownParam, secondChanceOffered: secondChanceOfferedParam, firedFatefulMomentIndices: newFiredFatefulMomentIndices });
     setActiveCallback(null);
     setIndex(newIndex);
     setStage("phone");
@@ -1363,6 +1386,8 @@ function App() {
     setBreadthConfrontationShown(false);
     setFiratFullCircleShown(false);
     setHardTimesUsed({});
+    setFiredFatefulMomentIndices([]);
+    setActiveFatefulMoment(null);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1380,7 +1405,7 @@ function App() {
     enterPhone(
       0, [], [], {}, [1], order, [], cast, null, originId,
       { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
-      false, [], [], Date.now(), Date.now(), MINIGAME_MAX_PLAYS, [], 0, [], {}, [], false, false,
+      false, [], [], Date.now(), Date.now(), MINIGAME_MAX_PLAYS, [], 0, [], {}, [], false, false, [],
     );
   }
 
@@ -1439,6 +1464,8 @@ function App() {
     setBreadthConfrontationShown(savedGame.breadthConfrontationShown ?? false);
     setFiratFullCircleShown(savedGame.firatFullCircleShown ?? false);
     setHardTimesUsed(savedGame.hardTimesUsed ?? {});
+    setFiredFatefulMomentIndices(savedGame.firedFatefulMomentIndices ?? []);
+    setActiveFatefulMoment(null);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -1483,6 +1510,7 @@ function App() {
       savedGame.friendBondMilestonesShown ?? [],
       savedGame.flashbackShown ?? false,
       savedGame.secondChanceOffered ?? false,
+      savedGame.firedFatefulMomentIndices ?? [],
     );
   }
 
@@ -2987,6 +3015,19 @@ function App() {
           <div className="rankup-card self-reflection-card flashback-card">
             <p className="rankup-label">{flashbackTextFor(activeFlashback).title}</p>
             {flashbackTextFor(activeFlashback).paragraphs.map((p, i) => (
+              <p className="flashback-paragraph" key={i}>
+                {p}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeFatefulMoment && (
+        <div className="rankup-overlay" onClick={() => setActiveFatefulMoment(null)}>
+          <div className="rankup-card self-reflection-card flashback-card">
+            <p className="rankup-label">{activeFatefulMoment.title}</p>
+            {activeFatefulMoment.paragraphs.map((p, i) => (
               <p className="flashback-paragraph" key={i}>
                 {p}
               </p>

@@ -45,7 +45,7 @@ assert(data.ladderSize === 5, "rival ladder still has 5 rungs");
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 25, index: 20,
+    version: 26, index: 20,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: Array.from({ length: 20 }, (_, i) => ({
       houseId: housesMod.allHouses[i].id,
@@ -77,7 +77,7 @@ await page.evaluate(async () => {
     firatFullCircleShown: false,
     savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v25-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v26-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(800);
@@ -125,7 +125,7 @@ assert(reachedContinue, "reached and clicked the phone screen's 'Devam Et' butto
 await page.waitForTimeout(1000);
 
 const restored = await page.evaluate(() => {
-  const raw = localStorage.getItem("simsar-emlak-save-v25-slot0");
+  const raw = localStorage.getItem("simsar-emlak-save-v26-slot0");
   return raw ? JSON.parse(raw) : null;
 });
 assert(restored?.firatFullCircleShown === true, "firatFullCircleShown flips to true on the very next transition");

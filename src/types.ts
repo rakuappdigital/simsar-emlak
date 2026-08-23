@@ -255,7 +255,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 25;
+  version: 26;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -345,6 +345,8 @@ export interface SaveGame {
   firatFullCircleShown: boolean;
   /** "Zor Zamanlar" — friend id -> Emlah has already used his one lifetime "ask for help" with that friend. See data/relationshipStages.ts. */
   hardTimesUsed: Record<string, boolean>;
+  /** "Kader Anları" — house indices whose one-time, origin-specific narrative beat has already fired. See data/fatefulMoments.ts. */
+  firedFatefulMomentIndices: number[];
   savedAt: string;
 }
 
