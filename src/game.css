@@ -1980,6 +1980,12 @@
   color: var(--c-text-dim);
 }
 
+.favor-choice-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 /* ---------- Office scene (main hub between houses) ---------- */
 .office-scene {
   display: flex;

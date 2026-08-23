@@ -55,6 +55,8 @@ interface EmlahMenuProps {
   results: HouseResult[];
   onRetry: (houseId: string) => void;
   onFollowUp: (houseId: string) => void;
+  pendingFriendFavors: Record<string, boolean>;
+  onFriendFavor: (friendId: string, accepted: boolean) => void;
   allHouses: HouseScene[];
   houseOrder: number[];
   currentIndex: number;
@@ -124,6 +126,8 @@ export default function EmlahMenu({
   results,
   onRetry,
   onFollowUp,
+  pendingFriendFavors,
+  onFriendFavor,
   allHouses,
   houseOrder,
   currentIndex,
@@ -207,7 +211,16 @@ export default function EmlahMenu({
               onBuy={onBuy}
             />
           )}
-          {tab === "mesajlar" && <MessagesPanel inbox={inbox} results={results} onRetry={onRetry} onFollowUp={onFollowUp} />}
+          {tab === "mesajlar" && (
+            <MessagesPanel
+              inbox={inbox}
+              results={results}
+              onRetry={onRetry}
+              onFollowUp={onFollowUp}
+              pendingFriendFavors={pendingFriendFavors}
+              onFriendFavor={onFriendFavor}
+            />
+          )}
           {tab === "portfoy" && (
             <PortfolioPanel
               allHouses={allHouses}

@@ -32,7 +32,7 @@ await page.goto(BASE_URL);
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 22, index: 5,
+    version: 23, index: 5,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: [
       {
@@ -63,7 +63,7 @@ await page.evaluate(async () => {
     ownedSkillIds: ["sakin-kafa-1"], skillXP: 5, defeatedRivalIds: [], friendBondCounts: {}, friendBondMilestonesShown: [],
     flashbackShown: false, secondChanceOffered: false, savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v22-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v23-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(500);

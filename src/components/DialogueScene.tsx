@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Choice, ChoiceEffects, DialogueLine, DialogueNode, GameStats, HouseScene, SceneOutcome, ToneBucket } from "../types";
 import { loadHouseImage, peekHouseImage } from "../data/houseImages";
 import { characterImages } from "../data/characterImages";
@@ -19,6 +19,13 @@ import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
+import {
+  isHeldFirmChoice,
+  isDiscountContradiction,
+  CONTRADICTION_SUSPICION_PENALTY,
+  pickDiscountContradictionLine,
+  contradictionRankMultiplier,
+} from "../data/contradiction";
 import type { ContactedCustomer, SignificantMemory } from "../types";
 
 const FUN_BONUS_THRESHOLD = 30;
@@ -80,6 +87,8 @@ interface DialogueSceneProps {
   memoryReference?: SignificantMemory;
   /** Reports when the player picks THIS origin's closing choice, for the loyalty count. */
   onOriginChoicePicked?: () => void;
+  /** "Çelişki Motoru" — customers get sharper-eyed at higher career ranks. See data/contradiction.ts. */
+  rankTitleText?: string;
 }
 
 const speakerLabel: Record<string, string> = {
@@ -114,6 +123,7 @@ export default function DialogueScene({
   showOriginIntro,
   memoryReference,
   onOriginChoicePicked,
+  rankTitleText,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [dialogueStyle] = useState(getDialogueStyle);
@@ -123,10 +133,15 @@ export default function DialogueScene({
   // "Flörtöz Kapanış" — a short bonus exchange overlaid on top of the real
   // node graph instead of a new authored node id (see flirtDialogue.ts).
   const [syntheticNode, setSyntheticNode] = useState<DialogueNode | null>(null);
+  // "Çelişki Motoru" — counts "confident, holding firm" choices picked
+  // this visit; a ref (not state) since it's read-only bookkeeping that
+  // shouldn't trigger its own re-render. See data/contradiction.ts.
+  const heldFirmCountRef = useRef(0);
 
   useEffect(() => {
     setNodeId(house.startNode);
     setLineIndex(0);
+    heldFirmCountRef.current = 0;
   }, [house]);
 
   const node = syntheticNode ?? house.nodes[nodeId];
@@ -350,6 +365,31 @@ export default function DialogueScene({
   }, [isTyping, atLastLine, currentText, choicesToShow]);
 
   function pickChoice(choice: Choice) {
+    // "Çelişki Motoru" — checked BEFORE the choice's own effects apply, off
+    // the SAME onChoiceEffects channel everything else uses (just a much
+    // sharper one-off penalty), so a held-firm-then-big-discount about-face
+    // gets called out instead of silently resolving. See data/contradiction.ts.
+    if (choice.id !== "flirt-bond" && isDiscountContradiction(heldFirmCountRef.current, choice.effects)) {
+      const rankMultiplier = contradictionRankMultiplier[rankTitleText ?? "Stajyer"] ?? 1;
+      onChoiceEffects({ suspicion: Math.round(CONTRADICTION_SUSPICION_PENALTY * rankMultiplier) });
+      heldFirmCountRef.current = 0;
+      setSyntheticNode({
+        id: "contradiction-callout",
+        lines: [{ speaker: "customer1", text: pickDiscountContradictionLine() }],
+        choices: [
+          {
+            id: "contradiction-continue",
+            text: "Devam ▸",
+            next: choice.next,
+            effects: choice.effects?.closingBias !== undefined ? { closingBias: choice.effects.closingBias } : undefined,
+          },
+        ],
+      });
+      setLineIndex(0);
+      return;
+    }
+    if (isHeldFirmChoice(choice.effects)) heldFirmCountRef.current += 1;
+
     if (choice.effects) onChoiceEffects(choice.effects);
     if (choice.effects?.fun) onLineChosen?.(choice.text, choice.effects.fun);
     if (choice.effects) onToneChoice?.(choice.effects);
@@ -358,10 +398,23 @@ export default function DialogueScene({
       // Defer the actual sale resolution to a short bonus exchange instead
       // of resolving instantly — same closingBias, just felt as a scene
       // instead of an invisible number. See flirtDialogue.ts.
+      // "İçten Soru" — a second, honest-path choice alongside the flirty
+      // close. Its suspicion:-5 rides the SAME classifyCompassChoice
+      // pipeline every other choice already uses (negative suspicion =
+      // durustluk), no bespoke callback needed — and the halved closingBias
+      // makes honesty a real, felt tradeoff instead of a free virtue point.
       setSyntheticNode({
         id: "flirt-extra",
-        lines: pickFlirtExchangeLines(),
-        choices: [{ id: "flirt-bond-resolve", text: pickFlirtClosingLine(), next: "", effects: { closingBias: choice.effects?.closingBias ?? 0 } }],
+        lines: [...pickFlirtExchangeLines(), { speaker: "thought", text: "(içinden) Bu satışı gerçekten hak ediyor muyum, yoksa bu sohbetin tadını mı çıkarıyorum?" }],
+        choices: [
+          { id: "flirt-bond-resolve", text: pickFlirtClosingLine(), next: "", effects: { closingBias: choice.effects?.closingBias ?? 0 } },
+          {
+            id: "flirt-honest-check",
+            text: "(Ciddileşerek) Dur biraz, bu evi gerçekten istediğinizden emin misiniz?",
+            next: "",
+            effects: { closingBias: (choice.effects?.closingBias ?? 0) * 0.5, suspicion: -5 },
+          },
+        ],
       });
       setLineIndex(0);
       return;

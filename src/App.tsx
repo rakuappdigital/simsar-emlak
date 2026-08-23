@@ -153,7 +153,7 @@ import {
 import { skillTree, canUnlockSkill, xpForOutcome, startingBonusForSkills } from "./data/skillTree";
 import { activeRivalFor } from "./data/rivalLadder";
 import { FRIEND_BOND_MILESTONES, friendBondMilestoneLine } from "./data/friendBondMilestones";
-import { friendCharacterForHouseId } from "./data/friendCharacters";
+import { friendCharacters, friendCharacterForHouseId } from "./data/friendCharacters";
 import {
   FLASHBACK_CHANCE,
   FLASHBACK_MIN_INDEX,
@@ -178,6 +178,17 @@ import { computeStreak, checkNewBadges, checkNewInvestmentBadges, allBadges } fr
 import { HOUSES_PER_WEEK, isLastHouseOfWeek, weekIndexForHouse, evaluateWeek } from "./data/goals";
 import { maybeGenerateCallback, negotiationChoices, luxuryNegotiationChoices, pickNegotiationReply, type CallbackEvent } from "./data/callbacks";
 import { rollFollowUpReaction, pickEmlahFollowUpLine, pickFollowUpReply, FOLLOWUP_WARM_SUSPICION_DELTA, FOLLOWUP_WARM_INTEREST_DELTA, FOLLOWUP_ANNOYED_SUSPICION_DELTA, FOLLOWUP_ANNOYED_INTEREST_DELTA } from "./data/followUp";
+import { isToneContradiction, pickToneContradictionLine, NEGOTIATION_TONE_CONTRADICTION_PENALTY } from "./data/contradiction";
+import {
+  favorRequestLine,
+  favorAcceptReply,
+  favorDeclineReply,
+  yakinlikEpilogueLine,
+  FAVOR_ACCEPT_COST,
+  FAVOR_ACCEPT_BOND_BONUS,
+  BREADTH_CONFRONTATION_MIN_FRIENDS,
+  breadthConfrontationLine,
+} from "./data/relationshipStages";
 import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
 import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
@@ -403,6 +414,9 @@ interface PersistOptional {
   friendBondMilestonesShown: string[];
   flashbackShown: boolean;
   secondChanceOffered: boolean;
+  pendingFriendFavors: Record<string, boolean>;
+  friendFavorAccepted: Record<string, boolean>;
+  breadthConfrontationShown: boolean;
 }
 
 type PersistOverrides = PersistRequired & Partial<PersistOptional>;
@@ -537,6 +551,10 @@ function App() {
   // "Satış Sonrası Arama" — no persisted state, same "avoid immediate repeat" pattern as lastTaskId. See data/postSaleCall.ts.
   const [activePostSaleCall, setActivePostSaleCall] = useState<{ def: PostSaleCallDef; contactName: string; houseId: string } | null>(null);
   const [lastPostSaleCallId, setLastPostSaleCallId] = useState<string | undefined>(undefined);
+  // "İlişki Evreleri" — see data/relationshipStages.ts.
+  const [pendingFriendFavors, setPendingFriendFavors] = useState<Record<string, boolean>>({});
+  const [friendFavorAccepted, setFriendFavorAccepted] = useState<Record<string, boolean>>({});
+  const [breadthConfrontationShown, setBreadthConfrontationShown] = useState(false);
   const [clickMilestoneMsg, setClickMilestoneMsg] = useState<string | null>(null);
   // Gizli Dokunuş Menüsü — 5 taps on the office title within a few seconds
   // opens a hidden lifetime-stats screen (the iOS-native stand-in for the
@@ -659,7 +677,7 @@ function App() {
 
   function persist(p: PersistOverrides) {
     const save: SaveGame = {
-      version: 22,
+      version: 23,
       index: p.index,
       houseOrder: p.houseOrder ?? houseOrder,
       results: p.results,
@@ -705,6 +723,9 @@ function App() {
       friendBondMilestonesShown: p.friendBondMilestonesShown ?? friendBondMilestonesShown,
       flashbackShown: p.flashbackShown ?? flashbackShown,
       secondChanceOffered: p.secondChanceOffered ?? secondChanceOffered,
+      pendingFriendFavors: p.pendingFriendFavors ?? pendingFriendFavors,
+      friendFavorAccepted: p.friendFavorAccepted ?? friendFavorAccepted,
+      breadthConfrontationShown: p.breadthConfrontationShown ?? breadthConfrontationShown,
       savedAt: new Date().toISOString(),
     };
     const targetSlot = p.slot ?? activeSlot;
@@ -1288,6 +1309,9 @@ function App() {
     setFlashbackShown(false);
     setActiveFlashback(null);
     setSecondChanceOffered(false);
+    setPendingFriendFavors({});
+    setFriendFavorAccepted({});
+    setBreadthConfrontationShown(false);
     setPendingDeliveries([]);
     setBossMood(BOSS_MOOD_START);
     setFiredSeasonalEventWeeks([]);
@@ -1359,6 +1383,9 @@ function App() {
     setFlashbackShown(savedGame.flashbackShown ?? false);
     setActiveFlashback(null);
     setSecondChanceOffered(savedGame.secondChanceOffered ?? false);
+    setPendingFriendFavors(savedGame.pendingFriendFavors ?? {});
+    setFriendFavorAccepted(savedGame.friendFavorAccepted ?? {});
+    setBreadthConfrontationShown(savedGame.breadthConfrontationShown ?? false);
     setPendingDeliveries(savedGame.pendingDeliveries ?? []);
     setBossMood(savedGame.bossMood ?? BOSS_MOOD_START);
     setFiredSeasonalEventWeeks(savedGame.firedSeasonalEventWeeks ?? []);
@@ -2109,16 +2136,25 @@ function App() {
 
     const original = results[activeCallback.resultIndex];
     const targetHouse = allHouses.find((h) => h.id === original.houseId)!;
+    // "Çelişki Motoru" — a tone flip (pushy↔patient) across separate
+    // negotiation attempts on the SAME customer reads as inconsistent, not
+    // just a strategy change. See data/contradiction.ts.
+    const toneContradiction = isToneContradiction(original.lastNegotiationTone, choice.id);
     const bias = choice.closingBias * closingBiasMultiplier(ownedPerks);
     const projected: GameStats = {
-      suspicion: original.finalStats.suspicion + choice.suspicionDelta,
+      suspicion: original.finalStats.suspicion + choice.suspicionDelta + (toneContradiction ? NEGOTIATION_TONE_CONTRADICTION_PENALTY : 0),
       interest: original.finalStats.interest + choice.interestDelta,
       fun: original.finalStats.fun + choice.funDelta,
       discountPercent: original.finalStats.discountPercent,
     };
     const outcome2: SceneOutcome = resolveOutcome(projected, bias, targetHouse.profile);
 
-    let updatedResult: HouseResult = { ...original, finalStats: projected, finalSuspicion: projected.suspicion };
+    let updatedResult: HouseResult = {
+      ...original,
+      finalStats: projected,
+      finalSuspicion: projected.suspicion,
+      lastNegotiationTone: choice.id as HouseResult["lastNegotiationTone"],
+    };
     if (outcome2 === "lost") {
       updatedResult = { ...updatedResult, outcome: "lost" };
     }
@@ -2127,9 +2163,11 @@ function App() {
     const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
     setResults(newResults);
     const playerMsg: PhoneMessage = { from: "Emlah", text: choice.text };
-    const confirmMsg: PhoneMessage = { from: activeCallback.contactName, text: confirmText };
+    const confirmMessages: PhoneMessage[] = toneContradiction
+      ? [{ from: activeCallback.contactName, text: pickToneContradictionLine() }, { from: activeCallback.contactName, text: confirmText }]
+      : [{ from: activeCallback.contactName, text: confirmText }];
     let newInbox = logMessages(inbox, targetHouse.id, "Emlah", [playerMsg], index + 1, true);
-    newInbox = logMessages(newInbox, targetHouse.id, activeCallback.contactName, [confirmMsg], index + 1);
+    newInbox = logMessages(newInbox, targetHouse.id, activeCallback.contactName, confirmMessages, index + 1);
     setInbox(newInbox);
     persist({ results: newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox });
 
@@ -2141,7 +2179,7 @@ function App() {
       prev
         ? {
             ...prev,
-            messages: [...prev.messages, playerMsg, confirmMsg],
+            messages: [...prev.messages, playerMsg, ...confirmMessages],
             choices: undefined,
           }
         : prev,
@@ -2322,6 +2360,25 @@ function App() {
         }
       }
     }
+    // "Herkese Aynı Şeyi mi Söylüyorsun?" — a one-time narrative nudge if
+    // bond points are being spread thin across 3+ friends at once with none
+    // reaching Yakınlık. No bond penalty (that'd feel punishing/confusing),
+    // just a values-compass tick — reuses the same tally handleToneChoice
+    // already maintains. See data/relationshipStages.ts.
+    if (!breadthConfrontationShown) {
+      const atGuvenOrAbove = Object.entries(friendBondCounts).filter(([, count]) => count >= 3);
+      if (atGuvenOrAbove.length >= BREADTH_CONFRONTATION_MIN_FRIENDS && !atGuvenOrAbove.some(([, count]) => count >= 10)) {
+        const [confrontingFriendId] = atGuvenOrAbove[Math.floor(Math.random() * atGuvenOrAbove.length)];
+        const friend = friendCharacters.find((f) => f.id === confrontingFriendId);
+        if (friend) {
+          const newInbox = logMessages(inbox, `friend-${friend.name.toLowerCase()}`, friend.name, [{ from: friend.name, text: breadthConfrontationLine(friend.name) }], index + 1);
+          setInbox(newInbox);
+          setBreadthConfrontationShown(true);
+          setCompassTally((prev) => ({ ...prev, kurnazlik: prev.kurnazlik + 1 }));
+          persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally: { ...compassTally, kurnazlik: compassTally.kurnazlik + 1 }, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors, friendFavorAccepted, breadthConfrontationShown: true });
+        }
+      }
+    }
     // Canlı Şehir Nabzı — ambient office-radio toast, entirely independent
     // of stage/detour screens (it floats over whatever's already on
     // screen), so it never needs a hadWorkTaskThisTransition-style guard.
@@ -2472,7 +2529,16 @@ function App() {
     let newUnlockedFriendHouseIds = unlockedFriendHouseIds;
     let newFriendBondCounts = friendBondCounts;
     let newFriendBondMilestonesShown = friendBondMilestonesShown;
+    let newPendingFriendFavors = pendingFriendFavors;
     let houseTipReaction = choice.reaction;
+    // Bagged up here instead of a separate racing setInbox() call — the
+    // milestone/favor message used to be posted via its own functional
+    // setInbox() update that the direct setInbox(newInbox) below silently
+    // clobbered in the same tick (never actually visible). Folding it into
+    // the SAME newInbox chain both fixes that and lets the favor prompt
+    // land right alongside the milestone line.
+    let milestoneMessages: PhoneMessage[] = [];
+    let milestoneFriendName: string | null = null;
     if (choice.houseTipAction === "accept" && choice.houseTipHouseId && !unlockedFriendHouseIds.includes(choice.houseTipHouseId)) {
       newUnlockedFriendHouseIds = [...unlockedFriendHouseIds, choice.houseTipHouseId];
       setUnlockedFriendHouseIds(newUnlockedFriendHouseIds);
@@ -2480,7 +2546,9 @@ function App() {
       const dateLabel = formatGameDate(gameDateForIndex(apptIndex));
       houseTipReaction = `${choice.reaction} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin.)`;
 
-      // Sosyal Bağ — silent counter, easter egg only. See data/friendBondMilestones.ts.
+      // "İlişki Evreleri" — see data/relationshipStages.ts. Milestone 3
+      // (Güven) now also opens a real favor choice; milestone 10
+      // (Yakınlık) gets an upgraded epilogue if that favor was accepted.
       const friend = friendCharacterForHouseId(choice.houseTipHouseId);
       if (friend) {
         const newCount = (friendBondCounts[friend.id] ?? 0) + 1;
@@ -2491,11 +2559,15 @@ function App() {
           if (!friendBondMilestonesShown.includes(milestoneKey)) {
             newFriendBondMilestonesShown = [...friendBondMilestonesShown, milestoneKey];
             setFriendBondMilestonesShown(newFriendBondMilestonesShown);
+            milestoneFriendName = friend.name;
             const line = friendBondMilestoneLine(friend.name, newCount);
-            if (line) {
-              setInbox((prev) =>
-                logMessages(prev, `friend-${friend.name.toLowerCase()}`, friend.name, [{ from: friend.name, text: line }], index + 1),
-              );
+            if (line) milestoneMessages.push({ from: friend.name, text: line });
+            if (newCount === 3) {
+              newPendingFriendFavors = { ...pendingFriendFavors, [friend.id]: true };
+              setPendingFriendFavors(newPendingFriendFavors);
+              milestoneMessages.push({ from: friend.name, text: favorRequestLine(friend.name, friend.profession) });
+            } else if (newCount === 10 && friendFavorAccepted[friend.id]) {
+              milestoneMessages.push({ from: friend.name, text: yakinlikEpilogueLine(friend.name) });
             }
           }
         }
@@ -2519,13 +2591,47 @@ function App() {
     }
 
     const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: bulkDealReaction };
-    const withReply = logMessages(inbox, threadId, "Emlah", [replyMsg], index + 1, true);
-    const newInbox = logMessages(withReply, threadId, activeFriendChat.set.contactName, [reactionMsg], index + 1);
+    let newInbox = logMessages(inbox, threadId, "Emlah", [replyMsg], index + 1, true);
+    newInbox = logMessages(newInbox, threadId, activeFriendChat.set.contactName, [reactionMsg], index + 1);
+    if (milestoneMessages.length > 0 && milestoneFriendName) {
+      newInbox = logMessages(newInbox, `friend-${milestoneFriendName.toLowerCase()}`, milestoneFriendName, milestoneMessages, index + 1);
+    }
     setInbox(newInbox);
     setActiveFriendChat((prev) =>
       prev ? { ...prev, messages: [...prev.messages, replyMsg, reactionMsg], showChoices: false } : prev,
     );
-    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds: newUnlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown: newFriendBondMilestonesShown, flashbackShown });
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan: newPendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment: newPendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds: newUnlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown: newFriendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors: newPendingFriendFavors, friendFavorAccepted, breadthConfrontationShown });
+  }
+
+  function resolveFriendFavor(friendId: string, accepted: boolean) {
+    if (!pendingFriendFavors[friendId]) return;
+    const friend = friendCharacters.find((f) => f.id === friendId);
+    if (!friend) return;
+
+    const newPendingFriendFavors = { ...pendingFriendFavors };
+    delete newPendingFriendFavors[friendId];
+    setPendingFriendFavors(newPendingFriendFavors);
+
+    let newSpent = spent;
+    let newFriendFavorAccepted = friendFavorAccepted;
+    let newFriendBondCounts = friendBondCounts;
+    const replyMsg: PhoneMessage = {
+      from: friend.name,
+      text: accepted ? favorAcceptReply(friend.name) : favorDeclineReply(friend.name),
+    };
+    if (accepted) {
+      newSpent = spent + FAVOR_ACCEPT_COST;
+      setSpent(newSpent);
+      newFriendFavorAccepted = { ...friendFavorAccepted, [friendId]: true };
+      setFriendFavorAccepted(newFriendFavorAccepted);
+      newFriendBondCounts = { ...friendBondCounts, [friendId]: (friendBondCounts[friendId] ?? 0) + FAVOR_ACCEPT_BOND_BONUS };
+      setFriendBondCounts(newFriendBondCounts);
+    }
+
+    const threadId = `friend-${friend.name.toLowerCase()}`;
+    const newInbox = logMessages(inbox, threadId, friend.name, [replyMsg], index + 1);
+    setInbox(newInbox);
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts: newFriendBondCounts, friendBondMilestonesShown, flashbackShown, secondChanceOffered, pendingFriendFavors: newPendingFriendFavors, friendFavorAccepted: newFriendFavorAccepted, breadthConfrontationShown });
   }
 
   function handleMeetupChoice(activityId: string) {
@@ -2804,6 +2910,8 @@ function App() {
           results={results}
           onRetry={retryFromInbox}
           onFollowUp={followUpThinking}
+          pendingFriendFavors={pendingFriendFavors}
+          onFriendFavor={resolveFriendFavor}
           allHouses={allHouses}
           houseOrder={houseOrder}
           currentIndex={index}
@@ -3106,6 +3214,7 @@ function App() {
             showOriginIntro={index === 0}
             memoryReference={activeMemoryReference?.houseId === house.id ? activeMemoryReference.memory : undefined}
             onOriginChoicePicked={handleOriginChoicePicked}
+            rankTitleText={rankTitle(earned)}
           />
         </>
       )}

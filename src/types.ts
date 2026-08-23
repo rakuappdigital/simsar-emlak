@@ -122,6 +122,8 @@ export interface HouseResult {
   retriedLost?: boolean;
   /** True once the player has used their one manual follow-up message from the inbox on a "thinking" sale. See data/followUp.ts. */
   followedUpThinking?: boolean;
+  /** Tone of the most recent negotiation choice picked for this customer (closing choice or callback) — used to catch a pushy↔patient about-face across separate attempts. See data/contradiction.ts. */
+  lastNegotiationTone?: "empathetic" | "pushy" | "patient";
   /** Text of the highest-fun choice picked during this house's dialogue, if any. */
   bestLine?: string;
   /** The `fun` value of `bestLine`, kept alongside it to compare across houses when picking a week's best. */
@@ -253,7 +255,7 @@ export interface PendingDelivery {
 }
 
 export interface SaveGame {
-  version: 22;
+  version: 23;
   index: number;
   houseOrder: number[];
   results: HouseResult[];
@@ -333,6 +335,12 @@ export interface SaveGame {
   flashbackShown: boolean;
   /** "İkinci Şans" — true once the one-time surprise lost-customer callback has fired. See data/secondChanceEvent.ts. */
   secondChanceOffered: boolean;
+  /** "İlişki Evreleri" — friend id -> a Güven-stage favor is awaiting the player's reply. See data/relationshipStages.ts. */
+  pendingFriendFavors: Record<string, boolean>;
+  /** friend id -> true once that friend's Güven-stage favor was accepted, unlocking the richer Yakınlık epilogue. */
+  friendFavorAccepted: Record<string, boolean>;
+  /** True once the one-time "Herkese aynı şeyi mi söylüyorsun?" breadth-confrontation beat has fired. */
+  breadthConfrontationShown: boolean;
   savedAt: string;
 }
 

@@ -65,7 +65,7 @@ assert(data.effectivePlaysWhenRefilled === 2, "plays refill once cooldown has pa
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
-    version: 22, index: 0,
+    version: 23, index: 0,
     houseOrder: housesMod.allHouses.map((_, i) => i),
     results: [], weekOutcomes: [], badges: [], ownedPerks: [], consumables: {}, unlockedTiers: [1, 2, 3, 4, 5], spent: 0,
     inbox: [], castAssignment: {}, dailyQuest: null, bonusEarnings: 0, pendingLoan: null, tasksCompleted: 0,
@@ -78,7 +78,7 @@ await page.evaluate(async () => {
     ownedSkillIds: [], skillXP: 0, defeatedRivalIds: [], friendBondCounts: {}, friendBondMilestonesShown: [],
     flashbackShown: false, secondChanceOffered: false, savedAt: new Date().toISOString(),
   };
-  localStorage.setItem("simsar-emlak-save-v22-slot0", JSON.stringify(save));
+  localStorage.setItem("simsar-emlak-save-v23-slot0", JSON.stringify(save));
 });
 await page.reload();
 await page.waitForTimeout(500);
