@@ -32,8 +32,13 @@ const data = await page.evaluate(async () => {
   out.depletion = energyMod.ENERGY_DEPLETION_PER_HOUSE;
   out.passivePerHour = energyMod.PASSIVE_REGEN_PER_HOUR;
   out.minigameGain = energyMod.MINIGAME_ENERGY_GAIN;
-  out.minigameMaxPlays = energyMod.MINIGAME_MAX_PLAYS;
-  out.minigameCooldownMs = energyMod.MINIGAME_COOLDOWN_MS;
+  // Mini-games no longer gate on a real-time cooldown — paid game, no
+  // ads/purchases to ration behind a wait timer. These exports should be
+  // gone entirely now.
+  out.cooldownExportsRemoved =
+    energyMod.MINIGAME_MAX_PLAYS === undefined &&
+    energyMod.MINIGAME_COOLDOWN_MS === undefined &&
+    energyMod.effectiveMinigamePlaysRemaining === undefined;
 
   const oneHourAgo = Date.now() - 60 * 60 * 1000;
   out.regen1hGained = energyMod.computePassiveEnergyRegen(oneHourAgo, Date.now()).gained;
@@ -43,25 +48,21 @@ const data = await page.evaluate(async () => {
   out.regen2_5hGained = regen2_5h.gained;
   out.regen2_5hCarriesOverPartialHour = regen2_5h.newLastRegenAt > twoAndHalfHoursAgo && regen2_5h.newLastRegenAt < Date.now();
 
-  out.effectivePlaysWhenLocked = energyMod.effectiveMinigamePlaysRemaining(0, Date.now() + 1000, Date.now());
-  out.effectivePlaysWhenRefilled = energyMod.effectiveMinigamePlaysRemaining(0, Date.now() - 1000, Date.now());
   return out;
 });
 
 assert(data.depletion === 30, "depletion per house is 30");
 assert(data.passivePerHour === 10, "passive regen is 10/hour");
 assert(data.minigameGain === 10, "minigame gain is 10");
-assert(data.minigameMaxPlays === 2, "minigame max plays is 2");
-assert(data.minigameCooldownMs === 3 * 60 * 60 * 1000, "minigame cooldown is 3h");
+assert(data.cooldownExportsRemoved, "real-time cooldown exports (MINIGAME_MAX_PLAYS/COOLDOWN_MS/effectiveMinigamePlaysRemaining) are gone");
 assert(data.regen1hGained === 10, "1 hour elapsed grants 10 energy");
 assert(data.regen2_5hGained === 20, "2.5 hours elapsed grants 20 (floored)");
 assert(data.regen2_5hCarriesOverPartialHour, "partial hour carries over instead of being discarded");
-assert(data.effectivePlaysWhenLocked === 0, "plays locked while cooldown active");
-assert(data.effectivePlaysWhenRefilled === 2, "plays refill once cooldown has passed");
 
-// UI: inject a low-energy save with the mini-game cooldown exhausted, verify
-// "Bugünün İşini Al" is blocked and the Enerji Molası modal shows the
-// locked countdown state + the two placeholder recovery paths.
+// UI: inject a low-energy save (even with the old minigamePlaysRemaining
+// field at 0, a vestigial value no longer read for gating) and verify
+// "Bugünün İşini Al" opens Enerji Molası with mini-games always available
+// — no locked/countdown state, no ad/purchase placeholders.
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");
   const save = {
@@ -76,7 +77,10 @@ await page.evaluate(async () => {
     selfReflectionShown: false, unlockedFriendHouseIds: [], friendHouseResults: [],
     energyLastRegenAt: Date.now(), minigameNextAvailableAt: Date.now() + 90 * 60 * 1000, minigamePlaysRemaining: 0,
     ownedSkillIds: [], skillXP: 0, defeatedRivalIds: [], friendBondCounts: {}, friendBondMilestonesShown: [],
-    flashbackShown: false, secondChanceOffered: false, savedAt: new Date().toISOString(),
+    flashbackShown: false, secondChanceOffered: false,
+    pendingFriendFavors: {}, friendFavorAccepted: {}, breadthConfrontationShown: false,
+    firatFullCircleShown: false, hardTimesUsed: {}, firedFatefulMomentIndices: [],
+    savedAt: new Date().toISOString(),
   };
   localStorage.setItem("simsar-emlak-save-v26-slot0", JSON.stringify(save));
 });
@@ -89,10 +93,9 @@ await page.waitForTimeout(500);
 
 await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
 await page.waitForTimeout(300);
-const modalText = await page.locator(".energy-break-modal").innerText().catch(() => "");
-assert((await page.locator(".energy-break-card").count()) === 0, "locked modal shows 0 activity cards");
-assert(modalText.includes("yenilenecek"), "locked modal shows countdown text");
-assert((await page.locator(".energy-break-soon").count()) === 2, "locked modal shows 2 'Yakında' placeholders (ad + purchase)");
+assert((await page.locator(".energy-break-modal").count()) > 0, "low energy opens the Enerji Molası modal");
+assert((await page.locator(".energy-break-card").count()) === 4, "all 4 mini-games are available, even with minigamePlaysRemaining at 0 (vestigial field, no longer gates anything)");
+assert((await page.locator(".energy-break-other-btn, .energy-break-soon").count()) === 0, "no leftover ad/purchase placeholder buttons");
 
 assert(errors.length === 0, `zero console/page errors (got ${errors.length})`);
 if (errors.length > 0) for (const e of errors) console.error("  -", e);

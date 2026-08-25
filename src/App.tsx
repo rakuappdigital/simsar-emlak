@@ -81,10 +81,7 @@ import {
   ENERGY_LOW_SUSPICION_MULTIPLIER,
   WEEKLY_ENERGY_REGEN,
   ENERGY_WORK_MIN_THRESHOLD,
-  MINIGAME_MAX_PLAYS,
-  MINIGAME_COOLDOWN_MS,
   computePassiveEnergyRegen,
-  effectiveMinigamePlaysRemaining,
 } from "./data/energy";
 import { energyBreakActivities } from "./data/energyBreak";
 const EnergyBreakScreen = lazy(() => import("./components/EnergyBreakScreen"));
@@ -563,7 +560,10 @@ function App() {
   // Real wall-clock energy timers — device time, not the in-game calendar. See data/energy.ts.
   const [energyLastRegenAt, setEnergyLastRegenAt] = useState(() => Date.now());
   const [minigameNextAvailableAt, setMinigameNextAvailableAt] = useState(() => Date.now());
-  const [minigamePlaysRemaining, setMinigamePlaysRemaining] = useState(MINIGAME_MAX_PLAYS);
+  // Vestigial — mini-games no longer gate on a real-time cooldown (see
+  // data/energy.ts), these two fields just stay around unused so old
+  // saves' shape doesn't need a version bump for two harmless dead numbers.
+  const [minigamePlaysRemaining, setMinigamePlaysRemaining] = useState(2);
   // "Emlah'ın İç Sesi" — skill tree, paid for with a separate XP currency. See data/skillTree.ts.
   const [ownedSkillIds, setOwnedSkillIds] = useState<string[]>([]);
   const [skillXP, setSkillXP] = useState(0);
@@ -1372,7 +1372,7 @@ function App() {
     setEnergy(ENERGY_MAX);
     setEnergyLastRegenAt(Date.now());
     setMinigameNextAvailableAt(Date.now());
-    setMinigamePlaysRemaining(MINIGAME_MAX_PLAYS);
+    setMinigamePlaysRemaining(2);
     setOwnedSkillIds([]);
     setSkillXP(0);
     setDefeatedRivalIds([]);
@@ -1405,7 +1405,7 @@ function App() {
     enterPhone(
       0, [], [], {}, [1], order, [], cast, null, originId,
       { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
-      false, [], [], Date.now(), Date.now(), MINIGAME_MAX_PLAYS, [], 0, [], {}, [], false, false, [],
+      false, [], [], Date.now(), Date.now(), 2, [], 0, [], {}, [], false, false, [],
     );
   }
 
@@ -1450,7 +1450,7 @@ function App() {
     setEnergy(Math.min(ENERGY_MAX, (savedGame.energy ?? ENERGY_MAX) + catchUpGain));
     setEnergyLastRegenAt(catchUpRegenAt);
     setMinigameNextAvailableAt(savedGame.minigameNextAvailableAt ?? Date.now());
-    setMinigamePlaysRemaining(savedGame.minigamePlaysRemaining ?? MINIGAME_MAX_PLAYS);
+    setMinigamePlaysRemaining(savedGame.minigamePlaysRemaining ?? 2);
     setOwnedSkillIds(savedGame.ownedSkillIds ?? []);
     setSkillXP(savedGame.skillXP ?? 0);
     setDefeatedRivalIds(savedGame.defeatedRivalIds ?? []);
@@ -1502,7 +1502,7 @@ function App() {
       savedGame.friendHouseResults ?? [],
       catchUpRegenAt,
       savedGame.minigameNextAvailableAt ?? Date.now(),
-      savedGame.minigamePlaysRemaining ?? MINIGAME_MAX_PLAYS,
+      savedGame.minigamePlaysRemaining ?? 2,
       savedGame.ownedSkillIds ?? [],
       savedGame.skillXP ?? 0,
       savedGame.defeatedRivalIds ?? [],
@@ -2146,21 +2146,18 @@ function App() {
   function handleEnergyBreakChoice(activityId: string, tier: MiniGameTier) {
     const activity = energyBreakActivities.find((a) => a.id === activityId);
     if (!activity) return;
-    const now = Date.now();
-    const playsNow = effectiveMinigamePlaysRemaining(minigamePlaysRemaining, minigameNextAvailableAt, now);
-    if (playsNow <= 0) return;
-
+    // No real-time cooldown/plays-remaining gate — the game is paid up
+    // front with no ads or purchases, so there's nothing to ration behind
+    // a wait timer. The only cost is the player's actual attention for a
+    // few seconds per play (see EnergyMiniGames.tsx). The modal stays open
+    // after each play (no setShowEnergyBreak(false) here) so the player
+    // can keep playing until satisfied, then close it manually.
     // "great" = full reward, "ok" = a partial one, "fail" still grants a
-    // small floor so a spent play never feels wasted — see EnergyMiniGames.tsx.
+    // small floor so a play never feels wasted.
     const tierGain = tier === "great" ? activity.energyGain : tier === "ok" ? Math.round(activity.energyGain * 0.6) : Math.round(activity.energyGain * 0.3);
     const newEnergy = Math.min(ENERGY_MAX, energy + tierGain);
-    const newPlaysRemaining = playsNow - 1;
-    const newNextAvailableAt = newPlaysRemaining <= 0 ? now + MINIGAME_COOLDOWN_MS : minigameNextAvailableAt;
     setEnergy(newEnergy);
-    setMinigamePlaysRemaining(newPlaysRemaining);
-    setMinigameNextAvailableAt(newNextAvailableAt);
-    setShowEnergyBreak(false);
-    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt: newNextAvailableAt, minigamePlaysRemaining: newPlaysRemaining });
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
   }
 
   function unlockSkill(skillId: string) {
@@ -3043,8 +3040,6 @@ function App() {
       {showEnergyBreak && (
         <EnergyBreakScreen
           energy={energy}
-          playsRemaining={effectiveMinigamePlaysRemaining(minigamePlaysRemaining, minigameNextAvailableAt, Date.now())}
-          nextAvailableAt={minigameNextAvailableAt}
           onChoose={handleEnergyBreakChoice}
           onClose={() => setShowEnergyBreak(false)}
         />

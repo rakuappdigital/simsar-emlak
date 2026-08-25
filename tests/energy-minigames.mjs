@@ -83,11 +83,10 @@ const energyAfter = await page.evaluate(() => {
 });
 assert(energyAfter !== null && energyAfter > 5, `energy actually increased after playing (was 5, now ${energyAfter})`);
 
-const playsAfter = await page.evaluate(() => {
-  const raw = localStorage.getItem("simsar-emlak-save-v26-slot0");
-  return raw ? JSON.parse(raw).minigamePlaysRemaining : null;
-});
-assert(playsAfter === 1, `one play was consumed (now ${playsAfter}/2)`);
+// No real-time cooldown anymore — the modal stays open (not auto-closed)
+// and the activity list should be playable again immediately, no lock.
+assert((await page.locator(".energy-break-modal").count()) > 0, "the modal stays open after a play instead of auto-closing");
+assert((await page.locator(".energy-break-card").count()) === 4, "all 4 activities are immediately playable again, no cooldown lock");
 
 assert(errors.length === 0, `zero console/page errors (got ${errors.length})`);
 if (errors.length > 0) for (const e of errors) console.error("  -", e);
