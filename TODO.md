@@ -1,3 +1,24 @@
+# App Store Connect Submission Durumu (2026-09-21/22)
+
+API ile tamamlananlar:
+- ✅ **Build yüklendi** — `xcrun altool --upload-app` ile IPA App Store Connect'e gönderildi (Delivery UUID `7ad35ad7-23b7-429b-952a-811956360fec`), Apple tarafında **işleniyor** (state: PROCESSING, genelde 15-90 dk sürer — build listede görünmeye başlayınca version'a atanıp submit edilebilir).
+- ✅ **Kategori**: Games / Simulation / Casual
+- ✅ **Telif hakkı**: "2026 Rakuapp Digital"
+- ✅ **Açıklama, anahtar kelimeler, tanıtım metni** (en-US) — İngilizce yazıldı, oyunun gerçek özelliklerini anlatıyor
+- ✅ **Yaş Derecelendirmesi** — tüm alanlar dolduruldu (şiddet/argo/cinsel içerik/kumar yok, reklam var=true)
+- ✅ **App Store ekran görüntüleri** — 5 adet, gerçek oynanış görüntüsü, 1290×2796 (6.7" iPhone), Playwright ile üretildi ve yüklendi
+
+**API İLE YAPILAMAYAN (gerçek kısıtlama, denendi doğrulandı):**
+- ❌ **App Privacy (veri kullanımı bildirimi / "nutrition label")** — App Store Connect API bu alanı HİÇ desteklemiyor (`/v1/appDataUsages` gibi denenen tüm path'ler 404 döndü). **Kesinlikle ASC web arayüzünden elle doldurulmalı** (My Apps → Odd Estate → App Privacy). RevenueCat/AdMob/Game Center kullanıldığı için muhtemelen "Purchase History", "Device ID", "Identifiers" gibi kategoriler işaretlenmeli.
+
+**Kullanıcı kendisi dolduracak:**
+- App Store İnceleme Detayı (İnceleme ekibi iletişim: ad/soyad/telefon) — kullanıcı "sonra ben doldururum" dedi.
+
+**Kontrol edilmeli (API'den net teyit alınamadı):**
+- Fiyatlandırma — base territory USA/USD olarak ayarlı görünüyor, muhtemelen otomatik "Free" ama ASC arayüzünden bir bakışla teyit edilmeli.
+
+---
+
 # Odd Estate — Sıradaki Oturum Yapılacaklar Listesi
 
 Kullanıcı 2026-09-21 tarihinde 10 madde istedi. Hepsi tek tek ele alınıyor.
