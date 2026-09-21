@@ -4,6 +4,7 @@ import { computePrestige, PRESTIGE_MAX, rankTitleDisplay } from "../data/scoring
 import { rivalLadder, activeRivalFor } from "../data/rivalLadder";
 import { MedalIcon } from "./icons";
 import { resolveText } from "../data/language";
+import { showLeaderboard } from "../data/gameCenter";
 
 interface CareerPanelProps {
   rankTitleText: string;
@@ -48,6 +49,9 @@ export default function CareerPanel({
 
   return (
     <div className="career-panel">
+      <button className="pixel-btn small" onClick={showLeaderboard}>
+        🏆 Liderlik Tablosu
+      </button>
       <div className="career-stat-row">
         <span className="career-stat-label">Kariyer Rütbesi</span>
         <span className="career-stat-value">{rankTitleDisplay(rankTitleText)}</span>

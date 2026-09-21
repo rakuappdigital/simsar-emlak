@@ -8,6 +8,7 @@
  * `syncPurchasesFromRevenueCat()` ile (uygulama açılışında) senkronize edilir.
  */
 import { isRevenueCatAvailable, purchaseByProductId, getOwnedProductIds } from "./revenuecat";
+import { addJettons } from "./jettons";
 
 const UNLOCK_KEY = "simsar-emlak-full-unlock";
 const REMOVE_ADS_KEY = "simsar-emlak-remove-ads";
@@ -88,6 +89,53 @@ export async function purchaseRemoveAds(): Promise<boolean> {
     // ignore
   }
   return true;
+}
+
+// --- Başlangıç Paketleri (Starter Bundles) — App Store "bundle" kavramını desteklemediği için üçü de ayrı non-consumable ürün. ---
+export const BUNDLE_FULL_JETTON30_PRODUCT_ID = "com.rakuappdigital.simsaremlak.bundle_full_jetton30";
+export const BUNDLE_FULL_NOADS_PRODUCT_ID = "com.rakuappdigital.simsaremlak.bundle_full_noads";
+export const BUNDLE_FULL_NOADS_JETTON30_PRODUCT_ID = "com.rakuappdigital.simsaremlak.bundle_full_noads_jetton30";
+
+export const BUNDLE_FULL_JETTON30_PRICE_INTL = "$2.99";
+export const BUNDLE_FULL_NOADS_PRICE_INTL = "$3.99";
+export const BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL = "$4.99";
+
+export const BUNDLE_FULL_JETTON30_DESCRIPTION = {
+  tr: "Tam sürümü açar ve hesabına 30 Jetton ekler — ayrı ayrı almaktan daha avantajlı.",
+  en: "Unlocks the full version and adds 30 Jetton to your account — better value than buying separately.",
+};
+export const BUNDLE_FULL_NOADS_DESCRIPTION = {
+  tr: "Tam sürümü açar ve hafta sonu ekranındaki geçilebilir reklamları kaldırır.",
+  en: "Unlocks the full version and removes the skippable weekly ad.",
+};
+export const BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION = {
+  tr: "Tam sürümü açar, geçilebilir reklamları kaldırır ve 30 Jetton ekler — en avantajlı paket.",
+  en: "Unlocks the full version, removes the skippable ad, and adds 30 Jetton — the best value bundle.",
+};
+
+async function purchaseBundle(productId: string, grantsRemoveAds: boolean, jettonAmount: number): Promise<boolean> {
+  const ok = isRevenueCatAvailable() ? await purchaseByProductId(productId) : true;
+  if (!ok) return false;
+  try {
+    localStorage.setItem(UNLOCK_KEY, "1");
+    if (grantsRemoveAds) localStorage.setItem(REMOVE_ADS_KEY, "1");
+  } catch {
+    // ignore
+  }
+  if (jettonAmount > 0) addJettons(jettonAmount);
+  return true;
+}
+
+export function purchaseBundleFullJetton30(): Promise<boolean> {
+  return purchaseBundle(BUNDLE_FULL_JETTON30_PRODUCT_ID, false, 30);
+}
+
+export function purchaseBundleFullNoAds(): Promise<boolean> {
+  return purchaseBundle(BUNDLE_FULL_NOADS_PRODUCT_ID, true, 0);
+}
+
+export function purchaseBundleFullNoAdsJetton30(): Promise<boolean> {
+  return purchaseBundle(BUNDLE_FULL_NOADS_JETTON30_PRODUCT_ID, true, 30);
 }
 
 /** Re-checks RevenueCat purchase history (e.g. after reinstall) and refreshes the local cache flags. */

@@ -11,6 +11,12 @@ import {
   REMOVE_ADS_PRICE_TR,
   REMOVE_ADS_PRICE_INTL,
   REMOVE_ADS_DESCRIPTION,
+  BUNDLE_FULL_JETTON30_PRICE_INTL,
+  BUNDLE_FULL_JETTON30_DESCRIPTION,
+  BUNDLE_FULL_NOADS_PRICE_INTL,
+  BUNDLE_FULL_NOADS_DESCRIPTION,
+  BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL,
+  BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION,
 } from "../data/purchases";
 import oddEstateLogo from "../assets/branding/oddestate-logo.png";
 
@@ -23,6 +29,9 @@ interface SettingsScreenProps {
   onBuyJetton: (pkg: JettonPackage) => Promise<void>;
   onBuyFullVersion: () => Promise<void>;
   onBuyRemoveAds: () => Promise<void>;
+  onBuyBundleFullJetton30: () => Promise<void>;
+  onBuyBundleFullNoAds: () => Promise<void>;
+  onBuyBundleFullNoAdsJetton30: () => Promise<void>;
   onRestorePurchases: () => Promise<void>;
   onBack: () => void;
 }
@@ -48,6 +57,9 @@ export default function SettingsScreen({
   onBuyJetton,
   onBuyFullVersion,
   onBuyRemoveAds,
+  onBuyBundleFullJetton30,
+  onBuyBundleFullNoAds,
+  onBuyBundleFullNoAdsJetton30,
   onRestorePurchases,
   onBack,
 }: SettingsScreenProps) {
@@ -79,6 +91,12 @@ export default function SettingsScreen({
   async function handleBuyRemoveAds() {
     setBuyingId("remove-ads");
     await onBuyRemoveAds();
+    setBuyingId(null);
+  }
+
+  async function handleBuyBundle(id: string, action: () => Promise<void>) {
+    setBuyingId(id);
+    await action();
     setBuyingId(null);
   }
 
@@ -216,6 +234,44 @@ export default function SettingsScreen({
       </div>
       <p className="menu-empty">{FULL_UNLOCK_DESCRIPTION[language]}</p>
       <p className="menu-empty">{REMOVE_ADS_DESCRIPTION[language]}</p>
+
+      {!fullUnlocked && (
+        <>
+          <p className="settings-subsection-title">🎁 {language === "en" ? "Starter Bundles" : "Başlangıç Paketleri"}</p>
+          <div className="day-activity-list">
+            <button
+              className="day-activity-card"
+              onClick={() => handleBuyBundle("bundle-jetton30", onBuyBundleFullJetton30)}
+              disabled={buyingId !== null}
+            >
+              <span className="day-activity-icon">🔓🪙</span>
+              <span className="day-activity-label">{language === "en" ? "Full + 30 Jetton" : "Full + 30 Jetton"}</span>
+              <span className="day-activity-gain">{buyingId === "bundle-jetton30" ? "…" : BUNDLE_FULL_JETTON30_PRICE_INTL}</span>
+            </button>
+            <button
+              className="day-activity-card"
+              onClick={() => handleBuyBundle("bundle-noads", onBuyBundleFullNoAds)}
+              disabled={buyingId !== null}
+            >
+              <span className="day-activity-icon">🔓🚫</span>
+              <span className="day-activity-label">{language === "en" ? "Full + No Ads" : "Full + Reklamsız"}</span>
+              <span className="day-activity-gain">{buyingId === "bundle-noads" ? "…" : BUNDLE_FULL_NOADS_PRICE_INTL}</span>
+            </button>
+            <button
+              className="day-activity-card"
+              onClick={() => handleBuyBundle("bundle-noads-jetton30", onBuyBundleFullNoAdsJetton30)}
+              disabled={buyingId !== null}
+            >
+              <span className="day-activity-icon">🔓🚫🪙</span>
+              <span className="day-activity-label">{language === "en" ? "Full + No Ads + 30 Jetton" : "Full + Reklamsız + 30 Jetton"}</span>
+              <span className="day-activity-gain">{buyingId === "bundle-noads-jetton30" ? "…" : BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL}</span>
+            </button>
+          </div>
+          <p className="menu-empty">{BUNDLE_FULL_JETTON30_DESCRIPTION[language]}</p>
+          <p className="menu-empty">{BUNDLE_FULL_NOADS_DESCRIPTION[language]}</p>
+          <p className="menu-empty">{BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION[language]}</p>
+        </>
+      )}
 
       <button className="menu-btn ghost" onClick={handleRestore} disabled={restoring}>
         {restoring ? "…" : language === "en" ? "Restore Purchases" : "Satın Alımları Geri Yükle"}

@@ -2,6 +2,35 @@
 
 Kullanıcı 2026-09-21 tarihinde 10 madde istedi. Hepsi tek tek ele alınıyor.
 
+---
+
+# İKİNCİ TUR — Monetizasyon/Keyif Fikirleri (2026-09-22)
+
+Kullanıcıya sunulan öneriler onaylandı, uygulama sırası:
+
+1. ✅ TAMAMLANDI — Garantili İkinci Şans (Envanter'de yeni jetton ürünü, 3 Jetton, `guaranteed-second-chance` — `pickSecondChanceCandidateIndex()` + mevcut `retryFromInbox()` pipeline'ı reuse edildi)
+2. ✅ TAMAMLANDI — Başlangıç Paketi (3 yeni ASC ürünü oluşturuldu, kalıcı sekme + ilk satıştan sonra bir kerelik tanıtım pop-up'ı eklendi)
+3. ✅ TAMAMLANDI — Günlük giriş ödülü (`src/data/dailyReward.ts`, 24 saatte 1 Jetton, TR/EN pop-up, `navigator.webdriver` ile test ortamında atlanıyor — aynı splash deseni)
+4. ✅ TAMAMLANDI — Game Center Leaderboard (bkz yukarı madde 5 — `submitScore`/`showLeaderboard` eklendi, ASC'de leaderboard oluşturuldu)
+5. ✅ TAMAMLANDI — Envanter'e 13 yeni eşya (4 mevcut + 13 yeni = 17 toplam), bkz aşağıda detay
+6. ❌ REDDEDİLDİ — Günlük Sınırsız Enerji Bileti (kullanıcı gerekli görmedi)
+7. ❌ REDDEDİLDİ — Sezonluk Kariyer Pasosu (kullanıcı çok karmaşık buldu)
+
+## Envanter genişlemesi detayı (13 yeni eşya)
+`src/data/inventory.ts` — 7 TL eşyası (Masa Lambası, Duvar Tablosu, Yeşil Saksı, Kahve Makinesi, Konfor Koltuğu, Plaket Rafı, Yeni Tabela) + 6 Jetton eşyası (Garantili İkinci Şans, Kusursuz İzlenim, Patron Notu, Sağlam Referans, Ekstra Enerji Deposu, Şanslı Randevu). Hepsi mevcut "pending bonus" deseniyle (App.tsx'teki ev-geçiş bloğu) ya da anlık enerji/patron-memnuniyeti güncellemesiyle çalışıyor — yeni state: `pendingInterestBonus`, `pendingFunBonus` (sayısal accumulator, `pendingSuspicionDiscount` ile aynı desen). "Garantili İkinci Şans" `pickSecondChanceCandidateIndex(results)` ile uygun ev arıyor, yoksa buton `InventoryPanel`'de disabled kalıyor (`hasRetryCandidate` prop, `EmlahMenu` üzerinden geçiriliyor).
+TS + 12/12 test + imzalı archive doğrulandı.
+
+## Başlangıç Paketi detayı (madde 2 — tamamlandı)
+3 yeni non-consumable ürün ASC API ile oluşturuldu (lokalizasyon + fiyat + review screenshot + 175 ülke müsaitliği, READY_TO_SUBMIT):
+- `bundle_full_jetton30` — Full + 30 Jetton — $2.99
+- `bundle_full_noads` — Full + Remove Ads — $3.99
+- `bundle_full_noads_jetton30` — Full + Remove Ads + 30 Jetton — $4.99
+
+`purchases.ts`'e `purchaseBundle*()` fonksiyonları eklendi (her biri full-unlock + gerekiyorsa remove-ads + gerekiyorsa `addJettons(30)` uyguluyor). `SettingsScreen`'e "🎁 Starter Bundles" bölümü eklendi — SADECE `!fullUnlocked` iken görünüyor. İlk satıştan sonra (achievement-check effect'indeki `soldCount>=1` kontrolüne eklendi), demo kullanıcıya (henüz full-unlock almamışsa) bir kerelik, süresiz tanıtım pop-up'ı çıkıyor ("Karşılama Teklifi" / "Welcome Offer"), "Teklifleri Gör" butonu Ayarlar'a yönlendiriyor. localStorage flag ile bir daha gösterilmiyor.
+
+**Kalan tek adım**: RevenueCat dashboard'da bu 3 ürünün otomatik import olup olmadığını kontrol et (önceki 5 üründe "import edince otomatik geldiler" demiştin, muhtemelen bunlar da otomatik gelir) — gelmezse elle "Import Products" ile ekle.
+TS + 12/12 test + imzalı archive doğrulandı.
+
 ## 1. ✅ TAMAMLANDI — Ofis aktivitelerinin gerçek avantajı
 - **Gerçek bug bulundu ve düzeltildi**: "Müşteri Araştırması" (`research`) hiçbir etki yaratmıyordu — `handleDoDayActivity()` içinde uyguladığı şüphe indirimi, yeni ev diyaloğu başlarken `computeFreshStats()` tarafından anında eziliyordu (stats objesi sıfırdan hesaplanıyor). Çözüm: `pendingResearchDiscount` state'i eklendi (mevcut `pendingMeetupBonus` deseniyle aynı), indirim artık `newStats` hesaplanırken (App.tsx ~1256 civarı, ev geçiş bloğunda) uygulanıyor — bir sonraki evin başlangıç şüphesini gerçekten düşürüyor.
 - "Pazarlama" (bossMood +3, kalıcı) ve "Ofis İşleri" (+5000 TL, `earned`'e direkt giriyor) zaten gerçek ve kalıcı etkiler sağlıyordu, doğrulandı.
@@ -27,15 +56,17 @@ Kullanıcı 2026-09-21 tarihinde 10 madde istedi. Hepsi tek tek ele alınıyor.
 - TS + 12/12 test + imzalı archive doğrulandı.
 - Not: "Ofis Ekipmanı" (mevcut `officeImages.ts`/`countOwnedOfisItems`, TL ile Market'te satılan kalıcı eşyalar) bilerek ayrı bırakıldı, karıştırılmadı — Envanter tamamen yeni, tüketilebilir buff'lar için.
 
-## 5. 🟡 KISMEN TAMAMLANDI — Game Center başarımları (15/20 kodda tetikleniyor, ASC tarafında tanımlanması gerekiyor)
+## 5. 🟡 NEREDEYSE TAMAMLANDI — Game Center (altyapı + 20 başarım + leaderboard ASC'de hazır, 15/20 kodda tetikleniyor)
 
 **Altyapı tamamen kuruldu:**
 - npm'deki hazır Game Center pluginleri (`@openforge/capacitor-game-connect`, `capacitor-game-connect-8`, `@osmanraifgunes/capacitor-game-connect` vb.) denendi — hepsi aynı sorunu taşıyor: sadece CocoaPods podspec'i var, Swift+Objective-C dosyalarını aynı SPM target'ında karıştırıyorlar ve Swift Package Manager bunu reddediyor ("mixed language source files; feature not supported"). Bu proje CocoaPods değil Capacitor'ın SPM entegrasyonunu kullanıyor.
-- **Çözüm**: `ios/App/App/GameCenterPlugin.swift` — projeye özel, npm paketi olmayan, Swift-only bir Capacitor plugin'i (App target'ı içine doğrudan yazıldı, `CAPBridgedPlugin` protokolüne conform oluyor). 3 metod: `authenticate`, `unlockAchievement`, `showAchievements`.
+- **Çözüm**: `ios/App/App/GameCenterPlugin.swift` — projeye özel, npm paketi olmayan, Swift-only bir Capacitor plugin'i. 5 metod: `authenticate`, `unlockAchievement`, `showAchievements`, `submitScore`, `showLeaderboard`.
 - `ios/App/App/App.entitlements` oluşturuldu (`com.apple.developer.game-center: true`), `project.pbxproj`'a `CODE_SIGN_ENTITLEMENTS` build setting'i eklendi (Debug + Release).
-- **App Store Connect API ile**: Bundle ID'ye (`PX4ZXGVN35`) `GAME_CENTER` capability'si eklendi. Eski "Simsar Emlak App Store" provisioning profile bu capability'yi içermediği için geçersiz (INVALID) oldu — silmek yıkıcı işlem sınıflandırıcısı tarafından engellendiği için, **yeni bir profil** ("Odd Estate App Store", id `7Y6Q49T854`) oluşturuldu ve yerel makineye kuruldu, `PROVISIONING_PROFILE_SPECIFIER` buna güncellendi. Eski "Simsar Emlak App Store" profili hâlâ ASC'de duruyor (INVALID durumda, zararsız — istenirse elle silinebilir).
-- `src/data/gameCenter.ts` — `ACHIEVEMENT_IDS` (20 id, aşağıdaki liste), `initGameCenter()` (App.tsx mount'ta çağrılıyor), `unlockAchievement()` (idempotent, localStorage'da tekrar açmayı engelliyor), `showAchievements()`.
+- **App Store Connect API ile**: Bundle ID'ye (`PX4ZXGVN35`) `GAME_CENTER` capability'si eklendi. Eski "Simsar Emlak App Store" provisioning profile bu capability'yi içermediği için geçersiz (INVALID) oldu — **yeni bir profil** ("Odd Estate App Store", id `7Y6Q49T854`) oluşturuldu ve yerel makineye kuruldu, `PROVISIONING_PROFILE_SPECIFIER` buna güncellendi.
+- **✅ ASC'de Game Center açıldı ve 20 başarım + 1 leaderboard TAMAMEN API İLE OLUŞTURULDU** (`POST /v1/gameCenterDetails`, `/v1/gameCenterAchievements`, `/v1/gameCenterAchievementLocalizations`, `/v1/gameCenterLeaderboards`, `/v1/gameCenterLeaderboardLocalizations`) — daha önce "muhtemelen manuel" diye not düşülmüştü ama API tam destekliyormuş, hepsi otomatik yapıldı, **manuel ASC adımı kalmadı**. Leaderboard id: `toplam_kazanc` (İngilizce lokalizasyon: "Total Earnings"). 20 başarımın hepsi `ACHIEVEMENT_IDS` ile birebir eşleşen `vendorIdentifier`'larla, İngilizce lokalizasyonlarıyla oluşturuldu ve doğrulandı (`GET gameCenterAchievements` → 20/20).
+- `src/data/gameCenter.ts` — `ACHIEVEMENT_IDS` (20 id), `LEADERBOARD_ID`, `initGameCenter()`, `unlockAchievement()` (idempotent), `showAchievements()`, `submitLeaderboardScore()`, `showLeaderboard()`. `CareerPanel.tsx`'e "🏆 Liderlik Tablosu" butonu eklendi, `earned` değiştikçe skor otomatik gönderiliyor.
 - İmzalı Release archive başarıyla derlendi, `codesign -d --entitlements` ile `com.apple.developer.game-center: true` doğrulandı.
+- **Kalan tek şey**: Leaderboard'a bir görsel (icon) eklenmedi (opsiyonel, App Store incelemesi için gerekebilir — ASC'de leaderboard sayfasından elle eklenebilir).
 
 **Kodda tetiklenen 15/20 başarım** (App.tsx'te merkezi bir `useEffect` + 3 event-bazlı hook):
 1. ✅ İlk Satış (`ilk_satis`) — `results` içinde ilk "sold"

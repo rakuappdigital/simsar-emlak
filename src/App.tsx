@@ -7,7 +7,17 @@ import MainMenu from "./components/MainMenu";
 import LanguageSelectScreen from "./components/LanguageSelectScreen";
 import SplashScreen from "./components/SplashScreen";
 import PaywallScreen from "./components/PaywallScreen";
-import { DEMO_HOUSE_LIMIT, isFullUnlocked, isAdsRemoved, purchaseFullUnlock, purchaseRemoveAds, syncPurchasesFromRevenueCat } from "./data/purchases";
+import {
+  DEMO_HOUSE_LIMIT,
+  isFullUnlocked,
+  isAdsRemoved,
+  purchaseFullUnlock,
+  purchaseRemoveAds,
+  purchaseBundleFullJetton30,
+  purchaseBundleFullNoAds,
+  purchaseBundleFullNoAdsJetton30,
+  syncPurchasesFromRevenueCat,
+} from "./data/purchases";
 import { showInterstitialAd } from "./data/ads";
 import { shouldShowInterstitialOnDayAdvance } from "./data/adSchedule";
 import {
@@ -17,15 +27,29 @@ import {
   LUCKY_CALL_INTEREST_BONUS,
   LUCKY_CALL_SUSPICION_DISCOUNT,
   CONFIDENCE_OUTFIT_DISCOUNT,
+  DESK_LAMP_INTEREST_BONUS,
+  WALL_PAINTING_FUN_BONUS,
+  POTTED_PLANT_SUSPICION_DISCOUNT,
+  COFFEE_MACHINE_ENERGY,
+  COMFORT_CHAIR_ENERGY,
+  TROPHY_SHELF_INTEREST_BONUS,
+  NEW_SIGN_BOSS_MOOD_GAIN,
+  FLAWLESS_IMPRESSION_FUN_BONUS,
+  BOSS_NOTE_MOOD_GAIN,
+  SOLID_REFERENCE_SUSPICION_DISCOUNT,
+  ENERGY_RESERVE_AMOUNT,
+  LUCKY_APPOINTMENT_INTEREST_BONUS,
   getShieldHousesLeft,
   setShieldHousesLeft,
 } from "./data/inventory";
 import { getPlaysRemaining, recordPlay } from "./data/minigameSchedule";
-import { initGameCenter, unlockAchievement, ACHIEVEMENT_IDS } from "./data/gameCenter";
+import { initGameCenter, unlockAchievement, ACHIEVEMENT_IDS, submitLeaderboardScore } from "./data/gameCenter";
+import { claimDailyRewardIfEligible } from "./data/dailyReward";
 import { initRevenueCat } from "./data/revenuecat";
 import { dayActivities, RESEARCH_SUSPICION_DISCOUNT, MARKETING_BOSS_MOOD_GAIN, OFFICE_WORK_BONUS_EARNINGS } from "./data/dayActivities";
 import {
   getJettons,
+  addJettons,
   spendJettons,
   purchaseJettonPackage,
   JETTON_ENERGY_REFILL_COST,
@@ -520,6 +544,8 @@ function App() {
   const [rankUpUnlockedInvites, setRankUpUnlockedInvites] = useState(false);
   const [rankUpSkillBonus, setRankUpSkillBonus] = useState<number | null>(null);
   const [badgeCelebration, setBadgeCelebration] = useState<Badge[] | null>(null);
+  const [dailyRewardPopup, setDailyRewardPopup] = useState<number | null>(null);
+  const [starterPromoPopup, setStarterPromoPopup] = useState(false);
   const lastRankRef = useRef<string | null>(null);
   // "Oyun senin gerçek saatini biliyor" — at most once per browser session. See data/realWorldFlavor.ts.
   const realWorldFlavorShownRef = useRef(false);
@@ -544,6 +570,8 @@ function App() {
   } | null>(null);
   const [pendingMeetupBonus, setPendingMeetupBonus] = useState<{ interest?: number; fun?: number } | null>(null);
   const [pendingSuspicionDiscount, setPendingSuspicionDiscount] = useState(0);
+  const [pendingInterestBonus, setPendingInterestBonus] = useState(0);
+  const [pendingFunBonus, setPendingFunBonus] = useState(0);
   const [pendingLuckyCall, setPendingLuckyCall] = useState(false);
   const [shieldHousesLeftState, setShieldHousesLeftState] = useState(getShieldHousesLeft);
   const [tasksCompleted, setTasksCompleted] = useState(0);
@@ -607,6 +635,12 @@ function App() {
   useEffect(() => {
     initRevenueCat().then(() => syncPurchasesFromRevenueCat());
     initGameCenter();
+    const dailyAmount = navigator.webdriver ? null : claimDailyRewardIfEligible();
+    if (dailyAmount !== null) {
+      addJettons(dailyAmount);
+      setJettonsState(getJettons());
+      setDailyRewardPopup(dailyAmount);
+    }
   }, []);
   useEffect(() => {
     if (getMusicVolume() <= 0) return;
@@ -1291,6 +1325,14 @@ function App() {
     if (pendingSuspicionDiscount > 0) {
       newStats = { ...newStats, suspicion: Math.max(0, newStats.suspicion - pendingSuspicionDiscount) };
       setPendingSuspicionDiscount(0);
+    }
+    if (pendingInterestBonus > 0) {
+      newStats = { ...newStats, interest: Math.min(100, newStats.interest + pendingInterestBonus) };
+      setPendingInterestBonus(0);
+    }
+    if (pendingFunBonus > 0) {
+      newStats = { ...newStats, fun: Math.min(100, newStats.fun + pendingFunBonus) };
+      setPendingFunBonus(0);
     }
     const shieldLeft = getShieldHousesLeft();
     if (shieldLeft > 0) {
@@ -2277,6 +2319,7 @@ function App() {
   function handleBuyInventoryItem(itemId: string) {
     const item = inventoryItems.find((i) => i.id === itemId);
     if (!item) return;
+    if (item.id === "guaranteed-second-chance" && pickSecondChanceCandidateIndex(results) === null) return;
     if (item.currency === "jetton") {
       if (!spendJettons(item.cost)) return;
       setJettonsState(getJettons());
@@ -2301,6 +2344,47 @@ function App() {
       case "confidence-outfit":
         setPendingSuspicionDiscount((d) => d + CONFIDENCE_OUTFIT_DISCOUNT);
         break;
+      case "desk-lamp":
+        setPendingInterestBonus((b) => b + DESK_LAMP_INTEREST_BONUS);
+        break;
+      case "wall-painting":
+        setPendingFunBonus((b) => b + WALL_PAINTING_FUN_BONUS);
+        break;
+      case "potted-plant":
+        setPendingSuspicionDiscount((d) => d + POTTED_PLANT_SUSPICION_DISCOUNT);
+        break;
+      case "coffee-machine":
+        setEnergy((e) => Math.min(ENERGY_MAX, e + COFFEE_MACHINE_ENERGY));
+        break;
+      case "comfort-chair":
+        setEnergy((e) => Math.min(ENERGY_MAX, e + COMFORT_CHAIR_ENERGY));
+        break;
+      case "trophy-shelf":
+        setPendingInterestBonus((b) => b + TROPHY_SHELF_INTEREST_BONUS);
+        break;
+      case "new-sign":
+        setBossMood((m) => clampBossMood(m + NEW_SIGN_BOSS_MOOD_GAIN));
+        break;
+      case "guaranteed-second-chance": {
+        const idx = pickSecondChanceCandidateIndex(results);
+        if (idx !== null) retryFromInbox(results[idx].houseId);
+        break;
+      }
+      case "flawless-impression":
+        setPendingFunBonus((b) => b + FLAWLESS_IMPRESSION_FUN_BONUS);
+        break;
+      case "boss-note":
+        setBossMood((m) => clampBossMood(m + BOSS_NOTE_MOOD_GAIN));
+        break;
+      case "solid-reference":
+        setPendingSuspicionDiscount((d) => d + SOLID_REFERENCE_SUSPICION_DISCOUNT);
+        break;
+      case "energy-reserve":
+        setEnergy((e) => Math.min(ENERGY_MAX, e + ENERGY_RESERVE_AMOUNT));
+        break;
+      case "lucky-appointment":
+        setPendingInterestBonus((b) => b + LUCKY_APPOINTMENT_INTEREST_BONUS);
+        break;
     }
   }
 
@@ -2319,6 +2403,36 @@ function App() {
       setAdsRemovedState(true);
       playPurchase();
       if (isFullUnlocked()) unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
+    }
+  }
+
+  async function handleBuyBundleFullJetton30() {
+    const ok = await purchaseBundleFullJetton30();
+    if (ok) {
+      setFullUnlockedState(true);
+      setJettonsState(getJettons());
+      playPurchase();
+    }
+  }
+
+  async function handleBuyBundleFullNoAds() {
+    const ok = await purchaseBundleFullNoAds();
+    if (ok) {
+      setFullUnlockedState(true);
+      setAdsRemovedState(true);
+      playPurchase();
+      unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
+    }
+  }
+
+  async function handleBuyBundleFullNoAdsJetton30() {
+    const ok = await purchaseBundleFullNoAdsJetton30();
+    if (ok) {
+      setFullUnlockedState(true);
+      setAdsRemovedState(true);
+      setJettonsState(getJettons());
+      playPurchase();
+      unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
     }
   }
 
@@ -3064,6 +3178,16 @@ function App() {
   useEffect(() => {
     const soldCount = results.filter((r) => r.outcome === "sold").length;
     if (soldCount >= 1) unlockAchievement(ACHIEVEMENT_IDS.firstSale);
+    if (soldCount >= 1 && !isFullUnlocked()) {
+      try {
+        if (localStorage.getItem("simsar-emlak-starter-promo-shown") !== "1") {
+          localStorage.setItem("simsar-emlak-starter-promo-shown", "1");
+          setStarterPromoPopup(true);
+        }
+      } catch {
+        // ignore
+      }
+    }
     if (soldCount >= 10) unlockAchievement(ACHIEVEMENT_IDS.tenSales);
     if (soldCount >= 20 && Object.keys(friendBondCounts).length === 0) unlockAchievement(ACHIEVEMENT_IDS.loneWolf20);
     if (earned >= 10_000_000) unlockAchievement(ACHIEVEMENT_IDS.totalEarnings10M);
@@ -3074,6 +3198,7 @@ function App() {
     if (Object.values(friendBondCounts).filter((c) => c >= 10).length >= 3) unlockAchievement(ACHIEVEMENT_IDS.threeFriendsYakinlik);
     if (investmentResults.some((r) => r.outcome === "sold")) unlockAchievement(ACHIEVEMENT_IDS.firstInvestmentFlip);
     if (secondChanceOffered) unlockAchievement(ACHIEVEMENT_IDS.secondChanceUsed);
+    submitLeaderboardScore(earned);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, earned, bossMood, defeatedRivalIds, friendBondCounts, investmentResults, secondChanceOffered]);
   const anySold = results.some((r) => r.outcome === "sold");
@@ -3212,6 +3337,47 @@ function App() {
         </div>
       )}
 
+      {starterPromoPopup && (
+        <div className="rankup-overlay" onClick={() => setStarterPromoPopup(false)}>
+          <div className="rankup-card">
+            <span className="rankup-label">🎁</span>
+            <p className="rankup-title">
+              {language === "en" ? "Welcome Offer" : "Karşılama Teklifi"}
+            </p>
+            <p className="menu-empty">
+              {language === "en"
+                ? "Check out the Starter Bundles in Settings — the best value way to unlock the full game."
+                : "Ayarlar'daki Başlangıç Paketlerine göz at — oyunu tam açmanın en avantajlı yolu."}
+            </p>
+            <button
+              className="pixel-btn small"
+              onClick={() => {
+                setStarterPromoPopup(false);
+                setStage("settings");
+              }}
+            >
+              {language === "en" ? "View Offers" : "Teklifleri Gör"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {dailyRewardPopup !== null && (
+        <div className="rankup-overlay" onClick={() => setDailyRewardPopup(null)}>
+          <div className="rankup-card">
+            <span className="rankup-label">🪙</span>
+            <p className="rankup-title">
+              {language === "en" ? "Daily Login Reward" : "Günlük Giriş Ödülü"}
+            </p>
+            <p className="menu-empty">
+              {language === "en"
+                ? `+${dailyRewardPopup} Jetton for coming back today!`
+                : `Bugün geri geldiğin için +${dailyRewardPopup} Jetton!`}
+            </p>
+          </div>
+        </div>
+      )}
+
       {badgeCelebration && (
         <div className="rankup-overlay" onClick={() => setBadgeCelebration(null)}>
           <div className="rankup-card">
@@ -3314,6 +3480,7 @@ function App() {
           onBuy={buyItem}
           jettons={jettons}
           shieldHousesLeft={shieldHousesLeftState}
+          hasRetryCandidate={pickSecondChanceCandidateIndex(results) !== null}
           onBuyInventoryItem={handleBuyInventoryItem}
           inbox={inbox}
           results={results}
@@ -3456,6 +3623,9 @@ function App() {
           onBuyJetton={handleBuyJettonPackage}
           onBuyFullVersion={handleBuyFullVersionFromStore}
           onBuyRemoveAds={handleBuyRemoveAds}
+          onBuyBundleFullJetton30={handleBuyBundleFullJetton30}
+          onBuyBundleFullNoAds={handleBuyBundleFullNoAds}
+          onBuyBundleFullNoAdsJetton30={handleBuyBundleFullNoAdsJetton30}
           onRestorePurchases={handleRestorePurchases}
           onBack={() => setStage("menu")}
         />

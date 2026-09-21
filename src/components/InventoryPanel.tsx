@@ -6,10 +6,11 @@ interface InventoryPanelProps {
   balance: number;
   jettons: number;
   shieldHousesLeft: number;
+  hasRetryCandidate: boolean;
   onBuy: (itemId: string) => void;
 }
 
-export default function InventoryPanel({ balance, jettons, shieldHousesLeft, onBuy }: InventoryPanelProps) {
+export default function InventoryPanel({ balance, jettons, shieldHousesLeft, hasRetryCandidate, onBuy }: InventoryPanelProps) {
   return (
     <div className="market-panel">
       <p className="menu-empty">
@@ -20,7 +21,9 @@ export default function InventoryPanel({ balance, jettons, shieldHousesLeft, onB
       )}
       <div className="market-category">
         {inventoryItems.map((item) => {
-          const disabled = item.currency === "jetton" ? jettons < item.cost : balance < item.cost;
+          const disabled =
+            (item.currency === "jetton" ? jettons < item.cost : balance < item.cost) ||
+            (item.id === "guaranteed-second-chance" && !hasRetryCandidate);
           return (
             <div className="market-item" key={item.id}>
               <div className="market-item-info">

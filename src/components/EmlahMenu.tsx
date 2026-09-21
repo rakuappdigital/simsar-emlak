@@ -55,6 +55,7 @@ interface EmlahMenuProps {
   onBuy: (id: string) => void;
   jettons: number;
   shieldHousesLeft: number;
+  hasRetryCandidate: boolean;
   onBuyInventoryItem: (id: string) => void;
   inbox: InboxMessage[];
   results: HouseResult[];
@@ -135,6 +136,7 @@ export default function EmlahMenu({
   onBuy,
   jettons,
   shieldHousesLeft,
+  hasRetryCandidate,
   onBuyInventoryItem,
   inbox,
   results,
@@ -231,7 +233,13 @@ export default function EmlahMenu({
             />
           )}
           {tab === "envanter" && (
-            <InventoryPanel balance={balance} jettons={jettons} shieldHousesLeft={shieldHousesLeft} onBuy={onBuyInventoryItem} />
+            <InventoryPanel
+              balance={balance}
+              jettons={jettons}
+              shieldHousesLeft={shieldHousesLeft}
+              hasRetryCandidate={hasRetryCandidate}
+              onBuy={onBuyInventoryItem}
+            />
           )}
           {tab === "mesajlar" && (
             <MessagesPanel

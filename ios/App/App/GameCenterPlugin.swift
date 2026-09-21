@@ -7,10 +7,9 @@ import GameKit
  * package. The available Capacitor Game Center plugins on npm only ship a
  * CocoaPods podspec (mixed Swift/Objective-C sources in one SPM target,
  * which Swift Package Manager refuses to build), and this project is wired
- * for Capacitor's SPM integration, not CocoaPods. Three methods is all the
- * game currently needs (sign-in + unlock an achievement + show the native
- * achievements UI), so a small Swift-only CAPBridgedPlugin living directly
- * in the App target sidesteps the packaging problem entirely.
+ * for Capacitor's SPM integration, not CocoaPods. A small Swift-only
+ * CAPBridgedPlugin living directly in the App target sidesteps the
+ * packaging problem entirely.
  */
 @objc(GameCenterPlugin)
 public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -20,6 +19,8 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "authenticate", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "unlockAchievement", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "showAchievements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "submitScore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "showLeaderboard", returnType: CAPPluginReturnPromise),
     ]
 
     @objc func authenticate(_ call: CAPPluginCall) {
@@ -66,6 +67,41 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         DispatchQueue.main.async { [weak self] in
             let gc = GKGameCenterViewController(state: .achievements)
+            gc.gameCenterDelegate = self
+            self?.bridge?.viewController?.present(gc, animated: true)
+            call.resolve()
+        }
+    }
+
+    @objc func submitScore(_ call: CAPPluginCall) {
+        guard let leaderboardID = call.getString("leaderboardID") else {
+            call.reject("leaderboardID is required")
+            return
+        }
+        let score = call.getInt("score") ?? 0
+        guard GKLocalPlayer.local.isAuthenticated else {
+            call.resolve(["submitted": false])
+            return
+        }
+        GKLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [leaderboardID]) { error in
+            if let error = error {
+                call.reject(error.localizedDescription)
+            } else {
+                call.resolve(["submitted": true])
+            }
+        }
+    }
+
+    @objc func showLeaderboard(_ call: CAPPluginCall) {
+        guard GKLocalPlayer.local.isAuthenticated else {
+            call.reject("not authenticated")
+            return
+        }
+        let leaderboardID = call.getString("leaderboardID")
+        DispatchQueue.main.async { [weak self] in
+            let gc = leaderboardID != nil
+                ? GKGameCenterViewController(leaderboardID: leaderboardID!, playerScope: .global, timeScope: .allTime)
+                : GKGameCenterViewController(state: .leaderboards)
             gc.gameCenterDelegate = self
             self?.bridge?.viewController?.present(gc, animated: true)
             call.resolve()

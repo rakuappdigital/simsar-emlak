@@ -4,7 +4,12 @@ interface GameCenterPlugin {
   authenticate(): Promise<{ authenticated: boolean }>;
   unlockAchievement(options: { achievementID: string }): Promise<{ unlocked: boolean }>;
   showAchievements(): Promise<void>;
+  submitScore(options: { leaderboardID: string; score: number }): Promise<{ submitted: boolean }>;
+  showLeaderboard(options?: { leaderboardID?: string }): Promise<void>;
 }
+
+/** App Store Connect Game Center'da bu id ile bir leaderboard tanımlanmalı (bkz TODO.md). */
+export const LEADERBOARD_ID = "toplam_kazanc";
 
 /**
  * Native tarafı `ios/App/App/GameCenterPlugin.swift` — küçük, projeye özel
@@ -88,5 +93,20 @@ export function showAchievements(): void {
   if (!Capacitor.isNativePlatform()) return;
   GameCenter.showAchievements().catch((e) => {
     console.error("Game Center showAchievements failed:", e);
+  });
+}
+
+/** Toplam kazancı liderlik tablosuna gönderir — ucuz bir çağrı değil, sık değil, anlamlı state değişimlerinde çağrılmalı. */
+export function submitLeaderboardScore(score: number): void {
+  if (!Capacitor.isNativePlatform()) return;
+  GameCenter.submitScore({ leaderboardID: LEADERBOARD_ID, score: Math.round(score) }).catch((e) => {
+    console.error("Game Center submitScore failed:", e);
+  });
+}
+
+export function showLeaderboard(): void {
+  if (!Capacitor.isNativePlatform()) return;
+  GameCenter.showLeaderboard({ leaderboardID: LEADERBOARD_ID }).catch((e) => {
+    console.error("Game Center showLeaderboard failed:", e);
   });
 }
