@@ -26,13 +26,17 @@ page.on("console", (msg) => {
 });
 
 await page.goto(BASE_URL);
+await page.locator("button", { hasText: "Türkçe" }).click({ timeout: 3000 }).catch(() => {});
+await page.evaluate(() => localStorage.setItem("simsar-emlak-full-unlock", "1")).catch(() => {});
 
 const data = await page.evaluate(async () => {
   const rivalMod = await import("/src/data/rivalCharacter.ts");
   const ladderMod = await import("/src/data/rivalLadder.ts");
   return {
     lineCount: rivalMod.firatFullCircleLines.length,
-    allLinesAreStrings: rivalMod.firatFullCircleLines.every((l) => typeof l === "string" && l.length > 0),
+    allLinesAreStrings: rivalMod.firatFullCircleLines.every(
+      (l) => (typeof l === "string" && l.length > 0) || (l && typeof l.tr === "string" && typeof l.en === "string"),
+    ),
     ladderSize: ladderMod.rivalLadder.length,
   };
 });

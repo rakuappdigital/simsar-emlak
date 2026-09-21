@@ -1,4 +1,5 @@
 import type { GameStats, SceneOutcome, MemoryKind, SignificantMemory } from "../types";
+import { resolveText, type Localized } from "./language";
 
 /**
  * "Karar Anıları" — the mirror image of echoNetwork.ts: instead of a past
@@ -71,29 +72,29 @@ export function memoryReputationSuspicionNudge(kind: MemoryKind): number {
   return 0;
 }
 
-const referenceLines: Record<MemoryKind, string[]> = {
+const referenceLines: Record<MemoryKind, Localized[]> = {
   "kurnaz-satis": [
-    "Bir arkadaşım anlattı, \"{ev}\" için epey kurnaz bir yöntem kullanmışsınız.",
-    "\"{ev}\" hikayenizi duydum, cesur bir pazarlıkmış doğrusu.",
-    "Sizi biraz araştırdım açıkçası — \"{ev}\" satışında epey gözü kara davranmışsınız.",
-    "\"{ev}\" konusunda anlatılanlar doğruysa, pazarlıkta hiç taviz vermeyen biriymişsiniz.",
+    { tr: "Bir arkadaşım anlattı, \"{ev}\" için epey kurnaz bir yöntem kullanmışsınız.", en: "A friend told me, you used a pretty cunning method for \"{ev}\"." },
+    { tr: "\"{ev}\" hikayenizi duydum, cesur bir pazarlıkmış doğrusu.", en: "I heard your \"{ev}\" story, quite a bold negotiation indeed." },
+    { tr: "Sizi biraz araştırdım açıkçası — \"{ev}\" satışında epey gözü kara davranmışsınız.", en: "I did some research on you frankly — you acted pretty bold in the \"{ev}\" sale." },
+    { tr: "\"{ev}\" konusunda anlatılanlar doğruysa, pazarlıkta hiç taviz vermeyen biriymişsiniz.", en: "If what's told about \"{ev}\" is true, you were someone who never compromised in negotiations." },
   ],
   "durust-satis": [
-    "\"{ev}\" konusunda ne kadar dürüst davrandığınızı anlatmışlar bana.",
-    "Sizi \"{ev}\" satışındaki dürüstlüğünüzle tanıyorum, öyle duydum.",
-    "\"{ev}\" alıcısı hâlâ sizden bahsediyormuş, çok şeffaf bir süreç olmuş.",
-    "Referansınızı \"{ev}\" satışındaki dürüstlüğünüzden dolayı vermişler bana.",
+    { tr: "\"{ev}\" konusunda ne kadar dürüst davrandığınızı anlatmışlar bana.", en: "They told me how honestly you acted regarding \"{ev}\"." },
+    { tr: "Sizi \"{ev}\" satışındaki dürüstlüğünüzle tanıyorum, öyle duydum.", en: "I know you by your honesty in the \"{ev}\" sale, heard so." },
+    { tr: "\"{ev}\" alıcısı hâlâ sizden bahsediyormuş, çok şeffaf bir süreç olmuş.", en: "The buyer of \"{ev}\" is still talking about you, it was a very transparent process." },
+    { tr: "Referansınızı \"{ev}\" satışındaki dürüstlüğünüzden dolayı vermişler bana.", en: "They gave me your reference because of your honesty in the \"{ev}\" sale." },
   ],
   "buyuk-kayip": [
-    "\"{ev}\" elinizden kaçmış diye duydum, gerçekten üzülmüş olmalısınız.",
-    "\"{ev}\" konusunda ne kadar uğraştığınızı ama olmadığını duymuştum.",
-    "\"{ev}\" satışını kaybettiğinizi anlatmışlardı, kolay olmamıştır.",
-    "O \"{ev}\" hikayesini duyunca sizin adınıza üzüldüm açıkçası.",
+    { tr: "\"{ev}\" elinizden kaçmış diye duydum, gerçekten üzülmüş olmalısınız.", en: "I heard \"{ev}\" slipped through your fingers, you must be really upset." },
+    { tr: "\"{ev}\" konusunda ne kadar uğraştığınızı ama olmadığını duymuştum.", en: "I had heard how hard you tried for \"{ev}\" but it didn't happen." },
+    { tr: "\"{ev}\" satışını kaybettiğinizi anlatmışlardı, kolay olmamıştır.", en: "They had told me you lost the \"{ev}\" sale, couldn't have been easy." },
+    { tr: "O \"{ev}\" hikayesini duyunca sizin adınıza üzüldüm açıkçası.", en: "When I heard that \"{ev}\" story, I felt sorry on your behalf frankly." },
   ],
 };
 
 export function pickMemoryReferenceLine(memory: SignificantMemory): string {
   const pool = referenceLines[memory.kind];
-  const template = pool[Math.floor(Math.random() * pool.length)];
+  const template = resolveText(pool[Math.floor(Math.random() * pool.length)]);
   return template.replace("{ev}", memory.houseTitle);
 }

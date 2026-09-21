@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import { formatTL } from "../data/economy";
 
 export type MiniGameTier = "fail" | "ok" | "great";
 
@@ -16,98 +17,16 @@ function ResultBadge({ tier }: { tier: MiniGameTier }) {
   return <p className={`minigame-result minigame-result-${tier}`}>{tierLabel[tier]}</p>;
 }
 
-/** ☕ Kahve Molası — a marker ping-pongs across a track, tap "Dur!" while it's inside the highlighted zone. */
-export function CoffeeMiniGame({ onComplete }: MiniGameProps) {
-  const [pos, setPos] = useState(0);
+/** 🔑 Anahtar Bul — bir düzine görsel olarak neredeyse aynı anahtar arasından belirgin şekilde farklı olanı hızlıca bul. */
+export function KeyFindMiniGame({ onComplete }: MiniGameProps) {
+  const KEY_COUNT = 6;
+  const [correctIndex] = useState(() => Math.floor(Math.random() * KEY_COUNT));
   const [done, setDone] = useState<MiniGameTier | null>(null);
-  const posRef = useRef(0);
-  const dirRef = useRef(1);
-  const zone = useRef({ start: 30 + Math.random() * 40 - 10, width: 14 });
+  const startRef = useRef(Date.now());
 
   useEffect(() => {
-    const speed = 1.6; // percent per tick
-    const t = setInterval(() => {
-      let next = posRef.current + dirRef.current * speed;
-      if (next >= 100) {
-        next = 100;
-        dirRef.current = -1;
-      } else if (next <= 0) {
-        next = 0;
-        dirRef.current = 1;
-      }
-      posRef.current = next;
-      setPos(next);
-    }, 16);
-    const timeout = setTimeout(() => finish("fail"), 6000);
-    return () => {
-      clearInterval(t);
-      clearTimeout(timeout);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function finish(tier: MiniGameTier) {
-    setDone(tier);
-    setTimeout(() => onComplete(tier), 700);
-  }
-
-  function stop() {
-    if (done) return;
-    const zoneCenter = zone.current.start + zone.current.width / 2;
-    const dist = Math.abs(posRef.current - zoneCenter);
-    if (dist <= zone.current.width / 2) finish("great");
-    else if (dist <= zone.current.width) finish("ok");
-    else finish("fail");
-  }
-
-  return (
-    <div className="minigame">
-      <p className="minigame-prompt">☕ Kahveyi tam kıvamında durdur!</p>
-      <div className="minigame-track">
-        <div className="minigame-zone" style={{ left: `${zone.current.start}%`, width: `${zone.current.width}%` }} />
-        <div className="minigame-marker" style={{ left: `${pos}%` }} />
-      </div>
-      {done ? <ResultBadge tier={done} /> : (
-        <button className="pixel-btn minigame-action-btn" onClick={stop}>
-          Dur!
-        </button>
-      )}
-    </div>
-  );
-}
-
-/** 🎧 Müzik Dinle — 5 beats pulse at a fixed tempo, tap "Vur" in sync with each one. */
-export function MusicMiniGame({ onComplete }: MiniGameProps) {
-  const BEAT_MS = 750;
-  const TOLERANCE_MS = 280;
-  const BEAT_COUNT = 5;
-  const [beatIndex, setBeatIndex] = useState(-1);
-  const [pulse, setPulse] = useState(false);
-  const [done, setDone] = useState<MiniGameTier | null>(null);
-  const hitsRef = useRef(0);
-  const lastBeatAtRef = useRef(0);
-  const hitThisBeatRef = useRef(false);
-
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    for (let i = 0; i < BEAT_COUNT; i++) {
-      timers.push(
-        setTimeout(() => {
-          setBeatIndex(i);
-          setPulse(true);
-          lastBeatAtRef.current = Date.now();
-          hitThisBeatRef.current = false;
-          setTimeout(() => setPulse(false), TOLERANCE_MS);
-        }, i * BEAT_MS + 400),
-      );
-    }
-    timers.push(
-      setTimeout(() => {
-        const hits = hitsRef.current;
-        finish(hits >= 4 ? "great" : hits >= 2 ? "ok" : "fail");
-      }, BEAT_COUNT * BEAT_MS + 700),
-    );
-    return () => timers.forEach(clearTimeout);
+    const timeout = setTimeout(() => finish("fail"), 3500);
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -116,31 +35,96 @@ export function MusicMiniGame({ onComplete }: MiniGameProps) {
     setTimeout(() => onComplete(tier), 700);
   }
 
-  function hit() {
+  function pick(i: number) {
     if (done) return;
-    if (hitThisBeatRef.current) return;
-    const sinceBeat = Date.now() - lastBeatAtRef.current;
-    if (sinceBeat >= 0 && sinceBeat <= TOLERANCE_MS + 120) {
-      hitThisBeatRef.current = true;
-      hitsRef.current += 1;
+    if (i !== correctIndex) {
+      finish("fail");
+      return;
     }
+    finish(Date.now() - startRef.current <= 1400 ? "great" : "ok");
   }
 
   return (
     <div className="minigame">
-      <p className="minigame-prompt">🎧 Ritme uyup her vuruşta dokun!</p>
-      <div className="minigame-beats">
-        {Array.from({ length: BEAT_COUNT }, (_, i) => (
-          <span key={i} className={`minigame-beat ${i === beatIndex && pulse ? "minigame-beat-active" : ""} ${i < beatIndex || (i === beatIndex && !pulse) ? "minigame-beat-passed" : ""}`}>
-            🎵
-          </span>
+      <p className="minigame-prompt">🔑 Farklı duran anahtarı hızlıca bul!</p>
+      <div className="minigame-key-grid">
+        {Array.from({ length: KEY_COUNT }, (_, i) => (
+          <button
+            key={i}
+            className={`minigame-key-btn ${i === correctIndex ? "minigame-key-correct" : ""}`}
+            onClick={() => pick(i)}
+            disabled={!!done}
+            aria-label="anahtar"
+          >
+            🔑
+          </button>
         ))}
       </div>
-      {done ? <ResultBadge tier={done} /> : (
-        <button className="pixel-btn minigame-action-btn" onClick={hit}>
-          Vur!
-        </button>
-      )}
+      {done && <ResultBadge tier={done} />}
+    </div>
+  );
+}
+
+/** 📱 Mesajları Sırala — 3 karışık mesaj balonunu doğru kronolojik sırayla dokunarak seç. */
+const MESSAGE_SETS: [string, string, string][] = [
+  ["Bugün müsait misiniz?", "Evi gördüm, çok beğendim!", "O zaman sözleşmeyi imzalayalım."],
+  ["Fiyat konusunda düşünüyorum.", "Biraz daha indirim olur mu acaba?", "Tamam, anlaştık o zaman!"],
+  ["Merhaba, ilanınızla ilgileniyorum.", "Yarın bakabilir miyim?", "Harika, o zaman görüşürüz."],
+];
+
+export function MessageSortMiniGame({ onComplete }: MiniGameProps) {
+  const [setIndex] = useState(() => Math.floor(Math.random() * MESSAGE_SETS.length));
+  const correctOrder = MESSAGE_SETS[setIndex];
+  const [displayOrder] = useState(() => {
+    const idx = [0, 1, 2];
+    for (let i = idx.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [idx[i], idx[j]] = [idx[j], idx[i]];
+    }
+    return idx;
+  });
+  const [picked, setPicked] = useState<number[]>([]);
+  const [done, setDone] = useState<MiniGameTier | null>(null);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => finish("fail"), 7000);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function finish(tier: MiniGameTier) {
+    setDone((prev) => prev ?? tier);
+    setTimeout(() => onComplete(tier), 700);
+  }
+
+  function pick(originalIdx: number) {
+    if (done || picked.includes(originalIdx)) return;
+    const expected = picked.length;
+    const nextPicked = [...picked, originalIdx];
+    setPicked(nextPicked);
+    if (originalIdx !== expected) {
+      finish(nextPicked.length >= 2 ? "ok" : "fail");
+      return;
+    }
+    if (nextPicked.length === correctOrder.length) finish("great");
+  }
+
+  return (
+    <div className="minigame">
+      <p className="minigame-prompt">📱 Mesajları doğru kronolojik sırayla dokun!</p>
+      <div className="minigame-message-list">
+        {displayOrder.map((originalIdx) => (
+          <button
+            key={originalIdx}
+            className="minigame-message-btn"
+            disabled={!!done || picked.includes(originalIdx)}
+            onClick={() => pick(originalIdx)}
+          >
+            {correctOrder[originalIdx]}
+          </button>
+        ))}
+      </div>
+      {done && <ResultBadge tier={done} />}
     </div>
   );
 }
@@ -197,27 +181,24 @@ export function WalkMiniGame({ onComplete }: MiniGameProps) {
   );
 }
 
-/** 😴 Masada Şekerleme — a one-shot sleep bar fills, press "Uyan!" inside the highlighted window: not too early, not too late. */
-export function NapMiniGame({ onComplete }: MiniGameProps) {
-  const DURATION_MS = 4200;
-  const [pos, setPos] = useState(0);
+/** 🏷️ Fiyat Tahmin Et — sentetik bir ev fiyatına en yakın seçeneği tahmin et (gerçek ev verisine bağımlı değil, kendi kendine yeterli). */
+export function PriceGuessMiniGame({ onComplete }: MiniGameProps) {
+  const [target] = useState(() => 500000 + Math.floor(1 + Math.random() * 20) * 250000);
+  const [options] = useState(() => {
+    const low = Math.round((target * (0.5 + Math.random() * 0.2)) / 1000) * 1000;
+    const high = Math.round((target * (1.3 + Math.random() * 0.3)) / 1000) * 1000;
+    const opts = [target, low, high];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return opts;
+  });
   const [done, setDone] = useState<MiniGameTier | null>(null);
-  const posRef = useRef(0);
-  const window_ = useRef({ start: 55, width: 18 });
 
   useEffect(() => {
-    const start = Date.now();
-    const t = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const next = Math.min(100, (elapsed / DURATION_MS) * 100);
-      posRef.current = next;
-      setPos(next);
-      if (next >= 100) {
-        clearInterval(t);
-        finish("fail");
-      }
-    }, 16);
-    return () => clearInterval(t);
+    const timeout = setTimeout(() => finish("fail"), 4500);
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -226,34 +207,33 @@ export function NapMiniGame({ onComplete }: MiniGameProps) {
     setTimeout(() => onComplete(tier), 700);
   }
 
-  function wake() {
+  function pick(value: number) {
     if (done) return;
-    const { start: zStart, width } = window_.current;
-    const p = posRef.current;
-    if (p >= zStart && p <= zStart + width) finish("great");
-    else if (p >= zStart - 12 && p <= zStart + width + 12) finish("ok");
-    else finish("fail");
+    if (value === target) {
+      finish("great");
+      return;
+    }
+    finish(Math.abs(value - target) / target <= 0.35 ? "ok" : "fail");
   }
 
   return (
     <div className="minigame">
-      <p className="minigame-prompt">😴 Ne çok erken ne çok geç, tam kıvamında uyan!</p>
-      <div className="minigame-track">
-        <div className="minigame-zone" style={{ left: `${window_.current.start}%`, width: `${window_.current.width}%` }} />
-        <div className="minigame-marker" style={{ left: `${pos}%` }} />
+      <p className="minigame-prompt">🏷️ Bu evin gerçek fiyatı hangisi?</p>
+      <div className="minigame-price-options">
+        {options.map((v) => (
+          <button key={v} className="pixel-btn small minigame-action-btn" disabled={!!done} onClick={() => pick(v)}>
+            {formatTL(v)}
+          </button>
+        ))}
       </div>
-      {done ? <ResultBadge tier={done} /> : (
-        <button className="pixel-btn minigame-action-btn" onClick={wake}>
-          Uyan!
-        </button>
-      )}
+      {done && <ResultBadge tier={done} />}
     </div>
   );
 }
 
 export const miniGameByActivityId: Record<string, ComponentType<MiniGameProps>> = {
-  kahve: CoffeeMiniGame,
-  muzik: MusicMiniGame,
+  anahtar: KeyFindMiniGame,
+  "mesaj-sirala": MessageSortMiniGame,
   yuruyus: WalkMiniGame,
-  sekerleme: NapMiniGame,
+  "fiyat-tahmin": PriceGuessMiniGame,
 };

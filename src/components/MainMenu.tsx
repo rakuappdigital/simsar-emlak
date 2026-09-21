@@ -1,32 +1,42 @@
 import { LogoIcon } from "./icons";
 import { getPrestigeCompletions, prestigeTitle } from "../data/prestige";
+import type { Language } from "../data/language";
 
 interface MainMenuProps {
   hasSave: boolean;
+  language: Language;
   onNewGame: () => void;
   onOpenSaved: () => void;
   onSettings: () => void;
 }
 
-export default function MainMenu({ hasSave, onNewGame, onOpenSaved, onSettings }: MainMenuProps) {
+const strings = {
+  subtitle: { tr: "İstanbul'un en... yaratıcı emlakçısı", en: "Istanbul's most... creative real estate agent" },
+  newGame: { tr: "Oyuna Başla", en: "Start Game" },
+  savedGames: { tr: "Kayıtlı Oyunlar", en: "Saved Games" },
+  settings: { tr: "Ayarlar", en: "Settings" },
+  prestigeTag: { tr: "yeni oyun bonusla başlar", en: "new game starts with a bonus" },
+};
+
+export default function MainMenu({ hasSave, language, onNewGame, onOpenSaved, onSettings }: MainMenuProps) {
   const title = prestigeTitle(getPrestigeCompletions());
   return (
     <div className="menu-screen">
       <div className="menu-title-block">
         <LogoIcon size={56} className="app-logo" />
-        <h1 className="menu-title">Simsar Emlak</h1>
-        <p className="menu-subtitle">İstanbul'un en... yaratıcı emlakçısı</p>
-        {title && <p className="menu-prestige-tag">🏆 {title} — yeni oyun bonusla başlar</p>}
+        <h1 className="menu-title">Odd Estate</h1>
+        <p className="menu-subtitle">{strings.subtitle[language]}</p>
+        {title && <p className="menu-prestige-tag">🏆 {title} — {strings.prestigeTag[language]}</p>}
       </div>
       <nav className="menu-buttons">
         <button className="menu-btn" onClick={onNewGame}>
-          Oyuna Başla
+          {strings.newGame[language]}
         </button>
         <button className="menu-btn" onClick={onOpenSaved} disabled={!hasSave}>
-          Kayıtlı Oyunlar
+          {strings.savedGames[language]}
         </button>
         <button className="menu-btn" onClick={onSettings}>
-          Ayarlar
+          {strings.settings[language]}
         </button>
       </nav>
     </div>

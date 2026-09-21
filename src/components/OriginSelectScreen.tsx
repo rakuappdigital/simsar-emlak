@@ -1,5 +1,6 @@
 import type { OriginDef } from "../data/origin";
 import type { OriginId } from "../types";
+import { resolveText } from "../data/language";
 
 interface OriginSelectScreenProps {
   origins: OriginDef[];
@@ -18,8 +19,8 @@ export default function OriginSelectScreen({ origins, onSelect, onBack }: Origin
       <div className="origin-list">
         {origins.map((o) => (
           <button key={o.id} className="origin-card" onClick={() => onSelect(o.id)}>
-            <span className="origin-card-title">{o.title}</span>
-            <span className="origin-card-description">{o.description}</span>
+            <span className="origin-card-title">{resolveText(o.title)}</span>
+            <span className="origin-card-description">{resolveText(o.description)}</span>
           </button>
         ))}
       </div>

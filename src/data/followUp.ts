@@ -1,4 +1,5 @@
 import type { GameStats } from "../types";
+import { resolveText, type Localized } from "./language";
 
 /**
  * "Takip Mesajı" — a player-initiated follow-up on a "thinking" sale,
@@ -27,34 +28,34 @@ export const FOLLOWUP_WARM_INTEREST_DELTA = 4;
 export const FOLLOWUP_ANNOYED_SUSPICION_DELTA = 12;
 export const FOLLOWUP_ANNOYED_INTEREST_DELTA = -8;
 
-const emlahOpeners = [
-  "Merhaba, geçen görüşmemizi bir kez daha düşünmek ister misiniz diye sormak istedim.",
-  "Selam, aklınıza takılan bir şey oldu mu diye kontrol etmek istedim.",
-  "Merhaba, ev hâlâ gündeminizde mi diye bir yazayım dedim.",
+const emlahOpeners: Localized[] = [
+  { tr: "Merhaba, geçen görüşmemizi bir kez daha düşünmek ister misiniz diye sormak istedim.", en: "Hello, I wanted to ask if you'd like to think about our last meeting once more." },
+  { tr: "Selam, aklınıza takılan bir şey oldu mu diye kontrol etmek istedim.", en: "Hi, I just wanted to check if you had anything lingering on your mind." },
+  { tr: "Merhaba, ev hâlâ gündeminizde mi diye bir yazayım dedim.", en: "Hello, I thought I'd drop a line to see if the house is still on your agenda." },
 ];
 
-const warmReplies = [
-  "İyi ki yazdınız, tam da bunu düşünüyordum.",
-  "Aslında aramanızı bekliyordum, ilginize sevindim.",
-  "Nazik bir hatırlatma oldu, teşekkür ederim.",
+const warmReplies: Localized[] = [
+  { tr: "İyi ki yazdınız, tam da bunu düşünüyordum.", en: "Glad you wrote, I was thinking about just that." },
+  { tr: "Aslında aramanızı bekliyordum, ilginize sevindim.", en: "Actually I was expecting your call, glad for your interest." },
+  { tr: "Nazik bir hatırlatma oldu, teşekkür ederim.", en: "It was a polite reminder, thank you." },
 ];
 
-const annoyedReplies = [
-  "Açıkçası biraz sık soruyorsunuz, düşünme sürem hâlâ devam ediyor.",
-  "Karar vermem için zaman istemiştim, bu kadar sık takip etmenize gerek yok.",
-  "Bu ısrar beni biraz rahatsız etti, açıkçası.",
+const annoyedReplies: Localized[] = [
+  { tr: "Açıkçası biraz sık soruyorsunuz, düşünme sürem hâlâ devam ediyor.", en: "Frankly, you're asking a bit too often, my thinking period is still ongoing." },
+  { tr: "Karar vermem için zaman istemiştim, bu kadar sık takip etmenize gerek yok.", en: "I asked for time to make a decision, you don't need to follow up this often." },
+  { tr: "Bu ısrar beni biraz rahatsız etti, açıkçası.", en: "This insistence made me a bit uncomfortable, frankly." },
 ];
 
-const instantLostReplies = [
-  "Bu kadar sık aranmak kararımı değiştirdi, artık ilgilenmiyorum.",
-  "Açıkçası bu ısrar güven vermedi, vazgeçiyorum.",
+const instantLostReplies: Localized[] = [
+  { tr: "Bu kadar sık aranmak kararımı değiştirdi, artık ilgilenmiyorum.", en: "Being called this often changed my decision, I'm no longer interested." },
+  { tr: "Açıkçası bu ısrar güven vermedi, vazgeçiyorum.", en: "Frankly, this persistence didn't inspire trust, I'm passing." },
 ];
 
 export function pickEmlahFollowUpLine(): string {
-  return emlahOpeners[Math.floor(Math.random() * emlahOpeners.length)];
+  return resolveText(emlahOpeners[Math.floor(Math.random() * emlahOpeners.length)]);
 }
 
 export function pickFollowUpReply(reaction: FollowUpReaction): string {
   const pool = reaction === "warm" ? warmReplies : reaction === "annoyed" ? annoyedReplies : instantLostReplies;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return resolveText(pool[Math.floor(Math.random() * pool.length)]);
 }

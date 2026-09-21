@@ -1,3 +1,4 @@
+import type { Localized } from "./language";
 /**
  * "Arkadaş Tavsiyeleri" — 5 recurring friends (distinct from the romantic
  * pool in characterPool.ts and from Bora's loan/investment thread in
@@ -10,17 +11,17 @@
 export interface FriendCharacterDef {
   id: string;
   name: string;
-  profession: string;
+  profession: Localized;
   /** House ids this friend is connected to — see data/friendHouses.ts. */
   houseIds: [string, string];
 }
 
 export const friendCharacters: FriendCharacterDef[] = [
-  { id: "ecrin", name: "Ecrin", profession: "Mimar", houseIds: ["ecrin-isik-kuyulu-loft", "ecrin-simetrik-ikiz-daire"] },
-  { id: "kutay", name: "Kutay", profession: "Noter", houseIds: ["kutay-tertemiz-tapulu-konak", "kutay-miras-sonrasi-daire"] },
-  { id: "bengisu", name: "Bengisu", profession: "Fotoğrafçı", houseIds: ["bengisu-gunbatimi-terasi", "bengisu-retro-vitrin-daire"] },
-  { id: "alperen", name: "Alperen", profession: "Girişimci", houseIds: ["alperen-ofis-ev-hybrid-loft", "alperen-yatirimci-dostu-studyo"] },
-  { id: "duru", name: "Duru", profession: "Hemşire", houseIds: ["duru-sessiz-bahce-kati", "duru-huzurlu-manzarali-ev"] },
+  { id: "ecrin", name: "Ecrin", profession: { tr: "Mimar", en: "Architect" }, houseIds: ["ecrin-isik-kuyulu-loft", "ecrin-simetrik-ikiz-daire"] },
+  { id: "kutay", name: "Kutay", profession: { tr: "Noter", en: "Notary" }, houseIds: ["kutay-tertemiz-tapulu-konak", "kutay-miras-sonrasi-daire"] },
+  { id: "bengisu", name: "Bengisu", profession: { tr: "Fotoğrafçı", en: "Photographer" }, houseIds: ["bengisu-gunbatimi-terasi", "bengisu-retro-vitrin-daire"] },
+  { id: "alperen", name: "Alperen", profession: { tr: "Girişimci", en: "Entrepreneur" }, houseIds: ["alperen-ofis-ev-hybrid-loft", "alperen-yatirimci-dostu-studyo"] },
+  { id: "duru", name: "Duru", profession: { tr: "Hemşire", en: "Nurse" }, houseIds: ["duru-sessiz-bahce-kati", "duru-huzurlu-manzarali-ev"] },
 ];
 
 /** Given a house id from friendHouses.ts, which friend it's connected to (for the "🤝 Arkadaşın" tag). */

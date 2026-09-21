@@ -1,3 +1,4 @@
+import { resolveText, type Localized } from "./language";
 /**
  * Gizli Müşteri — a very rare, silent tag on a random main-house visit
  * (never announced up front, that's the whole point of the surprise).
@@ -25,17 +26,17 @@ export function mysteryShopperVerdict(finalSuspicion: number): MysteryShopperVer
 }
 
 const honestReveals = [
-  "Aslında ben bir emlak inceleme sitesi için gizli müşteriydim — dürüstlüğünüz gerçekten fark edildi, küçük bir teşekkür yolda!",
-  "İtiraf edeyim, sizi test ediyordum aslında — bu kadar şeffaf bir emlakçı az bulunur, bir jest yapmak istedim.",
+  { tr: "Aslında ben bir emlak inceleme sitesi için gizli müşteriydim — dürüstlüğünüz gerçekten fark edildi, küçük bir teşekkür yolda!", en: "Actually, I was a mystery shopper for a real estate review site — your honesty was truly noticed, a small thank you is on the way!" },
+  { tr: "İtiraf edeyim, sizi test ediyordum aslında — bu kadar şeffaf bir emlakçı az bulunur, bir jest yapmak istedim.", en: "I must confess, I was actually testing you — an agent this transparent is rare, wanted to make a gesture." },
 ];
 
 const sneakyReveals = [
-  "Aslında bir emlak inceleme sitesi için gizli müşteriydim, açıkçası bazı cevaplarınız pek şeffaf değildi — bunu rapor etmek zorundayım.",
-  "İtiraf edeyim, sizi test ediyordum — biraz fazla iyimser bir satış taktiği kullandınız, bu küçük bir notla sonuçlandı.",
+  { tr: "Aslında bir emlak inceleme sitesi için gizli müşteriydim, açıkçası bazı cevaplarınız pek şeffaf değildi — bunu rapor etmek zorundayım.", en: "Actually, I was a mystery shopper for a real estate review site, frankly some of your answers weren't very transparent — I have to report this." },
+  { tr: "İtiraf edeyim, sizi test ediyordum — biraz fazla iyimser bir satış taktiği kullandınız, bu küçük bir notla sonuçlandı.", en: "I must confess, I was testing you — you used a bit overly optimistic sales tactic, resulting in this small note." },
 ];
 
 const neutralReveals = [
-  "Aslında bir emlak inceleme sitesi için gizli müşteriydim — ortalama bir görüşmeydi, ne çok iyi ne çok kötü, öylece not düşüyorum.",
+  { tr: "Aslında bir emlak inceleme sitesi için gizli müşteriydim — ortalama bir görüşmeydi, ne çok iyi ne çok kötü, öylece not düşüyorum.", en: "Actually, I was a mystery shopper for a real estate review site — it was an average meeting, neither too good nor too bad, making a note of it." },
 ];
 
 // "Aynı Yüzler, Farklı Bağlamlar" — occasionally the reveal namedrops a real
@@ -45,16 +46,16 @@ const neutralReveals = [
 // reusing characters on purpose) — this is a claimed connection in the
 // text, exactly like echoNetwork's namedrops.
 const honestRevealsWithName = [
-  "Aslında ben bir emlak inceleme sitesi için gizli müşteriydim — {isim} sizi tavsiye etmişti, haklıymış, gerçekten dürüstsünüz.",
+  { tr: "Aslında ben bir emlak inceleme sitesi için gizli müşteriydim — {isim} sizi tavsiye etmişti, haklıymış, gerçekten dürüstsünüz.", en: "Actually, I was a mystery shopper for a real estate review site — your honesty was truly noticed, a small thank you is on the way!" },
 ];
 const sneakyRevealsWithName = [
-  "Aslında bir emlak inceleme sitesi için gizli müşteriydim — {isim} sizi tavsiye etmişti ama açıkçası bazı cevaplarınız pek şeffaf değildi.",
+  { tr: "Aslında bir emlak inceleme sitesi için gizli müşteriydim — {isim} sizi tavsiye etmişti ama açıkçası bazı cevaplarınız pek şeffaf değildi.", en: "Actually, I was a mystery shopper for a real estate review site, frankly some of your answers weren't very transparent — I have to report this." },
 ];
 
 const NAME_REVEAL_CHANCE = 0.3;
 
-function pick(arr: string[]): string {
-  return arr[Math.floor(Math.random() * arr.length)];
+function pick(arr: Localized[]): string {
+  return resolveText(arr[Math.floor(Math.random() * arr.length)]);
 }
 
 export function pickMysteryShopperReveal(verdict: MysteryShopperVerdict, pastContactName?: string): string {

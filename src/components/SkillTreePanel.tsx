@@ -1,4 +1,5 @@
 import { skillTree, canUnlockSkill, type SkillBranch } from "../data/skillTree";
+import { resolveText } from "../data/language";
 
 interface SkillTreePanelProps {
   ownedSkillIds: string[];
@@ -32,9 +33,9 @@ export default function SkillTreePanel({ ownedSkillIds, skillXP, onUnlock }: Ski
                 <div className={`portfolio-row skill-row ${owned ? "status-sold" : ""}`} key={skill.id}>
                   <div className="portfolio-row-info">
                     <p className="portfolio-row-title">
-                      {skill.title} <span className="rival-ladder-title">(Tier {skill.tier})</span>
+                      {resolveText(skill.title)} <span className="rival-ladder-title">(Tier {skill.tier})</span>
                     </p>
-                    <p className="portfolio-row-location">{skill.description}</p>
+                    <p className="portfolio-row-location">{resolveText(skill.description)}</p>
                     {lockedByRequirement && !owned && (
                       <p className="rehber-note">Önce bir önceki tier açılmalı.</p>
                     )}

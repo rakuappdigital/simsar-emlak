@@ -1,3 +1,4 @@
+import { resolveText, type Localized } from "./language";
 /**
  * Patron Memnuniyeti — Muzaffer Bey's mood toward Emlah, 0-100, persisted.
  * Discounting too hard on a sale annoys him; clean sales and hitting the
@@ -27,21 +28,21 @@ export function bossMoodDeltaForSale(discountPercent: number): number {
   return discountPercent > DISCOUNT_ANGER_THRESHOLD ? -BOSS_MOOD_DISCOUNT_PENALTY : BOSS_MOOD_CLEAN_SALE_GAIN;
 }
 
-const discountAngerLines = [
-  "Yine indirim mi yaptın Emlah, böyle gidersek zor durumda kalırız.",
-  "Bu kadar taviz vermeyi bırakmalısın, kâr marjımız eriyor.",
-  "İndirim üstüne indirim... bu şirketin cebinden çıkıyor, unutma.",
+const discountAngerLines: Localized[] = [
+  { tr: "Yine indirim mi yaptın Emlah, böyle gidersek zor durumda kalırız.", en: "Did you give another discount Emlah, we'll be in trouble at this rate." },
+  { tr: "Bu kadar taviz vermeyi bırakmalısın, kâr marjımız eriyor.", en: "You need to stop making so many concessions, our profit margin is eroding." },
+  { tr: "İndirim üstüne indirim... bu şirketin cebinden çıkıyor, unutma.", en: "Discount after discount... this is coming out of the company's pocket, remember." },
 ];
 
-const cleanSaleLines = [
-  "İşte bu, tam fiyatına sattın — böyle devam et Emlah.",
-  "Pazarlığı iyi tuttun, tebrikler.",
+const cleanSaleLines: Localized[] = [
+  { tr: "İşte bu, tam fiyatına sattın — böyle devam et Emlah.", en: "There it is, you sold it at full price — keep it up Emlah." },
+  { tr: "Pazarlığı iyi tuttun, tebrikler.", en: "You held your ground well in negotiations, congrats." },
 ];
 
 export function pickDiscountAngerLine(): string {
-  return discountAngerLines[Math.floor(Math.random() * discountAngerLines.length)];
+  return resolveText(discountAngerLines[Math.floor(Math.random() * discountAngerLines.length)]);
 }
 
 export function pickCleanSaleLine(): string {
-  return cleanSaleLines[Math.floor(Math.random() * cleanSaleLines.length)];
+  return resolveText(cleanSaleLines[Math.floor(Math.random() * cleanSaleLines.length)]);
 }

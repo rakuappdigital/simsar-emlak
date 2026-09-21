@@ -14,13 +14,13 @@ export const LAST_MINUTE_PRESSURE_CHANCE = 0.1;
 const pressureChoices: Choice[] = [
   {
     id: "son-dakika-1",
-    text: "\"Tamam, hemen imzalayalım, düşünmeye gerek yok!\"",
+    text: { tr: "\"Tamam, hemen imzalayalım, düşünmeye gerek yok!\"", en: "\"Okay, let's sign immediately, no need to think!\"" },
     next: "",
     effects: { closingBias: 10, suspicion: 18 },
   },
   {
     id: "son-dakika-2",
-    text: "\"Zaman kaybetmeyelim, şartları hemen kabul edelim!\"",
+    text: { tr: "\"Zaman kaybetmeyelim, şartları hemen kabul edelim!\"", en: "\"Let's not waste time, let's accept the terms right away!\"" },
     next: "",
     effects: { closingBias: 10, suspicion: 18 },
   },

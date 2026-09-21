@@ -122,6 +122,22 @@ export function playThinking(): void {
   ]);
 }
 
+/** Satın alma onayı — Envanter/Jetton/Market'te bir ürün alındığında. */
+export function playPurchase(): void {
+  playTones([
+    { freq: 987.77, start: 0, duration: 0.06, type: "square", gain: 0.5 },
+    { freq: 1318.5, start: 0.05, duration: 0.1, type: "square", gain: 0.5 },
+  ]);
+}
+
+/** Yeni güne geçiş — kısa bir sayfa çevirme/whoosh hissi. */
+export function playDayAdvance(): void {
+  playTones([
+    { freq: 300, start: 0, duration: 0.1, type: "triangle", gain: 0.35 },
+    { freq: 500, start: 0.06, duration: 0.12, type: "triangle", gain: 0.4 },
+  ]);
+}
+
 /** Badge/level-up style flourish. */
 export function playReward(): void {
   playTones([
@@ -131,45 +147,54 @@ export function playReward(): void {
   ]);
 }
 
-// ---------- Ambient background pad ----------
+// ---------- Background music (real tracks, playlist) ----------
 
-let musicNodes: { oscA: OscillatorNode; oscB: OscillatorNode; gain: GainNode } | null = null;
+/**
+ * 4 gerçek şarkı, `<audio>` ile çalınıyor (WebAudio değil — dosya tabanlı,
+ * senkron ses grafiğine ihtiyacı yok). Her uygulama açılışında rastgele bir
+ * şarkıdan başlar, sonra sırayla (playlist gibi) devam eder, sona gelince
+ * başa döner. Tek bir modül-seviyesi `<audio>` elemanı — App.tsx yeniden
+ * render olsa da şarkı kesilmez.
+ */
+const musicTracks = [
+  new URL("../assets/music/track1.mp3", import.meta.url).href,
+  new URL("../assets/music/track2.mp3", import.meta.url).href,
+  new URL("../assets/music/track3.mp3", import.meta.url).href,
+  new URL("../assets/music/track4.mp3", import.meta.url).href,
+];
+
+let musicEl: HTMLAudioElement | null = null;
+// Session başına bir kere seçilir (her "uygulama açılışı" = her modül yüklemesi), sonra sırayla devam eder.
+let currentTrackIndex = Math.floor(Math.random() * musicTracks.length);
+
+function ensureMusicEl(): HTMLAudioElement | null {
+  if (typeof Audio === "undefined") return null;
+  if (musicEl) return musicEl;
+  const el = new Audio(musicTracks[currentTrackIndex]);
+  el.volume = (musicVolume / 100) * 0.6;
+  el.addEventListener("ended", () => {
+    currentTrackIndex = (currentTrackIndex + 1) % musicTracks.length;
+    el.src = musicTracks[currentTrackIndex];
+    el.play().catch(() => {});
+  });
+  musicEl = el;
+  return el;
+}
 
 function applyMusicGain() {
-  if (!musicNodes || !ctx) return;
-  musicNodes.gain.gain.linearRampToValueAtTime((musicVolume / 100) * 0.05, ctx.currentTime + 0.4);
+  if (!musicEl) return;
+  musicEl.volume = (musicVolume / 100) * 0.6;
 }
 
 export function startMusic(): void {
-  const audio = getCtx();
-  if (!audio || musicNodes) return;
-  const gain = audio.createGain();
-  gain.gain.value = 0;
-  const filter = audio.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.value = 800;
-  const oscA = audio.createOscillator();
-  const oscB = audio.createOscillator();
-  oscA.type = "sine";
-  oscB.type = "sine";
-  oscA.frequency.value = 110;
-  oscB.frequency.value = 110 * 1.5;
-  oscA.connect(filter);
-  oscB.connect(filter);
-  filter.connect(gain);
-  gain.connect(audio.destination);
-  oscA.start();
-  oscB.start();
-  musicNodes = { oscA, oscB, gain };
-  applyMusicGain();
+  const el = ensureMusicEl();
+  if (!el) return;
+  el.play().catch(() => {
+    // Autoplay engellenmiş olabilir (ilk kullanıcı etkileşiminden önce) — bir sonraki playClick/kullanıcı etkileşiminde tekrar denenir.
+  });
 }
 
 export function stopMusic(): void {
-  if (!musicNodes || !ctx) return;
-  const { oscA, oscB, gain } = musicNodes;
-  const now = ctx.currentTime;
-  gain.gain.linearRampToValueAtTime(0, now + 0.3);
-  oscA.stop(now + 0.35);
-  oscB.stop(now + 0.35);
-  musicNodes = null;
+  if (!musicEl) return;
+  musicEl.pause();
 }

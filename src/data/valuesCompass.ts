@@ -1,4 +1,5 @@
 import type { ChoiceEffects, CompassAxis } from "../types";
+import { getLanguage } from "./language";
 
 /**
  * "Değerler Pusulası" — tracks whether the player tends to pick choices
@@ -25,7 +26,8 @@ export function compassVerdict(tally: Record<CompassAxis, number>): string | nul
   const total = tally.durustluk + tally.kurnazlik;
   if (total < MIN_SAMPLES_FOR_VERDICT) return null;
   const ratio = (tally.durustluk - tally.kurnazlik) / total;
-  if (ratio > 0.3) return "Bu yolculukta genelde dürüst kalmayı seçtin.";
-  if (ratio < -0.3) return "Bu yolculukta kurnazlığı elden bırakmadın.";
-  return "Kararsız kaldın — bazen dürüst, bazen kurnaz oldun.";
+  const en = getLanguage() === "en";
+  if (ratio > 0.3) return en ? "You generally chose to stay honest on this journey." : "Bu yolculukta genelde dürüst kalmayı seçtin.";
+  if (ratio < -0.3) return en ? "You kept your cunning side handy throughout this journey." : "Bu yolculukta kurnazlığı elden bırakmadın.";
+  return en ? "You remained undecided — sometimes honest, sometimes cunning." : "Kararsız kaldın — bazen dürüst, bazen kurnaz oldun.";
 }

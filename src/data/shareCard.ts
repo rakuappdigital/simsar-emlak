@@ -1,4 +1,5 @@
 import { formatTL } from "./economy";
+import { getLanguage } from "./language";
 
 export interface ShareCardData {
   soldCount: number;
@@ -88,11 +89,12 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffd166";
   ctx.font = '32px "Press Start 2P", monospace';
-  ctx.fillText("SİMSAR EMLAK", WIDTH / 2, 230);
+  const en = getLanguage() === "en";
+  ctx.fillText("ODD ESTATE", WIDTH / 2, 230);
 
   ctx.font = '20px "VT323", monospace';
   ctx.fillStyle = "#aaaaaa";
-  ctx.fillText("Bugünün Özeti", WIDTH / 2, 262);
+  ctx.fillText(en ? "Today's Summary" : "Bugünün Özeti", WIDTH / 2, 262);
 
   // Stat card
   const cardX = 60;
@@ -105,14 +107,23 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
   ctx.fillRect(cardX, cardY, cardW, cardH);
   ctx.strokeRect(cardX, cardY, cardW, cardH);
 
-  const rows: [string, string][] = [
-    ["Satılan Ev", String(data.soldCount)],
-    ["Toplam Kazanç", formatTL(data.totalEarned)],
-    ["Bakiye", formatTL(data.balance)],
-    ["Ün", data.reputation || "—"],
-    ["Kariyer Rütbesi", data.rank],
-    ["Rozet Sayısı", String(data.badgeCount)],
-  ];
+  const rows: [string, string][] = en
+    ? [
+        ["House Sold", String(data.soldCount)],
+        ["Total Earnings", formatTL(data.totalEarned)],
+        ["Balance", formatTL(data.balance)],
+        ["Reputation", data.reputation || "—"],
+        ["Career Rank", data.rank],
+        ["Badge Count", String(data.badgeCount)],
+      ]
+    : [
+        ["Satılan Ev", String(data.soldCount)],
+        ["Toplam Kazanç", formatTL(data.totalEarned)],
+        ["Bakiye", formatTL(data.balance)],
+        ["Ün", data.reputation || "—"],
+        ["Kariyer Rütbesi", data.rank],
+        ["Rozet Sayısı", String(data.badgeCount)],
+      ];
 
   ctx.font = '22px "VT323", monospace';
   ctx.textBaseline = "middle";
@@ -159,7 +170,11 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
   // Footer
   ctx.font = '14px "VT323", monospace';
   ctx.fillStyle = "#888888";
-  ctx.fillText("Simsar Emlak — İstanbul'un en yaratıcı emlakçısı", WIDTH / 2, HEIGHT - 40);
+  ctx.fillText(
+    en ? "Odd Estate — Istanbul's most creative real estate agency" : "Odd Estate — İstanbul'un en yaratıcı emlakçısı",
+    WIDTH / 2,
+    HEIGHT - 40,
+  );
 
   return canvas.toDataURL("image/png");
 }

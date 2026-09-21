@@ -1,28 +1,29 @@
 import type { DailyQuestDef, HouseResult, WeekOutcome } from "../types";
+import { resolveText } from "./language";
 
 export const dailyQuestDefs: DailyQuestDef[] = [
   {
     id: "discount-free",
-    title: "Pazarlıksız Satış",
-    description: "Bu hafta en az bir evi hiç indirim yapmadan sat.",
+    title: { tr: "Pazarlıksız Satış", en: "No-Discount Sale" },
+    description: { tr: "Bu hafta en az bir evi hiç indirim yapmadan sat.", en: "Sell at least one home this week without any discount." },
     reward: 35000,
   },
   {
     id: "low-suspicion",
-    title: "Temiz İş",
-    description: "Bu hafta en az bir evi düşük şüpheyle (20 altı) sat.",
+    title: { tr: "Temiz İş", en: "Clean Job" },
+    description: { tr: "Bu hafta en az bir evi düşük şüpheyle (20 altı) sat.", en: "Sell at least one home this week with low suspicion (under 20)." },
     reward: 35000,
   },
   {
     id: "streak-2",
-    title: "Seri Simsar",
-    description: "Bu hafta art arda en az 2 ev sat.",
+    title: { tr: "Seri Simsar", en: "Streak Realtor" },
+    description: { tr: "Bu hafta art arda en az 2 ev sat.", en: "Sell at least 2 homes in a row this week." },
     reward: 45000,
   },
   {
     id: "high-fun",
-    title: "Sohbet Ustası",
-    description: "Bu hafta eğlence puanı yüksek (30+) bir görüşmeyle satış kapat.",
+    title: { tr: "Sohbet Ustası", en: "Chat Master" },
+    description: { tr: "Bu hafta eğlence puanı yüksek (30+) bir görüşmeyle satış kapat.", en: "Close a sale this week with a high fun score (30+) meeting." },
     reward: 40000,
   },
 ];
@@ -47,7 +48,7 @@ export function applyRecoveryBonus(quest: DailyQuestDef, weekOutcomes: WeekOutco
   return {
     ...quest,
     reward: quest.reward + RECOVERY_BONUS,
-    description: `${quest.description} (Toparlanma bonusu: +${RECOVERY_BONUS.toLocaleString("tr-TR")}₺)`,
+    description: `${resolveText(quest.description)} (Toparlanma bonusu: +${RECOVERY_BONUS.toLocaleString("tr-TR")}₺)`,
   };
 }
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { HouseResult, HouseScene, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
+import { resolveHouseTitle, resolveHouseLocation } from "../data/language";
 
 interface PortfolioPanelProps {
   allHouses: HouseScene[];
@@ -67,8 +68,8 @@ export default function PortfolioPanel({
         return (
           <div className={`portfolio-row ${statusClass}`} key={h.id}>
             <div className="portfolio-row-info">
-              <p className="portfolio-row-title">{h.title}</p>
-              <p className="portfolio-row-location">{h.location} · Tier {h.tier}</p>
+              <p className="portfolio-row-title">{resolveHouseTitle(h)}</p>
+              <p className="portfolio-row-location">{resolveHouseLocation(h)} · Tier {h.tier}</p>
             </div>
             <div className="portfolio-row-meta">
               <span className="portfolio-row-price">{formatTL(h.askingPrice)}</span>

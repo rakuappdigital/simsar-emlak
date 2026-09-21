@@ -1,3 +1,4 @@
+import { resolveText, type Localized } from "./language";
 /**
  * Tadilat — every investment house is rolled a random condition when
  * bought (not authored per-house, so the same listing can be a fixer-upper
@@ -14,15 +15,15 @@ export type RenovationLevel = "yok" | "basit" | "orta" | "yenileme";
 const conditionSeverity: Record<HouseCondition, number> = { iyi: 0, orta: 1, kotu: 2 };
 const renovationRank: Record<RenovationLevel, number> = { yok: 0, basit: 1, orta: 2, yenileme: 3 };
 
-export const conditionLabel: Record<HouseCondition, string> = {
-  iyi: "İyi Durumda",
-  orta: "Orta Halli",
-  kotu: "Bakım Gerekiyor",
+export const conditionLabel: Record<HouseCondition, Localized> = {
+  iyi: { tr: "İyi Durumda", en: "In Good Condition" },
+  orta: { tr: "Orta Halli", en: "Fair Condition" },
+  kotu: { tr: "Bakım Gerekiyor", en: "Needs Maintenance" },
 };
 
 export interface RenovationOption {
   level: RenovationLevel;
-  label: string;
+  label: Localized;
   /** Fraction of the purchase price. */
   costRate: number;
   /** Fraction added to the resale price ceiling, regardless of condition. */
@@ -30,9 +31,9 @@ export interface RenovationOption {
 }
 
 export const renovationOptions: RenovationOption[] = [
-  { level: "basit", label: "Basit Tadilat", costRate: 0.04, priceBoostRate: 0.06 },
-  { level: "orta", label: "Orta Ölçekli Tadilat", costRate: 0.1, priceBoostRate: 0.14 },
-  { level: "yenileme", label: "Yenileme", costRate: 0.18, priceBoostRate: 0.25 },
+  { level: "basit", label: { tr: "Basit Tadilat", en: "Simple Renovation" }, costRate: 0.04, priceBoostRate: 0.06 },
+  { level: "orta", label: { tr: "Orta Ölçekli Tadilat", en: "Medium Renovation" }, costRate: 0.1, priceBoostRate: 0.14 },
+  { level: "yenileme", label: { tr: "Yenileme", en: "Full Renovation" }, costRate: 0.18, priceBoostRate: 0.25 },
 ];
 
 /** Rolled once, at purchase time — roughly a third each. */
@@ -62,18 +63,18 @@ export function renovationCost(level: RenovationLevel, purchasePrice: number): n
 }
 
 const conditionWarningThoughts = [
-  "(içinden) Bu evi yeterince toparlamadım, alıcı fark edecektir.",
-  "(içinden) Tadilat konusunda biraz eli sıkı davrandım, bu şimdi karşıma çıkabilir.",
+  { tr: "(içinden) Bu evi yeterince toparlamadım, alıcı fark edecektir.", en: "(to himself) I didn't fix up this house enough, the buyer will notice." },
+  { tr: "(içinden) Tadilat konusunda biraz eli sıkı davrandım, bu şimdi karşıma çıkabilir.", en: "(to himself) I was a bit tight-fisted regarding renovations, this might backfire now." },
 ];
 
 const conditionWarningLines = [
-  "(çevreye bakınır) Açıkçası burada epey eksik var, bu fiyatta ısrar edeceğim.",
-  "(duvarlara dokunur) Bu haliyle tam istediğim gibi değil, pazarlığa açığım demeyeceğim.",
-  "(kaşlarını çatar) Beklediğimden bakımsız, bunu fiyata yansıtmam lazım.",
+  { tr: "(çevreye bakınır) Açıkçası burada epey eksik var, bu fiyatta ısrar edeceğim.", en: "(looking around) Frankly there are quite a few flaws here, I'm going to insist on this price." },
+  { tr: "(duvarlara dokunur) Bu haliyle tam istediğim gibi değil, pazarlığa açığım demeyeceğim.", en: "(touching the walls) Not quite as I wanted in this state, I won't say I'm open to negotiation." },
+  { tr: "(kaşlarını çatar) Beklediğimden bakımsız, bunu fiyata yansıtmam lazım.", en: "(frowning) More unkempt than I expected, I need to reflect this in the price." },
 ];
 
-function pick(arr: string[]): string {
-  return arr[Math.floor(Math.random() * arr.length)];
+function pick(arr: Localized[]): string {
+  return resolveText(arr[Math.floor(Math.random() * arr.length)]);
 }
 
 export function pickConditionWarningThought(): string {

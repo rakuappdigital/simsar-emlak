@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ContractClause } from "../types";
 import { evaluateContract, MAX_CONTRACT_ROUNDS, type ContractOutcome } from "../data/contract";
+import { resolveText } from "../data/language";
 
 interface ContractModalProps {
   clauses: ContractClause[];
@@ -60,7 +61,7 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
           <>
             {clauses.map((c) => (
               <div className="contract-clause" key={c.id}>
-                <p className="contract-clause-title">{c.title}</p>
+                <p className="contract-clause-title">{resolveText(c.title)}</p>
                 <div className="contract-options">
                   {c.options.map((o) => (
                     <button
@@ -68,7 +69,7 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
                       className={`contract-option-btn ${selections[c.id] === o.id ? "selected" : ""}`}
                       onClick={() => setSelections((s) => ({ ...s, [c.id]: o.id }))}
                     >
-                      {o.label}
+                      {resolveText(o.label)}
                     </button>
                   ))}
                 </div>
@@ -91,22 +92,22 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
               const preferredOption = c.options.find((o) => o.id === c.preferredOptionId);
               return (
                 <div className="contract-clause" key={c.id}>
-                  <p className="contract-clause-title">{c.title}</p>
+                  <p className="contract-clause-title">{resolveText(c.title)}</p>
                   <p className="contract-counter-offer">
-                    {customerName} şunu istiyor: <strong>{preferredOption?.label}</strong>
+                    {customerName} şunu istiyor: <strong>{preferredOption ? resolveText(preferredOption.label) : ""}</strong>
                   </p>
                   <div className="contract-options">
                     <button
                       className={`contract-option-btn ${concessions[c.id] === true ? "selected" : ""}`}
                       onClick={() => setConcessions((s) => ({ ...s, [c.id]: true }))}
                     >
-                      Kabul Et: {preferredOption?.label}
+                      Kabul Et: {preferredOption ? resolveText(preferredOption.label) : ""}
                     </button>
                     <button
                       className={`contract-option-btn ${concessions[c.id] === false ? "selected" : ""}`}
                       onClick={() => setConcessions((s) => ({ ...s, [c.id]: false }))}
                     >
-                      Israr Et: {currentOption?.label}
+                      Israr Et: {currentOption ? resolveText(currentOption.label) : ""}
                     </button>
                   </div>
                 </div>
@@ -124,7 +125,7 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
               const matched = selections[c.id] === c.preferredOptionId;
               return (
                 <p key={c.id}>
-                  {matched ? "✅" : "⚠️"} {c.title}: {matched
+                  {matched ? "✅" : "⚠️"} {resolveText(c.title)}: {matched
                     ? `${customerName} bu maddeyi kabul etti.`
                     : `${customerName} bu maddede anlaşamadık, ısrar ettiniz.`}
                 </p>

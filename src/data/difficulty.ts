@@ -1,3 +1,4 @@
+import type { Localized } from "./language";
 export type Difficulty = "kolay" | "normal" | "zor";
 
 const KEY = "simsar-emlak-difficulty";
@@ -10,10 +11,10 @@ export const difficultyMultiplier: Record<Difficulty, number> = {
   zor: 1.25,
 };
 
-export const difficultyLabels: Record<Difficulty, string> = {
-  kolay: "Kolay",
-  normal: "Normal",
-  zor: "Zor",
+export const difficultyLabels: Record<Difficulty, Localized> = {
+  kolay: { tr: "Kolay", en: "Easy" },
+  normal: { tr: "Normal", en: "Normal" },
+  zor: { tr: "Zor", en: "Hard" },
 };
 
 export function getDifficulty(): Difficulty {

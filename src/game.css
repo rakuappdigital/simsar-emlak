@@ -2244,6 +2244,68 @@
   letter-spacing: 2px;
 }
 
+.energy-ad-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 10px;
+  font-size: 0.68rem;
+}
+
+.day-activities {
+  margin: 10px 0;
+}
+
+.day-activity-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.day-activity-list-3col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.day-activity-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--c-surface-dark);
+  border: 2px solid var(--c-border-light);
+  border-radius: 8px;
+  padding: 14px 8px;
+  cursor: pointer;
+  color: var(--c-text);
+  font-family: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.day-activity-card:hover:not(:disabled) {
+  border-color: var(--c-accent);
+  transform: translateY(-2px);
+}
+
+.day-activity-card:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.day-activity-icon {
+  font-size: 1.6rem;
+}
+
+.day-activity-label {
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.day-activity-gain {
+  font-size: 0.7rem;
+  color: var(--c-accent);
+  font-weight: bold;
+}
+
 .office-panel {
   display: flex;
   align-items: center;
@@ -2884,55 +2946,54 @@
   margin: 0;
 }
 
-.minigame-track {
-  position: relative;
-  width: 100%;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--c-divider);
-  overflow: hidden;
-}
-
-.minigame-zone {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  background: rgba(129, 199, 132, 0.35);
-  border-left: 2px solid var(--c-success);
-  border-right: 2px solid var(--c-success);
-}
-
-.minigame-marker {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 5px;
-  border-radius: 3px;
-  background: var(--c-accent);
-  transform: translateX(-50%);
-  transition: left 0.016s linear;
-}
-
-.minigame-beats {
-  display: flex;
+.minigame-key-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  font-size: 1.3rem;
+  width: 100%;
 }
 
-.minigame-beat {
-  opacity: 0.3;
-  transform: scale(0.85);
-  transition: transform 0.12s ease, opacity 0.12s ease;
+.minigame-key-btn {
+  font-size: 1.6rem;
+  padding: 14px 0;
+  border-radius: 8px;
+  border: 2px solid var(--c-border-light);
+  background: var(--c-surface-dark);
+  cursor: pointer;
 }
 
-.minigame-beat-active {
-  opacity: 1;
-  transform: scale(1.25);
+.minigame-key-correct {
+  filter: hue-rotate(130deg) saturate(1.6);
+  transform: rotate(18deg);
 }
 
-.minigame-beat-passed {
-  opacity: 0.55;
-  transform: scale(0.95);
+.minigame-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.minigame-message-btn {
+  font-size: 0.78rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--c-border-light);
+  background: var(--c-surface-dark);
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.minigame-message-btn:disabled {
+  opacity: 0.45;
+}
+
+.minigame-price-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 }
 
 .minigame-step-count {
@@ -2989,4 +3050,78 @@
   line-height: 1.7;
   color: var(--c-text-dim);
   margin: 6px 0;
+}
+
+/* Splash screen (studio logo -> game logo) */
+.splash-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-root-game {
+  /* Exact background color sampled from oddestate-logo.png so the transition to the second splash stage shows no seam. */
+  background: #fec821;
+}
+
+.splash-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 32px;
+  opacity: 1;
+}
+
+.splash-fade-out {
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.splash-fade-in-hidden {
+  opacity: 0;
+}
+
+.splash-fade-in-visible {
+  opacity: 1;
+  transition: opacity 500ms ease;
+}
+
+.splash-studio-img {
+  width: min(60vw, 360px);
+  height: auto;
+}
+
+.splash-game-img {
+  width: min(72vw, 340px);
+  height: auto;
+}
+
+.splash-progress-track {
+  width: min(60vw, 260px);
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.splash-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #3d2b1f;
+}
+
+.settings-logo {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 8px;
+  border-radius: 14px;
 }

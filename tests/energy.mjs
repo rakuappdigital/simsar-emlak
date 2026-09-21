@@ -25,6 +25,8 @@ page.on("console", (msg) => {
 });
 
 await page.goto(BASE_URL);
+await page.locator("button", { hasText: "Türkçe" }).click({ timeout: 3000 }).catch(() => {});
+await page.evaluate(() => localStorage.setItem("simsar-emlak-full-unlock", "1")).catch(() => {});
 
 const data = await page.evaluate(async () => {
   const energyMod = await import("/src/data/energy.ts");
@@ -51,9 +53,9 @@ const data = await page.evaluate(async () => {
   return out;
 });
 
-assert(data.depletion === 30, "depletion per house is 30");
+assert(data.depletion === 35, "depletion per house is 35");
 assert(data.passivePerHour === 10, "passive regen is 10/hour");
-assert(data.minigameGain === 10, "minigame gain is 10");
+assert(data.minigameGain === 2, "minigame gain is 2");
 assert(data.cooldownExportsRemoved, "real-time cooldown exports (MINIGAME_MAX_PLAYS/COOLDOWN_MS/effectiveMinigamePlaysRemaining) are gone");
 assert(data.regen1hGained === 10, "1 hour elapsed grants 10 energy");
 assert(data.regen2_5hGained === 20, "2.5 hours elapsed grants 20 (floored)");
@@ -91,10 +93,15 @@ await page.waitForTimeout(300);
 await page.locator(".pixel-btn").first().click({ timeout: 5000 });
 await page.waitForTimeout(500);
 
+// "Yeni Güne Geç" — first click advances the day (same .office-get-job-btn
+// class, different handler until dayAdvanced flips true), second click is
+// the actual "Bugünün İşini Al" job attempt that hits the energy gate.
+await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
+await page.waitForTimeout(300);
 await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
 await page.waitForTimeout(300);
 assert((await page.locator(".energy-break-modal").count()) > 0, "low energy opens the Enerji Molası modal");
-assert((await page.locator(".energy-break-card").count()) === 4, "all 4 mini-games are available, even with minigamePlaysRemaining at 0 (vestigial field, no longer gates anything)");
+assert((await page.locator(".energy-break-card").count()) === 6, "all 4 mini-games + rewarded-ad + jetton cards are available, even with minigamePlaysRemaining at 0 (vestigial field, no longer gates anything)");
 assert((await page.locator(".energy-break-other-btn, .energy-break-soon").count()) === 0, "no leftover ad/purchase placeholder buttons");
 
 assert(errors.length === 0, `zero console/page errors (got ${errors.length})`);

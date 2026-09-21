@@ -1,8 +1,9 @@
 import type { HouseResult } from "../types";
+import type { Localized } from "./language";
 
 export interface Ending {
-  title: string;
-  description: string;
+  title: Localized;
+  description: Localized;
 }
 
 // Total commission across the full house set realistically lands anywhere
@@ -18,7 +19,10 @@ const SNEAKY_AVG = 55;
 
 export function computeEnding(results: HouseResult[], earned: number): Ending {
   if (results.length === 0) {
-    return { title: "Yarım Kalan Hikaye", description: "Emlah daha işe yeni başladı." };
+    return {
+      title: { tr: "Yarım Kalan Hikaye", en: "An Unfinished Story" },
+      description: { tr: "Emlah daha işe yeni başladı.", en: "Emlah has just started his journey." },
+    };
   }
 
   const avgSuspicion = results.reduce((s, r) => s + r.finalSuspicion, 0) / results.length;
@@ -28,30 +32,45 @@ export function computeEnding(results: HouseResult[], earned: number): Ending {
 
   if (honest && rich) {
     return {
-      title: "Kendi Ofisini Açtı",
-      description: "Dürüstlüğü ve başarısı bir arada — Emlah artık kendi adını taşıyan bir ofiste çalışıyor.",
+      title: { tr: "Kendi Ofisini Açtı", en: "Opened His Own Office" },
+      description: {
+        tr: "Dürüstlüğü ve başarısı bir arada — Emlah artık kendi adını taşıyan bir ofiste çalışıyor.",
+        en: "Honesty and success combined — Emlah now works in an office bearing his own name.",
+      },
     };
   }
   if (honest && !rich) {
     return {
-      title: "Az Kazandı Ama Huzurlu",
-      description: "Cebi pek dolmadı ama Emlah geceleri rahat uyuyor.",
+      title: { tr: "Az Kazandı Ama Huzurlu", en: "Earned Less But Peaceful" },
+      description: {
+        tr: "Cebi pek dolmadı ama Emlah geceleri rahat uyuyor.",
+        en: "His pockets aren't bulging, but Emlah sleeps soundly at night.",
+      },
     };
   }
   if (sneaky && rich) {
     return {
-      title: "Muzaffer Bey'in Ortağı Oldu",
-      description: "Yöntemleri tartışmalı ama rakamlar ortada — Emlah artık şirketin yarısına ortak.",
+      title: { tr: "Muzaffer Bey'in Ortağı Oldu", en: "Became Muzaffer Bey's Partner" },
+      description: {
+        tr: "Yöntemleri tartışmalı ama rakamlar ortada — Emlah artık şirketin yarısına ortak.",
+        en: "His methods are debatable, but the numbers speak for themselves — Emlah is now a half-partner in the company.",
+      },
     };
   }
   if (sneaky && !rich) {
     return {
-      title: "Kovuldu",
-      description: "Ne yeterince sattı ne de güven kazandı. Muzaffer Bey'in son mesajı: \"Bu iş sende değilmiş.\"",
+      title: { tr: "Kovuldu", en: "Fired" },
+      description: {
+        tr: "Ne yeterince sattı ne de güven kazandı. Muzaffer Bey'in son mesajı: \"Bu iş sende değilmiş.\"",
+        en: "He neither sold enough nor earned trust. Muzaffer Bey's final message: \"Looks like this job wasn't for you.\"",
+      },
     };
   }
   return {
-    title: "Sektörde Sağlam Bir İsim Oldu",
-    description: "Ne çok sinsi ne fazla dürüst — Emlah dengeyi buldu, istikrarlı bir kariyer kurdu.",
+    title: { tr: "Sektörde Sağlam Bir İsim Oldu", en: "Became a Solid Name in the Industry" },
+    description: {
+      tr: "Ne çok sinsi ne fazla dürüst — Emlah dengeyi buldu, istikrarlı bir kariyer kurdu.",
+      en: "Neither too sneaky nor overly honest — Emlah found the balance, building a steady career.",
+    },
   };
 }

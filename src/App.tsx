@@ -4,6 +4,35 @@ import OfficeScene from "./components/OfficeScene";
 import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
 import MainMenu from "./components/MainMenu";
+import LanguageSelectScreen from "./components/LanguageSelectScreen";
+import SplashScreen from "./components/SplashScreen";
+import PaywallScreen from "./components/PaywallScreen";
+import { DEMO_HOUSE_LIMIT, isFullUnlocked, isAdsRemoved, purchaseFullUnlock, purchaseRemoveAds, syncPurchasesFromRevenueCat } from "./data/purchases";
+import { showInterstitialAd } from "./data/ads";
+import { shouldShowInterstitialOnDayAdvance } from "./data/adSchedule";
+import {
+  inventoryItems,
+  SUSPICION_SHIELD_HOUSES,
+  SUSPICION_SHIELD_DISCOUNT,
+  LUCKY_CALL_INTEREST_BONUS,
+  LUCKY_CALL_SUSPICION_DISCOUNT,
+  CONFIDENCE_OUTFIT_DISCOUNT,
+  getShieldHousesLeft,
+  setShieldHousesLeft,
+} from "./data/inventory";
+import { getPlaysRemaining, recordPlay } from "./data/minigameSchedule";
+import { initGameCenter, unlockAchievement, ACHIEVEMENT_IDS } from "./data/gameCenter";
+import { initRevenueCat } from "./data/revenuecat";
+import { dayActivities, RESEARCH_SUSPICION_DISCOUNT, MARKETING_BOSS_MOOD_GAIN, OFFICE_WORK_BONUS_EARNINGS } from "./data/dayActivities";
+import {
+  getJettons,
+  spendJettons,
+  purchaseJettonPackage,
+  JETTON_ENERGY_REFILL_COST,
+  JETTON_ENERGY_REFILL_AMOUNT,
+  type JettonPackage,
+} from "./data/jettons";
+import { getLanguage, hasChosenLanguage, resolveText, resolveHouseTitle, resolveHouseLocation, type Language } from "./data/language";
 const SavedGames = lazy(() => import("./components/SavedGames"));
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 import WeekResult from "./components/WeekResult";
@@ -11,7 +40,7 @@ import ContractModal from "./components/ContractModal";
 import type { EmlahTab } from "./components/EmlahMenu";
 const EmlahMenu = lazy(() => import("./components/EmlahMenu"));
 import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon } from "./components/icons";
-import { playClick, playSale, playLost, playReward, playThinking } from "./data/sound";
+import { playClick, playSale, playLost, playReward, playThinking, playPurchase, playDayAdvance, startMusic, getMusicVolume } from "./data/sound";
 import { houseIntros, defaultIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
@@ -81,6 +110,7 @@ import {
   ENERGY_LOW_SUSPICION_MULTIPLIER,
   WEEKLY_ENERGY_REGEN,
   ENERGY_WORK_MIN_THRESHOLD,
+  AD_ENERGY_REWARD,
   computePassiveEnergyRegen,
 } from "./data/energy";
 import { energyBreakActivities } from "./data/energyBreak";
@@ -145,6 +175,7 @@ import {
   rankBonus,
   rankInterestBonus,
   rankTitle,
+  rankTitleDisplay,
   computeFreshStats,
 } from "./data/scoring";
 import { skillTree, canUnlockSkill, xpForOutcome, startingBonusForSkills } from "./data/skillTree";
@@ -241,6 +272,7 @@ type Stage =
   | "house"
   | "contract"
   | "locked"
+  | "paywall"
   | "result"
   | "weekGoal"
   | "summary";
@@ -511,6 +543,9 @@ function App() {
     showChoices: boolean;
   } | null>(null);
   const [pendingMeetupBonus, setPendingMeetupBonus] = useState<{ interest?: number; fun?: number } | null>(null);
+  const [pendingSuspicionDiscount, setPendingSuspicionDiscount] = useState(0);
+  const [pendingLuckyCall, setPendingLuckyCall] = useState(false);
+  const [shieldHousesLeftState, setShieldHousesLeftState] = useState(getShieldHousesLeft);
   const [tasksCompleted, setTasksCompleted] = useState(0);
   const [chitchatBonuses, setChitchatBonuses] = useState(0);
   const [premiumResults, setPremiumResults] = useState<HouseResult[]>([]);
@@ -557,6 +592,33 @@ function App() {
   const [cityPulseMsg, setCityPulseMsg] = useState<string | null>(null);
   // Enerji Molası — blocks "Bugünün İşini Al" while energy is critically low. Not persisted, purely a gate on the existing energy state.
   const [showEnergyBreak, setShowEnergyBreak] = useState(false);
+  // Jetton — prestige.ts ile aynı desen: 3 kayıt slotundan bağımsız, hesap genelinde kalıcı.
+  const [jettons, setJettonsState] = useState(getJettons);
+  const [fullUnlockedState, setFullUnlockedState] = useState(isFullUnlocked);
+  const [adsRemovedState, setAdsRemovedState] = useState(isAdsRemoved);
+  // "Yeni Güne Geç" — keyed by house index so it self-resets the moment the
+  // player moves to the next house, no explicit reset call needed anywhere.
+  const [dayAdvancedForIndex, setDayAdvancedForIndex] = useState<number | null>(null);
+  const [dayActivitiesDone, setDayActivitiesDone] = useState<string[]>([]);
+  const dayAdvanced = dayAdvancedForIndex === index;
+  useEffect(() => {
+    setDayActivitiesDone([]);
+  }, [index]);
+  useEffect(() => {
+    initRevenueCat().then(() => syncPurchasesFromRevenueCat());
+    initGameCenter();
+  }, []);
+  useEffect(() => {
+    if (getMusicVolume() <= 0) return;
+    startMusic();
+    // Tarayıcı/WKWebView autoplay politikası ilk denemeyi engelleyebilir — ilk dokunuşta tekrar dene.
+    const kick = () => {
+      startMusic();
+      document.removeEventListener("pointerdown", kick);
+    };
+    document.addEventListener("pointerdown", kick, { once: true });
+    return () => document.removeEventListener("pointerdown", kick);
+  }, []);
   // Real wall-clock energy timers — device time, not the in-game calendar. See data/energy.ts.
   const [energyLastRegenAt, setEnergyLastRegenAt] = useState(() => Date.now());
   const [minigameNextAvailableAt, setMinigameNextAvailableAt] = useState(() => Date.now());
@@ -641,6 +703,12 @@ function App() {
   useEffect(() => {
     if (stage === "phone") setShowPhoneOverlay(false);
   }, [stage]);
+  // Otomasyon/test ortamında (Playwright, navigator.webdriver) splash'ı atla — gerçek kullanıcıda hep gösterilir.
+  const [showSplash, setShowSplash] = useState(() => !navigator.webdriver);
+  // İlk açılışta bir kere gösterilen dil seçim ekranı — Ayarlar'dan istendiği zaman değiştirilebilir.
+  const [languageChosen, setLanguageChosen] = useState(hasChosenLanguage);
+  const [language, setLanguage] = useState<Language>(getLanguage);
+
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
     try {
       return localStorage.getItem("simsar-emlak-tutorial-seen") === "1";
@@ -848,7 +916,7 @@ function App() {
           setInbox((inb) =>
             logMessages(
               inb, "muzaffer", "Muzaffer Bey",
-              [{ from: "Muzaffer Bey", text: `Artık sana "${def.nickname}" diyeceğim, bu tarzını hak ettin.` }],
+              [{ from: "Muzaffer Bey", text: `Artık sana "${resolveText(def.nickname)}" diyeceğim, bu tarzını hak ettin.` }],
               index + 1,
             ),
           );
@@ -1115,7 +1183,7 @@ function App() {
         setBonusEarnings(newBonusEarnings);
         loanInbox = logMessages(
           loanInbox, "muzaffer", "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: `📅 ${formatGameDate(gameDateForIndex(newIndex))} — ${event.headline}${event.bonusEarnings !== 0 ? ` (${event.bonusEarnings > 0 ? "+" : ""}${formatTL(event.bonusEarnings)})` : ""}` }],
+          [{ from: "Muzaffer Bey", text: `📅 ${formatGameDate(gameDateForIndex(newIndex))} — ${resolveText(event.headline)}${event.bonusEarnings !== 0 ? ` (${event.bonusEarnings > 0 ? "+" : ""}${formatTL(event.bonusEarnings)})` : ""}` }],
           newIndex + 1,
         );
         newFiredSeasonalEventWeeks = [...firedSeasonalEventWeeks, weekIdx];
@@ -1190,7 +1258,7 @@ function App() {
     if (originParam && FATEFUL_MOMENT_INDICES.includes(newIndex as (typeof FATEFUL_MOMENT_INDICES)[number]) && !firedFatefulMomentIndicesParam.includes(newIndex)) {
       const moment = fatefulMomentFor(newIndex, originParam);
       if (moment) {
-        setActiveFatefulMoment(moment);
+        setActiveFatefulMoment({ title: resolveText(moment.title), paragraphs: moment.paragraphs.map((p) => resolveText(p)) });
         newFiredFatefulMomentIndices = [...firedFatefulMomentIndicesParam, newIndex];
         setFiredFatefulMomentIndices(newFiredFatefulMomentIndices);
       }
@@ -1220,12 +1288,31 @@ function App() {
       };
       setPendingMeetupBonus(null);
     }
+    if (pendingSuspicionDiscount > 0) {
+      newStats = { ...newStats, suspicion: Math.max(0, newStats.suspicion - pendingSuspicionDiscount) };
+      setPendingSuspicionDiscount(0);
+    }
+    const shieldLeft = getShieldHousesLeft();
+    if (shieldLeft > 0) {
+      newStats = { ...newStats, suspicion: Math.max(0, newStats.suspicion - SUSPICION_SHIELD_DISCOUNT) };
+      setShieldHousesLeft(shieldLeft - 1);
+      setShieldHousesLeftState(shieldLeft - 1);
+    }
+    if (pendingLuckyCall) {
+      newStats = {
+        ...newStats,
+        interest: Math.min(100, newStats.interest + LUCKY_CALL_INTEREST_BONUS),
+        suspicion: Math.max(0, newStats.suspicion - LUCKY_CALL_SUSPICION_DISCOUNT),
+      };
+      setPendingLuckyCall(false);
+    }
     setStats(newStats);
     const remainingConsumables = consumeOneOfEach(consumablesList);
     setConsumables(remainingConsumables);
 
     const nextIntro = houseIntros[nextHouse.id] ?? defaultIntro(nextHouse);
-    const introMessages = flavor.message ? [flavor.message, ...nextIntro.messages] : nextIntro.messages;
+    const resolvedIntroMessages = nextIntro.messages.map((m) => ({ from: m.from, text: resolveText(m.text) }));
+    const introMessages = flavor.message ? [flavor.message, ...resolvedIntroMessages] : resolvedIntroMessages;
     let newInbox = logMessages(loanInbox, "muzaffer", "Muzaffer Bey", introMessages, newIndex + 1);
     newInbox = pruneInbox(newInbox, currentResults, newIndex + 1);
 
@@ -1270,7 +1357,7 @@ function App() {
     if (confession) {
       const nextHouse = allHouses[p.order[p.newIndex] ?? p.newIndex];
       const contactName = resolveCustomerNames(nextHouse, p.castAssignmentParam)[0];
-      inboxForNextHouse = logMessages(p.inboxList, nextHouse.id, contactName, [{ from: contactName, text: confession }], p.newIndex + 1);
+      inboxForNextHouse = logMessages(p.inboxList, nextHouse.id, contactName, [{ from: contactName, text: resolveText(confession) }], p.newIndex + 1);
     }
     proceedToHouseIntro(
       p.newIndex,
@@ -1299,8 +1386,8 @@ function App() {
     if (choice?.bonusEarningsDelta) setBonusEarnings(newBonusEarnings);
     let newInbox = p.inboxList;
     if (choice) {
-      const playerMsg: PhoneMessage = { from: "Emlah", text: choice.text };
-      const replyMsg: PhoneMessage = { from: activePostSaleCall.contactName, text: choice.reply };
+      const playerMsg: PhoneMessage = { from: "Emlah", text: resolveText(choice.text) };
+      const replyMsg: PhoneMessage = { from: activePostSaleCall.contactName, text: resolveText(choice.reply) };
       newInbox = logMessages(p.inboxList, activePostSaleCall.houseId, "Emlah", [playerMsg], p.newIndex + 1, true);
       newInbox = logMessages(newInbox, activePostSaleCall.houseId, activePostSaleCall.contactName, [replyMsg], p.newIndex + 1);
     }
@@ -1617,7 +1704,7 @@ function App() {
     if (totalSoldCount >= activeRival.threshold && !defeatedRivalIds.includes(activeRival.id)) {
       newDefeatedRivalIds = [...defeatedRivalIds, activeRival.id];
       setDefeatedRivalIds(newDefeatedRivalIds);
-      newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: activeRival.victoryLine }], index + 1);
+      newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: resolveText(activeRival.victoryLine) }], index + 1);
     }
 
     // Gizli Müşteri — silent until now; reveals itself only in the reaction
@@ -1696,7 +1783,8 @@ function App() {
       // bonus, additive on top of the existing sales/honesty bonus above.
       if (weekOutcome.salesGoalMet) newBossMood = clampBossMood(newBossMood + BOSS_MOOD_WEEK_GOAL_GAIN);
       // Sadakat Rozetleri — once unlocked, Muzaffer Bey uses the origin's nickname here instead of "Emlah".
-      const addressName = originChoiceCount >= LOYALTY_THRESHOLD ? (originById(origin)?.nickname ?? "Emlah") : "Emlah";
+      const originNickname = originById(origin)?.nickname;
+      const addressName = originChoiceCount >= LOYALTY_THRESHOLD && originNickname ? resolveText(originNickname) : "Emlah";
       if (newBossMood >= BOSS_MOOD_RAISE_THRESHOLD) {
         newBonusEarnings += WEEKLY_RAISE_AMOUNT;
         newInbox = logMessages(
@@ -2032,10 +2120,10 @@ function App() {
       totalEarned: earned,
       balance,
       reputation: reputationLabel(results),
-      rank: rankTitle(earned),
+      rank: rankTitleDisplay(rankTitle(earned)),
       badgeCount: badges.length,
-      endingTitle: ending.title,
-      endingDescription: ending.description,
+      endingTitle: resolveText(ending.title),
+      endingDescription: resolveText(ending.description),
     });
     const a = document.createElement("a");
     a.href = dataUrl;
@@ -2051,7 +2139,7 @@ function App() {
     slides.push({
       icon: "🏁",
       eyebrow: "Kariyerinin Sonu",
-      title: rankTitle(earned),
+      title: rankTitleDisplay(rankTitle(earned)),
       body: [`${soldCount} ev sattın, toplamda ${formatTL(earned)} kazandın.`],
     });
 
@@ -2065,7 +2153,7 @@ function App() {
         slides.push({
           icon: "💰",
           eyebrow: "En İyi Satışın",
-          title: bestHouse.title,
+          title: resolveHouseTitle(bestHouse),
           body: [`${formatTL(best.sale?.commission ?? 0)} komisyonla kariyerinin en iyi anlaşmasıydı.`],
         });
       }
@@ -2087,7 +2175,7 @@ function App() {
         icon: "🏅",
         eyebrow: "Kazanılan Rozetler",
         title: `${badges.length} rozet`,
-        body: badges.slice(0, 3).map((id) => allBadges[id]?.title ?? id),
+        body: badges.slice(0, 3).map((id) => (allBadges[id] ? resolveText(allBadges[id].title) : id)),
       });
     }
 
@@ -2103,12 +2191,12 @@ function App() {
     }
 
     const ending = computeEnding(results, earned);
-    const epilogue = originEndingLine(origin, ending.title);
+    const epilogue = originEndingLine(origin, resolveText(ending.title));
     slides.push({
       icon: "🎬",
       eyebrow: "Son",
-      title: ending.title,
-      body: [ending.description, epilogue].filter((s): s is string => !!s),
+      title: resolveText(ending.title),
+      body: [resolveText(ending.description), epilogue].filter((s): s is string => !!s),
     });
 
     // Efsane Modu already counts EVERY completed playthrough (recordGameCompletion()
@@ -2117,6 +2205,8 @@ function App() {
     // players had no idea a rough run still carried something forward. Read
     // fresh since recordGameCompletion() already ran for THIS run by now.
     const completions = getPrestigeCompletions();
+    unlockAchievement(ACHIEVEMENT_IDS.allHousesSold);
+    if (completions >= 1) unlockAchievement(ACHIEVEMENT_IDS.prestigeCompleted);
     const nextBonus = prestigeStartingBonus(completions);
     slides.push({
       icon: "♾️",
@@ -2133,7 +2223,7 @@ function App() {
     slides.push({
       icon: "🚀",
       eyebrow: "Hikaye Burada Bitmiyor",
-      title: "Simsar Emlak Gelişmeye Devam Ediyor",
+      title: "Odd Estate Gelişmeye Devam Ediyor",
       body: [
         "Emlah'ın hikayesi bu turla kapanmıyor — yeni semtler, yeni karakterler ve yeni mekaniklerle düzenli güncellemeler almaya devam edecek.",
         "Bir sonraki turunda seni neyin beklediğini görmek için yakında tekrar uğra.",
@@ -2146,18 +2236,125 @@ function App() {
   function handleEnergyBreakChoice(activityId: string, tier: MiniGameTier) {
     const activity = energyBreakActivities.find((a) => a.id === activityId);
     if (!activity) return;
-    // No real-time cooldown/plays-remaining gate — the game is paid up
-    // front with no ads or purchases, so there's nothing to ration behind
-    // a wait timer. The only cost is the player's actual attention for a
-    // few seconds per play (see EnergyMiniGames.tsx). The modal stays open
-    // after each play (no setShowEnergyBreak(false) here) so the player
-    // can keep playing until satisfied, then close it manually.
+    if (getPlaysRemaining(activityId) <= 0) return;
+    recordPlay(activityId);
+    // The modal stays open after each play (no setShowEnergyBreak(false)
+    // here) so the player can keep playing (within their remaining plays,
+    // see minigameSchedule.ts) until satisfied, then close it manually.
     // "great" = full reward, "ok" = a partial one, "fail" still grants a
     // small floor so a play never feels wasted.
     const tierGain = tier === "great" ? activity.energyGain : tier === "ok" ? Math.round(activity.energyGain * 0.6) : Math.round(activity.energyGain * 0.3);
     const newEnergy = Math.min(ENERGY_MAX, energy + tierGain);
     setEnergy(newEnergy);
     persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
+  }
+
+  // Enerji %{ENERGY_LOW_THRESHOLD} altına düşünce ödüllü reklam seçeneği açılır (bkz data/ads.ts — şimdilik mock).
+  function handleWatchAdForEnergy() {
+    const newEnergy = Math.min(ENERGY_MAX, energy + AD_ENERGY_REWARD);
+    setEnergy(newEnergy);
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
+  }
+
+  function handleSpendJettonsForEnergy() {
+    if (!spendJettons(JETTON_ENERGY_REFILL_COST)) return;
+    setJettonsState(getJettons());
+    const newEnergy = Math.min(ENERGY_MAX, energy + JETTON_ENERGY_REFILL_AMOUNT);
+    setEnergy(newEnergy);
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
+  }
+
+  async function handleBuyJettonPackage(pkg: JettonPackage) {
+    const ok = await purchaseJettonPackage(pkg);
+    if (ok) {
+      setJettonsState(getJettons());
+      playPurchase();
+      unlockAchievement(ACHIEVEMENT_IDS.jettonPurchased);
+      if (pkg.amount === 100) unlockAchievement(ACHIEVEMENT_IDS.jetton100Purchased);
+    }
+  }
+
+  function handleBuyInventoryItem(itemId: string) {
+    const item = inventoryItems.find((i) => i.id === itemId);
+    if (!item) return;
+    if (item.currency === "jetton") {
+      if (!spendJettons(item.cost)) return;
+      setJettonsState(getJettons());
+    } else {
+      if (balance < item.cost) return;
+      const newSpent = spent + item.cost;
+      setSpent(newSpent);
+      persist({ results, weekOutcomes, badges, index, ownedPerks, spent: newSpent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy });
+    }
+    playPurchase();
+    switch (item.id) {
+      case "suspicion-shield":
+        setShieldHousesLeft(SUSPICION_SHIELD_HOUSES);
+        setShieldHousesLeftState(SUSPICION_SHIELD_HOUSES);
+        break;
+      case "lucky-call":
+        setPendingLuckyCall(true);
+        break;
+      case "energy-box":
+        setEnergy(ENERGY_MAX);
+        break;
+      case "confidence-outfit":
+        setPendingSuspicionDiscount((d) => d + CONFIDENCE_OUTFIT_DISCOUNT);
+        break;
+    }
+  }
+
+  async function handleBuyFullVersionFromStore() {
+    const ok = await purchaseFullUnlock();
+    if (ok) {
+      setFullUnlockedState(true);
+      playPurchase();
+      if (isAdsRemoved()) unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
+    }
+  }
+
+  async function handleBuyRemoveAds() {
+    const ok = await purchaseRemoveAds();
+    if (ok) {
+      setAdsRemovedState(true);
+      playPurchase();
+      if (isFullUnlocked()) unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
+    }
+  }
+
+  async function handleRestorePurchases() {
+    await syncPurchasesFromRevenueCat();
+    setFullUnlockedState(isFullUnlocked());
+    setAdsRemovedState(isAdsRemoved());
+  }
+
+  async function handleAdvanceDay() {
+    playDayAdvance();
+    if (shouldShowInterstitialOnDayAdvance() && !isAdsRemoved()) {
+      await showInterstitialAd();
+    }
+    setDayAdvancedForIndex(index);
+  }
+
+  function handleDoDayActivity(activityId: string) {
+    if (dayActivitiesDone.includes(activityId)) return;
+    const activity = dayActivities.find((a) => a.id === activityId);
+    if (!activity) return;
+    const newEnergy = Math.max(0, energy - activity.energyCost);
+    setEnergy(newEnergy);
+    setDayActivitiesDone((prev) => [...prev, activityId]);
+    let newBossMood = bossMood;
+    let newBonusEarnings = bonusEarnings;
+    if (activityId === "research") {
+      setPendingSuspicionDiscount((d) => d + RESEARCH_SUSPICION_DISCOUNT);
+    } else if (activityId === "marketing") {
+      newBossMood = clampBossMood(bossMood + MARKETING_BOSS_MOOD_GAIN);
+      setBossMood(newBossMood);
+    } else if (activityId === "office-work") {
+      newBonusEarnings = bonusEarnings + OFFICE_WORK_BONUS_EARNINGS;
+      setBonusEarnings(newBonusEarnings);
+    }
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
   }
 
   function unlockSkill(skillId: string) {
@@ -2259,7 +2456,7 @@ function App() {
 
     const newResults = results.map((r, i) => (i === activeCallback.resultIndex ? updatedResult : r));
     setResults(newResults);
-    const playerMsg: PhoneMessage = { from: "Emlah", text: choice.text };
+    const playerMsg: PhoneMessage = { from: "Emlah", text: resolveText(choice.text) };
     const confirmMessages: PhoneMessage[] = toneContradiction
       ? [{ from: activeCallback.contactName, text: pickToneContradictionLine() }, { from: activeCallback.contactName, text: confirmText }]
       : [{ from: activeCallback.contactName, text: confirmText }];
@@ -2436,7 +2633,7 @@ function App() {
         const tip = pickTipsterMessage(lastTipsterId);
         setLastTipsterId(tip.id);
         const threadId = `tipster-${tip.from.toLowerCase().replace(/\s+/g, "-")}`;
-        setInbox((prev) => logMessages(prev, threadId, tip.from, [{ from: tip.from, text: tip.text }], index + 1));
+        setInbox((prev) => logMessages(prev, threadId, tip.from, [{ from: tip.from, text: resolveText(tip.text) }], index + 1));
       }
     }
     // "İkinci Şans" — a surprise, unprompted version of the existing manual
@@ -2486,7 +2683,7 @@ function App() {
         inbox,
         "rival-firat",
         "Fırat Bey",
-        firatFullCircleLines.map((text) => ({ from: "Fırat Bey", text })),
+        firatFullCircleLines.map((text) => ({ from: "Fırat Bey", text: resolveText(text) })),
         index + 1,
       );
       setInbox(newInbox);
@@ -2524,7 +2721,7 @@ function App() {
           ? firatMoodFor(results.filter((r) => r.outcome === "sold").length, rivalTotalSales(weekOutcomes.length))
           : null,
       );
-      const duelMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickDuelStartMessage(house.title, activeRival.name) };
+      const duelMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickDuelStartMessage(resolveHouseTitle(house), activeRival.name) };
       setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", [duelMsg], index + 1));
     } else if (Math.random() < MYSTERY_SHOPPER_CHANCE) {
       // Deliberately silent — a mystery shopper who announced themselves wouldn't be much of a mystery.
@@ -2572,7 +2769,7 @@ function App() {
       if (roll < FRIEND_CHANCE) {
         const set = pickFriendMessage(lastFriendId, pendingLoan !== null, pendingInvestment !== null, unlockedFriendHouseIds);
         setLastFriendId(set.id);
-        const openMsg: PhoneMessage[] = [{ from: set.contactName, text: set.prompt }];
+        const openMsg: PhoneMessage[] = [{ from: set.contactName, text: resolveText(set.prompt) }];
         setActiveFriendChat({ set, messages: openMsg, showChoices: true });
         const threadId = `friend-${set.contactName.toLowerCase()}`;
         setInbox((prev) => logMessages(prev, threadId, set.contactName, openMsg, index + 1));
@@ -2582,7 +2779,7 @@ function App() {
       if (roll < FRIEND_CHANCE + CHITCHAT_CHANCE) {
         const set = pickChitchat(lastChitchatId);
         setLastChitchatId(set.id);
-        const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: set.prompt }];
+        const openMsg: PhoneMessage[] = [{ from: "Muzaffer Bey", text: resolveText(set.prompt) }];
         setActiveChitchat({ set, messages: openMsg, showChoices: true });
         setInbox((prev) => logMessages(prev, "muzaffer", "Muzaffer Bey", openMsg, index + 1));
         setStage("chitchat");
@@ -2619,7 +2816,7 @@ function App() {
     if (!choice) return;
 
     const threadId = `friend-${activeFriendChat.set.contactName.toLowerCase()}`;
-    const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
+    const replyMsg: PhoneMessage = { from: "Emlah", text: resolveText(choice.text) };
 
     let newSpent = spent;
     let newPendingLoan = pendingLoan;
@@ -2644,7 +2841,7 @@ function App() {
     let newFriendBondCounts = friendBondCounts;
     let newFriendBondMilestonesShown = friendBondMilestonesShown;
     let newPendingFriendFavors = pendingFriendFavors;
-    let houseTipReaction = choice.reaction;
+    let houseTipReaction = resolveText(choice.reaction);
     // Bagged up here instead of a separate racing setInbox() call — the
     // milestone/favor message used to be posted via its own functional
     // setInbox() update that the direct setInbox(newInbox) below silently
@@ -2661,7 +2858,7 @@ function App() {
       setEnergy(newEnergy);
       const apptIndex = index + (choice.houseTipWeekOffset ?? 0) * HOUSES_PER_WEEK;
       const dateLabel = formatGameDate(gameDateForIndex(apptIndex));
-      houseTipReaction = `${choice.reaction} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin. -${FRIEND_TIP_ENERGY_COST} enerji)`;
+      houseTipReaction = `${resolveText(choice.reaction)} (Randevu: ${dateLabel} — "Arkadaşlarım" menüsünden bakabilirsin. -${FRIEND_TIP_ENERGY_COST} enerji)`;
 
       // "İlişki Evreleri" — see data/relationshipStages.ts. Milestone 3
       // (Güven) now also opens a real favor choice; milestone 10
@@ -2682,7 +2879,7 @@ function App() {
             if (newCount === 3) {
               newPendingFriendFavors = { ...pendingFriendFavors, [friend.id]: true };
               setPendingFriendFavors(newPendingFriendFavors);
-              milestoneMessages.push({ from: friend.name, text: favorRequestLine(friend.name, friend.profession) });
+              milestoneMessages.push({ from: friend.name, text: favorRequestLine(friend.name, resolveText(friend.profession)) });
             } else if (newCount === 10 && friendFavorAccepted[friend.id]) {
               milestoneMessages.push({ from: friend.name, text: yakinlikEpilogueLine(friend.name) });
             }
@@ -2696,7 +2893,7 @@ function App() {
     if (choice.bulkDealAction === "safe") {
       newBonusEarnings = bonusEarnings + BULK_DEAL_SAFE_AMOUNT;
       setBonusEarnings(newBonusEarnings);
-      bulkDealReaction = `${choice.reaction} (+${formatTL(BULK_DEAL_SAFE_AMOUNT)})`;
+      bulkDealReaction = `${resolveText(choice.reaction)} (+${formatTL(BULK_DEAL_SAFE_AMOUNT)})`;
     } else if (choice.bulkDealAction === "risky") {
       const big = Math.random() < BULK_DEAL_RISKY_BIG_CHANCE;
       const amount = big ? BULK_DEAL_RISKY_BIG_AMOUNT : BULK_DEAL_RISKY_SMALL_AMOUNT;
@@ -2795,25 +2992,25 @@ function App() {
     const activity = meetupActivities.find((a) => a.id === activityId);
 
     const threadId = `meetup-${activeMeetup.characterId}`;
-    const replyMsg: PhoneMessage = { from: "Emlah", text: activity ? activity.label : "Şu an vaktim yok açıkçası." };
+    const replyMsg: PhoneMessage = { from: "Emlah", text: activity ? resolveText(activity.label) : "Şu an vaktim yok açıkçası." };
 
     let newSpent = spent;
     let newFriendBonds = friendBonds;
     let reactionText: string;
 
     if (!activity) {
-      reactionText = declineReplies[Math.floor(Math.random() * declineReplies.length)];
+      reactionText = resolveText(declineReplies[Math.floor(Math.random() * declineReplies.length)]);
     } else if (balance >= activity.cost) {
       newSpent = spent + activity.cost;
       setSpent(newSpent);
       newFriendBonds = { ...friendBonds, [activeMeetup.characterId]: activity.bondGain };
       setFriendBonds(newFriendBonds);
       setPendingMeetupBonus(activity.bonus);
-      reactionText = activity.goodReplies[Math.floor(Math.random() * activity.goodReplies.length)];
+      reactionText = resolveText(activity.goodReplies[Math.floor(Math.random() * activity.goodReplies.length)]);
     } else {
       newFriendBonds = { ...friendBonds, [activeMeetup.characterId]: 0 };
       setFriendBonds(newFriendBonds);
-      reactionText = activity.cantAffordReplies[Math.floor(Math.random() * activity.cantAffordReplies.length)];
+      reactionText = resolveText(activity.cantAffordReplies[Math.floor(Math.random() * activity.cantAffordReplies.length)]);
     }
 
     const reactionMsg: PhoneMessage = { from: activeMeetup.characterName, text: reactionText };
@@ -2838,8 +3035,8 @@ function App() {
     const choice = activeChitchat.set.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
-    const replyMsg: PhoneMessage = { from: "Emlah", text: choice.text };
-    const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: choice.reaction };
+    const replyMsg: PhoneMessage = { from: "Emlah", text: resolveText(choice.text) };
+    const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: resolveText(choice.reaction) };
 
     if (choice.bonus) {
       applyEffects(choice.bonus);
@@ -2864,6 +3061,21 @@ function App() {
     // investmentResults is its own isolated array, so there's no ambiguity.
     investmentResults.reduce((sum, r) => sum + (r.sale?.commission ?? 0), 0);
   const balance = earned - spent;
+  useEffect(() => {
+    const soldCount = results.filter((r) => r.outcome === "sold").length;
+    if (soldCount >= 1) unlockAchievement(ACHIEVEMENT_IDS.firstSale);
+    if (soldCount >= 10) unlockAchievement(ACHIEVEMENT_IDS.tenSales);
+    if (soldCount >= 20 && Object.keys(friendBondCounts).length === 0) unlockAchievement(ACHIEVEMENT_IDS.loneWolf20);
+    if (earned >= 10_000_000) unlockAchievement(ACHIEVEMENT_IDS.totalEarnings10M);
+    if (earned >= 1_500_000) unlockAchievement(ACHIEVEMENT_IDS.topRank);
+    if (bossMood >= 100) unlockAchievement(ACHIEVEMENT_IDS.bossMoodMax);
+    if (defeatedRivalIds.includes("firat")) unlockAchievement(ACHIEVEMENT_IDS.beatFirat);
+    if (defeatedRivalIds.length >= rivalLadder.length) unlockAchievement(ACHIEVEMENT_IDS.allRivalsBeaten);
+    if (Object.values(friendBondCounts).filter((c) => c >= 10).length >= 3) unlockAchievement(ACHIEVEMENT_IDS.threeFriendsYakinlik);
+    if (investmentResults.some((r) => r.outcome === "sold")) unlockAchievement(ACHIEVEMENT_IDS.firstInvestmentFlip);
+    if (secondChanceOffered) unlockAchievement(ACHIEVEMENT_IDS.secondChanceUsed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, earned, bossMood, defeatedRivalIds, friendBondCounts, investmentResults, secondChanceOffered]);
   const anySold = results.some((r) => r.outcome === "sold");
   // "Zor Zamanlar" — eligibility is fully derived, no persisted "pending" flag needed.
   const recentLossStreak =
@@ -2921,20 +3133,37 @@ function App() {
     return () => clearTimeout(t);
   }, [badgeCelebration]);
 
-  const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "settings";
+  const marketVisible = stage !== "menu" && stage !== "saved" && stage !== "settings" && stage !== "paywall";
+
+  if (showSplash) {
+    return <SplashScreen onDone={() => setShowSplash(false)} />;
+  }
+
+  if (!languageChosen) {
+    return (
+      <div className="game-root">
+        <LanguageSelectScreen
+          onChosen={(lang) => {
+            setLanguage(lang);
+            setLanguageChosen(true);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="game-root" onClick={handleRootClick}>
       <Suspense fallback={null}>
       {marketVisible && (
         <header className="game-header">
-          <h1>Simsar Emlak</h1>
+          <h1>Odd Estate</h1>
           <span className="subtitle">
-            Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitle(earned)}
+            Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitleDisplay(rankTitle(earned))}
           </span>
           {dailyQuest && (
-            <span className="quest-banner" title={dailyQuest.description}>
-              🎯 {dailyQuest.title}
+            <span className="quest-banner" title={resolveText(dailyQuest.description)}>
+              🎯 {resolveText(dailyQuest.title)}
             </span>
           )}
           <div className="header-actions">
@@ -2945,6 +3174,9 @@ function App() {
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
+            </button>
+            <button className="wallet-pill wallet-pill-btn jetton-pill" onClick={() => setStage("settings")}>
+              🪙 {jettons}
             </button>
           </div>
         </header>
@@ -2973,7 +3205,7 @@ function App() {
                 })()}
             </div>
             <p className="rankup-label">Yeni Rütbe!</p>
-            <p className="rankup-title">{rankUpTitle}</p>
+            <p className="rankup-title">{rankUpTitle ? rankTitleDisplay(rankUpTitle) : rankUpTitle}</p>
             {rankUpUnlockedInvites && <p className="rankup-invite-note">🎁 Ününüz yayılıyor — yeni özel davetler açıldı!</p>}
             {rankUpSkillBonus && <p className="rankup-invite-note">🧠 +{rankUpSkillBonus} Deneyim Puanı kazandın!</p>}
           </div>
@@ -2987,7 +3219,7 @@ function App() {
             <p className="rankup-label">Yeni Rozet!</p>
             {badgeCelebration.map((b) => (
               <p className="rankup-title" key={b.id}>
-                {b.title}
+                {resolveText(b.title)}
               </p>
             ))}
           </div>
@@ -2997,10 +3229,10 @@ function App() {
       {activeSelfReflection && (
         <div className="rankup-overlay" onClick={() => setActiveSelfReflection(null)}>
           <div className="rankup-card self-reflection-card">
-            <p className="rankup-label">{selfReflectionText[activeSelfReflection].title}</p>
+            <p className="rankup-label">{resolveText(selfReflectionText[activeSelfReflection].title)}</p>
             {selfReflectionText[activeSelfReflection].paragraphs.map((p, i) => (
               <p className="self-reflection-paragraph" key={i}>
-                {p}
+                {resolveText(p)}
               </p>
             ))}
           </div>
@@ -3040,7 +3272,10 @@ function App() {
       {showEnergyBreak && (
         <EnergyBreakScreen
           energy={energy}
+          jettons={jettons}
           onChoose={handleEnergyBreakChoice}
+          onWatchAd={handleWatchAdForEnergy}
+          onSpendJettons={handleSpendJettonsForEnergy}
           onClose={() => setShowEnergyBreak(false)}
         />
       )}
@@ -3077,6 +3312,9 @@ function App() {
           consumables={consumables}
           unlockedTiers={unlockedTiers}
           onBuy={buyItem}
+          jettons={jettons}
+          shieldHousesLeft={shieldHousesLeftState}
+          onBuyInventoryItem={handleBuyInventoryItem}
           inbox={inbox}
           results={results}
           onRetry={retryFromInbox}
@@ -3197,7 +3435,7 @@ function App() {
 
       <div key={stage} className="stage-transition">
       {stage === "menu" && (
-        <MainMenu hasSave={hasSave} onNewGame={() => setStage("origin")} onOpenSaved={openSaved} onSettings={() => setStage("settings")} />
+        <MainMenu hasSave={hasSave} language={language} onNewGame={() => setStage("origin")} onOpenSaved={openSaved} onSettings={() => setStage("settings")} />
       )}
 
       {stage === "origin" && (
@@ -3208,19 +3446,43 @@ function App() {
         <SavedGames saves={savedGames} onContinue={continueSaved} onDelete={deleteSaved} onBack={() => setStage("menu")} />
       )}
 
-      {stage === "settings" && <SettingsScreen onBack={() => setStage("menu")} />}
+      {stage === "settings" && (
+        <SettingsScreen
+          language={language}
+          onLanguageChange={setLanguage}
+          jettons={jettons}
+          fullUnlocked={fullUnlockedState}
+          adsRemoved={adsRemovedState}
+          onBuyJetton={handleBuyJettonPackage}
+          onBuyFullVersion={handleBuyFullVersionFromStore}
+          onBuyRemoveAds={handleBuyRemoveAds}
+          onRestorePurchases={handleRestorePurchases}
+          onBack={() => setStage("menu")}
+        />
+      )}
 
       {stage === "locked" && (
         <div className="result-screen locked-preview">
           <p className="locked-preview-tag">🔒 Tier {house.tier} — henüz erişimin yok</p>
-          <p className="locked-preview-title">{house.title}</p>
-          <p className="locked-preview-location">{house.location}</p>
+          <p className="locked-preview-title">{resolveHouseTitle(house)}</p>
+          <p className="locked-preview-location">{resolveHouseLocation(house)}</p>
           <p className="locked-preview-price">{formatTL(house.askingPrice)}</p>
           <p className="menu-empty">Bu evi görebilmek için Ofis Marketi'nden "Portföy Kilidi" bölümüne bakabilirsin.</p>
           <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
             Marketi Aç
           </button>
         </div>
+      )}
+
+      {stage === "paywall" && (
+        <PaywallScreen
+          language={language}
+          onUnlocked={() => {
+            setFullUnlockedState(true);
+            setStage("phone");
+          }}
+          onBack={() => setStage("menu")}
+        />
       )}
 
       {stage === "callback" && activeCallback && (
@@ -3234,7 +3496,7 @@ function App() {
             castAssignment,
           )}
           statusText="mesaj yazdı"
-          choices={withLowBatteryChoice(activeCallback.choices?.map((c) => ({ id: c.id, text: c.text })))}
+          choices={withLowBatteryChoice(activeCallback.choices?.map((c) => ({ id: c.id, text: resolveText(c.text) })))}
           onChoice={handleNegotiationChoice}
           onContinue={() => {
             setActiveCallback(null);
@@ -3256,7 +3518,15 @@ function App() {
           currentDateLabel={formatGameDateTime(index)}
           seasonalFilter={seasonalFilterFragment(gameDateForIndex(index))}
           prestigeTitle={prestigeTitleThisRun}
+          dayAdvanced={dayAdvanced}
+          dayActivitiesDone={dayActivitiesDone}
+          onAdvanceDay={handleAdvanceDay}
+          onDoActivity={handleDoDayActivity}
           onGetJob={() => {
+            if (!isFullUnlocked() && index >= DEMO_HOUSE_LIMIT) {
+              setStage("paywall");
+              return;
+            }
             if (energy < ENERGY_WORK_MIN_THRESHOLD) {
               setShowEnergyBreak(true);
               return;
@@ -3265,6 +3535,7 @@ function App() {
             drainPhoneBattery();
           }}
           onOpenMessages={() => openEmlahMenu("mesajlar")}
+          onOpenEnergyBreak={() => setShowEnergyBreak(true)}
           onTitleTap={handleOfficeTitleTap}
           badges={badges}
           allBadges={allBadges}
@@ -3275,8 +3546,12 @@ function App() {
       {stage === "phone" && intro && showPhoneOverlay && (
         <PhoneScreen
           key={house.id}
-          messages={introFlavorMsg ? [introFlavorMsg, ...intro.messages] : intro.messages}
-          thought={intro.thought}
+          messages={
+            introFlavorMsg
+              ? [introFlavorMsg, ...intro.messages.map((m) => ({ from: m.from, text: resolveText(m.text) }))]
+              : intro.messages.map((m) => ({ from: m.from, text: resolveText(m.text) }))
+          }
+          thought={resolveText(intro.thought)}
           onContinue={afterIntro}
           batteryPercent={phoneBattery}
           statusTime={gameTimeForIndex(index)}
@@ -3289,7 +3564,7 @@ function App() {
           messages={activeChitchat.messages}
           choices={
             activeChitchat.showChoices
-              ? withLowBatteryChoice(activeChitchat.set.choices.map((c) => ({ id: c.id, text: c.text })))
+              ? withLowBatteryChoice(activeChitchat.set.choices.map((c) => ({ id: c.id, text: resolveText(c.text) })))
               : undefined
           }
           onChoice={handleChitchatChoice}
@@ -3310,7 +3585,7 @@ function App() {
           messages={activeFriendChat.messages}
           choices={
             activeFriendChat.showChoices
-              ? withLowBatteryChoice(activeFriendChat.set.choices.map((c) => ({ id: c.id, text: c.text })))
+              ? withLowBatteryChoice(activeFriendChat.set.choices.map((c) => ({ id: c.id, text: resolveText(c.text) })))
               : undefined
           }
           onChoice={handleFriendChoice}
@@ -3332,7 +3607,7 @@ function App() {
           choices={
             activeMeetup.showChoices
               ? withLowBatteryChoice([
-                  ...meetupActivities.map((a) => ({ id: a.id, text: a.label })),
+                  ...meetupActivities.map((a) => ({ id: a.id, text: resolveText(a.label) })),
                   { id: "decline", text: "\"Şu an vaktim yok açıkçası.\"" },
                 ])
               : undefined
@@ -3431,7 +3706,7 @@ function App() {
             <div className="badge-popup">
               {pendingNewBadges.map((b) => (
                 <p key={b.id}>
-                  <MedalIcon size={14} className="icon-inline" /> Yeni rozet: {b.title}
+                  <MedalIcon size={14} className="icon-inline" /> Yeni rozet: {resolveText(b.title)}
                 </p>
               ))}
             </div>
@@ -3464,7 +3739,7 @@ function App() {
             const r = results[playedIdx];
             return (
               <p key={h.id}>
-                {h.title}: {r ? outcomeText[r.outcome] : "—"}
+                {resolveHouseTitle(h)}: {r ? outcomeText[r.outcome] : "—"}
                 {r?.converted ? " (sonradan ikna oldu)" : ""}
               </p>
             );
@@ -3472,24 +3747,24 @@ function App() {
           <p className="sale-summary">Toplam Kazanç: {formatTL(earned)}</p>
           <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
           <p className="sale-summary">Unvan: {reputationLabel(results)}</p>
-          <p className="sale-summary">Kariyer: {rankTitle(earned)}</p>
+          <p className="sale-summary">Kariyer: {rankTitleDisplay(rankTitle(earned))}</p>
           {badges.length > 0 && (
             <div className="badge-popup">
               <p>Kazanılan rozetler:</p>
               {badges.map((id) => (
                 <p key={id}>
-                  <MedalIcon size={14} className="icon-inline" /> {allBadges[id]?.title ?? id}
+                  <MedalIcon size={14} className="icon-inline" /> {allBadges[id] ? resolveText(allBadges[id].title) : id}
                 </p>
               ))}
             </div>
           )}
           {(() => {
             const ending = computeEnding(results, earned);
-            const epilogue = originEndingLine(origin, ending.title);
+            const epilogue = originEndingLine(origin, resolveText(ending.title));
             return (
               <div className="ending-card">
-                <p className="ending-title">{ending.title}</p>
-                <p className="ending-description">{ending.description}</p>
+                <p className="ending-title">{resolveText(ending.title)}</p>
+                <p className="ending-description">{resolveText(ending.description)}</p>
                 {epilogue && <p className="ending-description ending-epilogue">{epilogue}</p>}
               </div>
             );

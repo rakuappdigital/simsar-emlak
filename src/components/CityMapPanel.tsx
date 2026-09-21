@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { DistrictPin } from "../data/istanbulMap";
 import { TOTAL_DISTRICT_COUNT } from "../data/istanbulMap";
 import istanbulMapImg from "../assets/istanbul-map.webp";
+import { resolveHouseTitle } from "../data/language";
 
 interface CityMapPanelProps {
   pins: DistrictPin[];
@@ -51,7 +52,7 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
           {selectedPin.houses.map((h, i) => (
             <div className="city-map-detail-row" key={i}>
               <span>
-                {outcomeIcon[h.outcome]} {h.title}
+                {outcomeIcon[h.outcome]} {resolveHouseTitle(h)}
               </span>
               {h.bestLine && <span className="rehber-note">"{h.bestLine}"</span>}
             </div>

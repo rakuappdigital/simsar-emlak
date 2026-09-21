@@ -3,6 +3,7 @@ import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
 import { countOwnedOfisItems } from "../data/officeImages";
 import type { HouseResult, MarketCategory } from "../types";
+import { resolveText } from "../data/language";
 
 interface MarketPanelProps {
   balance: number;
@@ -77,10 +78,10 @@ export default function MarketPanel({
               return (
                 <div className="market-item" key={item.id}>
                   <div className="market-item-info">
-                    <p className="market-item-title">{item.title}</p>
-                    <p className="market-item-description">{item.description}</p>
+                    <p className="market-item-title">{resolveText(item.title)}</p>
+                    <p className="market-item-description">{resolveText(item.description)}</p>
                     {!prereqMet && prereqItem && (
-                      <p className="market-item-requires">Önce gerekli: {prereqItem.title}</p>
+                      <p className="market-item-requires">Önce gerekli: {resolveText(prereqItem.title)}</p>
                     )}
                     {prereqMet && !soldCountMet && (
                       <p className="market-item-requires">Gerekli: en az {item.requiresSoldCount} satış (şu an {soldCount})</p>

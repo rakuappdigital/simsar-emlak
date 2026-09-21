@@ -4,6 +4,8 @@
  * every click anywhere in the app, no gameplay meaning at all — purely a
  * "the game noticed" surprise at absurd round numbers.
  */
+import { getLanguage } from "./language";
+
 const STORAGE_KEY = "simsar-emlak-clicks";
 const MILESTONES = [1000, 5000, 10000, 25000, 50000, 100000];
 
@@ -45,7 +47,9 @@ export function recordClick(): number | null {
 }
 
 export function milestoneMessage(milestone: number): string {
-  return `Sen gerçekten çok tıklıyorsun ha — bu senin ${milestone.toLocaleString("tr-TR")}. tıklaman!`;
+  return getLanguage() === "en"
+    ? `You really click a lot, huh — this is your ${milestone.toLocaleString("tr-TR")} click!`
+    : `Sen gerçekten çok tıklıyorsun ha — bu senin ${milestone.toLocaleString("tr-TR")}. tıklaman!`;
 }
 
 /** Read-only — for the Gizli Dokunuş Menüsü secret stats screen. */

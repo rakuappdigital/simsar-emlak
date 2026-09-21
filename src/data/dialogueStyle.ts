@@ -1,3 +1,4 @@
+import type { Localized } from "./language";
 /**
  * "Konuşma Tarzı" — a device-level preference (localStorage, same pattern
  * as difficulty.ts — not part of any save slot). Deliberately does NOT
@@ -10,10 +11,10 @@ export type DialogueStyle = "notr" | "esprili" | "resmi";
 
 const KEY = "simsar-emlak-dialogue-style";
 
-export const dialogueStyleLabels: Record<DialogueStyle, string> = {
-  notr: "Normal",
-  esprili: "Esprili",
-  resmi: "Resmi",
+export const dialogueStyleLabels: Record<DialogueStyle, Localized> = {
+  notr: { tr: "Normal", en: "Normal" },
+  esprili: { tr: "Esprili", en: "Witty" },
+  resmi: { tr: "Resmi", en: "Formal" },
 };
 
 export function getDialogueStyle(): DialogueStyle {
@@ -35,9 +36,9 @@ export function setDialogueStyle(style: DialogueStyle): void {
 }
 
 const ESPRILI_SUFFIX_CHANCE = 0.2;
-const espriliSuffixes = [" 😄", " 😅", " 😉"];
+const espriliSuffixes = [{ tr: " 😄", en: "😄" }, { tr: " 😅", en: "😅" }, { tr: " 😉", en: "😉" }];
 const RESMI_SUFFIX_CHANCE = 0.2;
-const resmiSuffixes = ["!"];
+const resmiSuffixes = [{ tr: "!", en: "!" }];
 
 /**
  * Applies the cosmetic suffix to a line already spoken by Emlah. Picked

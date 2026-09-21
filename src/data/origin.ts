@@ -1,4 +1,5 @@
 import type { Choice, OriginId } from "../types";
+import type { Localized } from "./language";
 
 /**
  * "Emlah'ın Geçmişi" — a one-time backstory pick at the start of a new game
@@ -12,12 +13,12 @@ import type { Choice, OriginId } from "../types";
  */
 export interface OriginDef {
   id: OriginId;
-  title: string;
-  description: string;
-  introLine: string;
+  title: Localized;
+  description: Localized;
+  introLine: Localized;
   closingChoice: Choice;
   /** "Sadakat Rozetleri" — what Muzaffer Bey starts calling Emlah once the origin's closing choice has been picked LOYALTY_THRESHOLD times. */
-  nickname: string;
+  nickname: Localized;
   /** Origin-themed accent color for the rank-up card glow — pure CSS, no external assets. */
   accentColor: string;
 }
@@ -28,58 +29,58 @@ export const LOYALTY_THRESHOLD = 10;
 export const origins: OriginDef[] = [
   {
     id: "ogretmen",
-    title: "Eski Öğretmen",
-    description: "Yıllarca sınıfta durdun, şimdi sabrın en büyük silahın.",
-    introLine: "(içinden) Öğretmenlik günlerimden kalma bir sabrım var, bu işte gerçekten işime yarıyor.",
+    title: { tr: "Eski Öğretmen", en: "Former Teacher" },
+    description: { tr: "Yıllarca sınıfta durdun, şimdi sabrın en büyük silahın.", en: "You stood in the classroom for years, now patience is your greatest weapon." },
+    introLine: { tr: "(içinden) Öğretmenlik günlerimden kalma bir sabrım var, bu işte gerçekten işime yarıyor.", en: "(to himself) I have a patience left from my teaching days, it really comes in handy in this job." },
     closingChoice: {
       id: "origin-ogretmen",
-      text: "(Sakin bir sesle) Acele etmeyin, bu önemli bir karar — birlikte düşünelim.",
+      text: { tr: "(Sakin bir sesle) Acele etmeyin, bu önemli bir karar — birlikte düşünelim.", en: "(Calmly) Don't rush, this is an important decision — let's think together." },
       next: "",
       effects: { closingBias: 12, suspicion: -8 },
     },
-    nickname: "Hoca",
+    nickname: { tr: "Hoca", en: "Teacher" },
     accentColor: "#4dd0e1",
   },
   {
     id: "emlakci-ailesi",
-    title: "Emlakçı Ailesi",
-    description: "Bu iş kanında var, küçüklüğünden beri tapu senetleri arasında büyüdün.",
-    introLine: "(içinden) Ailemin mesleği bu, kanımda var — bu bölgeleri gözüm kapalı bilirim.",
+    title: { tr: "Emlakçı Ailesi", en: "Realtor Family" },
+    description: { tr: "Bu iş kanında var, küçüklüğünden beri tapu senetleri arasında büyüdün.", en: "This business is in your blood, you grew up among title deeds since childhood." },
+    introLine: { tr: "(içinden) Ailemin mesleği bu, kanımda var — bu bölgeleri gözüm kapalı bilirim.", en: "(to himself) This is my family's profession, it's in my blood — I know these districts blindfolded." },
     closingChoice: {
       id: "origin-emlakci-ailesi",
-      text: "(Ailesinden gelen tecrübeyle) Bu bölgeyi çok iyi tanırım, bana güvenebilirsiniz.",
+      text: { tr: "(Ailesinden gelen tecrübeyle) Bu bölgeyi çok iyi tanırım, bana güvenebilirsiniz.", en: "(With experience from his family) I know this region very well, you can trust me." },
       next: "",
       effects: { closingBias: 15, interest: 8 },
     },
-    nickname: "Usta",
+    nickname: { tr: "Usta", en: "Master" },
     accentColor: "#a1887f",
   },
   {
     id: "girisimci",
-    title: "İflas Etmiş Girişimci",
-    description: "Bir zamanlar kendi şirketin vardı. Battı ama pazarlık reflekslerin kalıcı.",
-    introLine: "(içinden) Eskiden kendi şirketimi yönetirdim, battı ama pazarlık içgüdülerim hâlâ keskin.",
+    title: { tr: "İflas Etmiş Girişimci", en: "Bankrupt Entrepreneur" },
+    description: { tr: "Bir zamanlar kendi şirketin vardı. Battı ama pazarlık reflekslerin kalıcı.", en: "You once had your own company. It went under, but your negotiation reflexes are permanent." },
+    introLine: { tr: "(içinden) Eskiden kendi şirketimi yönetirdim, battı ama pazarlık içgüdülerim hâlâ keskin.", en: "(to himself) I used to run my own company, it went under but my negotiation instincts are still sharp." },
     closingChoice: {
       id: "origin-girisimci",
-      text: "(İş tecrübesiyle) Size özel bir esneklik sağlayabilirim.",
+      text: { tr: "(İş tecrübesiyle) Size özel bir esneklik sağlayabilirim.", en: "(With business experience) I can provide a special flexibility for you." },
       next: "",
       effects: { closingBias: 12, discountPercent: 3 },
     },
-    nickname: "Patron",
+    nickname: { tr: "Patron", en: "Boss" },
     accentColor: "#ffd166",
   },
   {
     id: "yurtdisi",
-    title: "Yurt Dışından Dönen",
-    description: "Yıllarca başka bir ülkede yaşadın, farklı bir bakış açın var.",
-    introLine: "(içinden) Yurt dışında gördüklerim bana farklı bir bakış açısı kazandırdı.",
+    title: { tr: "Yurt Dışından Dönen", en: "Returned from Abroad" },
+    description: { tr: "Yıllarca başka bir ülkede yaşadın, farklı bir bakış açın var.", en: "You lived in another country for years, you have a different perspective." },
+    introLine: { tr: "(içinden) Yurt dışında gördüklerim bana farklı bir bakış açısı kazandırdı.", en: "(to himself) What I saw abroad gave me a different perspective." },
     closingChoice: {
       id: "origin-yurtdisi",
-      text: "(Farklı bir bakış açısıyla) Yurt dışında gördüğüm bazı örnekleri anlatayım size.",
+      text: { tr: "(Farklı bir bakış açısıyla) Yurt dışında gördüğüm bazı örnekleri anlatayım size.", en: "(With a different perspective) Let me tell you some examples I saw abroad." },
       next: "",
       effects: { closingBias: 10, fun: 10 },
     },
-    nickname: "Gezgin",
+    nickname: { tr: "Gezgin", en: "Traveler" },
     accentColor: "#81c784",
   },
 ];

@@ -14,6 +14,7 @@ import type {
 import { formatTL } from "../data/economy";
 import { weekIndexForHouse } from "../data/goals";
 import MarketPanel from "./MarketPanel";
+import InventoryPanel from "./InventoryPanel";
 import MessagesPanel from "./MessagesPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
@@ -28,10 +29,11 @@ import SkillTreePanel from "./SkillTreePanel";
 import type { ContactEntry } from "../data/contactBook";
 import type { DistrictPin } from "../data/istanbulMap";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon } from "./icons";
+import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon, KeyRingIcon } from "./icons";
 
 export type EmlahTab =
   | "market"
+  | "envanter"
   | "mesajlar"
   | "portfoy"
   | "kariyer"
@@ -51,6 +53,9 @@ interface EmlahMenuProps {
   consumables: Record<string, number>;
   unlockedTiers: number[];
   onBuy: (id: string) => void;
+  jettons: number;
+  shieldHousesLeft: number;
+  onBuyInventoryItem: (id: string) => void;
   inbox: InboxMessage[];
   results: HouseResult[];
   onRetry: (houseId: string) => void;
@@ -107,6 +112,7 @@ interface EmlahMenuProps {
 
 const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
   { id: "market", icon: <CartIcon size={14} />, label: "Market" },
+  { id: "envanter", icon: <KeyRingIcon size={14} />, label: "Envanter" },
   { id: "mesajlar", icon: <ChatIcon size={14} />, label: "Mesajlar" },
   { id: "portfoy", icon: <HouseIcon size={14} />, label: "Portföy" },
   { id: "kariyer", icon: <StarIcon size={14} />, label: "Kariyer" },
@@ -127,6 +133,9 @@ export default function EmlahMenu({
   consumables,
   unlockedTiers,
   onBuy,
+  jettons,
+  shieldHousesLeft,
+  onBuyInventoryItem,
   inbox,
   results,
   onRetry,
@@ -220,6 +229,9 @@ export default function EmlahMenu({
               results={results}
               onBuy={onBuy}
             />
+          )}
+          {tab === "envanter" && (
+            <InventoryPanel balance={balance} jettons={jettons} shieldHousesLeft={shieldHousesLeft} onBuy={onBuyInventoryItem} />
           )}
           {tab === "mesajlar" && (
             <MessagesPanel

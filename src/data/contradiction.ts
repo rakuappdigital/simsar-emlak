@@ -1,4 +1,5 @@
 import type { ChoiceEffects } from "../types";
+import { resolveText, type Localized } from "./language";
 
 /**
  * "Çelişki Motoru" — turns the negotiation from "always pick the best
@@ -39,14 +40,14 @@ export function isDiscountContradiction(heldFirmCount: number, effects: ChoiceEf
   return (effects?.discountPercent ?? 0) >= DISCOUNT_CONTRADICTION_THRESHOLD;
 }
 
-const discountContradictionLines = [
-  "Az önce esneklik olmadığını söylemiştiniz, şimdi neden indirim yapıyorsunuz?",
-  "Bir dakika, demin fiyatın kesin olduğunu söylemiştiniz...",
-  "İlginç, biraz önceki tavrınızla şimdiki teklifiniz pek uyuşmuyor.",
+const discountContradictionLines: Localized[] = [
+  { tr: "Az önce esneklik olmadığını söylemiştiniz, şimdi neden indirim yapıyorsunuz?", en: "You just said there was no flexibility, why are you offering a discount now?" },
+  { tr: "Bir dakika, demin fiyatın kesin olduğunu söylemiştiniz...", en: "Wait a minute, you just said the price was firm..." },
+  { tr: "İlginç, biraz önceki tavrınızla şimdiki teklifiniz pek uyuşmuyor.", en: "Interesting, your attitude just a moment ago doesn't quite match your current offer." },
 ];
 
 export function pickDiscountContradictionLine(): string {
-  return discountContradictionLines[Math.floor(Math.random() * discountContradictionLines.length)];
+  return resolveText(discountContradictionLines[Math.floor(Math.random() * discountContradictionLines.length)]);
 }
 
 /**
@@ -64,12 +65,12 @@ export function isToneContradiction(lastTone: string | undefined, newToneId: str
   return (lastTone === "pushy" && newToneId === "patient") || (lastTone === "patient" && newToneId === "pushy");
 }
 
-const toneContradictionLines = [
-  "Geçen sefer bambaşka bir tavrınız vardı, kafam biraz karıştı açıkçası.",
-  "Önceki konuşmamızla şimdiki yaklaşımınız pek örtüşmüyor.",
-  "Tutarlı olmadığınızı hissediyorum, açıkçası bu güvenimi sarstı.",
+const toneContradictionLines: Localized[] = [
+  { tr: "Geçen sefer bambaşka bir tavrınız vardı, kafam biraz karıştı açıkçası.", en: "You had a completely different attitude last time, I'm a bit confused frankly." },
+  { tr: "Önceki konuşmamızla şimdiki yaklaşımınız pek örtüşmüyor.", en: "Our previous conversation and your current approach don't quite align." },
+  { tr: "Tutarlı olmadığınızı hissediyorum, açıkçası bu güvenimi sarstı.", en: "I feel like you're inconsistent, frankly this shook my trust." },
 ];
 
 export function pickToneContradictionLine(): string {
-  return toneContradictionLines[Math.floor(Math.random() * toneContradictionLines.length)];
+  return resolveText(toneContradictionLines[Math.floor(Math.random() * toneContradictionLines.length)]);
 }

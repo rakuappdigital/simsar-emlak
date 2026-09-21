@@ -1,3 +1,4 @@
+import { resolveText, type Localized } from "./language";
 /**
  * Emlah'ın telefon şarjı — purely cosmetic, session-scoped flavor state (not
  * persisted, mirrors the rival-duel/mystery-shopper pattern). Recharges to
@@ -21,23 +22,23 @@ export function maybeDrainBattery(current: number): number {
 export const LOW_BATTERY_CHOICE_ID = "sarj-bitiyor";
 export const LOW_BATTERY_LINE = "Şarjım bitmek üzere, kısa keseyim...";
 
-const customerReplies = [
-  "Tamam, müsait olduğunuzda devam ederiz.",
-  "Sorun değil, sonra tekrar yazışalım.",
-  "Anladım, iyi şarjlar 😄",
-  "Peki, bekliyorum o zaman.",
+const customerReplies: Localized[] = [
+  { tr: "Tamam, müsait olduğunuzda devam ederiz.", en: "Okay, we can continue whenever you are available." },
+  { tr: "Sorun değil, sonra tekrar yazışalım.", en: "No problem, let's chat again later." },
+  { tr: "Anladım, iyi şarjlar 😄", en: "Understood, happy charging 😄" },
+  { tr: "Peki, bekliyorum o zaman.", en: "Alright, I'll wait then." },
 ];
 
-const casualReplies = [
-  "Yine mi? Powerbank alsana artık 😂",
-  "Tamam kanka, şarj olunca yaz.",
-  "Emlah sen bu telefonla nasıl iş yapıyorsun ya 😅",
-  "Git şarja tak, ben buradayım.",
+const casualReplies: Localized[] = [
+  { tr: "Yine mi? Powerbank alsana artık 😂", en: "Again? Just get a powerbank already 😂" },
+  { tr: "Tamam kanka, şarj olunca yaz.", en: "Alright bro, text me when it's charged." },
+  { tr: "Emlah sen bu telefonla nasıl iş yapıyorsun ya 😅", en: "Emlah, how do you even do business with that phone 😅" },
+  { tr: "Git şarja tak, ben buradayım.", en: "Go plug it in, I'll be right here." },
 ];
 
 export type LowBatteryReplyKind = "customer" | "casual";
 
 export function pickLowBatteryReply(kind: LowBatteryReplyKind): string {
   const pool = kind === "customer" ? customerReplies : casualReplies;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return resolveText(pool[Math.floor(Math.random() * pool.length)]);
 }

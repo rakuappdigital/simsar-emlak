@@ -1,3 +1,4 @@
+import { resolveText, type Localized } from "./language";
 /**
  * "Bağlantılar" — a very rare, entirely optional thread where a spark
  * during a house visit (a flirty closing line, gated behind high fun and a
@@ -28,73 +29,73 @@ export const MEETUP_INVITE_CHANCE = 0.15;
 
 export interface MeetupActivity {
   id: string;
-  label: string;
+  label: Localized;
   cost: number;
   bonus: { interest?: number; fun?: number };
   bondGain: number;
-  goodReplies: string[];
-  cantAffordReplies: string[];
+  goodReplies: Localized[];
+  cantAffordReplies: Localized[];
 }
 
 export const meetupActivities: MeetupActivity[] = [
   {
     id: "kahve",
-    label: "\"Bir ara kahve içelim mi?\"",
+    label: { tr: "\"Bir ara kahve içelim mi?\"", en: "\"Shall we grab coffee sometime?\"" },
     cost: 1000,
     bonus: { fun: 8 },
     bondGain: 1,
     goodReplies: [
-      "Kahve güzeldi, uzun uzun sohbet ettik. 😊",
-      "Keyifli bir molaydı, tekrar yapalım.",
+      { tr: "Kahve güzeldi, uzun uzun sohbet ettik. 😊", en: "The coffee was nice, we chatted for a long time. 😊" },
+      { tr: "Keyifli bir molaydı, tekrar yapalım.", en: "It was an enjoyable break, let's do it again." },
     ],
     cantAffordReplies: [
-      "Cebimde kahveye bile param kalmamıştı, mahcup oldum, gidemedim.",
-      "Tam çıkacaktım ki cüzdanımın boş olduğunu fark ettim, iptal etmek zorunda kaldım.",
+      { tr: "Cebimde kahveye bile param kalmamıştı, mahcup oldum, gidemedim.", en: "I didn't even have money for coffee in my pocket, felt embarrassed, couldn't go." },
+      { tr: "Tam çıkacaktım ki cüzdanımın boş olduğunu fark ettim, iptal etmek zorunda kaldım.", en: "Just as I was heading out I realized my wallet was empty, had to cancel." },
     ],
   },
   {
     id: "gezinti",
-    label: "\"Sahilde biraz yürüyüş yapalım mı?\"",
+    label: { tr: "\"Sahilde biraz yürüyüş yapalım mı?\"", en: "\"Shall we take a walk by the beach?\"" },
     cost: 2500,
     bonus: { interest: 6, fun: 8 },
     bondGain: 1,
     goodReplies: [
-      "Yürüyüş çok iyi geldi, güzel sohbet ettik.",
-      "Sahilde vakit geçirmek keyifliydi, teşekkürler.",
+      { tr: "Yürüyüş çok iyi geldi, güzel sohbet ettik.", en: "The walk felt great, we had a nice chat." },
+      { tr: "Sahilde vakit geçirmek keyifliydi, teşekkürler.", en: "Spending time by the beach was enjoyable, thanks." },
     ],
     cantAffordReplies: [
-      "Yol masraflarını bile çıkaramayacaktım, son anda vazgeçtim, hiç iyi olmadı.",
-      "O gün param yetişmedi, buluşmayı iptal etmek zorunda kaldım, biraz garip oldu.",
+      { tr: "Yol masraflarını bile çıkaramayacaktım, son anda vazgeçtim, hiç iyi olmadı.", en: "I wouldn't even be able to cover travel expenses, backed out at the last minute, turned out terrible." },
+      { tr: "O gün param yetişmedi, buluşmayı iptal etmek zorunda kaldım, biraz garip oldu.", en: "My money didn't suffice that day, had to cancel the meetup, felt a bit awkward." },
     ],
   },
   {
     id: "ozel-aksam",
-    label: "\"Baş başa özel bir akşam geçirelim mi?\"",
+    label: { tr: "\"Baş başa özel bir akşam geçirelim mi?\"", en: "\"Shall we spend a special evening alone together?\"" },
     cost: 5000,
     bonus: { interest: 10, fun: 14 },
     bondGain: 2,
     goodReplies: [
-      "O akşamı hiç unutmayacağım. 😉",
-      "Gecenin geri kalanını konuşarak... ve başka şekillerde geçirdik. 😉",
+      { tr: "O akşamı hiç unutmayacağım. 😉", en: "I will never forget that evening. 😉" },
+      { tr: "Gecenin geri kalanını konuşarak... ve başka şekillerde geçirdik. 😉", en: "We spent the rest of the night talking... and in other ways. 😉" },
     ],
     cantAffordReplies: [
-      "O akşam için hiç param yoktu, iptal etmek zorunda kaldım, gerçekten kötü hissettim.",
-      "Planı son anda iptal ettim, cebimde hiçbir şey kalmamıştı, hiç iyi geçmedi.",
+      { tr: "O akşam için hiç param yoktu, iptal etmek zorunda kaldım, gerçekten kötü hissettim.", en: "I had zero money for that evening, had to cancel, felt really bad." },
+      { tr: "Planı son anda iptal ettim, cebimde hiçbir şey kalmamıştı, hiç iyi geçmedi.", en: "Canceled the plan at the last minute, had nothing left in my pocket, didn't go well at all." },
     ],
   },
 ];
 
 export const declineReplies = [
-  "Sorun değil, anlıyorum, ne zaman istersen.",
-  "Tamam, başka zaman o zaman.",
+  { tr: "Sorun değil, anlıyorum, ne zaman istersen.", en: "No problem, I understand, whenever you want." },
+  { tr: "Tamam, başka zaman o zaman.", en: "Alright, another time then." },
 ];
 
 const invitePrompts = [
-  "Aklıma geldin, bir ara buluşalım mı?",
-  "Seninle vakit geçirmek güzel oluyor, tekrar görüşelim mi?",
-  "Müsait olduğun bir gün buluşalım mı?",
+  { tr: "Aklıma geldin, bir ara buluşalım mı?", en: "I thought of you, shall we meet up sometime?" },
+  { tr: "Seninle vakit geçirmek güzel oluyor, tekrar görüşelim mi?", en: "It's nice spending time with you, shall we see each other again?" },
+  { tr: "Müsait olduğun bir gün buluşalım mı?", en: "Shall we meet on a day you are available?" },
 ];
 
 export function pickInvitePrompt(): string {
-  return invitePrompts[Math.floor(Math.random() * invitePrompts.length)];
+  return resolveText(invitePrompts[Math.floor(Math.random() * invitePrompts.length)]);
 }

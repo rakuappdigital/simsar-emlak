@@ -81,7 +81,7 @@ export interface DistrictPin {
   thinking: number;
   lost: number;
   total: number;
-  houses: { title: string; outcome: SceneOutcome; bestLine?: string }[];
+  houses: { title: string; titleEn?: string; outcome: SceneOutcome; bestLine?: string }[];
   /** True once DISTRICT_DOMINANCE_THRESHOLD houses have been sold here — see isDistrictDominated below. */
   dominated: boolean;
 }
@@ -141,7 +141,7 @@ export function buildDistrictPins(
     }
     pin[result.outcome] += 1;
     pin.total += 1;
-    pin.houses.push({ title: house.title, outcome: result.outcome, bestLine: result.bestLine });
+    pin.houses.push({ title: house.title, titleEn: house.titleEn, outcome: result.outcome, bestLine: result.bestLine });
   }
 
   for (const pin of byDistrict.values()) {

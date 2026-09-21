@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { formatTL } from "../data/economy";
 import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
-import { ENERGY_MAX, ENERGY_LOW_THRESHOLD } from "../data/energy";
+import { ENERGY_MAX, ENERGY_LOW_THRESHOLD, ENERGY_WORK_MIN_THRESHOLD } from "../data/energy";
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
 import { emlahMoodFor, emlahMoodLabel, emlahMoodPortrait } from "../data/emlahMood";
+import { rankTitleDisplay } from "../data/scoring";
+import { resolveText } from "../data/language";
+import { dayActivities } from "../data/dayActivities";
 import { WalletIcon, ChatIcon } from "./icons";
 import MemoryWall from "./MemoryWall";
 import type { Badge, SignificantMemory } from "../types";
@@ -19,8 +22,13 @@ interface OfficeSceneProps {
   /** Takvime Bağlı Mevsimsel Ton — a CSS filter fragment from data/seasonalTint.ts, combined with the mood filter below. */
   seasonalFilter: string;
   prestigeTitle?: string | null;
+  dayAdvanced: boolean;
+  dayActivitiesDone: string[];
+  onAdvanceDay: () => void;
+  onDoActivity: (activityId: string) => void;
   onGetJob: () => void;
   onOpenMessages: () => void;
+  onOpenEnergyBreak: () => void;
   /** Gizli Dokunuş Menüsü — called on every tap of the office title. See App.tsx's handleOfficeTitleTap. */
   onTitleTap?: () => void;
   badges: string[];
@@ -47,8 +55,13 @@ export default function OfficeScene({
   currentDateLabel,
   seasonalFilter,
   prestigeTitle,
+  dayAdvanced,
+  dayActivitiesDone,
+  onAdvanceDay,
+  onDoActivity,
   onGetJob,
   onOpenMessages,
+  onOpenEnergyBreak,
   onTitleTap,
   badges,
   allBadges,
@@ -95,11 +108,11 @@ export default function OfficeScene({
         <div className="office-title" onClick={onTitleTap}>
           <span>Emlah'ın Ofisi</span>
           <span className="office-rank-tag">
-            {rankTitleText}
+            {rankTitleDisplay(rankTitleText)}
             {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
           </span>
         </div>
-        <div className="emlah-mood-portrait" title={`Emlah şu an ${emlahMoodLabel[emlahMood]}`}>
+        <div className="emlah-mood-portrait" title={`Emlah şu an ${resolveText(emlahMoodLabel[emlahMood])}`}>
           <img className="emlah-mood-portrait-img" src={emlahMoodPortrait[emlahMood]} alt="Emlah" />
         </div>
         {(() => {
@@ -133,6 +146,11 @@ export default function OfficeScene({
             style={{ width: `${Math.min(100, (energy / ENERGY_MAX) * 100)}%` }}
           />
         </div>
+        {energy < ENERGY_WORK_MIN_THRESHOLD && (
+          <button className="pixel-btn small energy-ad-btn" onClick={onOpenEnergyBreak}>
+            🎬 Enerji Molası
+          </button>
+        )}
       </div>
 
       <div className="energy-bar">
@@ -147,13 +165,42 @@ export default function OfficeScene({
         </div>
       </div>
 
+      {dayAdvanced && (
+        <div className="day-activities">
+          <p className="market-category-title">📋 Bugünün Aktiviteleri</p>
+          <div className="day-activity-list">
+            {dayActivities.map((a) => {
+              const done = dayActivitiesDone.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  className="day-activity-card"
+                  onClick={() => onDoActivity(a.id)}
+                  disabled={done}
+                >
+                  <span className="day-activity-icon">{a.icon}</span>
+                  <span className="day-activity-label">{resolveText(a.label)}</span>
+                  <span className="day-activity-gain">{done ? "✅" : `-${a.energyCost} Enerji`}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="office-panel">
         <span className="office-balance">
           <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)}
         </span>
-        <button className="pixel-btn office-get-job-btn" onClick={onGetJob}>
-          Bugünün İşini Al
-        </button>
+        {dayAdvanced ? (
+          <button className="pixel-btn office-get-job-btn" onClick={onGetJob}>
+            Bugünün İşini Al
+          </button>
+        ) : (
+          <button className="pixel-btn office-get-job-btn" onClick={onAdvanceDay}>
+            📅 Yeni Güne Geç
+          </button>
+        )}
         <button className="pixel-btn small ghost office-messages-btn" onClick={onOpenMessages}>
           <ChatIcon size={14} className="icon-inline" /> Mesajlar
           {unreadCount > 0 && (

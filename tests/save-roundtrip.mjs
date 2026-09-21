@@ -28,6 +28,8 @@ page.on("console", (msg) => {
 });
 
 await page.goto(BASE_URL);
+await page.locator("button", { hasText: "Türkçe" }).click({ timeout: 3000 }).catch(() => {});
+await page.evaluate(() => localStorage.setItem("simsar-emlak-full-unlock", "1")).catch(() => {});
 
 // index:16 is deliberately >0 and not on a week boundary, so continueSaved's
 // synchronous chain runs through proceedToHouseIntro's non-trivial branches

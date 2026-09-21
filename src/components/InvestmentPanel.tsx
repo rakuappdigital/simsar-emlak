@@ -1,6 +1,7 @@
 import type { ContactedCustomer, HouseResult, HouseScene, OwnedInvestmentHouse, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { conditionLabel, renovationOptions, renovationCost, type RenovationLevel } from "../data/renovation";
+import { resolveText, resolveHouseTitle, resolveHouseLocation } from "../data/language";
 
 interface InvestmentPanelProps {
   balance: number;
@@ -66,10 +67,10 @@ export default function InvestmentPanel({
         return (
           <div className="portfolio-row" key={owned.houseId}>
             <div className="portfolio-row-info">
-              <p className="portfolio-row-title">{houseDef.title}</p>
-              <p className="portfolio-row-location">{houseDef.location}</p>
+              <p className="portfolio-row-title">{resolveHouseTitle(houseDef)}</p>
+              <p className="portfolio-row-location">{resolveHouseLocation(houseDef)}</p>
               <p className="portfolio-row-location">Alış: {formatTL(owned.purchasePrice)}</p>
-              <p className={`condition-tag condition-${owned.condition}`}>🔧 {conditionLabel[owned.condition]}</p>
+              <p className={`condition-tag condition-${owned.condition}`}>🔧 {resolveText(conditionLabel[owned.condition])}</p>
               {owned.renovationLevel === "yok" ? (
                 <div className="renovation-options">
                   {renovationOptions.map((opt) => {
@@ -81,14 +82,14 @@ export default function InvestmentPanel({
                         disabled={balance < cost}
                         onClick={() => onRenovate(owned.houseId, opt.level)}
                       >
-                        {opt.label} ({formatTL(cost)})
+                        {resolveText(opt.label)} ({formatTL(cost)})
                       </button>
                     );
                   })}
                 </div>
               ) : (
                 <p className="renovation-done-tag">
-                  ✅ {renovationOptions.find((o) => o.level === owned.renovationLevel)?.label} yapıldı
+                  ✅ {resolveText(renovationOptions.find((o) => o.level === owned.renovationLevel)?.label ?? "")} yapıldı
                 </p>
               )}
               {contactedCustomers.length > 0 && (
@@ -122,8 +123,8 @@ export default function InvestmentPanel({
         return (
           <div className="portfolio-row" key={houseDef.id}>
             <div className="portfolio-row-info">
-              <p className="portfolio-row-title">{houseDef.title}</p>
-              <p className="portfolio-row-location">{houseDef.location}</p>
+              <p className="portfolio-row-title">{resolveHouseTitle(houseDef)}</p>
+              <p className="portfolio-row-location">{resolveHouseLocation(houseDef)}</p>
             </div>
             <div className="portfolio-row-meta">
               <button className="pixel-btn small" disabled={disabled} onClick={() => onBuyInvestment(houseDef.id)}>

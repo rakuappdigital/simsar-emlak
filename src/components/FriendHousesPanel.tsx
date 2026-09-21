@@ -1,6 +1,7 @@
 import type { HouseResult, HouseScene, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { friendCharacterForHouseId } from "../data/friendCharacters";
+import { resolveHouseTitle, resolveHouseLocation } from "../data/language";
 
 interface FriendHousesPanelProps {
   friendHouses: HouseScene[];
@@ -41,9 +42,9 @@ export default function FriendHousesPanel({ friendHouses, unlockedIds, friendHou
           <div className={`portfolio-row ${statusClass}`} key={h.id}>
             <div className="portfolio-row-info">
               <p className="portfolio-row-title">
-                {h.title} {friend && <span className="friend-tag">🤝 {friend.name}</span>}
+                {resolveHouseTitle(h)} {friend && <span className="friend-tag">🤝 {friend.name}</span>}
               </p>
-              <p className="portfolio-row-location">{h.location}</p>
+              <p className="portfolio-row-location">{resolveHouseLocation(h)}</p>
             </div>
             <div className="portfolio-row-meta">
               <span className="portfolio-row-price">{formatTL(h.askingPrice)}</span>

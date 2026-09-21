@@ -1,5 +1,6 @@
 import type { CustomerProfile, GameStats, SceneOutcome } from "../types";
 import { perks, hasPerk, consumableEffects } from "./perks";
+import { getLanguage, type Language } from "./language";
 
 export const DEFAULT_PROFILE: CustomerProfile = { suspicionWeight: 1.1, funWeight: 1, interestWeight: 1 };
 
@@ -55,6 +56,24 @@ export function rankTitle(earned: number): string {
   if (earned >= 800000) return "Kıdemli Emlakçı";
   if (earned >= 300000) return "Emlakçı";
   return "Stajyer";
+}
+
+/**
+ * `rankTitle()`'s return value is used as a plain-string LOGIC key in many
+ * places (RANK_ORDER.indexOf, contradictionRankMultiplier lookups,
+ * unlockedPremiumHouseIds/isInvestmentUnlocked comparisons) — so it must stay
+ * Turkish. This is the display-only English translation, same pattern as
+ * resolveHouseTitle for HouseScene.title.
+ */
+const rankTitleEn: Record<string, string> = {
+  Stajyer: "Intern",
+  Emlakçı: "Realtor",
+  "Kıdemli Emlakçı": "Senior Realtor",
+  "Ofis Ortağı": "Office Partner",
+};
+
+export function rankTitleDisplay(trTitle: string, lang: Language = getLanguage()): string {
+  return lang === "en" ? (rankTitleEn[trTitle] ?? trTitle) : trTitle;
 }
 
 /** Small passive commission bonus that comes with rank — makes the ladder felt, not cosmetic. */
@@ -134,9 +153,10 @@ export function closingBiasMultiplier(owned: string[]): number {
  */
 export function personalityHint(profile: CustomerProfile | undefined): string | null {
   const p = profile ?? DEFAULT_PROFILE;
-  if (p.suspicionWeight >= 1.4) return "Dikkatli";
-  if (p.funWeight >= 1.3) return "Eğlenceye Açık";
-  if (p.interestWeight >= 1.2) return "Detaycı";
+  const en = getLanguage() === "en";
+  if (p.suspicionWeight >= 1.4) return en ? "Cautious" : "Dikkatli";
+  if (p.funWeight >= 1.3) return en ? "Open to Fun" : "Eğlenceye Açık";
+  if (p.interestWeight >= 1.2) return en ? "Detail-Oriented" : "Detaycı";
   return null;
 }
 

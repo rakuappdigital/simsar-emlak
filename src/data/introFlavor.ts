@@ -1,5 +1,6 @@
 import type { HouseResult, HouseScene, PhoneMessage } from "../types";
 import { computeStreak } from "./badges";
+import { resolveText, type Localized } from "./language";
 
 export type Mood = "happy" | "neutral" | "annoyed";
 
@@ -14,32 +15,32 @@ export function computeMood(results: HouseResult[]): Mood {
   return "neutral";
 }
 
-const moodLines: Record<Exclude<Mood, "neutral">, string[]> = {
+const moodLines: Record<Exclude<Mood, "neutral">, Localized[]> = {
   happy: [
-    "Aslanım benim, böyle devam et!",
-    "Bugün keyfim yerinde, seninle çalışmak güzelmiş.",
-    "Şu gidişata bak, ofisin gözdesi oluyorsun yakında.",
+    { tr: "Aslanım benim, böyle devam et!", en: "My boy, keep it up!" },
+    { tr: "Bugün keyfim yerinde, seninle çalışmak güzelmiş.", en: "I'm in a good mood today, it's nice working with you." },
+    { tr: "Şu gidişata bak, ofisin gözdesi oluyorsun yakında.", en: "Look at this momentum, you'll be the darling of the office soon." },
   ],
   annoyed: [
-    "Emlah, son zamanlarda pek iyi gitmiyor ha, biraz toparlan.",
-    "Bu ayki kotayı nasıl tutturacağız bilmiyorum doğrusu.",
-    "Biraz daha gayret bekliyorum senden açıkçası.",
+    { tr: "Emlah, son zamanlarda pek iyi gitmiyor ha, biraz toparlan.", en: "Emlah, things haven't been going so well lately huh, pull yourself together." },
+    { tr: "Bu ayki kotayı nasıl tutturacağız bilmiyorum doğrusu.", en: "Frankly I don't know how we'll hit this month's quota." },
+    { tr: "Biraz daha gayret bekliyorum senden açıkçası.", en: "Frankly, I expect a bit more effort from you." },
   ],
 };
 
 export function pickMoodLine(mood: Exclude<Mood, "neutral">): string {
   const lines = moodLines[mood];
-  return lines[Math.floor(Math.random() * lines.length)];
+  return resolveText(lines[Math.floor(Math.random() * lines.length)]);
 }
 
 const luckyLines = [
-  "Bugün havan yerinde galiba Emlah, içim rahat!",
-  "Bu sabah kahve fincanımda güzel bir şekil gördüm, bugün şanslı günündesin.",
-  "Bugün her şey senin lehine dönecek gibi bir hissim var.",
+  { tr: "Bugün havan yerinde galiba Emlah, içim rahat!", en: "You're in high spirits today I guess Emlah, my mind is at ease!" },
+  { tr: "Bu sabah kahve fincanımda güzel bir şekil gördüm, bugün şanslı günündesin.", en: "I saw a nice shape in my coffee cup this morning, you're on your lucky day." },
+  { tr: "Bugün her şey senin lehine dönecek gibi bir hissim var.", en: "I have a feeling everything will turn in your favor today." },
 ];
 
 export function pickLuckyLine(): string {
-  return luckyLines[Math.floor(Math.random() * luckyLines.length)];
+  return resolveText(luckyLines[Math.floor(Math.random() * luckyLines.length)]);
 }
 
 /** Word-of-mouth reputation label — same bucketing shown in the Kariyer tab. */
@@ -66,20 +67,20 @@ export function reputationSuspicionOffset(results: HouseResult[]): number {
 }
 
 const honestReputationLines = [
-  "Az önce biriyle konuştum, sizi cidden övmüş — dürüst biri olduğunuzu söylüyorlar.",
-  "Bugünkü müşteri sizi bir tanıdıktan duymuş, güvenilir biri olduğunuzu söylemişler.",
-  "Adınız mahallede iyi anılıyor galiba, bu da işimizi kolaylaştırır.",
+  { tr: "Az önce biriyle konuştum, sizi cidden övmüş — dürüst biri olduğunuzu söylüyorlar.", en: "I spoke with someone just now, they praised you big time — they say you're an honest person." },
+  { tr: "Bugünkü müşteri sizi bir tanıdıktan duymuş, güvenilir biri olduğunuzu söylemişler.", en: "Today's client heard about you from an acquaintance, they said you're a trustworthy person." },
+  { tr: "Adınız mahallede iyi anılıyor galiba, bu da işimizi kolaylaştırır.", en: "Your name is spoken well of in the neighborhood I guess, this makes our job easier." },
 ];
 
 const sneakyReputationLines = [
-  "Bugünkü müşteri biraz temkinli geliyor, sanırım sizi araştırmış.",
-  "Duydum ki bazı müşteriler sizin hakkınızda dedikodu yapıyormuş, dikkatli olun.",
-  "Bu sefer karşınızdaki biraz daha soru soracak gibi, hazırlıklı olun.",
+  { tr: "Bugünkü müşteri biraz temkinli geliyor, sanırım sizi araştırmış.", en: "Today's client is coming in a bit cautious, I guess they researched you." },
+  { tr: "Duydum ki bazı müşteriler sizin hakkınızda dedikodu yapıyormuş, dikkatli olun.", en: "I heard some clients are gossiping about you, be careful." },
+  { tr: "Bu sefer karşınızdaki biraz daha soru soracak gibi, hazırlıklı olun.", en: "Looks like the person across you will ask more questions this time, be prepared." },
 ];
 
 export function pickReputationLine(label: string): string {
   const lines = label === "Dürüst Simsar" ? honestReputationLines : sneakyReputationLines;
-  return lines[Math.floor(Math.random() * lines.length)];
+  return resolveText(lines[Math.floor(Math.random() * lines.length)]);
 }
 
 /** District name from a "Semt, detay" location string, e.g. "Kadıköy, pazar sokağı" -> "Kadıköy". */
@@ -110,42 +111,42 @@ export function districtReputationOffset(results: HouseResult[], allHouses: Hous
 }
 
 const districtHonestLines = [
-  "Bu mahallede işleriniz hep temiz gitmiş, burada da rahat olacaksınız.",
-  "Bu semtte adınız iyi biliniyor galiba.",
+  { tr: "Bu mahallede işleriniz hep temiz gitmiş, burada da rahat olacaksınız.", en: "Your business has always gone clean in this neighborhood, you'll be comfortable here too." },
+  { tr: "Bu semtte adınız iyi biliniyor galiba.", en: "Your name seems to be well known in this district." },
 ];
 
 const districtSneakyLines = [
-  "Bu mahallede sizinle ilgili bazı şeyler duymuş, biraz temkinli geliyor.",
-  "Bu semtte önceki bir işiniz pek iyi anılmıyor sanki.",
+  { tr: "Bu mahallede sizinle ilgili bazı şeyler duymuş, biraz temkinli geliyor.", en: "He heard some things about you in this neighborhood, comes a bit cautious." },
+  { tr: "Bu semtte önceki bir işiniz pek iyi anılmıyor sanki.", en: "It seems a previous job of yours is not remembered very well in this district." },
 ];
 
 export function pickDistrictLine(district: string, honest: boolean): string {
   const lines = honest ? districtHonestLines : districtSneakyLines;
-  return lines[Math.floor(Math.random() * lines.length)].replace("Bu mahallede", `${district}'de`).replace("Bu semtte", `${district}'de`);
+  return resolveText(lines[Math.floor(Math.random() * lines.length)]).replace("Bu mahallede", `${district}'de`).replace("Bu semtte", `${district}'de`);
 }
 
 /** Streak length at which the commission bonus caps out (see STREAK_BONUS_CAP/RATE in scoring.ts). */
 const HOT_STREAK_THRESHOLD = 3;
 
 const streakLines = [
-  "Şu anki gidişat müthiş, arka arkaya satıyorsun!",
-  "Bu formu bozma, tam bir seri yakaladın.",
-  "Ofis seni konuşuyor, bu kadar art arda satış az görülür.",
+  { tr: "Şu anki gidişat müthiş, arka arkaya satıyorsun!", en: "The current trend is amazing, you are selling back to back!" },
+  { tr: "Bu formu bozma, tam bir seri yakaladın.", en: "Don't break this form, you caught a real streak." },
+  { tr: "Ofis seni konuşuyor, bu kadar art arda satış az görülür.", en: "The office is talking about you, such back to back sales are rarely seen." },
 ];
 
 export function pickStreakLine(): string {
-  return streakLines[Math.floor(Math.random() * streakLines.length)];
+  return resolveText(streakLines[Math.floor(Math.random() * streakLines.length)]);
 }
 
 const rivalLines = [
-  "Bu arada Fırat Bey de senin bölgede geziyormuş, gözünü dört aç.",
-  "Fırat Bey geçen hafta iki ev birden sattı, moralini bozma ama bilesin istedim.",
-  "Rakip ofisten Fırat Bey seni sormuş, ne diyeyim bilmiyorum.",
-  "Fırat Bey'in yeni arabası varmış, komisyonları iyi gidiyor demek ki.",
+  { tr: "Bu arada Fırat Bey de senin bölgede geziyormuş, gözünü dört aç.", en: "By the way, Mr. Fırat is also wandering around your area, keep your eyes open." },
+  { tr: "Fırat Bey geçen hafta iki ev birden sattı, moralini bozma ama bilesin istedim.", en: "Mr. Fırat sold two houses at once last week, don't let it ruin your morale but I wanted you to know." },
+  { tr: "Rakip ofisten Fırat Bey seni sormuş, ne diyeyim bilmiyorum.", en: "Mr. Fırat from the rival office asked about you, I don't know what to say." },
+  { tr: "Fırat Bey'in yeni arabası varmış, komisyonları iyi gidiyor demek ki.", en: "Mr. Fırat has a new car, means his commissions are going well." },
 ];
 
 export function pickRivalLine(): string {
-  return rivalLines[Math.floor(Math.random() * rivalLines.length)];
+  return resolveText(rivalLines[Math.floor(Math.random() * rivalLines.length)]);
 }
 
 const LUCKY_DAY_CHANCE = 0.08;

@@ -1,4 +1,5 @@
 import { ENERGY_LOW_THRESHOLD, ENERGY_MAX } from "./energy";
+import type { Localized } from "./language";
 import { BOSS_MOOD_RAISE_THRESHOLD, BOSS_MOOD_MAX } from "./bossMood";
 import emlahNotr from "../assets/portraits/emlah-notr.webp";
 import emlahYorgun from "../assets/portraits/emlah-yorgun.webp";
@@ -28,9 +29,9 @@ export const emlahMoodPortrait: Record<EmlahMood, string> = {
   notr: emlahNotr,
 };
 
-export const emlahMoodLabel: Record<EmlahMood, string> = {
-  yorgun: "yorgun 😴",
-  gergin: "gergin 😬",
-  enerjik: "enerjik ✨",
-  notr: "sakin 🙂",
+export const emlahMoodLabel: Record<EmlahMood, Localized> = {
+  yorgun: { tr: "yorgun 😴", en: "tired 😴" },
+  gergin: { tr: "gergin 😬", en: "tense 😬" },
+  enerjik: { tr: "enerjik ✨", en: "energetic ✨" },
+  notr: { tr: "sakin 🙂", en: "calm 🙂" },
 };

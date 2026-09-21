@@ -3,6 +3,7 @@ import { poolCharacterById } from "../data/characterPool";
 import { dominantTone } from "../data/voiceTone";
 import { compassVerdict } from "../data/valuesCompass";
 import { friendCharacters } from "../data/friendCharacters";
+import { resolveText } from "../data/language";
 import { stageForBondCount, type RelationshipStage } from "../data/relationshipStages";
 import type { ToneBucket, CompassAxis } from "../types";
 
@@ -80,7 +81,7 @@ export default function RelationshipsPanel({
           <div className="portfolio-row" key={friend.id}>
             <div className="portfolio-row-info">
               <p className="portfolio-row-title">
-                {friend.name} <span className="rival-ladder-title">— {friend.profession}</span>
+                {friend.name} <span className="rival-ladder-title">— {resolveText(friend.profession)}</span>
               </p>
               <div className="stat-track relationship-track">
                 <div

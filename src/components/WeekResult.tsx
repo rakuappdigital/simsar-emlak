@@ -3,6 +3,7 @@ import type { DailyQuestDef, WeekOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { rivalSalesForWeek } from "../data/rival";
 import { weeklyNewsLine } from "../data/weeklyNews";
+import { resolveText } from "../data/language";
 import { generateWeekJournalEntry } from "../data/journal";
 import { pickWeeklyDreamLine } from "../data/weeklyDream";
 import { CartIcon } from "./icons";
@@ -18,6 +19,7 @@ interface WeekResultProps {
 export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenMarket, onContinue }: WeekResultProps) {
   const rivalSales = rivalSalesForWeek(outcome.weekIndex);
   const dreamLine = useMemo(() => pickWeeklyDreamLine(outcome), [outcome.weekIndex]);
+
   return (
     <div className="result-screen">
       <p className="week-result-title">Hafta {outcome.weekIndex + 1} Değerlendirmesi</p>
@@ -40,7 +42,7 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
         </p>
         {dailyQuestResult && (
           <p>
-            {dailyQuestResult.completed ? "✅" : "❌"} Özel görev — {dailyQuestResult.def.title}
+            {dailyQuestResult.completed ? "✅" : "❌"} Özel görev — {resolveText(dailyQuestResult.def.title)}
             {dailyQuestResult.completed && ` (+${formatTL(dailyQuestResult.def.reward)})`}
           </p>
         )}

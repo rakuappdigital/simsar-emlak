@@ -1,4 +1,5 @@
 import { HOUSES_PER_WEEK, weekIndexForHouse } from "./goals";
+import { resolveText, type Localized } from "./language";
 
 /**
  * Emlah'ın Takvimi — a purely derived in-game date, computed from `index`
@@ -25,10 +26,10 @@ export function formatGameDate(date: Date): string {
 }
 
 /** Fixed appointment slots — deterministic per house so the same save always shows the same time, no extra state needed. */
-const APPOINTMENT_HOURS = ["09:00", "10:15", "11:30", "13:00", "14:15", "15:30", "16:45", "18:00"];
+const APPOINTMENT_HOURS: Localized[] = [{ tr: "09:00", en: "09:00" }, { tr: "10:15", en: "10:15" }, { tr: "11:30", en: "11:30" }, { tr: "13:00", en: "13:00" }, { tr: "14:15", en: "14:15" }, { tr: "15:30", en: "15:30" }, { tr: "16:45", en: "16:45" }, { tr: "18:00", en: "18:00" }];
 
 export function gameTimeForIndex(index: number): string {
-  return APPOINTMENT_HOURS[index % APPOINTMENT_HOURS.length];
+  return resolveText(APPOINTMENT_HOURS[index % APPOINTMENT_HOURS.length]);
 }
 
 /** Combined "1 Eylül 2026 • 14:15" label — the general clock/date readout shown across Office/Phone/Stats. */

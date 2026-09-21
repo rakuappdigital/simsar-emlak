@@ -5,6 +5,7 @@ import { investmentHouses } from "./investmentHouses";
 import { resolveCustomerNames, resolvePortrait } from "./characterPool";
 import { characterImages } from "./characterImages";
 import { districtOf } from "./introFlavor";
+import { resolveText, type Localized } from "./language";
 
 /**
  * "Emlah'ın Rehberi" — a phone-contacts-style read-only view built purely
@@ -36,43 +37,43 @@ function hashString(s: string): number {
   return Math.abs(h);
 }
 
-function pick(seed: string, options: string[]): string {
-  return options[hashString(seed) % options.length];
+function pick(seed: string, options: Localized[]): string {
+  return resolveText(options[hashString(seed) % options.length]);
 }
 
 const soldHonestNotes = [
-  "İşimi dürüstçe yaptım, hiç zorlanmadım.",
-  "Ona her şeyi olduğu gibi anlattım, yine de anlaştık.",
-  "Temiz bir satıştı, arkamda hiçbir şey bırakmadım.",
+  { tr: "İşimi dürüstçe yaptım, hiç zorlanmadım.", en: "I did my job honestly, had no trouble at all." },
+  { tr: "Ona her şeyi olduğu gibi anlattım, yine de anlaştık.", en: "I explained everything to him just as it was, we agreed anyway." },
+  { tr: "Temiz bir satıştı, arkamda hiçbir şey bırakmadım.", en: "It was a clean sale, I left nothing behind." },
 ];
 const soldSneakyNotes = [
-  "Biraz köşe kestim ama iş oldu, vicdanım biraz sızladı.",
-  "Bazı detayları atlattım, keşke gerek kalmasaydı.",
-  "Baskı yaptım, işe yaradı ama tadı damağımda kalmadı.",
+  { tr: "Biraz köşe kestim ama iş oldu, vicdanım biraz sızladı.", en: "I cut some corners but the job got done, my conscience twinged a bit." },
+  { tr: "Bazı detayları atlattım, keşke gerek kalmasaydı.", en: "I glossed over some details, wish it hadn't been necessary." },
+  { tr: "Baskı yaptım, işe yaradı ama tadı damağımda kalmadı.", en: "I applied pressure, it worked, but left a bitter taste." },
 ];
 const soldFunNotes = [
-  "Sohbeti tatlıydı, satış neredeyse kendiliğinden oldu.",
-  "İyi anlaştık, tekrar karşılaşmak isterim.",
-  "Espriyle geçti, keşke her müşteri böyle olsa.",
+  { tr: "Sohbeti tatlıydı, satış neredeyse kendiliğinden oldu.", en: "The chat was sweet, the sale happened almost by itself." },
+  { tr: "İyi anlaştık, tekrar karşılaşmak isterim.", en: "We got along well, would love to cross paths again." },
+  { tr: "Espriyle geçti, keşke her müşteri böyle olsa.", en: "It passed with humor, wish every client was like this." },
 ];
 const soldDiscountNotes = [
-  "Pazarlıkta cömert davrandım ama satış cepte kaldı.",
-  "İndirimi hak etti, memnun ayrıldı.",
+  { tr: "Pazarlıkta cömert davrandım ama satış cepte kaldı.", en: "I was generous in negotiation, but the sale is in the bag." },
+  { tr: "İndirimi hak etti, memnun ayrıldı.", en: "He deserved the discount, left satisfied." },
 ];
 const thinkingNotes = [
-  "Kararsız kaldı, belki bir gün geri döner.",
-  "İkna olmadı ama kapıyı da kapatmadı.",
-  "Düşünmek istedi, elimden geleni yaptım.",
+  { tr: "Kararsız kaldı, belki bir gün geri döner.", en: "Remained indecisive, maybe he'll return one day." },
+  { tr: "İkna olmadı ama kapıyı da kapatmadı.", en: "Wasn't convinced but didn't close the door either." },
+  { tr: "Düşünmek istedi, elimden geleni yaptım.", en: "Wanted to think, I did my best." },
 ];
 const lostSuspiciousNotes = [
-  "Bana hiç güvenmedi, elimden bir şey gelmedi.",
-  "Gözlerindeki şüpheyi kıramadım.",
-  "Fazla ısrar ettim galiba, kaçırdım.",
+  { tr: "Bana hiç güvenmedi, elimden bir şey gelmedi.", en: "Never trusted me, nothing I could do." },
+  { tr: "Gözlerindeki şüpheyi kıramadım.", en: "I couldn't break the doubt in their eyes." },
+  { tr: "Fazla ısrar ettim galiba, kaçırdım.", en: "I guess I insisted too much, I missed it." },
 ];
 const lostOtherNotes = [
-  "Bu sefer olmadı, tam anlaşamadık.",
-  "Farklı bir şey arıyordu, elimde o yoktu.",
-  "Kısmet değilmiş.",
+  { tr: "Bu sefer olmadı, tam anlaşamadık.", en: "Not this time, we couldn't quite agree." },
+  { tr: "Farklı bir şey arıyordu, elimde o yoktu.", en: "They were looking for something different, I didn't have that." },
+  { tr: "Kısmet değilmiş.", en: "It wasn't meant to be." },
 ];
 
 function contactNoteFor(result: HouseResult): string {

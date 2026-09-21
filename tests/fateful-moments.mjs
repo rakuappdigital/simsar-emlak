@@ -26,9 +26,12 @@ page.on("console", (msg) => {
 });
 
 await page.goto(BASE_URL);
+await page.locator("button", { hasText: "Türkçe" }).click({ timeout: 3000 }).catch(() => {});
+await page.evaluate(() => localStorage.setItem("simsar-emlak-full-unlock", "1")).catch(() => {});
 
 const data = await page.evaluate(async () => {
   const fatefulMod = await import("/src/data/fatefulMoments.ts");
+  const langMod = await import("/src/data/language.ts");
   const origins = ["ogretmen", "emlakci-ailesi", "girisimci", "yurtdisi"];
   const out = {};
 
@@ -38,10 +41,17 @@ const data = await page.evaluate(async () => {
   out.noneOnWeekBoundary = fatefulMod.FATEFUL_MOMENT_INDICES.every((i) => i % 5 !== 0 && i % 5 !== 4);
 
   // All 12 combinations (3 beats x 4 origins) must resolve to real content.
+  // title/paragraphs may be a plain string or a { tr, en } bilingual field —
+  // resolveText() gives the actual displayed string either way.
   out.allCombinationsResolve = fatefulMod.FATEFUL_MOMENT_INDICES.every((index) =>
     origins.every((origin) => {
       const moment = fatefulMod.fatefulMomentFor(index, origin);
-      return !!moment && moment.title.length > 0 && moment.paragraphs.length >= 2;
+      return (
+        !!moment &&
+        langMod.resolveText(moment.title).length > 0 &&
+        moment.paragraphs.length >= 2 &&
+        moment.paragraphs.every((p) => langMod.resolveText(p).length > 0)
+      );
     }),
   );
 
@@ -49,7 +59,12 @@ const data = await page.evaluate(async () => {
   // (the whole point — a second playthrough with a different origin sees
   // different content here).
   const beat0 = fatefulMod.FATEFUL_MOMENT_INDICES[0];
-  const texts = origins.map((o) => fatefulMod.fatefulMomentFor(beat0, o).paragraphs.join(" "));
+  const texts = origins.map((o) =>
+    fatefulMod
+      .fatefulMomentFor(beat0, o)
+      .paragraphs.map((p) => langMod.resolveText(p))
+      .join(" "),
+  );
   out.originsAreDistinct = new Set(texts).size === origins.length;
 
   out.nonFatefulIndexReturnsNull = fatefulMod.fatefulMomentFor(3, "ogretmen") === null;

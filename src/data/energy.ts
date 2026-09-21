@@ -19,8 +19,8 @@
  * for playing across multiple sessions, never required.
  */
 export const ENERGY_MAX = 100;
-/** ~%30 per house, per the "her ev denemesinde enerji gitsin" brief. */
-export const ENERGY_DEPLETION_PER_HOUSE = 30;
+/** Bir müşteriye ev göstermenin enerji maliyeti — en yüksek maliyetli aktivite, günün diğer (araştırma/pazarlama/ofis işi) aktivitelerinden belirgin şekilde daha pahalı. */
+export const ENERGY_DEPLETION_PER_HOUSE = 35;
 export const ENERGY_LOW_THRESHOLD = 30;
 /** Below this, Emlah can't take on today's job at all — he has to recover some energy first. See data/energyBreak.ts. */
 export const ENERGY_WORK_MIN_THRESHOLD = 20;
@@ -30,7 +30,10 @@ export const WEEKLY_ENERGY_REGEN = 25;
 
 /** Real-clock passive regen — device time, not the in-game calendar. */
 export const PASSIVE_REGEN_PER_HOUR = 10;
-export const MINIGAME_ENERGY_GAIN = 10;
+/** Mini oyun başına en fazla enerji (tam bu miktar sadece "great" sonucunda) — her mini oyun 8 saatte 4 hakla sınırlı, bkz minigameSchedule.ts. */
+export const MINIGAME_ENERGY_GAIN = 2;
+/** Ödüllü reklam izleyince gelen enerji — enerji %30 altına düştüğünde (ENERGY_LOW_THRESHOLD) bu seçenek açılır. */
+export const AD_ENERGY_REWARD = 10;
 
 /**
  * Whole real hours elapsed since `lastRegenAt` become energy, rounding

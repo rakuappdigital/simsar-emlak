@@ -1,4 +1,5 @@
 import type { MarketNews } from "../data/marketNews";
+import { resolveText } from "../data/language";
 
 interface NewsBannerProps {
   news: MarketNews | null;
@@ -10,7 +11,7 @@ export default function NewsBanner({ news }: NewsBannerProps) {
   return (
     <div className={`news-banner news-banner-${news.direction}`}>
       <span className="news-banner-tag">{news.direction === "up" ? "📈 EMLAK GÜNDEMİ" : "📉 EMLAK GÜNDEMİ"}</span>
-      <span className="news-banner-text">{news.headline}</span>
+      <span className="news-banner-text">{resolveText(news.headline)}</span>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Badge, SignificantMemory } from "../types";
 import { MedalIcon } from "./icons";
+import { resolveText } from "../data/language";
 
 interface MemoryWallProps {
   badges: string[];
@@ -34,7 +35,7 @@ export default function MemoryWall({ badges, allBadges, significantMemories }: M
 
   const badgeItems: WallItem[] = badges.map((id) => ({
     id: `badge-${id}`,
-    label: allBadges[id]?.title ?? id,
+    label: allBadges[id] ? resolveText(allBadges[id].title) : id,
     useMedalIcon: true,
   }));
   const memoryItems: WallItem[] = significantMemories.map((m) => ({

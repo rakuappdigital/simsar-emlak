@@ -28,6 +28,8 @@ page.on("console", (msg) => {
 });
 
 await page.goto(BASE_URL);
+await page.locator("button", { hasText: "Türkçe" }).click({ timeout: 3000 }).catch(() => {});
+await page.evaluate(() => localStorage.setItem("simsar-emlak-full-unlock", "1")).catch(() => {});
 
 await page.evaluate(async () => {
   const housesMod = await import("/src/data/houses.ts");

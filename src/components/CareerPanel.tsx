@@ -1,8 +1,9 @@
 import type { Badge, HouseResult } from "../types";
 import { formatTL } from "../data/economy";
-import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
+import { computePrestige, PRESTIGE_MAX, rankTitleDisplay } from "../data/scoring";
 import { rivalLadder, activeRivalFor } from "../data/rivalLadder";
 import { MedalIcon } from "./icons";
+import { resolveText } from "../data/language";
 
 interface CareerPanelProps {
   rankTitleText: string;
@@ -49,7 +50,7 @@ export default function CareerPanel({
     <div className="career-panel">
       <div className="career-stat-row">
         <span className="career-stat-label">Kariyer Rütbesi</span>
-        <span className="career-stat-value">{rankTitleText}</span>
+        <span className="career-stat-value">{rankTitleDisplay(rankTitleText)}</span>
       </div>
       <div className="career-stat-row">
         <span className="career-stat-label">Ün</span>
@@ -98,7 +99,7 @@ export default function CareerPanel({
         return (
           <div className="career-stat-row rival-ladder-row" key={rival.id}>
             <span className="career-stat-label">
-              {i + 1}. {rival.name} <span className="rival-ladder-title">— {rival.title}</span>
+              {i + 1}. {rival.name} <span className="rival-ladder-title">— {resolveText(rival.title)}</span>
             </span>
             <span className="career-stat-value">
               {defeated ? "✅ Geçildi" : isActive ? `${soldCount}/${rival.threshold}` : "🔒"}
@@ -122,7 +123,7 @@ export default function CareerPanel({
         <div className="badge-popup">
           {badges.map((id) => (
             <p key={id}>
-              <MedalIcon size={14} className="icon-inline" /> {allBadges[id]?.title ?? id}
+              <MedalIcon size={14} className="icon-inline" /> {allBadges[id] ? resolveText(allBadges[id].title) : id}
             </p>
           ))}
         </div>

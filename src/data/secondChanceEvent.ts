@@ -1,4 +1,5 @@
 import type { HouseResult } from "../types";
+import { resolveText, type Localized } from "./language";
 
 /**
  * "İkinci Şans" — a surprise, unprompted version of the existing manual
@@ -20,13 +21,13 @@ export function pickSecondChanceCandidateIndex(results: HouseResult[]): number |
   return eligible[Math.floor(Math.random() * eligible.length)].i;
 }
 
-const secondChanceLines = [
-  "Merhaba, geçen görüşmemizi düşünüp duruyorum. Belki yanlış karar verdim.",
-  "Rahatsız ediyorsam kusura bakmayın ama aklımdan çıkmadınız, tekrar konuşabilir miyiz?",
-  "O evi başkası aldı mı bilmiyorum ama hâlâ ilgileniyor olabilirim, bir şansımız daha olsun.",
-  "Ailemle tekrar konuştuk, belki de acele karar vermiştik.",
+const secondChanceLines: Localized[] = [
+  { tr: "Merhaba, geçen görüşmemizi düşünüp duruyorum. Belki yanlış karar verdim.", en: "Hello, I keep thinking about our last meeting. Maybe I made the wrong decision." },
+  { tr: "Rahatsız ediyorsam kusura bakmayın ama aklımdan çıkmadınız, tekrar konuşabilir miyiz?", en: "Sorry if I am disturbing you, but you haven't left my mind, can we talk again?" },
+  { tr: "O evi başkası aldı mı bilmiyorum ama hâlâ ilgileniyor olabilirim, bir şansımız daha olsun.", en: "I don't know if someone else bought that house, but I might still be interested, let's have another chance." },
+  { tr: "Ailemle tekrar konuştuk, belki de acele karar vermiştik.", en: "We talked with my family again, maybe we made a hasty decision." },
 ];
 
 export function pickSecondChanceLine(): string {
-  return secondChanceLines[Math.floor(Math.random() * secondChanceLines.length)];
+  return resolveText(secondChanceLines[Math.floor(Math.random() * secondChanceLines.length)]);
 }

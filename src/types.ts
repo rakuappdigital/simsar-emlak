@@ -1,9 +1,12 @@
+import type { Localized } from "./data/language";
+
 export type Speaker = "emlah" | "thought" | "customer1" | "customer2" | "system";
 
 export interface DialogueLine {
   speaker: Speaker;
   name?: string;
-  text: string;
+  /** Plain string until translated, then `{ tr, en }` — resolve with resolveText(). */
+  text: Localized;
 }
 
 export interface ChoiceEffects {
@@ -22,7 +25,8 @@ export interface ChoiceEffects {
 
 export interface Choice {
   id: string;
-  text: string;
+  /** Plain string until translated, then `{ tr, en }` — resolve with resolveText(). */
+  text: Localized;
   next: string;
   effects?: ChoiceEffects;
 }
@@ -53,7 +57,11 @@ export interface CastSlot {
 export interface HouseScene {
   id: string;
   title: string;
+  /** English display title, shown instead of `title` when the active language is "en". Optional — untranslated houses just keep showing `title`. */
+  titleEn?: string;
   location: string;
+  /** English display location, same fallback rule as `titleEn`. */
+  locationEn?: string;
   /**
    * Static customer names for hand-authored houses. Ignored (and can be
    * left as placeholders) when `dynamicCast` is set — those houses get
@@ -151,8 +159,8 @@ export interface WeekOutcome {
 
 export interface Badge {
   id: string;
-  title: string;
-  description: string;
+  title: Localized;
+  description: Localized;
 }
 
 export type MarketCategory = "ofis" | "kiyafet" | "sertifika" | "arac" | "kilit" | "sarf";
@@ -160,8 +168,8 @@ export type MarketCategory = "ofis" | "kiyafet" | "sertifika" | "arac" | "kilit"
 export interface Perk {
   id: string;
   category: MarketCategory;
-  title: string;
-  description: string;
+  title: Localized;
+  description: Localized;
   cost: number;
   /** True for single-use items that go into the consumables inventory instead of ownedPerks. */
   consumable?: boolean;
@@ -191,8 +199,8 @@ export interface InboxMessage {
 
 export interface DailyQuestDef {
   id: "discount-free" | "low-suspicion" | "streak-2" | "high-fun";
-  title: string;
-  description: string;
+  title: Localized;
+  description: Localized;
   reward: number;
 }
 
@@ -352,12 +360,12 @@ export interface SaveGame {
 
 export interface ContractClauseOption {
   id: string;
-  label: string;
+  label: Localized;
 }
 
 export interface ContractClause {
   id: string;
-  title: string;
+  title: Localized;
   options: ContractClauseOption[];
   /** id of the option this particular customer secretly prefers. */
   preferredOptionId: string;

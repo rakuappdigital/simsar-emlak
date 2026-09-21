@@ -19,6 +19,7 @@ import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
+import { resolveText, resolveHouseTitle, resolveHouseLocation } from "../data/language";
 import {
   isHeldFirmChoice,
   isDiscountContradiction,
@@ -255,8 +256,9 @@ export default function DialogueScene({
   // Emlah has no real reason to offer one unprompted.
   const dealAlreadyWon = isClosingNode && resolveOutcome(stats, 0, house.profile) === "sold";
 
-  function getLineText(line: { text: string; speaker: string }) {
-    const base = house.dynamicCast ? interpolateNames(line.text, resolvedNames) : line.text;
+  function getLineText(line: { text: DialogueLine["text"]; speaker: string }) {
+    const raw = resolveText(line.text);
+    const base = house.dynamicCast ? interpolateNames(raw, resolvedNames) : raw;
     if (isClosingNode && dealAlreadyWon && line.speaker !== "emlah" && line.speaker !== "thought" && DISCOUNT_ASK_PATTERN.test(base)) {
       return WON_DEAL_LINE;
     }
@@ -391,7 +393,7 @@ export default function DialogueScene({
     if (isHeldFirmChoice(choice.effects)) heldFirmCountRef.current += 1;
 
     if (choice.effects) onChoiceEffects(choice.effects);
-    if (choice.effects?.fun) onLineChosen?.(choice.text, choice.effects.fun);
+    if (choice.effects?.fun) onLineChosen?.(resolveText(choice.text), choice.effects.fun);
     if (choice.effects) onToneChoice?.(choice.effects);
     if (choice.id === "flirt-bond" && flirtCharacterId && flirtCharacter) {
       onFlirt?.(flirtCharacterId, flirtCharacter.name);
@@ -466,9 +468,12 @@ export default function DialogueScene({
           <span className="personality-tag">{personalityHint(house.profile)}</span>
         )}
         {isDuel && <span className="duel-tag">⏱️ {duelRivalName ?? "Fırat Bey"} de bu evle ilgileniyor!</span>}
-        {easterEgg && nodeId === house.startNode && <span className="easter-egg-tag">{easterEgg.tag}</span>}
+        {easterEgg && nodeId === house.startNode && <span className="easter-egg-tag">{resolveText(easterEgg.tag)}</span>}
         <div className="scene-title">
-          <span>{house.title} — {house.location}</span>
+          <span>
+            {resolveHouseTitle(house)} —{" "}
+            {resolveHouseLocation(house)}
+          </span>
           <span className="scene-price">{formatTL(house.askingPrice)}</span>
         </div>
       </div>
@@ -530,7 +535,7 @@ export default function DialogueScene({
                 className="choice-btn"
                 onClick={() => pickChoice(c)}
               >
-                {c.text}
+                {resolveText(c.text)}
               </button>
             ))}
           </div>

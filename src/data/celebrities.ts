@@ -4,6 +4,7 @@ import celebCihangir from "../assets/portraits/celeb-cihangir.webp";
 import celebFikret from "../assets/portraits/celeb-fikret.webp";
 import celebLeyla from "../assets/portraits/celeb-leyla.webp";
 import type { Gender } from "../types";
+import type { Localized } from "./language";
 
 /**
  * "Özel Davetler" easter egg — a small, separate pool of parody-celebrity
@@ -20,11 +21,11 @@ export interface Celebrity {
   name: string;
   personality: "kibirli" | "samimi";
   /** Emlah's inner-thought line on realizing who just walked in. */
-  introLine: string;
+  introLine: Localized;
   /** The one-off admiring line Emlah gets to say back. */
-  fanLine: string;
+  fanLine: Localized;
   /** How the celebrity reacts to being fanned over — tone follows personality. */
-  fanReplyLine: string;
+  fanReplyLine: Localized;
 }
 
 export const celebrities: Celebrity[] = [
@@ -33,45 +34,45 @@ export const celebrities: Celebrity[] = [
     gender: "k",
     name: "Aslı Yıldız",
     personality: "kibirli",
-    introLine: "(içinden) Dur biraz... bu kesinlikle Aslı Yıldız! Sakin ol Emlah, sakin ol.",
-    fanLine: "\"Sizi yıllardır dinliyorum, gerçekten çok büyük bir hayranınızım.\"",
-    fanReplyLine: "(kısaca gülümser) Tabii, çoğu insan öyle söylüyor zaten. Devam edelim mi?",
+    introLine: { tr: "(içinden) Dur biraz... bu kesinlikle Aslı Yıldız! Sakin ol Emlah, sakin ol.", en: "(to himself) Wait a second... that is definitely Aslı Yıldız! Stay calm Emlah, stay calm." },
+    fanLine: { tr: "\"Sizi yıllardır dinliyorum, gerçekten çok büyük bir hayranınızım.\"", en: "\"I've been listening to you for years, I'm a really big fan of yours.\"" },
+    fanReplyLine: { tr: "(kısaca gülümser) Tabii, çoğu insan öyle söylüyor zaten. Devam edelim mi?", en: "(smiles briefly) Sure, most people say that anyway. Shall we continue?" },
   },
   {
     id: "celeb-fikret",
     gender: "e",
     name: "Kaptan Fikret",
     personality: "samimi",
-    introLine: "(içinden) Bu ses tonu... bu kesinlikle Kaptan Fikret! İnanamıyorum.",
-    fanLine: "\"O final golü hâlâ tüylerimi diken diken ediyor, efsanesiniz.\"",
-    fanReplyLine: "(kahkaha atar, omzuna vurur) Yeğenim, o golü ben de hâlâ izliyorum bazen!",
+    introLine: { tr: "(içinden) Bu ses tonu... bu kesinlikle Kaptan Fikret! İnanamıyorum.", en: "(to himself) That voice tone... that is definitely Captain Fikret! I can't believe it." },
+    fanLine: { tr: "\"O final golü hâlâ tüylerimi diken diken ediyor, efsanesiniz.\"", en: "\"That final goal still gives me goosebumps, you are a legend.\"" },
+    fanReplyLine: { tr: "(kahkaha atar, omzuna vurur) Yeğenim, o golü ben de hâlâ izliyorum bazen!", en: "(laughs, pats on the shoulder) Nephew, I still watch that goal sometimes myself!" },
   },
   {
     id: "celeb-bahar",
     gender: "k",
     name: "Şef Bahar",
     personality: "samimi",
-    introLine: "(içinden) Bu tarif anlatan ses... Şef Bahar burada mı yani?",
-    fanLine: "\"Geçen hafta tarifinizi denedim, evde herkes bayıldı.\"",
-    fanReplyLine: "(gözleri parlar) Aaa ne güzel haber, tam da bunun için yapıyorum bu işi.",
+    introLine: { tr: "(içinden) Bu tarif anlatan ses... Şef Bahar burada mı yani?", en: "(to himself) That voice explaining recipes... is Chef Bahar here then?" },
+    fanLine: { tr: "\"Geçen hafta tarifinizi denedim, evde herkes bayıldı.\"", en: "\"I tried your recipe last week, everyone at home loved it.\"" },
+    fanReplyLine: { tr: "(gözleri parlar) Aaa ne güzel haber, tam da bunun için yapıyorum bu işi.", en: "(eyes sparkle) Oh what great news, that's exactly why I do this job." },
   },
   {
     id: "celeb-cihangir",
     gender: "e",
     name: "Cihangir Bey",
     personality: "kibirli",
-    introLine: "(içinden) Bu takım elbise, bu duruş... Cihangir Bey'in ta kendisi.",
-    fanLine: "\"Yatırımlarınızı takip ediyorum, gerçekten ilham verici.\"",
-    fanReplyLine: "(başıyla onaylar) Doğal olarak. Az insan benim seviyemde risk alabilir.",
+    introLine: { tr: "(içinden) Bu takım elbise, bu duruş... Cihangir Bey'in ta kendisi.", en: "(to himself) This suit, this posture... Cihangir Bey himself." },
+    fanLine: { tr: "\"Yatırımlarınızı takip ediyorum, gerçekten ilham verici.\"", en: "\"I follow your investments, it's truly inspiring.\"" },
+    fanReplyLine: { tr: "(başıyla onaylar) Doğal olarak. Az insan benim seviyemde risk alabilir.", en: "(nods) Naturally. Few people can take risks at my level." },
   },
   {
     id: "celeb-leyla",
     gender: "k",
     name: "Leyla Han",
     personality: "samimi",
-    introLine: "(içinden) O ses, o duruş... Leyla Han, hiç şüphem yok.",
-    fanLine: "\"Filmlerinizle büyüdüm, bugün karşımda olmanız inanılmaz.\"",
-    fanReplyLine: "(candan güler) Ne kadar tatlısınız, böyle sözler beni hep mutlu eder.",
+    introLine: { tr: "(içinden) O ses, o duruş... Leyla Han, hiç şüphem yok.", en: "(to himself) That voice, that posture... Leyla Han, I have no doubt." },
+    fanLine: { tr: "\"Filmlerinizle büyüdüm, bugün karşımda olmanız inanılmaz.\"", en: "\"I grew up with your movies, it's incredible to have you in front of me today.\"" },
+    fanReplyLine: { tr: "(candan güler) Ne kadar tatlısınız, böyle sözler beni hep mutlu eder.", en: "(laughs warmly) How sweet of you, such words always make me happy." },
   },
 ];
 

@@ -27,12 +27,15 @@ page.on("console", (msg) => {
 });
 
 await page.goto(BASE_URL);
+await page.locator("button", { hasText: "Türkçe" }).click({ timeout: 3000 }).catch(() => {});
+await page.evaluate(() => localStorage.setItem("simsar-emlak-full-unlock", "1")).catch(() => {});
 
 const data = await page.evaluate(async () => {
   const secondChanceMod = await import("/src/data/secondChanceEvent.ts");
   const postSaleMod = await import("/src/data/postSaleCall.ts");
   const suspiciousMod = await import("/src/data/suspiciousDetails.ts");
   const originMod = await import("/src/data/originRecognition.ts");
+  const isRealText = (v) => typeof v === "string" || (v && typeof v.tr === "string" && typeof v.en === "string");
 
   const out = {};
 
@@ -57,7 +60,7 @@ const data = await page.evaluate(async () => {
   );
 
   // C — Gizli Gündem: every suspiciousDetails entry has a matching confession.
-  out.everyDetailHasConfession = suspiciousMod.suspiciousDetails.every((d) => typeof suspiciousMod.suspiciousDetailConfessions[d.id] === "string");
+  out.everyDetailHasConfession = suspiciousMod.suspiciousDetails.every((d) => isRealText(suspiciousMod.suspiciousDetailConfessions[d.id]));
 
   // D — Geçmişini Hatırlıyor: every origin id has at least one line.
   const originIds = ["ogretmen", "emlakci-ailesi", "girisimci", "yurtdisi"];

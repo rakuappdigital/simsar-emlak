@@ -1,4 +1,5 @@
 import type { OriginId } from "../types";
+import { resolveText, type Localized } from "./language";
 
 /**
  * "Geçmişini Hatırlıyor" — brings origin.ts (currently only felt at the
@@ -10,26 +11,26 @@ import type { OriginId } from "../types";
  */
 export const ORIGIN_RECOGNITION_CHANCE = 0.05;
 
-const linesByOrigin: Record<OriginId, string[]> = {
+const linesByOrigin: Record<OriginId, Localized[]> = {
   ogretmen: [
-    "Eskiden öğretmen miydiniz? Anlatış tarzınızdan belli oluyor.",
-    "Bir öğretmen sabrı var sizde, fark ettim de.",
+    { tr: "Eskiden öğretmen miydiniz? Anlatış tarzınızdan belli oluyor.", en: "Were you a teacher before? Shows from your style of explaining." },
+    { tr: "Bir öğretmen sabrı var sizde, fark ettim de.", en: "You have the patience of a teacher, I noticed." },
   ],
   "emlakci-ailesi": [
-    "Bu işi ailenizden mi öğrendiniz? Bölgeyi çok iyi biliyorsunuz.",
-    "Emlakçılık sizde kan galiba, her sokağı ezbere biliyorsunuz.",
+    { tr: "Bu işi ailenizden mi öğrendiniz? Bölgeyi çok iyi biliyorsunuz.", en: "Did you learn this business from your family? You know the region very well." },
+    { tr: "Emlakçılık sizde kan galiba, her sokağı ezbere biliyorsunuz.", en: "Realtor business must be in your blood, you know every street by heart." },
   ],
   girisimci: [
-    "Eskiden kendi işiniz mi vardı? Pazarlık tarzınız çok tanıdık geldi.",
-    "İş insanı gibi konuşuyorsunuz, daha önce bir şirket mi yönettiniz?",
+    { tr: "Eskiden kendi işiniz mi vardı? Pazarlık tarzınız çok tanıdık geldi.", en: "Did you used to have your own business? Your negotiation style feels very familiar." },
+    { tr: "İş insanı gibi konuşuyorsunuz, daha önce bir şirket mi yönettiniz?", en: "You talk like a business person, did you manage a company before?" },
   ],
   yurtdisi: [
-    "Yurt dışında mı yaşadınız? Bakış açınız buradakilerden farklı.",
-    "Aksanınızda hafif bir şey var, yurt dışında mı büyüdünüz?",
+    { tr: "Yurt dışında mı yaşadınız? Bakış açınız buradakilerden farklı.", en: "Did you live abroad? Your perspective is different from locals here." },
+    { tr: "Aksanınızda hafif bir şey var, yurt dışında mı büyüdünüz?", en: "There's a slight hint in your accent, did you grow up abroad?" },
   ],
 };
 
 export function pickOriginRecognitionLine(originId: OriginId): string {
   const pool = linesByOrigin[originId];
-  return pool[Math.floor(Math.random() * pool.length)];
+  return resolveText(pool[Math.floor(Math.random() * pool.length)]);
 }
