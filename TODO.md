@@ -8,7 +8,7 @@ API ile tamamlananlar (bu oturumda):
 **Hâlâ elle yapılması gereken (API desteklemiyor):**
 - ❌ **App Privacy (veri kullanımı bildirimi / nutrition label)** — kullanıcı kendisi dolduracak (My Apps → Odd Estate → App Privacy). Bu adım tamamlanmadan sürüm İncelemeye gönderilemez.
 
-**Not:** TR sürüm açıklaması (`appStoreVersionLocalizations` locale=tr) hâlâ İngilizce metin içeriyor (description alanı EN ile aynı) — kullanıcı isterse ayrıca Türkçeleştirilebilir, şu an talep edilmedi.
+- ✅ **Açıklama, tanıtım metni, anahtar kelimeler yeniden yazıldı (2026-09-24)** — TR sürümdeki İngilizce kalıntı metin düzeltildi, ikisi de daha çekici/hikaye odaklı yeni metinlerle PATCH edildi (`appStoreVersionLocalizations`, EN+TR). Karakter sınırları doğrulandı (description ~1.7K/4000, keywords 92/76 char /100, promotionalText 110/97 char /170).
 
 ---
 
