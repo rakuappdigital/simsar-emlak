@@ -50,4 +50,37 @@ export function recordPlay(gameId: string): void {
   const fresh = pruneOld(getTimestamps(gameId));
   fresh.push(Date.now());
   setTimestamps(gameId, fresh);
+  markEverPlayed(gameId);
+}
+
+/**
+ * "Gece Kuşu" başarımı — 8 saatlik pencereyle silinen timestamp'lerden
+ * bağımsız, kalıcı "en az bir kez oynandı" bayrağı (jetton/inventory ile
+ * aynı desen, kayıt slotlarından bağımsız).
+ */
+const EVER_PLAYED_KEY = "simsar-emlak-minigame-ever-played";
+
+function getEverPlayedSet(): Set<string> {
+  try {
+    const raw = localStorage.getItem(EVER_PLAYED_KEY);
+    const arr: unknown = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr.filter((x): x is string => typeof x === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markEverPlayed(gameId: string): void {
+  try {
+    const set = getEverPlayedSet();
+    set.add(gameId);
+    localStorage.setItem(EVER_PLAYED_KEY, JSON.stringify([...set]));
+  } catch {
+    // ignore
+  }
+}
+
+export function hasPlayedAllMinigames(allGameIds: string[]): boolean {
+  const played = getEverPlayedSet();
+  return allGameIds.every((id) => played.has(id));
 }

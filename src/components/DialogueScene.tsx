@@ -75,6 +75,8 @@ interface DialogueSceneProps {
   onToneChoice?: (effects: ChoiceEffects) => void;
   /** "Son Dakika Baskısı" — fires only when the player actually falls for the trap choice. See data/lastMinutePressure.ts. */
   onPressureChoicePicked?: () => void;
+  /** "Pazarlık Ustası" achievement — reports every real held-firm pick (not just ones that trigger a contradiction) so App.tsx can tally them per week. */
+  onHeldFirm?: () => void;
   /** True when a rival ladder opponent is also circling this exact house (see rivalDuel.ts) — purely a visible warning tag, no stat effect. */
   isDuel?: boolean;
   /** Name shown in the duel tag — the current rival ladder rung. See data/rivalLadder.ts. */
@@ -130,6 +132,7 @@ export default function DialogueScene({
   onToneChoice,
   voiceTally,
   onPressureChoicePicked,
+  onHeldFirm,
   origin,
   showOriginIntro,
   memoryReference,
@@ -406,7 +409,10 @@ export default function DialogueScene({
       setLineIndex(0);
       return;
     }
-    if (isHeldFirmChoice(choice.effects)) heldFirmCountRef.current += 1;
+    if (isHeldFirmChoice(choice.effects)) {
+      heldFirmCountRef.current += 1;
+      onHeldFirm?.();
+    }
 
     if (choice.effects) onChoiceEffects(choice.effects);
     if (choice.effects?.fun) onLineChosen?.(resolveText(choice.text), choice.effects.fun);

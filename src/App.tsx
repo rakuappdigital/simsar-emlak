@@ -42,7 +42,7 @@ import {
   getShieldHousesLeft,
   setShieldHousesLeft,
 } from "./data/inventory";
-import { getPlaysRemaining, recordPlay } from "./data/minigameSchedule";
+import { getPlaysRemaining, recordPlay, hasPlayedAllMinigames } from "./data/minigameSchedule";
 import { initGameCenter, unlockAchievement, ACHIEVEMENT_IDS, submitLeaderboardScore } from "./data/gameCenter";
 import { claimDailyRewardIfEligible } from "./data/dailyReward";
 import { initRevenueCat } from "./data/revenuecat";
@@ -704,6 +704,8 @@ function App() {
   const [showSecretStats, setShowSecretStats] = useState(false);
   const [easterEggsSeenCount, setEasterEggsSeenCount] = useState(0);
   const [pressureChoicesTaken, setPressureChoicesTaken] = useState(0);
+  // "Pazarlık Ustası" achievement — held-firm picks tallied within the current week, reset on week change.
+  const heldFirmWeekRef = useRef({ weekIndex: -1, count: 0 });
   const officeTapCountRef = useRef(0);
   const officeTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Nadir, house-agnostic flavor moment — see data/easterEggs.ts. Same
@@ -927,6 +929,15 @@ function App() {
         discountPercent: s.discountPercent + (effects.discountPercent ?? 0),
       };
     });
+  }
+
+  // "Pazarlık Ustası" achievement — 5 held-firm picks within the same week.
+  function handleHeldFirm() {
+    const weekIdx = weekIndexForHouse(index);
+    const tracker = heldFirmWeekRef.current;
+    tracker.count = tracker.weekIndex === weekIdx ? tracker.count + 1 : 1;
+    tracker.weekIndex = weekIdx;
+    if (tracker.count >= 5) unlockAchievement(ACHIEVEMENT_IDS.heldFirm5InWeek);
   }
 
   // "Emlah'ın Sesi" — classifies and tallies every picked choice's tone.
@@ -3308,9 +3319,16 @@ function App() {
     if (Object.values(friendBondCounts).filter((c) => c >= 10).length >= 3) unlockAchievement(ACHIEVEMENT_IDS.threeFriendsYakinlik);
     if (investmentResults.some((r) => r.outcome === "sold")) unlockAchievement(ACHIEVEMENT_IDS.firstInvestmentFlip);
     if (secondChanceOffered) unlockAchievement(ACHIEVEMENT_IDS.secondChanceUsed);
+    // "Dürüst Emlakçı" — finish any week averaging under 20% suspicion.
+    if (weekOutcomes.some((w) => w.avgSuspicion < 20)) unlockAchievement(ACHIEVEMENT_IDS.honestWeek);
+    // "Mahalle Fatihi" — fully dominate any single district.
+    const districtPinsForAchievements = buildDistrictPins(results, premiumResults, investmentResults, friendHouseResults);
+    if (districtPinsForAchievements.some((p) => p.dominated)) unlockAchievement(ACHIEVEMENT_IDS.districtDominance);
+    // "Gece Kuşu" — try every mini-game at least once.
+    if (hasPlayedAllMinigames(energyBreakActivities.map((a) => a.id))) unlockAchievement(ACHIEVEMENT_IDS.triedAllMinigames);
     submitLeaderboardScore(earned);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results, earned, bossMood, defeatedRivalIds, friendBondCounts, investmentResults, secondChanceOffered]);
+  }, [results, earned, bossMood, defeatedRivalIds, friendBondCounts, investmentResults, secondChanceOffered, weekOutcomes, premiumResults, friendHouseResults]);
   const anySold = results.some((r) => r.outcome === "sold");
   // "Zor Zamanlar" — eligibility is fully derived, no persisted "pending" flag needed.
   const recentLossStreak =
@@ -3956,6 +3974,7 @@ function App() {
             onSceneEnd={handleSceneEnd}
             onLineChosen={handleLineChosen}
             onFlirt={handleFlirt}
+            onHeldFirm={handleHeldFirm}
             isDuel={activeDuelHouseId === house.id}
             duelRivalName={activeDuelHouseId === house.id ? activeRivalFor(defeatedRivalIds).name : undefined}
             firatEncounter={activeDuelHouseId === house.id ? (activeFiratMood ?? undefined) : undefined}
