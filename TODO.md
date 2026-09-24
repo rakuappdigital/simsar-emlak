@@ -1,3 +1,17 @@
+# App Store Connect Submission Durumu (2026-09-24 güncellemesi)
+
+API ile tamamlananlar (bu oturumda):
+- ✅ **Fiyatlandırma** — appPriceSchedule oluşturuldu, base territory USA, $0.00 (Free) manuel fiyat noktası atandı (freemium + IAP modeli zaten mevcuttu, kullanıcı onayladı).
+- ✅ **App Review İletişim Bilgisi** (`appStoreReviewDetails`) — Doğuş Telatar, +90 539 483 29 83, sivilpenguen@gmail.com, demo hesap gerekmiyor (login yok).
+- ✅ **Privacy Policy / Terms of Use / Support sayfaları** — TR+EN, `public/privacy(.html/-tr.html)`, `public/terms(.html/-tr.html)`, `public/support(.html/-tr.html)`, siteye (`simsar-emlak.vercel.app`) deploy edildi ve doğrulandı (200 OK, .html uzantılı — Vercel'de clean URL yok). ASC'de `appInfoLocalizations.privacyPolicyUrl` (EN+TR) ve `appStoreVersionLocalizations.supportUrl` (EN+TR) PATCH ile bağlandı.
+
+**Hâlâ elle yapılması gereken (API desteklemiyor):**
+- ❌ **App Privacy (veri kullanımı bildirimi / nutrition label)** — kullanıcı kendisi dolduracak (My Apps → Odd Estate → App Privacy). Bu adım tamamlanmadan sürüm İncelemeye gönderilemez.
+
+**Not:** TR sürüm açıklaması (`appStoreVersionLocalizations` locale=tr) hâlâ İngilizce metin içeriyor (description alanı EN ile aynı) — kullanıcı isterse ayrıca Türkçeleştirilebilir, şu an talep edilmedi.
+
+---
+
 # App Store Connect Submission Durumu (2026-09-21/22)
 
 API ile tamamlananlar:
