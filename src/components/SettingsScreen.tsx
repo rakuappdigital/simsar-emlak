@@ -11,10 +11,13 @@ import {
   REMOVE_ADS_PRICE_INTL,
   REMOVE_ADS_DESCRIPTION,
   BUNDLE_FULL_JETTON30_PRICE_INTL,
+  BUNDLE_FULL_JETTON30_PRICE_TR,
   BUNDLE_FULL_JETTON30_DESCRIPTION,
   BUNDLE_FULL_NOADS_PRICE_INTL,
+  BUNDLE_FULL_NOADS_PRICE_TR,
   BUNDLE_FULL_NOADS_DESCRIPTION,
   BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL,
+  BUNDLE_FULL_NOADS_JETTON30_PRICE_TR,
   BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION,
 } from "../data/purchases";
 import oddEstateLogo from "../assets/branding/oddestate-logo.png";
@@ -228,7 +231,9 @@ export default function SettingsScreen({
             >
               <span className="day-activity-icon">🔓🪙</span>
               <span className="day-activity-label">{language === "en" ? "Full + 30 Jetton" : "Full + 30 Jetton"}</span>
-              <span className="day-activity-gain">{buyingId === "bundle-jetton30" ? "…" : BUNDLE_FULL_JETTON30_PRICE_INTL}</span>
+              <span className="day-activity-gain">
+                {buyingId === "bundle-jetton30" ? "…" : language === "en" ? BUNDLE_FULL_JETTON30_PRICE_INTL : BUNDLE_FULL_JETTON30_PRICE_TR}
+              </span>
             </button>
             <button
               className="day-activity-card"
@@ -237,7 +242,9 @@ export default function SettingsScreen({
             >
               <span className="day-activity-icon">🔓🚫</span>
               <span className="day-activity-label">{language === "en" ? "Full + No Ads" : "Full + Reklamsız"}</span>
-              <span className="day-activity-gain">{buyingId === "bundle-noads" ? "…" : BUNDLE_FULL_NOADS_PRICE_INTL}</span>
+              <span className="day-activity-gain">
+                {buyingId === "bundle-noads" ? "…" : language === "en" ? BUNDLE_FULL_NOADS_PRICE_INTL : BUNDLE_FULL_NOADS_PRICE_TR}
+              </span>
             </button>
             <button
               className="day-activity-card"
@@ -246,7 +253,13 @@ export default function SettingsScreen({
             >
               <span className="day-activity-icon">🔓🚫🪙</span>
               <span className="day-activity-label">{language === "en" ? "Full + No Ads + 30 Jetton" : "Full + Reklamsız + 30 Jetton"}</span>
-              <span className="day-activity-gain">{buyingId === "bundle-noads-jetton30" ? "…" : BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL}</span>
+              <span className="day-activity-gain">
+                {buyingId === "bundle-noads-jetton30"
+                  ? "…"
+                  : language === "en"
+                    ? BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL
+                    : BUNDLE_FULL_NOADS_JETTON30_PRICE_TR}
+              </span>
             </button>
           </div>
           <p className="menu-empty">{BUNDLE_FULL_JETTON30_DESCRIPTION[language]}</p>

@@ -18,6 +18,8 @@
 
   /* Brand + status */
   --c-accent: #ffd166;
+  --c-accent-hi: #ffe6a3;
+  --c-accent-lo: #c9922e;
   --c-success: #06d6a0;
   --c-danger: #ef476f;
   --c-info: #118ab2;

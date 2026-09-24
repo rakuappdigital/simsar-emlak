@@ -464,6 +464,17 @@
   fill: var(--c-surface-dark);
 }
 
+/* "Warm Pixel" icon shading — a highlight tint on the top/light edge and a
+   shadow tint on the bottom/dark edge, same warm-gold language the
+   isometric house art already uses. See icons.tsx. */
+.icon-hi {
+  fill: var(--c-accent-hi);
+}
+
+.icon-lo {
+  fill: var(--c-accent-lo);
+}
+
 .rankup-overlay {
   position: fixed;
   inset: 0;

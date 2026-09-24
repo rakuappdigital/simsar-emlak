@@ -19,14 +19,18 @@ export const REMOVE_ADS_PRODUCT_ID = "com.rakuappdigital.simsaremlak.remove_ads"
 /** Demo sınırı — bu kadar ev tamamlanınca (ücretsiz) tam sürüm satın alma ekranı çıkar. */
 export const DEMO_HOUSE_LIMIT = 2;
 
-export const FULL_UNLOCK_PRICE_TR = "₺29,99";
+// Prices MUST match App Store Connect's actual price schedule exactly — see
+// jettons.ts's comment on JETTON_PACKAGES for why (no separate Turkey manual
+// price means Apple auto-equalizes TRY from the USD tier, and that's the
+// real charged price regardless of what we display).
+export const FULL_UNLOCK_PRICE_TR = "₺99,99";
 export const FULL_UNLOCK_PRICE_INTL = "$1.99";
 export const FULL_UNLOCK_DESCRIPTION = {
   tr: "Tüm 54+ ev, tüm sistemler (yatırım evleri, arkadaşlıklar, beceri ağacı, rakip merdiveni) tek seferlik ödemeyle sonsuza kadar açılır. Demo sınırı kalkar.",
   en: "Unlocks all 54+ houses and every system (investment houses, friendships, skill tree, rival ladder) forever with a single payment. Removes the demo limit.",
 };
 
-export const REMOVE_ADS_PRICE_TR = "₺59,99";
+export const REMOVE_ADS_PRICE_TR = "₺149,99";
 export const REMOVE_ADS_PRICE_INTL = "$2.99";
 export const REMOVE_ADS_DESCRIPTION = {
   tr: "Hafta sonu özet ekranında arada çıkan ödülsüz/geçilebilir reklamları tamamen kaldırır. Enerji için izlemeyi seçebileceğin ödüllü reklamlar bu pakete dahil değildir — onlar istediğin sürece kullanılabilir kalır.",
@@ -99,6 +103,13 @@ export const BUNDLE_FULL_NOADS_JETTON30_PRODUCT_ID = "com.rakuappdigital.simsare
 export const BUNDLE_FULL_JETTON30_PRICE_INTL = "$2.99";
 export const BUNDLE_FULL_NOADS_PRICE_INTL = "$3.99";
 export const BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL = "$4.99";
+// Turkey prices — previously missing entirely, which meant Turkish players
+// were shown the raw "$" price on these three buttons regardless of
+// language. See the comment above FULL_UNLOCK_PRICE_TR for why these must
+// match ASC's actual price schedule exactly.
+export const BUNDLE_FULL_JETTON30_PRICE_TR = "₺149,99";
+export const BUNDLE_FULL_NOADS_PRICE_TR = "₺199,99";
+export const BUNDLE_FULL_NOADS_JETTON30_PRICE_TR = "₺249,99";
 
 export const BUNDLE_FULL_JETTON30_DESCRIPTION = {
   tr: "Tam sürümü açar ve hesabına 30 Jetton ekler — ayrı ayrı almaktan daha avantajlı.",
