@@ -63,9 +63,10 @@ import WeekResult from "./components/WeekResult";
 import ContractModal from "./components/ContractModal";
 import type { EmlahTab } from "./components/EmlahMenu";
 const EmlahMenu = lazy(() => import("./components/EmlahMenu"));
-import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon } from "./components/icons";
+const MessagesPanel = lazy(() => import("./components/MessagesPanel"));
+import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon, GearIcon, PhoneDeviceIcon, CloseIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward, playThinking, playPurchase, playDayAdvance, startMusic, getMusicVolume } from "./data/sound";
-import { houseIntros, defaultIntro } from "./data/intro";
+import { houseIntros, defaultIntro, welcomeIntro } from "./data/intro";
 import { pickChitchat, type ChitchatSet } from "./data/chitchat";
 import { pickFriendMessage, type FriendMessageSet } from "./data/friendFlavor";
 import WorkTaskScreen from "./components/WorkTaskScreen";
@@ -124,6 +125,7 @@ import {
   MEMORY_REFERENCE_CHANCE,
 } from "./data/significantMemory";
 const OriginSelectScreen = lazy(() => import("./components/OriginSelectScreen"));
+const NewGameSetupScreen = lazy(() => import("./components/NewGameSetupScreen"));
 import { triggerHaptic } from "./data/haptics";
 import { generateSocialReaction, type SocialReaction } from "./data/socialReaction";
 import {
@@ -291,6 +293,7 @@ import "./game.css";
 
 type Stage =
   | "menu"
+  | "setup"
   | "origin"
   | "saved"
   | "settings"
@@ -514,6 +517,12 @@ type PersistOverrides = PersistRequired & Partial<PersistOptional>;
 
 function App() {
   const [stage, setStage] = useState<Stage>("menu");
+  // Settings can be opened from the main menu OR from mid-game — remember where to return to.
+  const preSettingsStageRef = useRef<Stage>("menu");
+  function openSettings() {
+    preSettingsStageRef.current = stage;
+    setStage("settings");
+  }
   const [index, setIndex] = useState(0);
   const [houseOrder, setHouseOrder] = useState<number[]>(() => tieredShuffle(allHouses.map((h) => h.tier)));
   const [stats, setStats] = useState<GameStats>({ suspicion: 0, interest: 0, fun: 0, discountPercent: 0 });
@@ -535,6 +544,7 @@ function App() {
   const [activeSlot, setActiveSlot] = useState(0);
   const hasSave = savedGames.some((s) => s !== null);
   const [showEmlahMenu, setShowEmlahMenu] = useState(false);
+  const [showMessagesOnly, setShowMessagesOnly] = useState(false);
   const [emlahMenuTab, setEmlahMenuTab] = useState<EmlahTab>("market");
   const [inbox, setInbox] = useState<InboxMessage[]>([]);
   const [castAssignment, setCastAssignment] = useState<Record<string, string[]>>({});
@@ -652,17 +662,12 @@ function App() {
       setDailyRewardPopup(dailyAmount);
     }
   }, []);
-  useEffect(() => {
-    if (getMusicVolume() <= 0) return;
-    startMusic();
-    // Tarayıcı/WKWebView autoplay politikası ilk denemeyi engelleyebilir — ilk dokunuşta tekrar dene.
-    const kick = () => {
-      startMusic();
-      document.removeEventListener("pointerdown", kick);
-    };
-    document.addEventListener("pointerdown", kick, { once: true });
-    return () => document.removeEventListener("pointerdown", kick);
-  }, []);
+  // Music deliberately does NOT auto-start on app mount (menu/splash should
+  // be silent) — it's started explicitly from startNewGame()/continueSaved()
+  // instead, right as the player actually enters the game screen. That call
+  // also happens to ride along on the same click/tap that triggered it, so
+  // it naturally satisfies the browser/WKWebView autoplay policy without
+  // needing a separate pointerdown-kick fallback.
   // Real wall-clock energy timers — device time, not the in-game calendar. See data/energy.ts.
   const [energyLastRegenAt, setEnergyLastRegenAt] = useState(() => Date.now());
   const [minigameNextAvailableAt, setMinigameNextAvailableAt] = useState(() => Date.now());
@@ -891,7 +896,13 @@ function App() {
     setEmlahMenuTab(tab);
     setShowEmlahMenu(true);
     setSeenInboxCount(inbox.length);
-    if (tab === "mesajlar") drainPhoneBattery();
+  }
+
+  /** Messages get their own dedicated, phone-only view (not the full tabbed Emlah menu) — see OfficeScene's Messages button. */
+  function openMessagesOnly() {
+    setShowMessagesOnly(true);
+    setSeenInboxCount(inbox.length);
+    drainPhoneBattery();
   }
 
   // Telefon şarjı — rolled every time a phone-style screen is opened; see data/battery.ts.
@@ -1408,7 +1419,7 @@ function App() {
     const remainingConsumables = consumeOneOfEach(consumablesList);
     setConsumables(remainingConsumables);
 
-    const nextIntro = houseIntros[nextHouse.id] ?? defaultIntro(nextHouse);
+    const nextIntro = newIndex === 0 ? welcomeIntro(nextHouse) : (houseIntros[nextHouse.id] ?? defaultIntro(nextHouse));
     const resolvedIntroMessages = nextIntro.messages.map((m) => ({ from: m.from, text: resolveText(m.text) }));
     const introMessages = flavor.message ? [flavor.message, ...resolvedIntroMessages] : resolvedIntroMessages;
     let newInbox = logMessages(loanInbox, "muzaffer", "Muzaffer Bey", introMessages, newIndex + 1);
@@ -1513,6 +1524,7 @@ function App() {
   }, [unlockedTiers, stage]);
 
   function startNewGame(originId: OriginId) {
+    if (getMusicVolume() > 0) startMusic();
     setOrigin(originId);
     setCompassTally({ durustluk: 0, kurnazlik: 0 });
     const order = tieredShuffle(allHouses.map((h) => h.tier));
@@ -1587,11 +1599,15 @@ function App() {
     setActiveFriendHouseId(null);
     setShowEndingSequence(false);
     lastRankRef.current = null;
-    enterPhone(
-      0, [], [], {}, [1], order, [], cast, null, originId,
-      { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
-      false, [], [], Date.now(), Date.now(), 2, [], 0, [], {}, [], false, false, [],
-    );
+    // Land on the office first, with no message waiting — the boss's
+    // welcome message only arrives once the player actually taps "Advance
+    // to New Day" for the first time (see handleAdvanceDay's isFirstEverDay
+    // branch), instead of a message silently sitting there before the
+    // player has done anything.
+    setIndex(0);
+    setStage("phone");
+    setShowPhoneOverlay(false);
+    setDayAdvancedForIndex(null);
   }
 
   function openSaved() {
@@ -1602,6 +1618,7 @@ function App() {
   function continueSaved(slot: number) {
     const savedGame = savedGames[slot];
     if (!savedGame) return;
+    if (getMusicVolume() > 0) startMusic();
     setActiveSlot(slot);
     setPrestigeTitleThisRun(prestigeTitle(getPrestigeCompletions()));
     setHouseOrder(savedGame.houseOrder);
@@ -2541,6 +2558,17 @@ function App() {
     if (shouldShowInterstitialOnDayAdvance() && !isAdsRemoved()) {
       await showInterstitialAd();
     }
+    // A brand-new game's very first day: nothing has been queued into the
+    // inbox yet (startNewGame deliberately skipped it, see its comment) —
+    // do that now, right as the player advances into day 1 for the first time.
+    const isFirstEverDay = index === 0 && dayAdvancedForIndex === null;
+    if (isFirstEverDay) {
+      enterPhone(
+        0, [], [], {}, [1], houseOrder, [], castAssignment, null, origin,
+        { eglenceli: 0, samimi: 0, atilgan: 0 }, { durustluk: 0, kurnazlik: 0 }, [], 0,
+        false, [], [], Date.now(), Date.now(), 2, [], 0, [], {}, [], false, false, [],
+      );
+    }
     setDayAdvancedForIndex(index);
   }
 
@@ -3429,8 +3457,8 @@ function App() {
                 </span>
               )}
             </button>
-            <button className="wallet-pill wallet-pill-btn jetton-pill" onClick={() => setStage("settings")}>
-              🪙 {jettons}
+            <button className="wallet-pill wallet-pill-btn jetton-pill" onClick={openSettings}>
+              <GearIcon size={12} className="icon-inline" /> 🪙 {jettons}
             </button>
           </div>
         </header>
@@ -3490,7 +3518,7 @@ function App() {
               className="pixel-btn small"
               onClick={() => {
                 setStarterPromoPopup(false);
-                setStage("settings");
+                openSettings();
               }}
             >
               {language === "en" ? "View Offers" : "Teklifleri Gör"}
@@ -3619,15 +3647,7 @@ function App() {
           shieldHousesLeft={shieldHousesLeftState}
           hasRetryCandidate={pickSecondChanceCandidateIndex(results) !== null}
           onBuyInventoryItem={handleBuyInventoryItem}
-          inbox={inbox}
           results={results}
-          onRetry={retryFromInbox}
-          onFollowUp={followUpThinking}
-          pendingFriendFavors={pendingFriendFavors}
-          onFriendFavor={resolveFriendFavor}
-          hardTimesUsed={hardTimesUsed}
-          emlahStruggling={emlahStruggling}
-          onAskForHelp={resolveHardTimesAsk}
           allHouses={allHouses}
           houseOrder={houseOrder}
           currentIndex={index}
@@ -3672,6 +3692,34 @@ function App() {
           skillXP={skillXP}
           onUnlockSkill={unlockSkill}
         />
+      )}
+
+      {showMessagesOnly && (
+        <div className="modal-overlay" onClick={() => setShowMessagesOnly(false)}>
+          <div className="market-modal messages-only-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="market-header">
+              <PhoneDeviceIcon size={16} className="icon-inline" />
+              <h2 className="market-title">{t({ tr: "Mesajlar", en: "Messages" })}</h2>
+              <button className="market-close" onClick={() => setShowMessagesOnly(false)} aria-label={t({ tr: "Kapat", en: "Close" })}>
+                <CloseIcon size={12} />
+              </button>
+            </div>
+            <div className="emlah-tab-content">
+              <MessagesPanel
+                inbox={inbox}
+                results={results}
+                onRetry={retryFromInbox}
+                onFollowUp={followUpThinking}
+                pendingFriendFavors={pendingFriendFavors}
+                onFriendFavor={resolveFriendFavor}
+                friendBondCounts={friendBondCounts}
+                hardTimesUsed={hardTimesUsed}
+                emlahStruggling={emlahStruggling}
+                onAskForHelp={resolveHardTimesAsk}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {activePremiumHouseId && (
@@ -3739,11 +3787,15 @@ function App() {
 
       <div key={stage} className="stage-transition">
       {stage === "menu" && (
-        <MainMenu hasSave={hasSave} language={language} onNewGame={() => setStage("origin")} onOpenSaved={openSaved} onSettings={() => setStage("settings")} />
+        <MainMenu hasSave={hasSave} language={language} onNewGame={() => setStage("setup")} onOpenSaved={openSaved} onSettings={openSettings} />
+      )}
+
+      {stage === "setup" && (
+        <NewGameSetupScreen onContinue={() => setStage("origin")} onBack={() => setStage("menu")} />
       )}
 
       {stage === "origin" && (
-        <OriginSelectScreen origins={origins} onSelect={startNewGame} onBack={() => setStage("menu")} />
+        <OriginSelectScreen origins={origins} onSelect={startNewGame} onBack={() => setStage("setup")} />
       )}
 
       {stage === "saved" && (
@@ -3764,7 +3816,7 @@ function App() {
           onBuyBundleFullNoAds={handleBuyBundleFullNoAds}
           onBuyBundleFullNoAdsJetton30={handleBuyBundleFullNoAdsJetton30}
           onRestorePurchases={handleRestorePurchases}
-          onBack={() => setStage("menu")}
+          onBack={() => setStage(preSettingsStageRef.current)}
         />
       )}
 
@@ -3848,7 +3900,7 @@ function App() {
             setShowPhoneOverlay(true);
             drainPhoneBattery();
           }}
-          onOpenMessages={() => openEmlahMenu("mesajlar")}
+          onOpenMessages={openMessagesOnly}
           onOpenEnergyBreak={() => setShowEnergyBreak(true)}
           onTitleTap={handleOfficeTitleTap}
           badges={badges}

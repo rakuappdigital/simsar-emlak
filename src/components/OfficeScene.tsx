@@ -7,7 +7,7 @@ import { emlahMoodFor, emlahMoodLabel, emlahMoodPortrait } from "../data/emlahMo
 import { rankTitleDisplay } from "../data/scoring";
 import { resolveText, t, getLanguage } from "../data/language";
 import { dayActivities } from "../data/dayActivities";
-import { WalletIcon, ChatIcon } from "./icons";
+import { WalletIcon, PhoneDeviceIcon } from "./icons";
 import MemoryWall from "./MemoryWall";
 import type { Badge, SignificantMemory } from "../types";
 
@@ -211,8 +211,11 @@ export default function OfficeScene({
             📅 {t({ tr: "Yeni Güne Geç", en: "Advance to New Day" })}
           </button>
         )}
-        <button className="pixel-btn small ghost office-messages-btn" onClick={onOpenMessages}>
-          <ChatIcon size={14} className="icon-inline" /> {t({ tr: "Mesajlar", en: "Messages" })}
+        <button
+          className={`pixel-btn small office-messages-btn ${unreadCount > 0 ? "office-messages-btn-alert" : "ghost"}`}
+          onClick={onOpenMessages}
+        >
+          <PhoneDeviceIcon size={16} className="icon-inline office-messages-icon" /> {t({ tr: "Mesajlar", en: "Messages" })}
           {unreadCount > 0 && (
             <span className="unread-dot" key={unreadCount}>
               {unreadCount > 9 ? "9+" : unreadCount}

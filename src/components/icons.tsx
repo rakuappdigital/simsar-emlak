@@ -226,6 +226,34 @@ export function LogoIcon(props: IconProps) {
   );
 }
 
+export function GearIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="7" y="0" width="2" height="3" />
+      <rect x="7" y="13" width="2" height="3" />
+      <rect x="0" y="7" width="3" height="2" />
+      <rect x="13" y="7" width="3" height="2" />
+      <rect x="2" y="2" width="2" height="2" />
+      <rect x="12" y="2" width="2" height="2" />
+      <rect x="2" y="12" width="2" height="2" />
+      <rect x="12" y="12" width="2" height="2" />
+      <rect x="3" y="3" width="10" height="10" />
+      <rect x="6" y="6" width="4" height="4" className="icon-cutout" />
+    </Grid>
+  );
+}
+
+/** A held smartphone silhouette — used for the Messages entry point, distinct from the small ChatIcon speech-bubble. */
+export function PhoneDeviceIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="4" y="0" width="8" height="16" />
+      <rect x="5" y="2" width="6" height="10" fill="#0000003d" />
+      <rect x="7" y="13" width="2" height="2" className="icon-accent" />
+    </Grid>
+  );
+}
+
 export function BellIcon(props: IconProps) {
   return (
     <Grid {...props}>

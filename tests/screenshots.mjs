@@ -27,6 +27,9 @@ async function run(lang) {
   const startLabel = lang === "en" ? "Start Game" : "Oyuna Başla";
   await page.locator("button", { hasText: startLabel }).click({ timeout: 5000 });
   await page.waitForTimeout(500);
+  const continueLabel = lang === "en" ? "Continue" : "Devam Et";
+  await page.locator("button", { hasText: continueLabel }).click({ timeout: 5000 });
+  await page.waitForTimeout(500);
   await page.screenshot({ path: `${outDir}/origin.png` });
 
   // 3. First house dialogue (with tutorial tip)

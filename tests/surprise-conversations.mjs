@@ -90,6 +90,8 @@ assert(data.originRecognitionChance > 0 && data.originRecognitionChance <= 0.15,
 // smoke.mjs's origin pick, just checking the immediate next screen).
 await page.getByText("Oyuna Başla").click();
 await page.waitForTimeout(300);
+await page.locator("button", { hasText: "Devam Et" }).click({ timeout: 5000 });
+await page.waitForTimeout(300);
 await page.locator(".origin-card").first().click({ timeout: 5000 });
 await page.waitForTimeout(800);
 assert((await page.locator(".office-scene").count()) > 0, "reached the office screen right after picking an origin");

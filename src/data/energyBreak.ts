@@ -17,6 +17,9 @@ export interface EnergyBreakActivity {
   flavorLine: Localized;
 }
 
+// Trimmed from 4 to the 2 clearest mini-games — "Sort the Messages" (ordering
+// logic) and "Guess the Price" (no real information to reason from, pure
+// luck disguised as a choice) were the main source of player confusion.
 export const energyBreakActivities: EnergyBreakActivity[] = [
   {
     id: "anahtar",
@@ -26,24 +29,10 @@ export const energyBreakActivities: EnergyBreakActivity[] = [
     flavorLine: { tr: "Doğru anahtarı hızlıca buldu, kafası dağıldı.", en: "Spotted the right key fast, cleared his head." },
   },
   {
-    id: "mesaj-sirala",
-    label: { tr: "Mesajları Sırala", en: "Sort the Messages" },
-    icon: "📱",
-    energyGain: MINIGAME_ENERGY_GAIN,
-    flavorLine: { tr: "Mesajları toparlayınca kafası da toparlandı.", en: "Sorting the messages sorted his head out too." },
-  },
-  {
     id: "yuruyus",
     label: { tr: "Kısa Yürüyüş", en: "Short Walk" },
     icon: "🚶",
     energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: { tr: "Dışarıda birkaç tur attı, ferahladı.", en: "Took a few laps outside, refreshed." },
-  },
-  {
-    id: "fiyat-tahmin",
-    label: { tr: "Fiyat Tahmin Et", en: "Guess the Price" },
-    icon: "🏷️",
-    energyGain: MINIGAME_ENERGY_GAIN,
-    flavorLine: { tr: "Fiyat tahmini yapınca işine biraz daha yaklaştı.", en: "Guessing the price got him back in the zone." },
   },
 ];

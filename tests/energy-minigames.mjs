@@ -65,7 +65,7 @@ await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch
 await page.waitForTimeout(500);
 
 assert((await page.locator(".energy-break-modal").count()) > 0, "low-energy save opens the Enerji Molası modal");
-assert((await page.locator(".energy-break-card").count()) === 6, "4 mini-game activities + rewarded-ad + jetton cards are offered");
+assert((await page.locator(".energy-break-card").count()) === 4, "2 mini-game activities + rewarded-ad + jetton cards are offered");
 
 // Play the "Kısa Yürüyüş" (tap-count) mini-game — the least timing-sensitive
 // one, so a scripted bot can reliably drive it: spam the action button.
@@ -94,7 +94,7 @@ assert(energyAfter !== null && energyAfter > 5, `energy actually increased after
 // allows 4 plays per 8-hour window (see minigameSchedule.ts) — a single
 // play leaves 3 remaining, so the full activity list is still offered.
 assert((await page.locator(".energy-break-modal").count()) > 0, "the modal stays open after a play instead of auto-closing");
-assert((await page.locator(".energy-break-card").count()) === 6, "all activities (4 mini-games + ad + jetton) are still offered after one play (plays remaining)");
+assert((await page.locator(".energy-break-card").count()) === 4, "all activities (2 mini-games + ad + jetton) are still offered after one play (plays remaining)");
 
 assert(errors.length === 0, `zero console/page errors (got ${errors.length})`);
 if (errors.length > 0) for (const e of errors) console.error("  -", e);

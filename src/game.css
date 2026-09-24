@@ -2377,6 +2377,41 @@
   gap: 4px;
 }
 
+.office-messages-icon {
+  flex-shrink: 0;
+}
+
+/* Eye-catching state when there's an unread message waiting — solid accent fill + a gentle pulse, so it reads as "tap me" at a glance. */
+.office-messages-btn-alert {
+  background: var(--c-accent);
+  color: var(--c-bg);
+  border-color: var(--c-accent);
+  animation: messages-btn-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes messages-btn-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 209, 102, 0);
+  }
+}
+
+.messages-only-modal {
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-only-modal .market-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ---------- Locked house gate ---------- */
 .result-screen .menu-empty {
   max-width: 340px;
@@ -2988,6 +3023,13 @@
   font-size: 0.85rem;
   color: var(--c-text);
   margin: 0;
+}
+
+.minigame-subtitle {
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+  margin: -6px 0 0;
+  line-height: 1.4;
 }
 
 .minigame-key-grid {

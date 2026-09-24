@@ -74,6 +74,10 @@ assert(await page.locator("text=Oyuna Başla").count() > 0, "main menu shows 'Oy
 await page.locator("button", { hasText: "Oyuna Başla" }).click();
 await page.waitForTimeout(400);
 
+// New-game setup screen (speaking style / music / sound) comes before origin select.
+await page.locator("button", { hasText: "Devam Et" }).click();
+await page.waitForTimeout(400);
+
 assert((await page.locator(".origin-card").count()) === 4, "origin select screen shows 4 backstory options");
 await page.locator(".origin-card").first().click();
 await page.waitForTimeout(800);
@@ -93,7 +97,7 @@ await emlahBtn.first().click().catch(() => {});
 await page.waitForTimeout(400);
 assert((await page.locator(".emlah-menu").count()) > 0, "Emlah menu opens");
 
-for (const tabLabel of ["Mesajlar", "Portföy", "Kariyer", "Market"]) {
+for (const tabLabel of ["Portföy", "Kariyer", "Market"]) {
   await page.locator(".emlah-tab-btn", { hasText: tabLabel }).click().catch(() => {});
   await page.waitForTimeout(300);
 }

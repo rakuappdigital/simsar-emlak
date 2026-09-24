@@ -101,7 +101,7 @@ await page.waitForTimeout(300);
 await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
 await page.waitForTimeout(300);
 assert((await page.locator(".energy-break-modal").count()) > 0, "low energy opens the Enerji Molası modal");
-assert((await page.locator(".energy-break-card").count()) === 6, "all 4 mini-games + rewarded-ad + jetton cards are available, even with minigamePlaysRemaining at 0 (vestigial field, no longer gates anything)");
+assert((await page.locator(".energy-break-card").count()) === 4, "all 2 mini-games + rewarded-ad + jetton cards are available, even with minigamePlaysRemaining at 0 (vestigial field, no longer gates anything)");
 assert((await page.locator(".energy-break-other-btn, .energy-break-soon").count()) === 0, "no leftover ad/purchase placeholder buttons");
 
 assert(errors.length === 0, `zero console/page errors (got ${errors.length})`);

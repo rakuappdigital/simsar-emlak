@@ -101,6 +101,8 @@ assert(data.flashbackTextHasHouseTitle, "flashback text interpolates the referen
 // UI: open Emlah menu, verify the new tabs render with the expected structure.
 await page.getByText("Oyuna Başla").click();
 await page.waitForTimeout(300);
+await page.locator("button", { hasText: "Devam Et" }).click({ timeout: 5000 });
+await page.waitForTimeout(300);
 await page.locator(".origin-card").first().click({ timeout: 5000 });
 await page.waitForTimeout(800);
 await page.locator(".wallet-pill-btn").first().click({ timeout: 5000 }).catch(() => {});

@@ -6,7 +6,6 @@ import type {
   ContactedCustomer,
   HouseResult,
   HouseScene,
-  InboxMessage,
   OwnedInvestmentHouse,
   PendingDelivery,
   ToneBucket,
@@ -16,7 +15,6 @@ import { formatTL } from "../data/economy";
 import { weekIndexForHouse } from "../data/goals";
 import MarketPanel from "./MarketPanel";
 import InventoryPanel from "./InventoryPanel";
-import MessagesPanel from "./MessagesPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import CareerPanel from "./CareerPanel";
 import PremiumInvitesPanel from "./PremiumInvitesPanel";
@@ -30,12 +28,11 @@ import SkillTreePanel from "./SkillTreePanel";
 import type { ContactEntry } from "../data/contactBook";
 import type { DistrictPin } from "../data/istanbulMap";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, ChatIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon, KeyRingIcon } from "./icons";
+import { WalletIcon, CartIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon, KeyRingIcon } from "./icons";
 
 export type EmlahTab =
   | "market"
   | "envanter"
-  | "mesajlar"
   | "portfoy"
   | "kariyer"
   | "davet"
@@ -58,15 +55,7 @@ interface EmlahMenuProps {
   shieldHousesLeft: number;
   hasRetryCandidate: boolean;
   onBuyInventoryItem: (id: string) => void;
-  inbox: InboxMessage[];
   results: HouseResult[];
-  onRetry: (houseId: string) => void;
-  onFollowUp: (houseId: string) => void;
-  pendingFriendFavors: Record<string, boolean>;
-  onFriendFavor: (friendId: string, accepted: boolean) => void;
-  hardTimesUsed: Record<string, boolean>;
-  emlahStruggling: boolean;
-  onAskForHelp: (friendId: string) => void;
   allHouses: HouseScene[];
   houseOrder: number[];
   currentIndex: number;
@@ -115,7 +104,6 @@ interface EmlahMenuProps {
 const tabs: { id: EmlahTab; icon: ReactNode; label: { tr: string; en: string } }[] = [
   { id: "market", icon: <CartIcon size={14} />, label: { tr: "Market", en: "Market" } },
   { id: "envanter", icon: <KeyRingIcon size={14} />, label: { tr: "Envanter", en: "Inventory" } },
-  { id: "mesajlar", icon: <ChatIcon size={14} />, label: { tr: "Mesajlar", en: "Messages" } },
   { id: "portfoy", icon: <HouseIcon size={14} />, label: { tr: "Portföy", en: "Portfolio" } },
   { id: "kariyer", icon: <StarIcon size={14} />, label: { tr: "Kariyer", en: "Career" } },
   { id: "davet", icon: <MedalIcon size={14} />, label: { tr: "Özel Davetler", en: "Special Invites" } },
@@ -139,15 +127,7 @@ export default function EmlahMenu({
   shieldHousesLeft,
   hasRetryCandidate,
   onBuyInventoryItem,
-  inbox,
   results,
-  onRetry,
-  onFollowUp,
-  pendingFriendFavors,
-  onFriendFavor,
-  hardTimesUsed,
-  emlahStruggling,
-  onAskForHelp,
   allHouses,
   houseOrder,
   currentIndex,
@@ -240,20 +220,6 @@ export default function EmlahMenu({
               shieldHousesLeft={shieldHousesLeft}
               hasRetryCandidate={hasRetryCandidate}
               onBuy={onBuyInventoryItem}
-            />
-          )}
-          {tab === "mesajlar" && (
-            <MessagesPanel
-              inbox={inbox}
-              results={results}
-              onRetry={onRetry}
-              onFollowUp={onFollowUp}
-              pendingFriendFavors={pendingFriendFavors}
-              onFriendFavor={onFriendFavor}
-              friendBondCounts={friendBondCounts}
-              hardTimesUsed={hardTimesUsed}
-              emlahStruggling={emlahStruggling}
-              onAskForHelp={onAskForHelp}
             />
           )}
           {tab === "portfoy" && (

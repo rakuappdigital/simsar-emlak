@@ -6,6 +6,10 @@ import type { Localized } from "./language";
  * is too easy to get wrong/garbled) — it only ever appends a small, fixed,
  * purely cosmetic suffix to his own spoken lines. "notr" changes nothing at
  * all, matching the game's current behavior exactly.
+ *
+ * Only ever chosen once, in NewGameSetupScreen right before a new game
+ * starts — deliberately NOT exposed in Settings anymore, so it can't be
+ * flipped mid-playthrough (see App.tsx's startNewGame).
  */
 export type DialogueStyle = "notr" | "esprili" | "resmi";
 
@@ -17,8 +21,13 @@ export const dialogueStyleLabels: Record<DialogueStyle, Localized> = {
   resmi: { tr: "Resmi", en: "Formal" },
 };
 
-/** Setting removed from Settings UI — always neutral now, regardless of any stale stored value from before. */
 export function getDialogueStyle(): DialogueStyle {
+  try {
+    const v = localStorage.getItem(KEY);
+    if (v === "notr" || v === "esprili" || v === "resmi") return v;
+  } catch {
+    // ignore
+  }
   return "notr";
 }
 

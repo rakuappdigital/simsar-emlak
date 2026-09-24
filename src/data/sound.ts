@@ -151,10 +151,11 @@ export function playReward(): void {
 
 /**
  * 4 gerçek şarkı, `<audio>` ile çalınıyor (WebAudio değil — dosya tabanlı,
- * senkron ses grafiğine ihtiyacı yok). Her uygulama açılışında rastgele bir
- * şarkıdan başlar, sonra sırayla (playlist gibi) devam eder, sona gelince
- * başa döner. Tek bir modül-seviyesi `<audio>` elemanı — App.tsx yeniden
- * render olsa da şarkı kesilmez.
+ * senkron ses grafiğine ihtiyacı yok). Her seferinde rastgele bir sırayla
+ * (shuffled queue) baştan sona çalar, hiçbir zaman durmaz — kuyruk biterse
+ * yeniden karıştırılır, tek kural: bir önceki turun son şarkısı yeni turun
+ * ilk şarkısı olamaz (peş peşe aynı şarkı asla çalınmaz). Tek bir modül-
+ * seviyesi `<audio>` elemanı — App.tsx yeniden render olsa da şarkı kesilmez.
  */
 const musicTracks = [
   new URL("../assets/music/track1.mp3", import.meta.url).href,
@@ -163,9 +164,34 @@ const musicTracks = [
   new URL("../assets/music/track4.mp3", import.meta.url).href,
 ];
 
+function shuffledIndices(): number[] {
+  const arr = musicTracks.map((_, i) => i);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+let playQueue: number[] = shuffledIndices();
+let queuePos = 0;
+
+/** Pulls the next track index off the shuffled queue, reshuffling (and guarding the repeat-at-the-seam case) once it runs out. */
+function nextTrackIndex(): number {
+  if (queuePos >= playQueue.length) {
+    const lastPlayed = playQueue[playQueue.length - 1];
+    const reshuffled = shuffledIndices();
+    if (reshuffled.length > 1 && reshuffled[0] === lastPlayed) {
+      [reshuffled[0], reshuffled[1]] = [reshuffled[1], reshuffled[0]];
+    }
+    playQueue = reshuffled;
+    queuePos = 0;
+  }
+  return playQueue[queuePos++];
+}
+
 let musicEl: HTMLAudioElement | null = null;
-// Session başına bir kere seçilir (her "uygulama açılışı" = her modül yüklemesi), sonra sırayla devam eder.
-let currentTrackIndex = Math.floor(Math.random() * musicTracks.length);
+let currentTrackIndex = playQueue[queuePos++];
 
 function ensureMusicEl(): HTMLAudioElement | null {
   if (typeof Audio === "undefined") return null;
@@ -173,7 +199,7 @@ function ensureMusicEl(): HTMLAudioElement | null {
   const el = new Audio(musicTracks[currentTrackIndex]);
   el.volume = (musicVolume / 100) * 0.6;
   el.addEventListener("ended", () => {
-    currentTrackIndex = (currentTrackIndex + 1) % musicTracks.length;
+    currentTrackIndex = nextTrackIndex();
     el.src = musicTracks[currentTrackIndex];
     el.play().catch(() => {});
   });

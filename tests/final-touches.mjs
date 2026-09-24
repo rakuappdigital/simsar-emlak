@@ -91,12 +91,12 @@ await page.locator("text=Kayıtlı Oyunlar").click({ timeout: 10000 });
 await page.waitForTimeout(400);
 await page.locator(".pixel-btn").first().click({ timeout: 10000 });
 await page.waitForTimeout(1000);
-await page.locator(".wallet-pill-btn").first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(400);
-await page.locator(".emlah-tab-btn", { hasText: "Mesajlar" }).first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(400);
+// Messages now open via their own dedicated phone-only view (OfficeScene's
+// Messages button), not the tabbed Emlah menu — see App.tsx's openMessagesOnly.
+await page.locator(".office-messages-btn").first().click({ timeout: 5000 }).catch(() => {});
+await page.waitForTimeout(600);
 await page.locator(".thread-row", { hasText: "Ecrin" }).first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(400);
+await page.waitForTimeout(600);
 
 const helpBtn = page.locator("button", { hasText: "Yardım İste" });
 assert((await helpBtn.count()) > 0, "'Yardım İste' button shows for a Güven+ friend while Emlah is struggling (low bossMood)");

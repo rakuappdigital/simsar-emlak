@@ -176,6 +176,43 @@ export const houseIntros: Record<string, HouseIntro> = {
   },
 };
 
+/** Shown once, only ahead of the very first house of a brand-new game (see App.tsx's isFirstEverDay) — a short welcome/tutorial beat before Emlah's very first assignment. */
+export function welcomeIntro(house: HouseScene): HouseIntro {
+  const title = resolveHouseTitle(house);
+  const location = resolveHouseLocation(house);
+  return {
+    messages: [
+      {
+        from: "Muzaffer Bey",
+        text: { tr: "Emlah'ım, hoş geldin! Bugünden itibaren bizdensin 🎉", en: "Welcome, Emlah! As of today, you're one of us 🎉" },
+      },
+      {
+        from: "Muzaffer Bey",
+        text: {
+          tr: "İstanbul emlak piyasası acımasızdır ama doğru müşteriyi doğru evle eşleştirmeyi bilirsen iyi para kazanırsın.",
+          en: "Istanbul's real estate market is ruthless, but if you know how to match the right customer with the right house, you'll earn good money.",
+        },
+      },
+      {
+        from: "Muzaffer Bey",
+        text: {
+          tr: "Kural basit: müşteriyi dinle, şüphesini yükseltme, ilgisini canlı tut. Gerisi zamanla gelir.",
+          en: "The rule is simple: listen to the customer, don't raise their suspicion, keep their interest alive. The rest comes with time.",
+        },
+      },
+      {
+        from: "Muzaffer Bey",
+        text: { tr: `İlk işin hazır: bugün ${title} gösteriyorsun`, en: `Your first job is ready: today you're showing ${title}` },
+      },
+      {
+        from: "Muzaffer Bey",
+        text: { tr: `${location}, adres SMS'te. Sen hallet, ben sana güveniyorum 💪`, en: `${location}, address is in the SMS. Handle it, I trust you 💪` },
+      },
+    ],
+    thought: { tr: "Tamam Emlah, ilk günün. Derin bir nefes al.", en: "Okay Emlah, your first day. Take a deep breath." },
+  };
+}
+
 export function defaultIntro(house: HouseScene): HouseIntro {
   const title = resolveHouseTitle(house);
   const location = resolveHouseLocation(house);
