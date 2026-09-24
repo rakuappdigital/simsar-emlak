@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { perks, effectiveCost, CAMPAIGN_PERK_ID, isCampaignWeek } from "../data/perks";
 import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX } from "../data/scoring";
 import { countOwnedOfisItems } from "../data/officeImages";
 import type { HouseResult, MarketCategory } from "../types";
 import { resolveText, t } from "../data/language";
+import PurchaseConfirmModal from "./PurchaseConfirmModal";
 
 interface MarketPanelProps {
   balance: number;
@@ -43,6 +45,9 @@ export default function MarketPanel({
   const campaignActive = isCampaignWeek(weekIndex);
   const soldCount = results.filter((r) => r.outcome === "sold").length;
   const ownedOfisCount = countOwnedOfisItems(ownedPerks);
+  const [pendingItemId, setPendingItemId] = useState<string | null>(null);
+  const pendingItem = pendingItemId ? perks.find((p) => p.id === pendingItemId) : undefined;
+  const pendingPrice = pendingItem ? effectiveCost(pendingItem, badges, weekIndex) : 0;
   return (
     <div className="market-panel">
       {campaignActive && (
@@ -86,7 +91,6 @@ export default function MarketPanel({
                 <div className="market-item" key={item.id}>
                   <div className="market-item-info">
                     <p className="market-item-title">{resolveText(item.title)}</p>
-                    <p className="market-item-description">{resolveText(item.description)}</p>
                     {!prereqMet && prereqItem && (
                       <p className="market-item-requires">
                         {t({ tr: "Önce gerekli", en: "Requires first" })}: {resolveText(prereqItem.title)}
@@ -121,7 +125,7 @@ export default function MarketPanel({
                       </p>
                     )}
                   </div>
-                  <button className="pixel-btn small" disabled={disabled} onClick={() => onBuy(item.id)}>
+                  <button className="pixel-btn small" disabled={disabled} onClick={() => setPendingItemId(item.id)}>
                     {alreadyOwned || tierAlready ? (
                       `${t({ tr: "Alındı", en: "Owned" })} ✓`
                     ) : discounted ? (
@@ -138,6 +142,18 @@ export default function MarketPanel({
           </div>
         );
       })}
+      {pendingItem && (
+        <PurchaseConfirmModal
+          title={resolveText(pendingItem.title)}
+          description={resolveText(pendingItem.description)}
+          priceLabel={formatTL(pendingPrice)}
+          onCancel={() => setPendingItemId(null)}
+          onConfirm={() => {
+            onBuy(pendingItem.id);
+            setPendingItemId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

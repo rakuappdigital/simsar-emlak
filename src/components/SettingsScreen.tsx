@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { getSfxVolume, getMusicVolume, setSfxVolume, setMusicVolume, startMusic, stopMusic, playClick } from "../data/sound";
 import { getDifficulty, setDifficulty, difficultyLabels, type Difficulty } from "../data/difficulty";
-import { getDialogueStyle, setDialogueStyle, dialogueStyleLabels, type DialogueStyle } from "../data/dialogueStyle";
 import { setLanguage as persistLanguage, resolveText, type Language } from "../data/language";
 import { JETTON_PACKAGES, JETTON_DESCRIPTION, type JettonPackage } from "../data/jettons";
 import {
@@ -42,7 +41,6 @@ const languages: { id: Language; label: string }[] = [
 ];
 
 const difficulties: Difficulty[] = ["kolay", "normal", "zor"];
-const dialogueStyles: DialogueStyle[] = ["notr", "esprili", "resmi"];
 
 /**
  * Single settings screen with room to grow: each future setting gets its
@@ -66,7 +64,6 @@ export default function SettingsScreen({
   const [music, setMusic] = useState(getMusicVolume);
   const [sfx, setSfx] = useState(getSfxVolume);
   const [difficulty, setDifficultyState] = useState(getDifficulty);
-  const [dialogueStyle, setDialogueStyleState] = useState(getDialogueStyle);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
 
@@ -115,11 +112,6 @@ export default function SettingsScreen({
   function handleDifficultyChange(d: Difficulty) {
     setDifficultyState(d);
     setDifficulty(d);
-  }
-
-  function handleDialogueStyleChange(s: DialogueStyle) {
-    setDialogueStyleState(s);
-    setDialogueStyle(s);
   }
 
   return (
@@ -182,24 +174,6 @@ export default function SettingsScreen({
         {language === "en"
           ? "Affects how quickly suspicion rises. Normal is the game's usual balance."
           : "Şüphenin ne kadar hızlı arttığını etkiler. Normal, oyunun her zamanki dengesidir."}
-      </p>
-
-      <p className="settings-subsection-title">{language === "en" ? "Speaking Style" : "Konuşma Tarzı"}</p>
-      <div className="difficulty-row">
-        {dialogueStyles.map((s) => (
-          <button
-            key={s}
-            className={`difficulty-btn ${dialogueStyle === s ? "active" : ""}`}
-            onClick={() => handleDialogueStyleChange(s)}
-          >
-            {resolveText(dialogueStyleLabels[s])}
-          </button>
-        ))}
-      </div>
-      <p className="menu-empty">
-        {language === "en"
-          ? "Occasionally adds a small touch to Emlah's own lines (an exclamation, a smile) — never changes any dialogue."
-          : "Emlah'ın kendi cümlelerine ara sıra küçük bir dokunuş ekler (ünlem, gülücük) — hiçbir cümleyi değiştirmez."}
       </p>
 
       <p className="settings-subsection-title">🏪 Store / Market</p>

@@ -1627,6 +1627,50 @@
   z-index: 50;
 }
 
+.purchase-confirm-overlay {
+  z-index: 60;
+}
+
+.purchase-confirm-modal {
+  background: var(--c-bg);
+  border: 3px solid var(--c-accent);
+  border-radius: 10px;
+  padding: 24px 20px;
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  text-align: center;
+}
+
+.purchase-confirm-icon {
+  font-size: 2.2rem;
+}
+
+.purchase-confirm-title {
+  font-weight: bold;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.purchase-confirm-description {
+  color: var(--c-text-dim);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.purchase-confirm-buy {
+  width: 100%;
+}
+
+.purchase-confirm-cancel {
+  width: 100%;
+}
+
 .contract-modal {
   background: var(--c-bg);
   border: 3px solid var(--c-accent);

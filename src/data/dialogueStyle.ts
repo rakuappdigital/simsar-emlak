@@ -17,13 +17,8 @@ export const dialogueStyleLabels: Record<DialogueStyle, Localized> = {
   resmi: { tr: "Resmi", en: "Formal" },
 };
 
+/** Setting removed from Settings UI — always neutral now, regardless of any stale stored value from before. */
 export function getDialogueStyle(): DialogueStyle {
-  try {
-    const v = localStorage.getItem(KEY);
-    if (v === "notr" || v === "esprili" || v === "resmi") return v;
-  } catch {
-    // ignore
-  }
   return "notr";
 }
 

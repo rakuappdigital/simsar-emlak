@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { inventoryItems } from "../data/inventory";
 import { formatTL } from "../data/economy";
 import { resolveText, t } from "../data/language";
+import PurchaseConfirmModal from "./PurchaseConfirmModal";
 
 interface InventoryPanelProps {
   balance: number;
@@ -11,6 +13,9 @@ interface InventoryPanelProps {
 }
 
 export default function InventoryPanel({ balance, jettons, shieldHousesLeft, hasRetryCandidate, onBuy }: InventoryPanelProps) {
+  const [pendingItemId, setPendingItemId] = useState<string | null>(null);
+  const pendingItem = pendingItemId ? inventoryItems.find((i) => i.id === pendingItemId) : undefined;
+
   return (
     <div className="market-panel">
       <p className="menu-empty">
@@ -33,15 +38,27 @@ export default function InventoryPanel({ balance, jettons, shieldHousesLeft, has
                 <p className="market-item-title">
                   {item.icon} {resolveText(item.name)}
                 </p>
-                <p className="market-item-description">{resolveText(item.description)}</p>
               </div>
-              <button className="pixel-btn small" disabled={disabled} onClick={() => onBuy(item.id)}>
+              <button className="pixel-btn small" disabled={disabled} onClick={() => setPendingItemId(item.id)}>
                 {item.currency === "jetton" ? `🪙 ${item.cost}` : formatTL(item.cost)}
               </button>
             </div>
           );
         })}
       </div>
+      {pendingItem && (
+        <PurchaseConfirmModal
+          icon={pendingItem.icon}
+          title={resolveText(pendingItem.name)}
+          description={resolveText(pendingItem.description)}
+          priceLabel={pendingItem.currency === "jetton" ? `🪙 ${pendingItem.cost}` : formatTL(pendingItem.cost)}
+          onCancel={() => setPendingItemId(null)}
+          onConfirm={() => {
+            onBuy(pendingItem.id);
+            setPendingItemId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
