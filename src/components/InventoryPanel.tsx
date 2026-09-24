@@ -1,6 +1,6 @@
 import { inventoryItems } from "../data/inventory";
 import { formatTL } from "../data/economy";
-import { resolveText } from "../data/language";
+import { resolveText, t } from "../data/language";
 
 interface InventoryPanelProps {
   balance: number;
@@ -14,10 +14,13 @@ export default function InventoryPanel({ balance, jettons, shieldHousesLeft, has
   return (
     <div className="market-panel">
       <p className="menu-empty">
-        Bakiye: {formatTL(balance)} · 🪙 {jettons}
+        {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)} · 🪙 {jettons}
       </p>
       {shieldHousesLeft > 0 && (
-        <p className="market-item-discount">🛡️ Şüphe Kalkanı aktif — {shieldHousesLeft} ev kaldı</p>
+        <p className="market-item-discount">
+          🛡️ {t({ tr: "Şüphe Kalkanı aktif", en: "Suspicion Shield active" })} — {shieldHousesLeft}{" "}
+          {t({ tr: "ev kaldı", en: "houses left" })}
+        </p>
       )}
       <div className="market-category">
         {inventoryItems.map((item) => {

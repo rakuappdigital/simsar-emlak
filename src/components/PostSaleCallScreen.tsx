@@ -1,5 +1,5 @@
 import type { PostSaleCallDef } from "../data/postSaleCall";
-import { resolveText } from "../data/language";
+import { resolveText, t } from "../data/language";
 
 interface PostSaleCallScreenProps {
   call: PostSaleCallDef;
@@ -10,7 +10,7 @@ interface PostSaleCallScreenProps {
 export default function PostSaleCallScreen({ call, contactName, onChoice }: PostSaleCallScreenProps) {
   return (
     <div className="work-task-screen">
-      <p className="work-task-tag">📞 {contactName} arıyor</p>
+      <p className="work-task-tag">📞 {t({ tr: `${contactName} arıyor`, en: `${contactName} is calling` })}</p>
       <p className="work-task-title">{resolveText(call.tag)}</p>
       <p className="work-task-prompt">{resolveText(call.prompt)}</p>
       <div className="choices">

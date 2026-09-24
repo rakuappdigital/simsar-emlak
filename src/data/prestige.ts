@@ -7,6 +7,8 @@
  * resolveOutcome or any in-run scoring math, it only nudges bonusEarnings
  * once at the very start of a new game.
  */
+import { t } from "./language";
+
 const STORAGE_KEY = "simsar-emlak-prestige";
 
 interface PrestigeData {
@@ -53,6 +55,7 @@ export function prestigeStartingBonus(completions: number): number {
 
 export function prestigeTitle(completions: number): string | null {
   if (completions <= 0) return null;
-  if (completions === 1) return "Efsane";
-  return `Efsane ${completions}`;
+  const legend = t({ tr: "Efsane", en: "Legend" });
+  if (completions === 1) return legend;
+  return `${legend} ${completions}`;
 }

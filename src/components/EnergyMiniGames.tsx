@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import { t } from "../data/language";
 import { formatTL } from "../data/economy";
 
 export type MiniGameTier = "fail" | "ok" | "great";
@@ -7,14 +8,14 @@ interface MiniGameProps {
   onComplete: (tier: MiniGameTier) => void;
 }
 
-const tierLabel: Record<MiniGameTier, string> = {
-  fail: "Idare eder...",
-  ok: "Fena değil!",
-  great: "Harika!",
+const tierLabel: Record<MiniGameTier, { tr: string; en: string }> = {
+  fail: { tr: "Idare eder...", en: "Could be better..." },
+  ok: { tr: "Fena değil!", en: "Not bad!" },
+  great: { tr: "Harika!", en: "Great!" },
 };
 
 function ResultBadge({ tier }: { tier: MiniGameTier }) {
-  return <p className={`minigame-result minigame-result-${tier}`}>{tierLabel[tier]}</p>;
+  return <p className={`minigame-result minigame-result-${tier}`}>{t(tierLabel[tier])}</p>;
 }
 
 /** 🔑 Anahtar Bul — bir düzine görsel olarak neredeyse aynı anahtar arasından belirgin şekilde farklı olanı hızlıca bul. */
@@ -46,7 +47,7 @@ export function KeyFindMiniGame({ onComplete }: MiniGameProps) {
 
   return (
     <div className="minigame">
-      <p className="minigame-prompt">🔑 Farklı duran anahtarı hızlıca bul!</p>
+      <p className="minigame-prompt">🔑 {t({ tr: "Farklı duran anahtarı hızlıca bul!", en: "Quickly find the odd key out!" })}</p>
       <div className="minigame-key-grid">
         {Array.from({ length: KEY_COUNT }, (_, i) => (
           <button
@@ -54,7 +55,7 @@ export function KeyFindMiniGame({ onComplete }: MiniGameProps) {
             className={`minigame-key-btn ${i === correctIndex ? "minigame-key-correct" : ""}`}
             onClick={() => pick(i)}
             disabled={!!done}
-            aria-label="anahtar"
+            aria-label={t({ tr: "anahtar", en: "key" })}
           >
             🔑
           </button>
@@ -66,10 +67,22 @@ export function KeyFindMiniGame({ onComplete }: MiniGameProps) {
 }
 
 /** 📱 Mesajları Sırala — 3 karışık mesaj balonunu doğru kronolojik sırayla dokunarak seç. */
-const MESSAGE_SETS: [string, string, string][] = [
-  ["Bugün müsait misiniz?", "Evi gördüm, çok beğendim!", "O zaman sözleşmeyi imzalayalım."],
-  ["Fiyat konusunda düşünüyorum.", "Biraz daha indirim olur mu acaba?", "Tamam, anlaştık o zaman!"],
-  ["Merhaba, ilanınızla ilgileniyorum.", "Yarın bakabilir miyim?", "Harika, o zaman görüşürüz."],
+const MESSAGE_SETS: [{ tr: string; en: string }, { tr: string; en: string }, { tr: string; en: string }][] = [
+  [
+    { tr: "Bugün müsait misiniz?", en: "Are you available today?" },
+    { tr: "Evi gördüm, çok beğendim!", en: "I saw the house, I loved it!" },
+    { tr: "O zaman sözleşmeyi imzalayalım.", en: "Then let's sign the contract." },
+  ],
+  [
+    { tr: "Fiyat konusunda düşünüyorum.", en: "I'm thinking about the price." },
+    { tr: "Biraz daha indirim olur mu acaba?", en: "I wonder if there's a bit more discount?" },
+    { tr: "Tamam, anlaştık o zaman!", en: "Okay, it's a deal then!" },
+  ],
+  [
+    { tr: "Merhaba, ilanınızla ilgileniyorum.", en: "Hi, I'm interested in your listing." },
+    { tr: "Yarın bakabilir miyim?", en: "Can I take a look tomorrow?" },
+    { tr: "Harika, o zaman görüşürüz.", en: "Great, see you then." },
+  ],
 ];
 
 export function MessageSortMiniGame({ onComplete }: MiniGameProps) {
@@ -111,7 +124,7 @@ export function MessageSortMiniGame({ onComplete }: MiniGameProps) {
 
   return (
     <div className="minigame">
-      <p className="minigame-prompt">📱 Mesajları doğru kronolojik sırayla dokun!</p>
+      <p className="minigame-prompt">📱 {t({ tr: "Mesajları doğru kronolojik sırayla dokun!", en: "Tap the messages in the right chronological order!" })}</p>
       <div className="minigame-message-list">
         {displayOrder.map((originalIdx) => (
           <button
@@ -120,7 +133,7 @@ export function MessageSortMiniGame({ onComplete }: MiniGameProps) {
             disabled={!!done || picked.includes(originalIdx)}
             onClick={() => pick(originalIdx)}
           >
-            {correctOrder[originalIdx]}
+            {t(correctOrder[originalIdx])}
           </button>
         ))}
       </div>
@@ -139,16 +152,16 @@ export function WalkMiniGame({ onComplete }: MiniGameProps) {
 
   useEffect(() => {
     const start = Date.now();
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       const left = Math.max(0, DURATION_MS - (Date.now() - start));
       setRemainingMs(left);
       if (left <= 0) {
-        clearInterval(t);
+        clearInterval(timer);
         const s = stepsRef.current;
         finish(s >= 10 ? "great" : s >= 5 ? "ok" : "fail");
       }
     }, 100);
-    return () => clearInterval(t);
+    return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -167,14 +180,18 @@ export function WalkMiniGame({ onComplete }: MiniGameProps) {
 
   return (
     <div className="minigame">
-      <p className="minigame-prompt">🚶 Süre bitmeden olabildiğince adım at!</p>
+      <p className="minigame-prompt">🚶 {t({ tr: "Süre bitmeden olabildiğince adım at!", en: "Take as many steps as you can before time runs out!" })}</p>
       <div className="quick-call-timer-track">
         <div className="quick-call-timer-fill" style={{ width: `${pct}%` }} />
       </div>
-      <p className="minigame-step-count">{steps} adım</p>
-      {done ? <ResultBadge tier={done} /> : (
+      <p className="minigame-step-count">
+        {steps} {t({ tr: "adım", en: "steps" })}
+      </p>
+      {done ? (
+        <ResultBadge tier={done} />
+      ) : (
         <button className="pixel-btn minigame-action-btn" onClick={step}>
-          Adım At!
+          {t({ tr: "Adım At!", en: "Take a Step!" })}
         </button>
       )}
     </div>
@@ -218,7 +235,7 @@ export function PriceGuessMiniGame({ onComplete }: MiniGameProps) {
 
   return (
     <div className="minigame">
-      <p className="minigame-prompt">🏷️ Bu evin gerçek fiyatı hangisi?</p>
+      <p className="minigame-prompt">🏷️ {t({ tr: "Bu evin gerçek fiyatı hangisi?", en: "Which is this house's real price?" })}</p>
       <div className="minigame-price-options">
         {options.map((v) => (
           <button key={v} className="pixel-btn small minigame-action-btn" disabled={!!done} onClick={() => pick(v)}>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { WorkTaskDef } from "../data/workTasks";
-import { resolveText } from "../data/language";
+import { resolveText, t } from "../data/language";
 
 interface QuickCallScreenProps {
   task: WorkTaskDef;
@@ -44,7 +44,7 @@ export default function QuickCallScreen({ task, onChoice }: QuickCallScreenProps
 
   return (
     <div className="work-task-screen quick-call-screen">
-      <p className="work-task-tag">⚡ Hızlı Karar</p>
+      <p className="work-task-tag">⚡ {t({ tr: "Hızlı Karar", en: "Quick Decision" })}</p>
       <p className="work-task-title">{resolveText(task.title)}</p>
       <p className="work-task-prompt">{resolveText(task.prompt)}</p>
       <div className="quick-call-timer-track">

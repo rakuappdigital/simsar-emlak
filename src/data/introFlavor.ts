@@ -1,6 +1,6 @@
 import type { HouseResult, HouseScene, PhoneMessage } from "../types";
 import { computeStreak } from "./badges";
-import { resolveText, type Localized } from "./language";
+import { resolveText, getLanguage, type Localized } from "./language";
 
 export type Mood = "happy" | "neutral" | "annoyed";
 
@@ -50,6 +50,22 @@ export function reputationLabel(results: HouseResult[]): string {
   if (avg <= 25) return "Dürüst Simsar";
   if (avg <= 45) return "Dengeli Simsar";
   return "İstanbul'un En Sinsi Emlakçısı";
+}
+
+/**
+ * `reputationLabel()`'s return value is used as a plain-string LOGIC key
+ * elsewhere in this file (reputationSuspicionModifier, pickReputationLine) —
+ * so it must stay Turkish. This is the display-only English translation,
+ * same pattern as rankTitleDisplay for rankTitle().
+ */
+const reputationLabelEn: Record<string, string> = {
+  "Dürüst Simsar": "Honest Realtor",
+  "Dengeli Simsar": "Balanced Realtor",
+  "İstanbul'un En Sinsi Emlakçısı": "Istanbul's Sneakiest Realtor",
+};
+
+export function reputationLabelDisplay(trLabel: string): string {
+  return getLanguage() === "en" ? (reputationLabelEn[trLabel] ?? trLabel) : trLabel;
 }
 
 /**

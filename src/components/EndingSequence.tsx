@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t } from "../data/language";
 
 export interface EndingSlide {
   icon: string;
@@ -32,7 +33,7 @@ export default function EndingSequence({ slides, onFinish }: EndingSequenceProps
   return (
     <div className="ending-sequence-overlay">
       <button className="ending-sequence-skip" onClick={onFinish}>
-        Atla ›
+        {t({ tr: "Atla", en: "Skip" })} ›
       </button>
       <div className="ending-sequence-card" key={index}>
         <span className="ending-sequence-icon">{slide.icon}</span>
@@ -50,7 +51,7 @@ export default function EndingSequence({ slides, onFinish }: EndingSequenceProps
         ))}
       </div>
       <button className="pixel-btn small ending-sequence-next" onClick={advance}>
-        {isLast ? "Özete Geç" : "İleri ›"}
+        {isLast ? t({ tr: "Özete Geç", en: "Go to Summary" }) : `${t({ tr: "İleri", en: "Next" })} ›`}
       </button>
     </div>
   );

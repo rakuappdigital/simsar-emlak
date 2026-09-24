@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { t } from "../data/language";
 import type { PhoneMessage } from "../types";
 import { SignalIcon, BatteryIcon, ChatIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
 import { playMessage } from "../data/sound";
@@ -11,6 +12,7 @@ interface PhoneScreenProps {
   contactName?: string;
   avatarSrc?: string;
   statusText?: string;
+  typing?: boolean;
   choices?: { id: string; text: string }[];
   onChoice?: (id: string) => void;
   batteryPercent?: number;
@@ -34,7 +36,8 @@ export default function PhoneScreen({
   onContinue,
   contactName = "Muzaffer Bey",
   avatarSrc,
-  statusText = "yazıyor...",
+  statusText,
+  typing = statusText === undefined,
   choices,
   onChoice,
   batteryPercent = 100,
@@ -107,9 +110,9 @@ export default function PhoneScreen({
           <div className="wa-title">
             <span className="wa-name">{contactName}</span>
             <span className="wa-status">
-              {statusText === "yazıyor..." ? (
+              {typing ? (
                 <>
-                  yazıyor
+                  {t({ tr: "yazıyor", en: "typing" })}
                   <span className="typing-dots">
                     <span>.</span>
                     <span>.</span>
@@ -154,7 +157,7 @@ export default function PhoneScreen({
 
       {allShown && (!choices || choices.length === 0) && (
         <button className="pixel-btn phone-continue" onClick={onContinue}>
-          Devam Et
+          {t({ tr: "Devam Et", en: "Continue" })}
         </button>
       )}
     </div>

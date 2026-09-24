@@ -56,7 +56,7 @@ import {
   JETTON_ENERGY_REFILL_AMOUNT,
   type JettonPackage,
 } from "./data/jettons";
-import { getLanguage, hasChosenLanguage, resolveText, resolveHouseTitle, resolveHouseLocation, type Language } from "./data/language";
+import { getLanguage, hasChosenLanguage, resolveText, resolveHouseTitle, resolveHouseLocation, t, type Language } from "./data/language";
 const SavedGames = lazy(() => import("./components/SavedGames"));
 const SettingsScreen = lazy(() => import("./components/SettingsScreen"));
 import WeekResult from "./components/WeekResult";
@@ -74,7 +74,14 @@ import { pickQuickCall } from "./data/quickCall";
 import { pickStagingTask } from "./data/staging";
 import { pickSuspiciousDetail } from "./data/suspiciousDetails";
 import QuickCallScreen from "./components/QuickCallScreen";
-import { pickIntroFlavor, reputationLabel, reputationSuspicionOffset, districtOf, districtReputationOffset } from "./data/introFlavor";
+import {
+  pickIntroFlavor,
+  reputationLabel,
+  reputationLabelDisplay,
+  reputationSuspicionOffset,
+  districtOf,
+  districtReputationOffset,
+} from "./data/introFlavor";
 import { generateShareCard } from "./data/shareCard";
 import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
@@ -154,7 +161,7 @@ import {
   BATTERY_MAX,
   BATTERY_LOW_THRESHOLD,
   LOW_BATTERY_CHOICE_ID,
-  LOW_BATTERY_LINE,
+  lowBatteryLine,
   maybeDrainBattery,
   pickLowBatteryReply,
 } from "./data/battery";
@@ -370,11 +377,14 @@ interface PendingHouseEntry {
   dailyQuestParam: DailyQuestDef | null;
 }
 
-const outcomeText: Record<SceneOutcome, string> = {
-  sold: "Satış tamamlandı! 🎉",
-  thinking: "Müşteri düşünüyor...",
-  lost: "Satış kaybedildi.",
+const outcomeTextByLang: Record<SceneOutcome, { tr: string; en: string }> = {
+  sold: { tr: "Satış tamamlandı! 🎉", en: "Sale complete! 🎉" },
+  thinking: { tr: "Müşteri düşünüyor...", en: "Customer is thinking..." },
+  lost: { tr: "Satış kaybedildi.", en: "Sale lost." },
 };
+function outcomeText(outcome: SceneOutcome): string {
+  return resolveText(outcomeTextByLang[outcome]);
+}
 
 export function computeSale(
   askingPrice: number,
@@ -893,7 +903,10 @@ function App() {
   ): { id: string; text: string }[] | undefined {
     if (!choices || choices.length === 0) return choices;
     if (phoneBattery > BATTERY_LOW_THRESHOLD) return choices;
-    return [...choices, { id: LOW_BATTERY_CHOICE_ID, text: "😩 Şarjım bitiyor, kısa keseyim..." }];
+    return [
+      ...choices,
+      { id: LOW_BATTERY_CHOICE_ID, text: t({ tr: "😩 Şarjım bitiyor, kısa keseyim...", en: "😩 My battery's dying, let me keep this short..." }) },
+    ];
   }
 
   function handleLineChosen(text: string, fun: number) {
@@ -1158,8 +1171,20 @@ function App() {
     if (pendingLoan && newIndex >= pendingLoan.dueIndex) {
       const repaid = Math.random() < LOAN_REPAY_CHANCE;
       const loanMsg: PhoneMessage = repaid
-        ? { from: "Bora", text: `Borcunu ödüyorum kanka, sağ ol beklettiğim için! (+${formatTL(pendingLoan.amount)})` }
-        : { from: "Bora", text: "Kanka çok mahcubum ama şu an gerçekten elimden bir şey gelmiyor, borcunu şimdilik ödeyemeyeceğim..." };
+        ? {
+            from: "Bora",
+            text: t({
+              tr: `Borcunu ödüyorum kanka, sağ ol beklettiğim için! (+${formatTL(pendingLoan.amount)})`,
+              en: `Paying you back, man, thanks for waiting! (+${formatTL(pendingLoan.amount)})`,
+            }),
+          }
+        : {
+            from: "Bora",
+            text: t({
+              tr: "Kanka çok mahcubum ama şu an gerçekten elimden bir şey gelmiyor, borcunu şimdilik ödeyemeyeceğim...",
+              en: "Man, I'm really embarrassed, but I've got nothing right now, I can't pay you back just yet...",
+            }),
+          };
       loanInbox = logMessages(inboxList, "friend-bora", "Bora", [loanMsg], newIndex + 1);
       if (repaid) newBonusEarnings += pendingLoan.amount;
       setBonusEarnings(newBonusEarnings);
@@ -1171,8 +1196,20 @@ function App() {
     if (pendingInvestment && newIndex >= pendingInvestment.dueIndex) {
       const profit = Math.random() < INVESTMENT_PROFIT_CHANCE;
       const investMsg: PhoneMessage = profit
-        ? { from: "Bora", text: `O daireyi hatırlıyor musun, satıldı! Payına düşen +${formatTL(INVESTMENT_PROFIT_AMOUNT)}` }
-        : { from: "Bora", text: `O daire konusunda kötü haberim var, beklediğimiz gibi gitmedi. Elimize sadece ${formatTL(INVESTMENT_LOSS_AMOUNT)} geçti.` };
+        ? {
+            from: "Bora",
+            text: t({
+              tr: `O daireyi hatırlıyor musun, satıldı! Payına düşen +${formatTL(INVESTMENT_PROFIT_AMOUNT)}`,
+              en: `Remember that flat? It sold! Your cut is +${formatTL(INVESTMENT_PROFIT_AMOUNT)}`,
+            }),
+          }
+        : {
+            from: "Bora",
+            text: t({
+              tr: `O daire konusunda kötü haberim var, beklediğimiz gibi gitmedi. Elimize sadece ${formatTL(INVESTMENT_LOSS_AMOUNT)} geçti.`,
+              en: `Bad news about that flat, it didn't go the way we hoped. We only cleared ${formatTL(INVESTMENT_LOSS_AMOUNT)}.`,
+            }),
+          };
       loanInbox = logMessages(loanInbox, "friend-bora", "Bora", [investMsg], newIndex + 1);
       newBonusEarnings += profit ? INVESTMENT_PROFIT_AMOUNT : INVESTMENT_LOSS_AMOUNT;
       setBonusEarnings(newBonusEarnings);
@@ -1190,7 +1227,15 @@ function App() {
           loanInbox,
           "muzaffer",
           "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: `${d.houseTitle} teslimi tamamlandı, bekleyen ödeme hesabına geçti: +${formatTL(d.deferredAmount)}` }],
+          [
+            {
+              from: "Muzaffer Bey",
+              text: t({
+                tr: `${d.houseTitle} teslimi tamamlandı, bekleyen ödeme hesabına geçti: +${formatTL(d.deferredAmount)}`,
+                en: `${d.houseTitle} delivery completed, the pending payment landed in your account: +${formatTL(d.deferredAmount)}`,
+              }),
+            },
+          ],
           newIndex + 1,
         );
       }
@@ -1831,13 +1876,29 @@ function App() {
         newBonusEarnings += WEEKLY_RAISE_AMOUNT;
         newInbox = logMessages(
           newInbox, "muzaffer", "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: `Bu hafta senden memnunum ${addressName}, küçük bir zam yaptım (+${formatTL(WEEKLY_RAISE_AMOUNT)}).` }],
+          [
+            {
+              from: "Muzaffer Bey",
+              text: t({
+                tr: `Bu hafta senden memnunum ${addressName}, küçük bir zam yaptım (+${formatTL(WEEKLY_RAISE_AMOUNT)}).`,
+                en: `I'm pleased with you this week, ${addressName}, I gave you a small raise (+${formatTL(WEEKLY_RAISE_AMOUNT)}).`,
+              }),
+            },
+          ],
           index + 1,
         );
       } else {
         newInbox = logMessages(
           newInbox, "muzaffer", "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: `Bu hafta zam yok ${addressName}, biraz daha dikkatli olmalısın.` }],
+          [
+            {
+              from: "Muzaffer Bey",
+              text: t({
+                tr: `Bu hafta zam yok ${addressName}, biraz daha dikkatli olmalısın.`,
+                en: `No raise this week, ${addressName}, you should be a bit more careful.`,
+              }),
+            },
+          ],
           index + 1,
         );
       }
@@ -2161,7 +2222,7 @@ function App() {
       soldCount,
       totalEarned: earned,
       balance,
-      reputation: reputationLabel(results),
+      reputation: reputationLabelDisplay(reputationLabel(results)),
       rank: rankTitleDisplay(rankTitle(earned)),
       badgeCount: badges.length,
       endingTitle: resolveText(ending.title),
@@ -2180,9 +2241,14 @@ function App() {
 
     slides.push({
       icon: "🏁",
-      eyebrow: "Kariyerinin Sonu",
+      eyebrow: t({ tr: "Kariyerinin Sonu", en: "The End of Your Career" }),
       title: rankTitleDisplay(rankTitle(earned)),
-      body: [`${soldCount} ev sattın, toplamda ${formatTL(earned)} kazandın.`],
+      body: [
+        t({
+          tr: `${soldCount} ev sattın, toplamda ${formatTL(earned)} kazandın.`,
+          en: `You sold ${soldCount} houses, earning ${formatTL(earned)} in total.`,
+        }),
+      ],
     });
 
     const allResultsWithSale = [...results, ...premiumResults, ...investmentResults, ...friendHouseResults].filter(
@@ -2194,9 +2260,14 @@ function App() {
       if (bestHouse) {
         slides.push({
           icon: "💰",
-          eyebrow: "En İyi Satışın",
+          eyebrow: t({ tr: "En İyi Satışın", en: "Your Best Sale" }),
           title: resolveHouseTitle(bestHouse),
-          body: [`${formatTL(best.sale?.commission ?? 0)} komisyonla kariyerinin en iyi anlaşmasıydı.`],
+          body: [
+            t({
+              tr: `${formatTL(best.sale?.commission ?? 0)} komisyonla kariyerinin en iyi anlaşmasıydı.`,
+              en: `The best deal of your career, at ${formatTL(best.sale?.commission ?? 0)} commission.`,
+            }),
+          ],
         });
       }
     }
@@ -2206,7 +2277,7 @@ function App() {
       const best = allResultsWithLine.reduce((a, b) => ((b.bestLineFun ?? 0) > (a.bestLineFun ?? 0) ? b : a));
       slides.push({
         icon: "💬",
-        eyebrow: "En Akılda Kalan Anın",
+        eyebrow: t({ tr: "En Akılda Kalan Anın", en: "Your Most Memorable Moment" }),
         title: `"${best.bestLine}"`,
         body: [],
       });
@@ -2215,8 +2286,8 @@ function App() {
     if (badges.length > 0) {
       slides.push({
         icon: "🏅",
-        eyebrow: "Kazanılan Rozetler",
-        title: `${badges.length} rozet`,
+        eyebrow: t({ tr: "Kazanılan Rozetler", en: "Badges Earned" }),
+        title: t({ tr: `${badges.length} rozet`, en: `${badges.length} badges` }),
         body: badges.slice(0, 3).map((id) => (allBadges[id] ? resolveText(allBadges[id].title) : id)),
       });
     }
@@ -2226,8 +2297,8 @@ function App() {
     if (personality || compass) {
       slides.push({
         icon: "🎭",
-        eyebrow: "Karakterin",
-        title: "Emlah Kimdi?",
+        eyebrow: t({ tr: "Karakterin", en: "Your Character" }),
+        title: t({ tr: "Emlah Kimdi?", en: "Who Was Emlah?" }),
         body: [personality, compass].filter((s): s is string => !!s),
       });
     }
@@ -2236,7 +2307,7 @@ function App() {
     const epilogue = originEndingLine(origin, resolveText(ending.title));
     slides.push({
       icon: "🎬",
-      eyebrow: "Son",
+      eyebrow: t({ tr: "Son", en: "The End" }),
       title: resolveText(ending.title),
       body: [resolveText(ending.description), epilogue].filter((s): s is string => !!s),
     });
@@ -2252,23 +2323,35 @@ function App() {
     const nextBonus = prestigeStartingBonus(completions);
     slides.push({
       icon: "♾️",
-      eyebrow: "Bu Hikaye Burada Bitse De",
-      title: prestigeTitle(completions) ?? "Efsane",
+      eyebrow: t({ tr: "Bu Hikaye Burada Bitse De", en: "Even Though This Story Ends Here" }),
+      title: prestigeTitle(completions) ?? t({ tr: "Efsane", en: "Legend" }),
       body: [
-        `Bu, ${completions}. tamamladığın oyun — ister parlak bir kariyer, ister kovulma ile bitsin, hepsi sayılıyor.`,
+        t({
+          tr: `Bu, ${completions}. tamamladığın oyun — ister parlak bir kariyer, ister kovulma ile bitsin, hepsi sayılıyor.`,
+          en: `This is playthrough #${completions} you've completed — whether it ends in a bright career or getting fired, it all counts.`,
+        }),
         nextBonus > 0
-          ? `Bir sonraki oyununa ${formatTL(nextBonus)} başlangıç bonusuyla başlayacaksın.`
-          : "Bir sonraki oyunun bu turdan bir iz taşıyacak.",
+          ? t({
+              tr: `Bir sonraki oyununa ${formatTL(nextBonus)} başlangıç bonusuyla başlayacaksın.`,
+              en: `Your next game will start with a ${formatTL(nextBonus)} bonus.`,
+            })
+          : t({ tr: "Bir sonraki oyunun bu turdan bir iz taşıyacak.", en: "Your next game will carry a trace of this run." }),
       ],
     });
 
     slides.push({
       icon: "🚀",
-      eyebrow: "Hikaye Burada Bitmiyor",
-      title: "Odd Estate Gelişmeye Devam Ediyor",
+      eyebrow: t({ tr: "Hikaye Burada Bitmiyor", en: "The Story Doesn't End Here" }),
+      title: t({ tr: "Odd Estate Gelişmeye Devam Ediyor", en: "Odd Estate Keeps Growing" }),
       body: [
-        "Emlah'ın hikayesi bu turla kapanmıyor — yeni semtler, yeni karakterler ve yeni mekaniklerle düzenli güncellemeler almaya devam edecek.",
-        "Bir sonraki turunda seni neyin beklediğini görmek için yakında tekrar uğra.",
+        t({
+          tr: "Emlah'ın hikayesi bu turla kapanmıyor — yeni semtler, yeni karakterler ve yeni mekaniklerle düzenli güncellemeler almaya devam edecek.",
+          en: "Emlah's story doesn't close with this run — new districts, new characters, and new mechanics keep arriving in regular updates.",
+        }),
+        t({
+          tr: "Bir sonraki turunda seni neyin beklediğini görmek için yakında tekrar uğra.",
+          en: "Come back soon to see what's waiting for you in your next run.",
+        }),
       ],
     });
 
@@ -2531,7 +2614,7 @@ function App() {
     if (!activeCallback) return;
     drainPhoneBattery();
     if (choiceId === LOW_BATTERY_CHOICE_ID) {
-      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const playerMsg: PhoneMessage = { from: "Emlah", text: lowBatteryLine() };
       const reactionMsg: PhoneMessage = { from: activeCallback.contactName, text: pickLowBatteryReply("customer") };
       setActiveCallback((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], choices: undefined } : prev));
       return;
@@ -2666,12 +2749,33 @@ function App() {
     const openingMessages: PhoneMessage[] =
       targetHouse.tier >= 3
         ? [
-            { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında ailemizle tekrar konuştuk.` },
-            { from: contactName, text: "Bu ölçekte bir karar bizim için kolay değil, ama bir şansımız daha olsun istedik." },
+            {
+              from: contactName,
+              text: t({
+                tr: `Merhaba, ${targetHouse.title} hakkında ailemizle tekrar konuştuk.`,
+                en: `Hi, we talked it over with the family again about ${targetHouse.title}.`,
+              }),
+            },
+            {
+              from: contactName,
+              text: t({
+                tr: "Bu ölçekte bir karar bizim için kolay değil, ama bir şansımız daha olsun istedik.",
+                en: "A decision at this scale isn't easy for us, but we wanted to give it one more shot.",
+              }),
+            },
           ]
         : [
-            { from: contactName, text: `Merhaba, ${targetHouse.title} hakkında tekrar sizinle konuşmak istedim.` },
-            { from: contactName, text: "Belki bir şansımız daha vardır diye düşündüm." },
+            {
+              from: contactName,
+              text: t({
+                tr: `Merhaba, ${targetHouse.title} hakkında tekrar sizinle konuşmak istedim.`,
+                en: `Hi, I wanted to talk with you again about ${targetHouse.title}.`,
+              }),
+            },
+            {
+              from: contactName,
+              text: t({ tr: "Belki bir şansımız daha vardır diye düşündüm.", en: "I thought maybe we had one more chance." }),
+            },
           ];
     const newInbox = logMessages(inbox, houseId, contactName, openingMessages, index + 1);
     setInbox(newInbox);
@@ -2921,7 +3025,7 @@ function App() {
     if (!activeFriendChat) return;
     drainPhoneBattery();
     if (choiceId === LOW_BATTERY_CHOICE_ID) {
-      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const playerMsg: PhoneMessage = { from: "Emlah", text: lowBatteryLine() };
       const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: pickLowBatteryReply("casual") };
       setActiveFriendChat((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], showChoices: false } : prev));
       return;
@@ -3014,8 +3118,11 @@ function App() {
       newBonusEarnings = bonusEarnings + amount;
       setBonusEarnings(newBonusEarnings);
       bulkDealReaction = big
-        ? `Anlaşma büyük çıktı, payınız: +${formatTL(amount)} 🎉`
-        : `Anlaşma beklediğimizden küçük oldu ama yine de bir pay çıktı: +${formatTL(amount)}`;
+        ? t({ tr: `Anlaşma büyük çıktı, payınız: +${formatTL(amount)} 🎉`, en: `The deal came in big, your share: +${formatTL(amount)} 🎉` })
+        : t({
+            tr: `Anlaşma beklediğimizden küçük oldu ama yine de bir pay çıktı: +${formatTL(amount)}`,
+            en: `The deal came in smaller than expected, but you still got a share: +${formatTL(amount)}`,
+          });
     }
 
     const reactionMsg: PhoneMessage = { from: activeFriendChat.set.contactName, text: bulkDealReaction };
@@ -3098,7 +3205,7 @@ function App() {
     if (!activeMeetup) return;
     drainPhoneBattery();
     if (activityId === LOW_BATTERY_CHOICE_ID) {
-      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const playerMsg: PhoneMessage = { from: "Emlah", text: lowBatteryLine() };
       const reactionMsg: PhoneMessage = { from: activeMeetup.characterName, text: pickLowBatteryReply("casual") };
       setActiveMeetup((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], showChoices: false } : prev));
       return;
@@ -3106,7 +3213,10 @@ function App() {
     const activity = meetupActivities.find((a) => a.id === activityId);
 
     const threadId = `meetup-${activeMeetup.characterId}`;
-    const replyMsg: PhoneMessage = { from: "Emlah", text: activity ? resolveText(activity.label) : "Şu an vaktim yok açıkçası." };
+    const replyMsg: PhoneMessage = {
+      from: "Emlah",
+      text: activity ? resolveText(activity.label) : t({ tr: "Şu an vaktim yok açıkçası.", en: "I honestly don't have time right now." }),
+    };
 
     let newSpent = spent;
     let newFriendBonds = friendBonds;
@@ -3141,7 +3251,7 @@ function App() {
     if (!activeChitchat) return;
     drainPhoneBattery();
     if (choiceId === LOW_BATTERY_CHOICE_ID) {
-      const playerMsg: PhoneMessage = { from: "Emlah", text: LOW_BATTERY_LINE };
+      const playerMsg: PhoneMessage = { from: "Emlah", text: lowBatteryLine() };
       const reactionMsg: PhoneMessage = { from: "Muzaffer Bey", text: pickLowBatteryReply("casual") };
       setActiveChitchat((prev) => (prev ? { ...prev, messages: [...prev.messages, playerMsg, reactionMsg], showChoices: false } : prev));
       return;
@@ -3284,7 +3394,8 @@ function App() {
         <header className="game-header">
           <h1>Odd Estate</h1>
           <span className="subtitle">
-            Emlah'ın günü — Ev {index + 1}/{allHouses.length} · {rankTitleDisplay(rankTitle(earned))}
+            {t({ tr: "Emlah'ın günü", en: "Emlah's day" })} — {t({ tr: "Ev", en: "House" })} {index + 1}/{allHouses.length} ·{" "}
+            {rankTitleDisplay(rankTitle(earned))}
           </span>
           {dailyQuest && (
             <span className="quest-banner" title={resolveText(dailyQuest.description)}>
@@ -3329,10 +3440,18 @@ function App() {
                   return <OriginIcon size={26} style={{ color: originById(origin)?.accentColor }} />;
                 })()}
             </div>
-            <p className="rankup-label">Yeni Rütbe!</p>
+            <p className="rankup-label">{t({ tr: "Yeni Rütbe!", en: "New Rank!" })}</p>
             <p className="rankup-title">{rankUpTitle ? rankTitleDisplay(rankUpTitle) : rankUpTitle}</p>
-            {rankUpUnlockedInvites && <p className="rankup-invite-note">🎁 Ününüz yayılıyor — yeni özel davetler açıldı!</p>}
-            {rankUpSkillBonus && <p className="rankup-invite-note">🧠 +{rankUpSkillBonus} Deneyim Puanı kazandın!</p>}
+            {rankUpUnlockedInvites && (
+              <p className="rankup-invite-note">
+                🎁 {t({ tr: "Ününüz yayılıyor — yeni özel davetler açıldı!", en: "Your reputation is spreading — new special invites unlocked!" })}
+              </p>
+            )}
+            {rankUpSkillBonus && (
+              <p className="rankup-invite-note">
+                🧠 +{rankUpSkillBonus} {t({ tr: "Deneyim Puanı kazandın!", en: "Experience Points earned!" })}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -3495,7 +3614,7 @@ function App() {
           houseOrder={houseOrder}
           currentIndex={index}
           rankTitleText={rankTitle(earned)}
-          reputationText={reputationLabel(results)}
+          reputationText={reputationLabelDisplay(reputationLabel(results))}
           earned={earned}
           badges={badges}
           allBadges={allBadges}
@@ -3633,13 +3752,20 @@ function App() {
 
       {stage === "locked" && (
         <div className="result-screen locked-preview">
-          <p className="locked-preview-tag">🔒 Tier {house.tier} — henüz erişimin yok</p>
+          <p className="locked-preview-tag">
+            🔒 Tier {house.tier} — {t({ tr: "henüz erişimin yok", en: "you don't have access yet" })}
+          </p>
           <p className="locked-preview-title">{resolveHouseTitle(house)}</p>
           <p className="locked-preview-location">{resolveHouseLocation(house)}</p>
           <p className="locked-preview-price">{formatTL(house.askingPrice)}</p>
-          <p className="menu-empty">Bu evi görebilmek için Ofis Marketi'nden "Portföy Kilidi" bölümüne bakabilirsin.</p>
+          <p className="menu-empty">
+            {t({
+              tr: 'Bu evi görebilmek için Ofis Marketi\'nden "Portföy Kilidi" bölümüne bakabilirsin.',
+              en: 'To unlock this house, check the "Portfolio Lock" section in the Office Market.',
+            })}
+          </p>
           <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
-            Marketi Aç
+            {t({ tr: "Marketi Aç", en: "Open Market" })}
           </button>
         </div>
       )}
@@ -3665,7 +3791,7 @@ function App() {
             results[activeCallback.resultIndex]?.houseId,
             castAssignment,
           )}
-          statusText="mesaj yazdı"
+          statusText={t({ tr: "mesaj yazdı", en: "sent a message" })}
           choices={withLowBatteryChoice(activeCallback.choices?.map((c) => ({ id: c.id, text: resolveText(c.text) })))}
           onChoice={handleNegotiationChoice}
           onContinue={() => {
@@ -3751,7 +3877,6 @@ function App() {
         <PhoneScreen
           key={`friend-${activeFriendChat.set.id}-${index}`}
           contactName={activeFriendChat.set.contactName}
-          statusText="yazıyor..."
           messages={activeFriendChat.messages}
           choices={
             activeFriendChat.showChoices
@@ -3772,13 +3897,12 @@ function App() {
         <PhoneScreen
           key={`meetup-${activeMeetup.characterId}-${index}`}
           contactName={activeMeetup.characterName}
-          statusText="yazıyor..."
           messages={activeMeetup.messages}
           choices={
             activeMeetup.showChoices
               ? withLowBatteryChoice([
                   ...meetupActivities.map((a) => ({ id: a.id, text: resolveText(a.label) })),
-                  { id: "decline", text: "\"Şu an vaktim yok açıkçası.\"" },
+                  { id: "decline", text: t({ tr: '"Şu an vaktim yok açıkçası."', en: '"I honestly don\'t have time right now."' }) },
                 ])
               : undefined
           }
@@ -3806,11 +3930,20 @@ function App() {
           {index === 0 && !tutorialDismissed && (
             <div className="tutorial-tip">
               <p>
-                <strong>Şüphe</strong> yükseldikçe satış zorlaşır. <strong>İlgi</strong> ve{" "}
-                <strong>Eğlence</strong> ise satışı kolaylaştırır — cevaplarınla bu üçünü dengelemeye çalış.
+                {getLanguage() === "en" ? (
+                  <>
+                    Rising <strong>Suspicion</strong> makes the sale harder. <strong>Interest</strong> and <strong>Fun</strong> make it
+                    easier — try to balance the three with your answers.
+                  </>
+                ) : (
+                  <>
+                    <strong>Şüphe</strong> yükseldikçe satış zorlaşır. <strong>İlgi</strong> ve <strong>Eğlence</strong> ise satışı
+                    kolaylaştırır — cevaplarınla bu üçünü dengelemeye çalış.
+                  </>
+                )}
               </p>
               <button className="pixel-btn small" onClick={dismissTutorial}>
-                Anladım
+                {t({ tr: "Anladım", en: "Got it" })}
               </button>
             </div>
           )}
@@ -3853,36 +3986,47 @@ function App() {
           {lastResult.outcome === "sold" && lastResult.sale && (
             <SaleStamp discountPercent={lastResult.sale.discountPercent} />
           )}
-          <p>{outcomeText[lastResult.outcome]}</p>
+          <p>{outcomeText(lastResult.outcome)}</p>
           {lastResult.sale && (
             <div className="sale-summary">
               <p>
-                Satış Fiyatı: {formatTL(lastResult.sale.finalPrice)}
-                {lastResult.sale.discountPercent > 0 && ` (%${lastResult.sale.discountPercent} indirimli)`}
+                {t({ tr: "Satış Fiyatı", en: "Sale Price" })}: {formatTL(lastResult.sale.finalPrice)}
+                {lastResult.sale.discountPercent > 0 &&
+                  ` (${t({ tr: `%${lastResult.sale.discountPercent} indirimli`, en: `${lastResult.sale.discountPercent}% discount` })})`}
               </p>
-              {lastResult.sale.streakBonus > 0 && <p>Seri bonusu: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥</p>}
+              {lastResult.sale.streakBonus > 0 && (
+                <p>
+                  {t({ tr: "Seri bonusu", en: "Streak bonus" })}: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥
+                </p>
+              )}
               {lastResult.sale.rankBonus > 0 && (
                 <p>
-                  Rütbe bonusu: +%{Math.round(lastResult.sale.rankBonus * 100)} <StarIcon size={12} className="icon-inline" />
+                  {t({ tr: "Rütbe bonusu", en: "Rank bonus" })}: +%{Math.round(lastResult.sale.rankBonus * 100)}{" "}
+                  <StarIcon size={12} className="icon-inline" />
                 </p>
               )}
               {lastResult.sale.contractModifier !== 0 && (
-                <p>Sözleşme etkisi: {lastResult.sale.contractModifier > 0 ? "+" : ""}%{Math.round(lastResult.sale.contractModifier * 100)}</p>
+                <p>
+                  {t({ tr: "Sözleşme etkisi", en: "Contract effect" })}: {lastResult.sale.contractModifier > 0 ? "+" : ""}%
+                  {Math.round(lastResult.sale.contractModifier * 100)}
+                </p>
               )}
-              <p>Komisyonunuz: {formatTL(lastResult.sale.commission)}</p>
+              <p>
+                {t({ tr: "Komisyonunuz", en: "Your Commission" })}: {formatTL(lastResult.sale.commission)}
+              </p>
             </div>
           )}
           {pendingNewBadges.length > 0 && (
             <div className="badge-popup">
               {pendingNewBadges.map((b) => (
                 <p key={b.id}>
-                  <MedalIcon size={14} className="icon-inline" /> Yeni rozet: {resolveText(b.title)}
+                  <MedalIcon size={14} className="icon-inline" /> {t({ tr: "Yeni rozet", en: "New badge" })}: {resolveText(b.title)}
                 </p>
               ))}
             </div>
           )}
           <button className="pixel-btn" onClick={proceedAfterResult}>
-            {isLastHouse ? "Günü Bitir" : "Devam Et"}
+            {isLastHouse ? t({ tr: "Günü Bitir", en: "End the Day" }) : t({ tr: "Devam Et", en: "Continue" })}
           </button>
         </div>
       )}
@@ -3903,24 +4047,32 @@ function App() {
 
       {stage === "summary" && !showEndingSequence && (
         <div className="result-screen">
-          <p>Bugünün özeti:</p>
+          <p>{t({ tr: "Bugünün özeti:", en: "Today's summary:" })}</p>
           {allHouses.map((h) => {
             const playedIdx = houseOrder.indexOf(allHouses.indexOf(h));
             const r = results[playedIdx];
             return (
               <p key={h.id}>
-                {resolveHouseTitle(h)}: {r ? outcomeText[r.outcome] : "—"}
-                {r?.converted ? " (sonradan ikna oldu)" : ""}
+                {resolveHouseTitle(h)}: {r ? outcomeText(r.outcome) : "—"}
+                {r?.converted ? ` (${t({ tr: "sonradan ikna oldu", en: "convinced later" })})` : ""}
               </p>
             );
           })}
-          <p className="sale-summary">Toplam Kazanç: {formatTL(earned)}</p>
-          <p className="sale-summary">Bakiye: {formatTL(balance)}</p>
-          <p className="sale-summary">Unvan: {reputationLabel(results)}</p>
-          <p className="sale-summary">Kariyer: {rankTitleDisplay(rankTitle(earned))}</p>
+          <p className="sale-summary">
+            {t({ tr: "Toplam Kazanç", en: "Total Earnings" })}: {formatTL(earned)}
+          </p>
+          <p className="sale-summary">
+            {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)}
+          </p>
+          <p className="sale-summary">
+            {t({ tr: "Unvan", en: "Title" })}: {reputationLabelDisplay(reputationLabel(results))}
+          </p>
+          <p className="sale-summary">
+            {t({ tr: "Kariyer", en: "Career" })}: {rankTitleDisplay(rankTitle(earned))}
+          </p>
           {badges.length > 0 && (
             <div className="badge-popup">
-              <p>Kazanılan rozetler:</p>
+              <p>{t({ tr: "Kazanılan rozetler:", en: "Badges earned:" })}</p>
               {badges.map((id) => (
                 <p key={id}>
                   <MedalIcon size={14} className="icon-inline" /> {allBadges[id] ? resolveText(allBadges[id].title) : id}
@@ -3939,27 +4091,37 @@ function App() {
               </div>
             );
           })()}
-          <p className="muzaffer-note">Muzaffer Bey: "{anySold ? "Aferin aslanım, devam!" : "Emlah'ım biraz gayret 😐"}"</p>
+          <p className="muzaffer-note">
+            Muzaffer Bey: "
+            {anySold
+              ? t({ tr: "Aferin aslanım, devam!", en: "Well done, keep it up!" })
+              : t({ tr: "Emlah'ım biraz gayret 😐", en: "Come on Emlah, a bit more effort 😐" })}
+            "
+          </p>
           {personalitySummary(voiceTally) && (
             <p className="ending-card">
-              <span className="ending-title">🎭 Emlah'ın Kişilik Profili</span>
+              <span className="ending-title">🎭 {t({ tr: "Emlah'ın Kişilik Profili", en: "Emlah's Personality Profile" })}</span>
               <span className="ending-description">{personalitySummary(voiceTally)}</span>
             </p>
           )}
           {compassVerdict(compassTally) && (
             <p className="ending-card">
-              <span className="ending-title">🧭 Değerler Pusulası</span>
+              <span className="ending-title">🧭 {t({ tr: "Değerler Pusulası", en: "Values Compass" })}</span>
               <span className="ending-description">{compassVerdict(compassTally)}</span>
             </p>
           )}
           <p className="menu-prestige-tag">
-            🏆 Bu senin {getPrestigeCompletions()}. turun! Yeni bir oyuna başladığında {formatTL(prestigeStartingBonus(getPrestigeCompletions()))} ile başlayacaksın.
+            🏆{" "}
+            {t({
+              tr: `Bu senin ${getPrestigeCompletions()}. turun! Yeni bir oyuna başladığında ${formatTL(prestigeStartingBonus(getPrestigeCompletions()))} ile başlayacaksın.`,
+              en: `This is your playthrough #${getPrestigeCompletions()}! Your next game will start with ${formatTL(prestigeStartingBonus(getPrestigeCompletions()))}.`,
+            })}
           </p>
           <button className="pixel-btn small" onClick={downloadShareCard}>
-            Paylaşım Kartını İndir
+            {t({ tr: "Paylaşım Kartını İndir", en: "Download Share Card" })}
           </button>
           <button className="menu-btn" onClick={() => setStage("menu")}>
-            Ana Menü
+            {t({ tr: "Ana Menü", en: "Main Menu" })}
           </button>
         </div>
       )}

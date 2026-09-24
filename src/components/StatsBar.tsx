@@ -1,4 +1,5 @@
 import type { GameStats } from "../types";
+import { t } from "../data/language";
 
 const FUN_BONUS_THRESHOLD = 30;
 
@@ -34,7 +35,7 @@ export default function StatsBar({ stats }: StatsBarProps) {
   return (
     <div className="stats-bar">
       <div className="stat">
-        <span className="stat-label">Şüphe</span>
+        <span className="stat-label">{t({ tr: "Şüphe", en: "Suspicion" })}</span>
         <div className="stat-track">
           <div
             className="stat-fill suspicion"
@@ -43,13 +44,13 @@ export default function StatsBar({ stats }: StatsBarProps) {
         </div>
       </div>
       <div className="stat">
-        <span className="stat-label">İlgi</span>
+        <span className="stat-label">{t({ tr: "İlgi", en: "Interest" })}</span>
         <div className="stat-track">
           <div className="stat-fill interest" style={{ width: `${clamp(stats.interest)}%` }} />
         </div>
       </div>
       <div className="stat">
-        <span className="stat-label">Eğlence</span>
+        <span className="stat-label">{t({ tr: "Eğlence", en: "Fun" })}</span>
         <div className="stat-track">
           <div
             className={`stat-fill fun ${funUnlocked ? "fun-unlocked" : ""}`}

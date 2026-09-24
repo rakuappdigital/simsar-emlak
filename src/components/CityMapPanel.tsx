@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { DistrictPin } from "../data/istanbulMap";
 import { TOTAL_DISTRICT_COUNT } from "../data/istanbulMap";
 import istanbulMapImg from "../assets/istanbul-map.webp";
-import { resolveHouseTitle } from "../data/language";
+import { resolveHouseTitle, t } from "../data/language";
 
 interface CityMapPanelProps {
   pins: DistrictPin[];
@@ -24,7 +24,8 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
   return (
     <div className="portfolio-panel">
       <p className="menu-empty">
-        Şehir, her satışla birlikte yavaş yavaş senin oluyor. Keşfedilen semt: {pins.length} / {TOTAL_DISTRICT_COUNT}
+        {t({ tr: "Şehir, her satışla birlikte yavaş yavaş senin oluyor.", en: "The city slowly becomes yours with every sale." })}{" "}
+        {t({ tr: "Keşfedilen semt", en: "Districts discovered" })}: {pins.length} / {TOTAL_DISTRICT_COUNT}
       </p>
       <div className="city-map-canvas" style={{ backgroundImage: `url(${istanbulMapImg})` }}>
         {pins.map((pin) => (
@@ -44,7 +45,10 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
       {selectedPin && (
         <div className="city-map-detail">
           <p className="portfolio-row-title">
-            {selectedPin.district} {selectedPin.dominated && <span className="rival-ladder-title">👑 Hakimiyetin var</span>}
+            {selectedPin.district}{" "}
+            {selectedPin.dominated && (
+              <span className="rival-ladder-title">👑 {t({ tr: "Hakimiyetin var", en: "You dominate this district" })}</span>
+            )}
           </p>
           <p className="portfolio-row-location">
             ✅ {selectedPin.sold} · 🤔 {selectedPin.thinking} · ❌ {selectedPin.lost}
@@ -59,7 +63,9 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
           ))}
         </div>
       )}
-      {!selectedPin && pins.length === 0 && <p className="menu-empty">Henüz haritada bir iz bırakmadın.</p>}
+      {!selectedPin && pins.length === 0 && (
+        <p className="menu-empty">{t({ tr: "Henüz haritada bir iz bırakmadın.", en: "You haven't left a mark on the map yet." })}</p>
+      )}
     </div>
   );
 }

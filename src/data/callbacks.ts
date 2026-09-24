@@ -1,6 +1,6 @@
 import type { HouseResult, HouseScene, PhoneMessage } from "../types";
 import { resolveCustomerNames } from "./characterPool";
-import { resolveText, type Localized } from "./language";
+import { resolveText, resolveHouseTitle, type Localized } from "./language";
 
 export interface NegotiationChoice {
   id: string;
@@ -183,8 +183,20 @@ export function maybeGenerateCallback(
       resultIndex,
       contactName,
       messages: [
-        { from: contactName, text: `Merhaba, ${house.title} için tekrar teşekkür etmek istedim, çok mutluyuz!` },
-        { from: contactName, text: "Bu arada bir arkadaşıma da sizi önerdim, belki o da arar." },
+        {
+          from: contactName,
+          text: resolveText({
+            tr: `Merhaba, ${resolveHouseTitle(house)} için tekrar teşekkür etmek istedim, çok mutluyuz!`,
+            en: `Hi, I wanted to thank you again for ${resolveHouseTitle(house)}, we're so happy!`,
+          }),
+        },
+        {
+          from: contactName,
+          text: resolveText({
+            tr: "Bu arada bir arkadaşıma da sizi önerdim, belki o da arar.",
+            en: "By the way, I recommended you to a friend, maybe they'll call too.",
+          }),
+        },
       ],
     };
   }
@@ -194,8 +206,20 @@ export function maybeGenerateCallback(
       resultIndex,
       contactName,
       messages: [
-        { from: contactName, text: `Merhaba, ${house.title} hâlâ satılık mı acaba?` },
-        { from: contactName, text: "Geçen sefer biraz aceleye getirilmiş hissetmiştim ama tekrar düşünüyorum." },
+        {
+          from: contactName,
+          text: resolveText({
+            tr: `Merhaba, ${resolveHouseTitle(house)} hâlâ satılık mı acaba?`,
+            en: `Hi, is ${resolveHouseTitle(house)} still for sale by any chance?`,
+          }),
+        },
+        {
+          from: contactName,
+          text: resolveText({
+            tr: "Geçen sefer biraz aceleye getirilmiş hissetmiştim ama tekrar düşünüyorum.",
+            en: "I felt a bit rushed last time, but I'm thinking it over again.",
+          }),
+        },
       ],
     };
   }
@@ -204,12 +228,36 @@ export function maybeGenerateCallback(
   const thinkingMessages =
     house.tier >= 3
       ? [
-          { from: contactName, text: `Merhaba, ${house.title} konusunda ailemizle tekrar değerlendirdik...` },
-          { from: contactName, text: "Bu ölçekte bir yatırımda hâlâ emin değiliz, biraz daha bilgi verir misiniz?" },
+          {
+            from: contactName,
+            text: resolveText({
+              tr: `Merhaba, ${resolveHouseTitle(house)} konusunda ailemizle tekrar değerlendirdik...`,
+              en: `Hi, we reconsidered ${resolveHouseTitle(house)} with the family again...`,
+            }),
+          },
+          {
+            from: contactName,
+            text: resolveText({
+              tr: "Bu ölçekte bir yatırımda hâlâ emin değiliz, biraz daha bilgi verir misiniz?",
+              en: "We're still not sure about an investment this size, could you give us a bit more information?",
+            }),
+          },
         ]
       : [
-          { from: contactName, text: `Merhaba, ${house.title} konusunda tekrar düşündük...` },
-          { from: contactName, text: "Hâlâ tam kararsızız açıkçası, biraz daha yardımcı olur musunuz?" },
+          {
+            from: contactName,
+            text: resolveText({
+              tr: `Merhaba, ${resolveHouseTitle(house)} konusunda tekrar düşündük...`,
+              en: `Hi, we thought about ${resolveHouseTitle(house)} again...`,
+            }),
+          },
+          {
+            from: contactName,
+            text: resolveText({
+              tr: "Hâlâ tam kararsızız açıkçası, biraz daha yardımcı olur musunuz?",
+              en: "Honestly we're still quite undecided, could you help a bit more?",
+            }),
+          },
         ];
 
   return {

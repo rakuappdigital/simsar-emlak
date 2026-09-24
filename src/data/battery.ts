@@ -20,7 +20,10 @@ export function maybeDrainBattery(current: number): number {
 }
 
 export const LOW_BATTERY_CHOICE_ID = "sarj-bitiyor";
-export const LOW_BATTERY_LINE = "Şarjım bitmek üzere, kısa keseyim...";
+const LOW_BATTERY_LINE_TEXT: Localized = { tr: "Şarjım bitmek üzere, kısa keseyim...", en: "My battery's almost dead, let me keep this short..." };
+export function lowBatteryLine(): string {
+  return resolveText(LOW_BATTERY_LINE_TEXT);
+}
 
 const customerReplies: Localized[] = [
   { tr: "Tamam, müsait olduğunuzda devam ederiz.", en: "Okay, we can continue whenever you are available." },

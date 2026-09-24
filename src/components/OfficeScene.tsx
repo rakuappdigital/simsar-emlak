@@ -5,7 +5,7 @@ import { ENERGY_MAX, ENERGY_LOW_THRESHOLD, ENERGY_WORK_MIN_THRESHOLD } from "../
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
 import { emlahMoodFor, emlahMoodLabel, emlahMoodPortrait } from "../data/emlahMood";
 import { rankTitleDisplay } from "../data/scoring";
-import { resolveText } from "../data/language";
+import { resolveText, t, getLanguage } from "../data/language";
 import { dayActivities } from "../data/dayActivities";
 import { WalletIcon, ChatIcon } from "./icons";
 import MemoryWall from "./MemoryWall";
@@ -106,13 +106,19 @@ export default function OfficeScene({
         />
         {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})`, filter: combinedFilter }} />}
         <div className="office-title" onClick={onTitleTap}>
-          <span>Emlah'ın Ofisi</span>
+          <span>{t({ tr: "Emlah'ın Ofisi", en: "Emlah's Office" })}</span>
           <span className="office-rank-tag">
             {rankTitleDisplay(rankTitleText)}
             {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
           </span>
         </div>
-        <div className="emlah-mood-portrait" title={`Emlah şu an ${resolveText(emlahMoodLabel[emlahMood])}`}>
+        <div
+          className="emlah-mood-portrait"
+          title={t({
+            tr: `Emlah şu an ${resolveText(emlahMoodLabel[emlahMood])}`,
+            en: `Emlah is currently ${resolveText(emlahMoodLabel[emlahMood])}`,
+          })}
+        >
           <img className="emlah-mood-portrait-img" src={emlahMoodPortrait[emlahMood]} alt="Emlah" />
         </div>
         {(() => {
@@ -124,7 +130,9 @@ export default function OfficeScene({
                 <span />
                 <span />
               </div>
-              <div className="office-calendar-header">{month ? month.slice(0, 3).toLocaleUpperCase("tr-TR") : ""}</div>
+              <div className="office-calendar-header">
+                {month ? month.slice(0, 3).toLocaleUpperCase(getLanguage() === "en" ? "en-US" : "tr-TR") : ""}
+              </div>
               <div className="office-calendar-day">{day}</div>
               <div className="office-calendar-footer">
                 {year && <span className="office-calendar-year">{year}</span>}
@@ -138,7 +146,8 @@ export default function OfficeScene({
 
       <div className="energy-bar">
         <span className="energy-bar-label">
-          ⚡ Enerji {energy < ENERGY_LOW_THRESHOLD && <span className="energy-bar-low">(düşük)</span>}
+          ⚡ {t({ tr: "Enerji", en: "Energy" })}{" "}
+          {energy < ENERGY_LOW_THRESHOLD && <span className="energy-bar-low">({t({ tr: "düşük", en: "low" })})</span>}
         </span>
         <div className="stat-track">
           <div
@@ -148,14 +157,15 @@ export default function OfficeScene({
         </div>
         {energy < ENERGY_WORK_MIN_THRESHOLD && (
           <button className="pixel-btn small energy-ad-btn" onClick={onOpenEnergyBreak}>
-            🎬 Enerji Molası
+            🎬 {t({ tr: "Enerji Molası", en: "Energy Break" })}
           </button>
         )}
       </div>
 
       <div className="energy-bar">
         <span className="energy-bar-label">
-          😊 Patron Memnuniyeti {bossMood < BOSS_MOOD_RAISE_THRESHOLD && <span className="energy-bar-low">(düşük)</span>}
+          😊 {t({ tr: "Patron Memnuniyeti", en: "Boss Mood" })}{" "}
+          {bossMood < BOSS_MOOD_RAISE_THRESHOLD && <span className="energy-bar-low">({t({ tr: "düşük", en: "low" })})</span>}
         </span>
         <div className="stat-track">
           <div
@@ -167,7 +177,7 @@ export default function OfficeScene({
 
       {dayAdvanced && (
         <div className="day-activities">
-          <p className="market-category-title">📋 Bugünün Aktiviteleri</p>
+          <p className="market-category-title">📋 {t({ tr: "Bugünün Aktiviteleri", en: "Today's Activities" })}</p>
           <div className="day-activity-list">
             {dayActivities.map((a) => {
               const done = dayActivitiesDone.includes(a.id);
@@ -180,7 +190,7 @@ export default function OfficeScene({
                 >
                   <span className="day-activity-icon">{a.icon}</span>
                   <span className="day-activity-label">{resolveText(a.label)}</span>
-                  <span className="day-activity-gain">{done ? "✅" : `-${a.energyCost} Enerji`}</span>
+                  <span className="day-activity-gain">{done ? "✅" : `-${a.energyCost} ${t({ tr: "Enerji", en: "Energy" })}`}</span>
                 </button>
               );
             })}
@@ -194,15 +204,15 @@ export default function OfficeScene({
         </span>
         {dayAdvanced ? (
           <button className="pixel-btn office-get-job-btn" onClick={onGetJob}>
-            Bugünün İşini Al
+            {t({ tr: "Bugünün İşini Al", en: "Get Today's Job" })}
           </button>
         ) : (
           <button className="pixel-btn office-get-job-btn" onClick={onAdvanceDay}>
-            📅 Yeni Güne Geç
+            📅 {t({ tr: "Yeni Güne Geç", en: "Advance to New Day" })}
           </button>
         )}
         <button className="pixel-btn small ghost office-messages-btn" onClick={onOpenMessages}>
-          <ChatIcon size={14} className="icon-inline" /> Mesajlar
+          <ChatIcon size={14} className="icon-inline" /> {t({ tr: "Mesajlar", en: "Messages" })}
           {unreadCount > 0 && (
             <span className="unread-dot" key={unreadCount}>
               {unreadCount > 9 ? "9+" : unreadCount}

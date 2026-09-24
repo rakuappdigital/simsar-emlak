@@ -3,7 +3,7 @@ import { poolCharacterById } from "../data/characterPool";
 import { dominantTone } from "../data/voiceTone";
 import { compassVerdict } from "../data/valuesCompass";
 import { friendCharacters } from "../data/friendCharacters";
-import { resolveText } from "../data/language";
+import { resolveText, t } from "../data/language";
 import { stageForBondCount, type RelationshipStage } from "../data/relationshipStages";
 import type { ToneBucket, CompassAxis } from "../types";
 
@@ -16,17 +16,23 @@ interface RelationshipsPanelProps {
   friendFavorAccepted: Record<string, boolean>;
 }
 
-const stageLabel: Record<RelationshipStage, string> = {
-  taniskilik: "Tanışıklık",
-  guven: "Güven",
-  yakinlik: "Yakınlık",
+const stageLabelByLang: Record<RelationshipStage, { tr: string; en: string }> = {
+  taniskilik: { tr: "Tanışıklık", en: "Acquaintance" },
+  guven: { tr: "Güven", en: "Trust" },
+  yakinlik: { tr: "Yakınlık", en: "Closeness" },
 };
+function stageLabel(stage: RelationshipStage): string {
+  return t(stageLabelByLang[stage]);
+}
 
-const toneLabels: Record<ToneBucket, string> = {
-  eglenceli: "Eğlenceli",
-  samimi: "Samimi",
-  atilgan: "Atılgan",
+const toneLabelsByLang: Record<ToneBucket, { tr: string; en: string }> = {
+  eglenceli: { tr: "Eğlenceli", en: "Playful" },
+  samimi: { tr: "Samimi", en: "Friendly" },
+  atilgan: { tr: "Atılgan", en: "Bold" },
 };
+function toneLabel(tone: ToneBucket): string {
+  return t(toneLabelsByLang[tone]);
+}
 
 /** Small fixed scale for the friendship pips — friendBonds points are rare and small (see meetup.ts), so a 0-100 bar would look broken. */
 const FRIEND_BOND_PIPS = 3;
@@ -45,15 +51,19 @@ export default function RelationshipsPanel({
 
   return (
     <div className="portfolio-panel">
-      <p className="market-category-title">Karakterin</p>
+      <p className="market-category-title">{t({ tr: "Karakterin", en: "Your Character" })}</p>
       <div className="portfolio-row">
         <div className="portfolio-row-info">
-          <p className="portfolio-row-location">🎭 Baskın ton: {tone ? toneLabels[tone] : "Henüz belirsiz"}</p>
-          <p className="portfolio-row-location">🧭 {compass ?? "Pusula henüz belirsiz — daha fazla karar vermen gerek."}</p>
+          <p className="portfolio-row-location">
+            🎭 {t({ tr: "Baskın ton", en: "Dominant tone" })}: {tone ? toneLabel(tone) : t({ tr: "Henüz belirsiz", en: "Not yet clear" })}
+          </p>
+          <p className="portfolio-row-location">
+            🧭 {compass ?? t({ tr: "Pusula henüz belirsiz — daha fazla karar vermen gerek.", en: "The compass isn't clear yet — you need to make more decisions." })}
+          </p>
         </div>
       </div>
 
-      <p className="market-category-title">Patron</p>
+      <p className="market-category-title">{t({ tr: "Patron", en: "Boss" })}</p>
       <div className="portfolio-row">
         <div className="portfolio-row-info">
           <p className="portfolio-row-title">Muzaffer Bey</p>
@@ -65,14 +75,19 @@ export default function RelationshipsPanel({
           </div>
           <p className="portfolio-row-location">
             {bossMood < BOSS_MOOD_RAISE_THRESHOLD
-              ? "Senden pek memnun değil — indirimlere dikkat et."
-              : "Senden memnun, hafta sonunda zam ihtimalin yüksek."}
+              ? t({ tr: "Senden pek memnun değil — indirimlere dikkat et.", en: "He's not very pleased with you — watch out with discounts." })
+              : t({ tr: "Senden memnun, hafta sonunda zam ihtimalin yüksek.", en: "He's pleased with you, a raise at the end of the week is likely." })}
           </p>
         </div>
       </div>
 
-      <p className="market-category-title">Arkadaşların</p>
-      <p className="menu-empty">Yakınlık seviyesindeki arkadaşların, evlere girmeden önce bazen sana gerçek bir tüyo veriyor.</p>
+      <p className="market-category-title">{t({ tr: "Arkadaşların", en: "Your Friends" })}</p>
+      <p className="menu-empty">
+        {t({
+          tr: "Yakınlık seviyesindeki arkadaşların, evlere girmeden önce bazen sana gerçek bir tüyo veriyor.",
+          en: "Friends at the Closeness level sometimes give you a real tip before you enter a house.",
+        })}
+      </p>
       {friendCharacters.map((friend) => {
         const count = friendBondCounts[friend.id] ?? 0;
         const stage = stageForBondCount(count);
@@ -90,17 +105,23 @@ export default function RelationshipsPanel({
                 />
               </div>
               <p className="portfolio-row-location">
-                {stageLabel[stage]}
-                {nextThreshold !== null && ` — sıradaki evreye ${Math.max(0, nextThreshold - count)} adım`}
-                {friendFavorAccepted[friend.id] && " · 🤝 bir iyilik yaptın"}
+                {stageLabel(stage)}
+                {nextThreshold !== null &&
+                  ` — ${t({
+                    tr: `sıradaki evreye ${Math.max(0, nextThreshold - count)} adım`,
+                    en: `${Math.max(0, nextThreshold - count)} steps to the next stage`,
+                  })}`}
+                {friendFavorAccepted[friend.id] && ` · 🤝 ${t({ tr: "bir iyilik yaptın", en: "you did a favor" })}`}
               </p>
             </div>
           </div>
         );
       })}
 
-      <p className="market-category-title">Bağlantılar</p>
-      {bonded.length === 0 && <p className="menu-empty">Henüz kimseyle özel bir bağın yok.</p>}
+      <p className="market-category-title">{t({ tr: "Bağlantılar", en: "Connections" })}</p>
+      {bonded.length === 0 && (
+        <p className="menu-empty">{t({ tr: "Henüz kimseyle özel bir bağın yok.", en: "You don't have a special bond with anyone yet." })}</p>
+      )}
       {bonded.map(([characterId, points]) => {
         const character = poolCharacterById(characterId);
         return (

@@ -1,5 +1,5 @@
 import { HOUSES_PER_WEEK, weekIndexForHouse } from "./goals";
-import { resolveText, type Localized } from "./language";
+import { resolveText, getLanguage, type Localized } from "./language";
 
 /**
  * Emlah'ın Takvimi — a purely derived in-game date, computed from `index`
@@ -22,7 +22,8 @@ export function gameDateForIndex(index: number): Date {
 }
 
 export function formatGameDate(date: Date): string {
-  return date.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+  const locale = getLanguage() === "en" ? "en-US" : "tr-TR";
+  return date.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
 }
 
 /** Fixed appointment slots — deterministic per house so the same save always shows the same time, no extra state needed. */

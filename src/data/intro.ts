@@ -1,5 +1,5 @@
 import type { HouseScene } from "../types";
-import type { Localized } from "./language";
+import { resolveHouseTitle, resolveHouseLocation, type Localized } from "./language";
 
 export interface IntroMessage {
   from: string;
@@ -177,12 +177,23 @@ export const houseIntros: Record<string, HouseIntro> = {
 };
 
 export function defaultIntro(house: HouseScene): HouseIntro {
+  const title = resolveHouseTitle(house);
+  const location = resolveHouseLocation(house);
   return {
     messages: [
-      { from: "Muzaffer Bey", text: `Emlah'ım bugün ${house.title} gösteriyorsun` },
-      { from: "Muzaffer Bey", text: `${house.location}, adres SMS'te` },
-      { from: "Muzaffer Bey", text: "Sen hallet, ben sana güveniyorum 💪" },
+      {
+        from: "Muzaffer Bey",
+        text: { tr: `Emlah'ım bugün ${title} gösteriyorsun`, en: `My Emlah, you're showing ${title} today` },
+      },
+      {
+        from: "Muzaffer Bey",
+        text: { tr: `${location}, adres SMS'te`, en: `${location}, address is in the SMS` },
+      },
+      {
+        from: "Muzaffer Bey",
+        text: { tr: "Sen hallet, ben sana güveniyorum 💪", en: "Handle it, I trust you 💪" },
+      },
     ],
-    thought: "Bakalım bugün nasıl geçecek.",
+    thought: { tr: "Bakalım bugün nasıl geçecek.", en: "Let's see how today goes." },
   };
 }

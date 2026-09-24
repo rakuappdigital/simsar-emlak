@@ -115,25 +115,48 @@ export function personalizedPulseLines(ctx: {
   const lines: string[] = [];
   if (ctx.lastSaleAmount && ctx.lastSaleDistrict) {
     lines.push(
-      `${ctx.lastSaleDistrict}'ta konuşulan haber: bir emlakçı ${formatTL(ctx.lastSaleAmount)} değerinde bir anlaşmaya imza attı — adı hâlâ gizli ama herkes seni konuşuyor.`,
-      `Radyomuza ulaşan bilgiye göre ${ctx.lastSaleDistrict} bölgesinde bu haftanın en iyi anlaşması senin imzanı taşıyor.`,
+      resolveText({
+        tr: `${ctx.lastSaleDistrict}'ta konuşulan haber: bir emlakçı ${formatTL(ctx.lastSaleAmount)} değerinde bir anlaşmaya imza attı — adı hâlâ gizli ama herkes seni konuşuyor.`,
+        en: `Word around ${ctx.lastSaleDistrict}: a realtor signed a deal worth ${formatTL(ctx.lastSaleAmount)} — the name is still secret, but everyone's talking about you.`,
+      }),
+      resolveText({
+        tr: `Radyomuza ulaşan bilgiye göre ${ctx.lastSaleDistrict} bölgesinde bu haftanın en iyi anlaşması senin imzanı taşıyor.`,
+        en: `According to information reaching our radio, this week's best deal in ${ctx.lastSaleDistrict} carries your signature.`,
+      }),
     );
   }
   if (ctx.soldCount !== undefined && ctx.rivalTotal !== undefined) {
     if (ctx.soldCount > ctx.rivalTotal) {
       lines.push(
-        "Sektör kulislerinde konuşulan bir isim var, rakipler bu hafta biraz daha sessiz.",
-        "Duyduğumuza göre Fırat Bey bu hafta biraz daha az konuşuyor, sebebini tahmin edebiliyoruz.",
+        resolveText({
+          tr: "Sektör kulislerinde konuşulan bir isim var, rakipler bu hafta biraz daha sessiz.",
+          en: "There's a name being talked about in industry circles, rivals are a bit quieter this week.",
+        }),
+        resolveText({
+          tr: "Duyduğumuza göre Fırat Bey bu hafta biraz daha az konuşuyor, sebebini tahmin edebiliyoruz.",
+          en: "We hear Fırat Bey is talking a bit less this week, we can guess why.",
+        }),
       );
     } else if (ctx.rivalTotal > ctx.soldCount + 2) {
       lines.push(
-        "Bu hafta rakip emlakçılardan biri iddialı bir seriye imza attı, herkes onu konuşuyor.",
-        "Sektörde rüzgar bu hafta başka bir yönden esiyor gibi görünüyor.",
+        resolveText({
+          tr: "Bu hafta rakip emlakçılardan biri iddialı bir seriye imza attı, herkes onu konuşuyor.",
+          en: "One of the rival realtors put together an impressive streak this week, everyone's talking about it.",
+        }),
+        resolveText({
+          tr: "Sektörde rüzgar bu hafta başka bir yönden esiyor gibi görünüyor.",
+          en: "The wind in the industry seems to be blowing from a different direction this week.",
+        }),
       );
     }
   }
   if (ctx.bossMoodHigh) {
-    lines.push("Duyduğumuza göre bir ofis bu hafta olağandan neşeli, patronun keyfi yerinde galiba.");
+    lines.push(
+      resolveText({
+        tr: "Duyduğumuza göre bir ofis bu hafta olağandan neşeli, patronun keyfi yerinde galiba.",
+        en: "We hear an office is unusually cheerful this week, the boss must be in a good mood.",
+      }),
+    );
   }
   return lines;
 }

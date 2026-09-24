@@ -19,7 +19,7 @@ import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
-import { resolveText, resolveHouseTitle, resolveHouseLocation } from "../data/language";
+import { resolveText, resolveHouseTitle, resolveHouseLocation, t } from "../data/language";
 import {
   isHeldFirmChoice,
   isDiscountContradiction,
@@ -34,7 +34,10 @@ const TYPE_MS_PER_CHAR = 16;
 
 const bonusChoice: Choice = {
   id: "bonus-fun",
-  text: "(Şakalaşarak) Görüyorum ki iyi anlaşıyoruz, hadi imzalayalım o zaman!",
+  text: {
+    tr: "(Şakalaşarak) Görüyorum ki iyi anlaşıyoruz, hadi imzalayalım o zaman!",
+    en: "(Joking) I can see we get along well, let's sign then!",
+  },
   next: "",
   effects: { closingBias: 20, fun: 5 },
 };
@@ -43,12 +46,18 @@ const bonusChoice: Choice = {
  *  to safely swap only the generic discount-ask lines, never touching
  *  specially-authored closing framings (e.g. Miras Kavgası's heir dispute). */
 const DISCOUNT_ASK_PATTERN = /esneklik|indirim/i;
-const WON_DEAL_LINE = "Açıkçası burayı gerçekten beğendim, karar vermeye hazırım.";
-const WON_DEAL_CHOICE_TEXT = "\"O zaman bu şartlarla ilerleyelim, teklif gayet makul.\"";
+const WON_DEAL_LINE = { tr: "Açıkçası burayı gerçekten beğendim, karar vermeye hazırım.", en: "Honestly, I really like this place, I'm ready to decide." };
+const WON_DEAL_CHOICE_TEXT = {
+  tr: '"O zaman bu şartlarla ilerleyelim, teklif gayet makul."',
+  en: '"Then let\'s go ahead with these terms, the offer is quite reasonable."',
+};
 
 const flirtChoice: Choice = {
   id: "flirt-bond",
-  text: "(Göz kırparak) İş ciddi ama bu kadar keyifli bir görüşme az oluyor doğrusu.",
+  text: {
+    tr: "(Göz kırparak) İş ciddi ama bu kadar keyifli bir görüşme az oluyor doğrusu.",
+    en: "(Winking) Business is serious, but a meeting this enjoyable is rare, honestly.",
+  },
   next: "",
   effects: { closingBias: 10, fun: 5 },
 };
@@ -92,10 +101,11 @@ interface DialogueSceneProps {
   rankTitleText?: string;
 }
 
-const speakerLabel: Record<string, string> = {
-  emlah: "Emlah",
-  thought: "Emlah (içinden)",
-};
+function speakerLabelFor(speaker: string): string {
+  if (speaker === "emlah") return "Emlah";
+  if (speaker === "thought") return t({ tr: "Emlah (içinden)", en: "Emlah (to himself)" });
+  return "";
+}
 
 const speakerSlot: Record<string, number> = {
   customer1: 0,
@@ -155,7 +165,13 @@ export default function DialogueScene({
     celebrity && nodeId === house.startNode
       ? [
           { speaker: "thought", text: celebrity.introLine },
-          { speaker: "thought", text: "(içinden) Ünlü biri karşımda, pazarlık payını biraz daha esnek tutabilirim." },
+          {
+            speaker: "thought",
+            text: {
+              tr: "(içinden) Ünlü biri karşımda, pazarlık payını biraz daha esnek tutabilirim.",
+              en: "(to himself) There's a celebrity in front of me, I could be a bit more flexible on the price.",
+            },
+          },
           { speaker: "emlah", text: celebrity.fanLine },
           { speaker: "customer1", text: celebrity.fanReplyLine },
         ]
@@ -260,7 +276,7 @@ export default function DialogueScene({
     const raw = resolveText(line.text);
     const base = house.dynamicCast ? interpolateNames(raw, resolvedNames) : raw;
     if (isClosingNode && dealAlreadyWon && line.speaker !== "emlah" && line.speaker !== "thought" && DISCOUNT_ASK_PATTERN.test(base)) {
-      return WON_DEAL_LINE;
+      return resolveText(WON_DEAL_LINE);
     }
     // Konuşma Tarzı — purely cosmetic suffix on Emlah's own spoken lines only, see data/dialogueStyle.ts.
     if (line.speaker === "emlah") return styleEmlahLine(base, dialogueStyle);
@@ -381,7 +397,7 @@ export default function DialogueScene({
         choices: [
           {
             id: "contradiction-continue",
-            text: "Devam ▸",
+            text: { tr: "Devam ▸", en: "Continue ▸" },
             next: choice.next,
             effects: choice.effects?.closingBias !== undefined ? { closingBias: choice.effects.closingBias } : undefined,
           },
@@ -407,12 +423,24 @@ export default function DialogueScene({
       // makes honesty a real, felt tradeoff instead of a free virtue point.
       setSyntheticNode({
         id: "flirt-extra",
-        lines: [...pickFlirtExchangeLines(), { speaker: "thought", text: "(içinden) Bu satışı gerçekten hak ediyor muyum, yoksa bu sohbetin tadını mı çıkarıyorum?" }],
+        lines: [
+          ...pickFlirtExchangeLines(),
+          {
+            speaker: "thought",
+            text: {
+              tr: "(içinden) Bu satışı gerçekten hak ediyor muyum, yoksa bu sohbetin tadını mı çıkarıyorum?",
+              en: "(to himself) Do I really deserve this sale, or am I just enjoying this conversation?",
+            },
+          },
+        ],
         choices: [
           { id: "flirt-bond-resolve", text: pickFlirtClosingLine(), next: "", effects: { closingBias: choice.effects?.closingBias ?? 0 } },
           {
             id: "flirt-honest-check",
-            text: "(Ciddileşerek) Dur biraz, bu evi gerçekten istediğinizden emin misiniz?",
+            text: {
+              tr: "(Ciddileşerek) Dur biraz, bu evi gerçekten istediğinizden emin misiniz?",
+              en: "(Getting serious) Wait a second, are you sure you really want this house?",
+            },
             next: "",
             effects: { closingBias: (choice.effects?.closingBias ?? 0) * 0.5, suspicion: -5 },
           },
@@ -467,7 +495,11 @@ export default function DialogueScene({
         {personalityHint(house.profile) && (
           <span className="personality-tag">{personalityHint(house.profile)}</span>
         )}
-        {isDuel && <span className="duel-tag">⏱️ {duelRivalName ?? "Fırat Bey"} de bu evle ilgileniyor!</span>}
+        {isDuel && (
+          <span className="duel-tag">
+            ⏱️ {t({ tr: `${duelRivalName ?? "Fırat Bey"} de bu evle ilgileniyor!`, en: `${duelRivalName ?? "Fırat Bey"} is also interested in this house!` })}
+          </span>
+        )}
         {easterEgg && nodeId === house.startNode && <span className="easter-egg-tag">{resolveText(easterEgg.tag)}</span>}
         <div className="scene-title">
           <span>
@@ -483,7 +515,7 @@ export default function DialogueScene({
           const isCurrent = i === linesShown.length - 1;
           const slot = speakerSlot[line.speaker];
           const dynamicName = house.dynamicCast && slot !== undefined ? resolvedNames[slot] : undefined;
-          const displayName = dynamicName ?? line.name ?? speakerLabel[line.speaker] ?? "";
+          const displayName = dynamicName ?? line.name ?? speakerLabelFor(line.speaker);
           const fullText = getLineText(line);
           const text = isCurrent ? fullText.slice(0, typedLength) : fullText;
           if (line.speaker === "thought") {
@@ -523,7 +555,7 @@ export default function DialogueScene({
 
         {!atLastLine && !isTyping && (
           <button className="pixel-btn small" onClick={advanceLine}>
-            Devam ▸
+            {t({ tr: "Devam ▸", en: "Continue ▸" })}
           </button>
         )}
 
@@ -543,7 +575,7 @@ export default function DialogueScene({
 
         {atLastLine && !isTyping && !node.choices && (node.next || node.end) && (
           <button className="pixel-btn small" onClick={advanceLine}>
-            {node.end ? "Sahneyi Bitir" : "Devam ▸"}
+            {node.end ? t({ tr: "Sahneyi Bitir", en: "End Scene" }) : t({ tr: "Devam ▸", en: "Continue ▸" })}
           </button>
         )}
       </div>

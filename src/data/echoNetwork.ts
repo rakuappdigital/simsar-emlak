@@ -24,6 +24,6 @@ export function pickEchoLines(pastContacts: ContactedCustomer[]): DialogueLine[]
   const text = resolveText(template).replace("{isim}", contact.name);
   return [
     { speaker: "customer1", text },
-    { speaker: "thought", text: "(içinden) Küçük bir dünya galiba." },
+    { speaker: "thought", text: resolveText({ tr: "(içinden) Küçük bir dünya galiba.", en: "(to himself) Small world, I guess." }) },
   ];
 }

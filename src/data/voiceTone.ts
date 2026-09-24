@@ -1,5 +1,5 @@
 import type { ChoiceEffects, ToneBucket } from "../types";
-import { resolveText, type Localized } from "./language";
+import { resolveText, t, type Localized } from "./language";
 
 /**
  * "Emlah'ın Sesi" — a lightweight, persisted "voice" that drifts based on
@@ -72,5 +72,5 @@ export function personalitySummary(tally: Record<ToneBucket, number>): string | 
     .filter(([, count]) => count > 0)
     .sort((a, b) => b[1] - a[1])
     .map(([tone, count]) => `%${Math.round((count / total) * 100)} ${resolveText(toneLabels[tone])}`);
-  return `${parts.join(", ")} bir emlakçıydın.`;
+  return t({ tr: `${parts.join(", ")} bir emlakçıydın.`, en: `You were a ${parts.join(", ")} realtor.` });
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { HouseResult, HouseScene, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
-import { resolveHouseTitle, resolveHouseLocation } from "../data/language";
+import { resolveHouseTitle, resolveHouseLocation, t } from "../data/language";
 
 interface PortfolioPanelProps {
   allHouses: HouseScene[];
@@ -11,11 +11,11 @@ interface PortfolioPanelProps {
   currentIndex: number;
 }
 
-const outcomeLabel: Record<SceneOutcome, string> = {
-  sold: "Satıldı ✅",
-  thinking: "Düşünüyor 🤔",
-  lost: "Kaybedildi ❌",
-};
+function outcomeLabel(outcome: SceneOutcome): string {
+  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })} ✅`;
+  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })} 🤔`;
+  return `${t({ tr: "Kaybedildi", en: "Lost" })} ❌`;
+}
 
 export default function PortfolioPanel({
   allHouses,
@@ -31,7 +31,9 @@ export default function PortfolioPanel({
     ? allHouses.filter(
         (h) =>
           h.title.toLocaleLowerCase("tr").includes(normalizedQuery) ||
-          h.location.toLocaleLowerCase("tr").includes(normalizedQuery),
+          h.location.toLocaleLowerCase("tr").includes(normalizedQuery) ||
+          resolveHouseTitle(h).toLocaleLowerCase().includes(normalizedQuery) ||
+          resolveHouseLocation(h).toLocaleLowerCase().includes(normalizedQuery),
       )
     : allHouses;
 
@@ -40,11 +42,13 @@ export default function PortfolioPanel({
       <input
         type="text"
         className="portfolio-search"
-        placeholder="Ev veya semt ara..."
+        placeholder={t({ tr: "Ev veya semt ara...", en: "Search house or district..." })}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {filteredHouses.length === 0 && <p className="menu-empty">Eşleşen ev bulunamadı.</p>}
+      {filteredHouses.length === 0 && (
+        <p className="menu-empty">{t({ tr: "Eşleşen ev bulunamadı.", en: "No matching house found." })}</p>
+      )}
       {filteredHouses.map((h) => {
         const playedIdx = houseOrder.indexOf(allHouses.indexOf(h));
         const result = playedIdx !== -1 && playedIdx < results.length ? results[playedIdx] : undefined;
@@ -52,16 +56,16 @@ export default function PortfolioPanel({
         let status: string;
         let statusClass: string;
         if (result) {
-          status = outcomeLabel[result.outcome] + (result.converted ? " (sonradan ikna)" : "");
+          status = outcomeLabel(result.outcome) + (result.converted ? ` (${t({ tr: "sonradan ikna", en: "convinced later" })})` : "");
           statusClass = `status-${result.outcome}`;
         } else if (h.tier > maxUnlockedTier) {
-          status = "Kilitli 🔒";
+          status = `${t({ tr: "Kilitli", en: "Locked" })} 🔒`;
           statusClass = "status-locked";
         } else if (playedIdx === currentIndex) {
-          status = "Şu an burada";
+          status = t({ tr: "Şu an burada", en: "Here now" });
           statusClass = "status-current";
         } else {
-          status = "Sırada";
+          status = t({ tr: "Sırada", en: "Up Next" });
           statusClass = "status-upcoming";
         }
 
@@ -69,7 +73,9 @@ export default function PortfolioPanel({
           <div className={`portfolio-row ${statusClass}`} key={h.id}>
             <div className="portfolio-row-info">
               <p className="portfolio-row-title">{resolveHouseTitle(h)}</p>
-              <p className="portfolio-row-location">{resolveHouseLocation(h)} · Tier {h.tier}</p>
+              <p className="portfolio-row-location">
+                {resolveHouseLocation(h)} · Tier {h.tier}
+              </p>
             </div>
             <div className="portfolio-row-meta">
               <span className="portfolio-row-price">{formatTL(h.askingPrice)}</span>

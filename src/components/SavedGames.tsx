@@ -1,4 +1,5 @@
 import type { SaveGame } from "../types";
+import { t, getLanguage } from "../data/language";
 import { allHouses } from "../data/houses";
 import { formatTL } from "../data/economy";
 
@@ -14,13 +15,15 @@ export default function SavedGames({ saves, onContinue, onDelete, onBack }: Save
 
   return (
     <div className="menu-screen">
-      <h2 className="menu-section-title">Kayıtlı Oyunlar</h2>
-      {!anySave && <p className="menu-empty">Henüz kayıtlı bir oyun yok.</p>}
+      <h2 className="menu-section-title">{t({ tr: "Kayıtlı Oyunlar", en: "Saved Games" })}</h2>
+      {!anySave && <p className="menu-empty">{t({ tr: "Henüz kayıtlı bir oyun yok.", en: "No saved games yet." })}</p>}
       {saves.map((save, slot) => {
         if (!save) {
           return (
             <div className="save-slot save-slot-empty" key={slot}>
-              <p className="menu-empty">Kayıt {slot + 1}: boş</p>
+              <p className="menu-empty">
+                {t({ tr: "Kayıt", en: "Save" })} {slot + 1}: {t({ tr: "boş", en: "empty" })}
+              </p>
             </div>
           );
         }
@@ -32,21 +35,42 @@ export default function SavedGames({ saves, onContinue, onDelete, onBack }: Save
 
         return (
           <div className="save-slot" key={slot}>
-            <p className="save-slot-title">Kayıt {slot + 1}</p>
-            <p>İlerleme: Ev {save.index + 1}/{allHouses.length}</p>
-            <p>Satış: {soldCount}</p>
-            <p>Toplam Kazanç: {formatTL(earned)}</p>
-            <p>Bakiye: {formatTL(balance)}</p>
-            <p>Rozet: {save.badges.length}</p>
-            <p className="save-slot-date">Son kayıt: {new Date(save.savedAt).toLocaleString("tr-TR")}</p>
+            <p className="save-slot-title">
+              {t({ tr: "Kayıt", en: "Save" })} {slot + 1}
+            </p>
+            <p>
+              {t({ tr: "İlerleme", en: "Progress" })}: {t({ tr: "Ev", en: "House" })} {save.index + 1}/{allHouses.length}
+            </p>
+            <p>
+              {t({ tr: "Satış", en: "Sales" })}: {soldCount}
+            </p>
+            <p>
+              {t({ tr: "Toplam Kazanç", en: "Total Earnings" })}: {formatTL(earned)}
+            </p>
+            <p>
+              {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)}
+            </p>
+            <p>
+              {t({ tr: "Rozet", en: "Badges" })}: {save.badges.length}
+            </p>
+            <p className="save-slot-date">
+              {t({ tr: "Son kayıt", en: "Last saved" })}:{" "}
+              {new Date(save.savedAt).toLocaleString(getLanguage() === "en" ? "en-US" : "tr-TR")}
+            </p>
             <div className="save-slot-actions">
-              <button className="pixel-btn" onClick={() => onContinue(slot)}>Devam Et</button>
-              <button className="pixel-btn small danger" onClick={() => onDelete(slot)}>Sil</button>
+              <button className="pixel-btn" onClick={() => onContinue(slot)}>
+                {t({ tr: "Devam Et", en: "Continue" })}
+              </button>
+              <button className="pixel-btn small danger" onClick={() => onDelete(slot)}>
+                {t({ tr: "Sil", en: "Delete" })}
+              </button>
             </div>
           </div>
         );
       })}
-      <button className="menu-btn ghost" onClick={onBack}>Geri</button>
+      <button className="menu-btn ghost" onClick={onBack}>
+        {t({ tr: "Geri", en: "Back" })}
+      </button>
     </div>
   );
 }

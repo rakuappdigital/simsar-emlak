@@ -3,7 +3,7 @@ import { formatTL } from "../data/economy";
 import { computePrestige, PRESTIGE_MAX, rankTitleDisplay } from "../data/scoring";
 import { rivalLadder, activeRivalFor } from "../data/rivalLadder";
 import { MedalIcon } from "./icons";
-import { resolveText } from "../data/language";
+import { resolveText, t } from "../data/language";
 import { showLeaderboard } from "../data/gameCenter";
 
 interface CareerPanelProps {
@@ -50,27 +50,27 @@ export default function CareerPanel({
   return (
     <div className="career-panel">
       <button className="pixel-btn small" onClick={showLeaderboard}>
-        🏆 Liderlik Tablosu
+        🏆 {t({ tr: "Liderlik Tablosu", en: "Leaderboard" })}
       </button>
       <div className="career-stat-row">
-        <span className="career-stat-label">Kariyer Rütbesi</span>
+        <span className="career-stat-label">{t({ tr: "Kariyer Rütbesi", en: "Career Rank" })}</span>
         <span className="career-stat-value">{rankTitleDisplay(rankTitleText)}</span>
       </div>
       <div className="career-stat-row">
-        <span className="career-stat-label">Ün</span>
+        <span className="career-stat-label">{t({ tr: "Ün", en: "Reputation" })}</span>
         <span className="career-stat-value">{reputationText || "—"}</span>
       </div>
       <div className="career-stat-row">
-        <span className="career-stat-label">Toplam Kazanç</span>
+        <span className="career-stat-label">{t({ tr: "Toplam Kazanç", en: "Total Earnings" })}</span>
         <span className="career-stat-value">{formatTL(earned)}</span>
       </div>
       <div className="career-stat-row">
-        <span className="career-stat-label">Bakiye</span>
+        <span className="career-stat-label">{t({ tr: "Bakiye", en: "Balance" })}</span>
         <span className="career-stat-value">{formatTL(balance)}</span>
       </div>
 
       <div className="prestige-bar">
-        <span className="prestige-label">Prestij: {prestige}/{PRESTIGE_MAX}</span>
+        <span className="prestige-label">{t({ tr: "Prestij", en: "Prestige" })}: {prestige}/{PRESTIGE_MAX}</span>
         <div className="stat-track">
           <div
             className="stat-fill prestige-fill"
@@ -79,24 +79,24 @@ export default function CareerPanel({
         </div>
       </div>
 
-      <p className="market-category-title">İstatistikler</p>
+      <p className="market-category-title">{t({ tr: "İstatistikler", en: "Statistics" })}</p>
       <div className="career-stat-row">
-        <span className="career-stat-label">En Yüksek Satış</span>
+        <span className="career-stat-label">{t({ tr: "En Yüksek Satış", en: "Highest Sale" })}</span>
         <span className="career-stat-value">{bestSale > 0 ? formatTL(bestSale) : "—"}</span>
       </div>
       <div className="career-stat-row">
-        <span className="career-stat-label">En Düşük Şüpheyle Satış</span>
+        <span className="career-stat-label">{t({ tr: "En Düşük Şüpheyle Satış", en: "Lowest-Suspicion Sale" })}</span>
         <span className="career-stat-value">{cleanestSale !== null ? cleanestSale.toFixed(0) : "—"}</span>
       </div>
       <div className="career-stat-row">
-        <span className="career-stat-label">Tamamlanan İş Görevi</span>
+        <span className="career-stat-label">{t({ tr: "Tamamlanan İş Görevi", en: "Office Tasks Completed" })}</span>
         <span className="career-stat-value">{tasksCompleted}</span>
       </div>
       <div className="career-stat-row">
-        <span className="career-stat-label">Yakalanan Sohbet Bonusu</span>
+        <span className="career-stat-label">{t({ tr: "Yakalanan Sohbet Bonusu", en: "Chitchat Bonuses Earned" })}</span>
         <span className="career-stat-value">{chitchatBonuses}</span>
       </div>
-      <p className="market-category-title">Şehrin Kurtları</p>
+      <p className="market-category-title">{t({ tr: "Şehrin Kurtları", en: "Wolves of the City" })}</p>
       {rivalLadder.map((rival, i) => {
         const defeated = defeatedRivalIds.includes(rival.id);
         const isActive = !defeated && activeRival.id === rival.id;
@@ -106,7 +106,7 @@ export default function CareerPanel({
               {i + 1}. {rival.name} <span className="rival-ladder-title">— {resolveText(rival.title)}</span>
             </span>
             <span className="career-stat-value">
-              {defeated ? "✅ Geçildi" : isActive ? `${soldCount}/${rival.threshold}` : "🔒"}
+              {defeated ? `✅ ${t({ tr: "Geçildi", en: "Passed" })}` : isActive ? `${soldCount}/${rival.threshold}` : "🔒"}
             </span>
           </div>
         );
@@ -114,15 +114,15 @@ export default function CareerPanel({
 
       {investmentResults.length > 0 && (
         <div className="career-stat-row">
-          <span className="career-stat-label">Yatırımlardan Net Kazanç</span>
+          <span className="career-stat-label">{t({ tr: "Yatırımlardan Net Kazanç", en: "Net Investment Profit" })}</span>
           <span className={`career-stat-value ${investmentNet < 0 ? "career-stat-negative" : ""}`}>
             {formatTL(investmentNet)}
           </span>
         </div>
       )}
 
-      <p className="market-category-title">Rozetler</p>
-      {badges.length === 0 && <p className="menu-empty">Henüz rozet yok.</p>}
+      <p className="market-category-title">{t({ tr: "Rozetler", en: "Badges" })}</p>
+      {badges.length === 0 && <p className="menu-empty">{t({ tr: "Henüz rozet yok.", en: "No badges yet." })}</p>}
       {badges.length > 0 && (
         <div className="badge-popup">
           {badges.map((id) => (

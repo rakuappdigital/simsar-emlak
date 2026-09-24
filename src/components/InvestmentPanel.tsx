@@ -1,7 +1,7 @@
 import type { ContactedCustomer, HouseResult, HouseScene, OwnedInvestmentHouse, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { conditionLabel, renovationOptions, renovationCost, type RenovationLevel } from "../data/renovation";
-import { resolveText, resolveHouseTitle, resolveHouseLocation } from "../data/language";
+import { resolveText, resolveHouseTitle, resolveHouseLocation, t } from "../data/language";
 
 interface InvestmentPanelProps {
   balance: number;
@@ -17,11 +17,11 @@ interface InvestmentPanelProps {
   onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
 }
 
-const outcomeLabel: Record<SceneOutcome, string> = {
-  sold: "Satıldı ✅",
-  thinking: "Düşünüyor 🤔",
-  lost: "Kaybedildi ❌",
-};
+function outcomeLabel(outcome: SceneOutcome): string {
+  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })} ✅`;
+  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })} 🤔`;
+  return `${t({ tr: "Kaybedildi", en: "Lost" })} ❌`;
+}
 
 export default function InvestmentPanel({
   balance,
@@ -40,7 +40,10 @@ export default function InvestmentPanel({
     return (
       <div className="portfolio-panel">
         <p className="menu-empty">
-          Bu bölüm "Ofis Ortağı" rütbesine ulaşınca açılır — kendi paranla ev alıp elinde tutmadan satabileceksin.
+          {t({
+            tr: 'Bu bölüm "Ofis Ortağı" rütbesine ulaşınca açılır — kendi paranla ev alıp elinde tutmadan satabileceksin.',
+            en: 'This section unlocks once you reach "Office Partner" rank — you\'ll be able to buy houses with your own money and sell them for a profit.',
+          })}
         </p>
       </div>
     );
@@ -54,13 +57,21 @@ export default function InvestmentPanel({
       {currentNewsModifier !== 0 && (
         <p className={`market-campaign-banner ${currentNewsModifier > 0 ? "news-up" : "news-down"}`}>
           {currentNewsModifier > 0
-            ? `📈 Piyasa yükselişte — fiyatlar %${Math.round(currentNewsModifier * 100)} yukarıda.`
-            : `📉 Piyasa düşüşte — fiyatlar %${Math.round(Math.abs(currentNewsModifier) * 100)} aşağıda, satışta pazarlık daha sert geçebilir.`}
+            ? t({
+                tr: `📈 Piyasa yükselişte — fiyatlar %${Math.round(currentNewsModifier * 100)} yukarıda.`,
+                en: `📈 The market is up — prices are ${Math.round(currentNewsModifier * 100)}% higher.`,
+              })
+            : t({
+                tr: `📉 Piyasa düşüşte — fiyatlar %${Math.round(Math.abs(currentNewsModifier) * 100)} aşağıda, satışta pazarlık daha sert geçebilir.`,
+                en: `📉 The market is down — prices are ${Math.round(Math.abs(currentNewsModifier) * 100)}% lower, negotiating a sale may be tougher.`,
+              })}
         </p>
       )}
 
-      <p className="market-category-title">Sahip Olduklarım</p>
-      {ownedInvestmentHouses.length === 0 && <p className="menu-empty">Henüz satın aldığın bir yatırım evi yok.</p>}
+      <p className="market-category-title">{t({ tr: "Sahip Olduklarım", en: "What I Own" })}</p>
+      {ownedInvestmentHouses.length === 0 && (
+        <p className="menu-empty">{t({ tr: "Henüz satın aldığın bir yatırım evi yok.", en: "You haven't bought any investment property yet." })}</p>
+      )}
       {ownedInvestmentHouses.map((owned) => {
         const houseDef = investmentHouses.find((h) => h.id === owned.houseId);
         if (!houseDef) return null;
@@ -69,7 +80,9 @@ export default function InvestmentPanel({
             <div className="portfolio-row-info">
               <p className="portfolio-row-title">{resolveHouseTitle(houseDef)}</p>
               <p className="portfolio-row-location">{resolveHouseLocation(houseDef)}</p>
-              <p className="portfolio-row-location">Alış: {formatTL(owned.purchasePrice)}</p>
+              <p className="portfolio-row-location">
+                {t({ tr: "Alış", en: "Purchase" })}: {formatTL(owned.purchasePrice)}
+              </p>
               <p className={`condition-tag condition-${owned.condition}`}>🔧 {resolveText(conditionLabel[owned.condition])}</p>
               {owned.renovationLevel === "yok" ? (
                 <div className="renovation-options">
@@ -89,7 +102,11 @@ export default function InvestmentPanel({
                 </div>
               ) : (
                 <p className="renovation-done-tag">
-                  ✅ {resolveText(renovationOptions.find((o) => o.level === owned.renovationLevel)?.label ?? "")} yapıldı
+                  ✅{" "}
+                  {t({
+                    tr: `${resolveText(renovationOptions.find((o) => o.level === owned.renovationLevel)?.label ?? "")} yapıldı`,
+                    en: `${resolveText(renovationOptions.find((o) => o.level === owned.renovationLevel)?.label ?? "")} done`,
+                  })}
                 </p>
               )}
               {contactedCustomers.length > 0 && (
@@ -100,7 +117,7 @@ export default function InvestmentPanel({
                       className="pixel-btn small ghost"
                       onClick={() => onPitchInvestment(c, owned.houseId)}
                     >
-                      {c.name}'e öner
+                      {t({ tr: `${c.name}'e öner`, en: `Suggest to ${c.name}` })}
                     </button>
                   ))}
                 </div>
@@ -108,14 +125,14 @@ export default function InvestmentPanel({
             </div>
             <div className="portfolio-row-meta">
               <button className="pixel-btn small" onClick={() => onSellInvestment(owned.houseId)}>
-                Satışa Çıkar
+                {t({ tr: "Satışa Çıkar", en: "Put Up for Sale" })}
               </button>
             </div>
           </div>
         );
       })}
 
-      <p className="market-category-title">Satın Alınabilir</p>
+      <p className="market-category-title">{t({ tr: "Satın Alınabilir", en: "Available to Buy" })}</p>
       {available.map((houseDef) => {
         const price = Math.round(houseDef.askingPrice * (1 + currentNewsModifier));
         const disabled = balance < price;
@@ -136,7 +153,11 @@ export default function InvestmentPanel({
                   formatTL(price)
                 )}
               </button>
-              {discounted && <p className="market-item-discount">⚠️ Fiyat düşük ama satarken zorlanabilirsin</p>}
+              {discounted && (
+                <p className="market-item-discount">
+                  ⚠️ {t({ tr: "Fiyat düşük ama satarken zorlanabilirsin", en: "Price is low but you may struggle to sell later" })}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -144,18 +165,18 @@ export default function InvestmentPanel({
 
       {investmentResults.length > 0 && (
         <>
-          <p className="market-category-title">Geçmiş Satışlar</p>
+          <p className="market-category-title">{t({ tr: "Geçmiş Satışlar", en: "Past Sales" })}</p>
           {investmentResults.map((r, i) => {
             const houseDef = investmentHouses.find((h) => h.id === r.houseId);
             return (
               <div className="portfolio-row" key={`${r.houseId}-${i}`}>
                 <div className="portfolio-row-info">
-                  <p className="portfolio-row-title">{houseDef?.title ?? r.houseId}</p>
+                  <p className="portfolio-row-title">{houseDef ? resolveHouseTitle(houseDef) : r.houseId}</p>
                 </div>
                 <div className="portfolio-row-meta">
                   <span className="portfolio-row-status">
-                    {outcomeLabel[r.outcome]}
-                    {r.sale && ` (${formatTL(r.sale.commission)} kâr)`}
+                    {outcomeLabel(r.outcome)}
+                    {r.sale && ` (${formatTL(r.sale.commission)} ${t({ tr: "kâr", en: "profit" })})`}
                   </span>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t } from "../data/language";
 import type { ReactNode } from "react";
 import type {
   Badge,
@@ -111,20 +112,20 @@ interface EmlahMenuProps {
   onUnlockSkill: (skillId: string) => void;
 }
 
-const tabs: { id: EmlahTab; icon: ReactNode; label: string }[] = [
-  { id: "market", icon: <CartIcon size={14} />, label: "Market" },
-  { id: "envanter", icon: <KeyRingIcon size={14} />, label: "Envanter" },
-  { id: "mesajlar", icon: <ChatIcon size={14} />, label: "Mesajlar" },
-  { id: "portfoy", icon: <HouseIcon size={14} />, label: "Portföy" },
-  { id: "kariyer", icon: <StarIcon size={14} />, label: "Kariyer" },
-  { id: "davet", icon: <MedalIcon size={14} />, label: "Özel Davetler" },
-  { id: "yatirim", icon: <HouseIcon size={14} />, label: "Yatırım Evleri" },
-  { id: "teslimler", icon: <CalendarIcon size={14} />, label: "Bekleyen Teslimler" },
-  { id: "iliskiler", icon: <HeartIcon size={14} />, label: "İlişkiler" },
-  { id: "arkadaslar", icon: <HouseIcon size={14} />, label: "Arkadaşlarım" },
-  { id: "rehber", icon: <BriefcaseIcon size={14} />, label: "Rehber" },
-  { id: "harita", icon: <CompassIcon size={14} />, label: "Şehir Haritası" },
-  { id: "beceri", icon: <ChalkboardIcon size={14} />, label: "Beceriler" },
+const tabs: { id: EmlahTab; icon: ReactNode; label: { tr: string; en: string } }[] = [
+  { id: "market", icon: <CartIcon size={14} />, label: { tr: "Market", en: "Market" } },
+  { id: "envanter", icon: <KeyRingIcon size={14} />, label: { tr: "Envanter", en: "Inventory" } },
+  { id: "mesajlar", icon: <ChatIcon size={14} />, label: { tr: "Mesajlar", en: "Messages" } },
+  { id: "portfoy", icon: <HouseIcon size={14} />, label: { tr: "Portföy", en: "Portfolio" } },
+  { id: "kariyer", icon: <StarIcon size={14} />, label: { tr: "Kariyer", en: "Career" } },
+  { id: "davet", icon: <MedalIcon size={14} />, label: { tr: "Özel Davetler", en: "Special Invites" } },
+  { id: "yatirim", icon: <HouseIcon size={14} />, label: { tr: "Yatırım Evleri", en: "Investment Properties" } },
+  { id: "teslimler", icon: <CalendarIcon size={14} />, label: { tr: "Bekleyen Teslimler", en: "Pending Deliveries" } },
+  { id: "iliskiler", icon: <HeartIcon size={14} />, label: { tr: "İlişkiler", en: "Relationships" } },
+  { id: "arkadaslar", icon: <HouseIcon size={14} />, label: { tr: "Arkadaşlarım", en: "My Friends" } },
+  { id: "rehber", icon: <BriefcaseIcon size={14} />, label: { tr: "Rehber", en: "Contacts" } },
+  { id: "harita", icon: <CompassIcon size={14} />, label: { tr: "Şehir Haritası", en: "City Map" } },
+  { id: "beceri", icon: <ChalkboardIcon size={14} />, label: { tr: "Beceriler", en: "Skills" } },
 ];
 
 export default function EmlahMenu({
@@ -201,20 +202,20 @@ export default function EmlahMenu({
           <span className="market-balance">
             <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)}
           </span>
-          <button className="market-close" onClick={onClose} aria-label="Kapat">
+          <button className="market-close" onClick={onClose} aria-label={t({ tr: "Kapat", en: "Close" })}>
             <CloseIcon size={12} />
           </button>
         </div>
 
         <div className="emlah-tabs">
-          {tabs.map((t) => (
+          {tabs.map((tabDef) => (
             <button
-              key={t.id}
-              className={`emlah-tab-btn ${tab === t.id ? "active" : ""}`}
-              onClick={() => setTab(t.id)}
+              key={tabDef.id}
+              className={`emlah-tab-btn ${tab === tabDef.id ? "active" : ""}`}
+              onClick={() => setTab(tabDef.id)}
             >
-              {t.icon}
-              <span>{t.label}</span>
+              {tabDef.icon}
+              <span>{t(tabDef.label)}</span>
             </button>
           ))}
         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t } from "../data/language";
 import type { HouseResult, InboxMessage } from "../types";
 import { groupThreads } from "../data/inbox";
 import { ChevronLeftIcon } from "./icons";
@@ -34,7 +35,7 @@ export default function MessagesPanel({
   const [selected, setSelected] = useState<string | null>(null);
 
   const threads = groupThreads(inbox);
-  const activeThread = threads.find((t) => t.threadId === selected);
+  const activeThread = threads.find((thread) => thread.threadId === selected);
   const activeResult = selected ? results.find((r) => r.houseId === selected) : undefined;
   const canRetry = activeResult?.outcome === "lost" && !activeResult.retriedLost;
   const canFollowUp = activeResult?.outcome === "thinking" && !activeResult.followedUpThinking;
@@ -49,21 +50,21 @@ export default function MessagesPanel({
   if (!selected) {
     return (
       <div className="thread-list">
-        {threads.length === 0 && <p className="menu-empty">Henüz mesaj yok.</p>}
-        {threads.map((t) => {
-          const result = t.threadId !== "muzaffer" ? results.find((r) => r.houseId === t.threadId) : undefined;
-          const threadFriendId = t.threadId.startsWith("friend-") ? t.threadId.slice(7) : null;
+        {threads.length === 0 && <p className="menu-empty">{t({ tr: "Henüz mesaj yok.", en: "No messages yet." })}</p>}
+        {threads.map((thread) => {
+          const result = thread.threadId !== "muzaffer" ? results.find((r) => r.houseId === thread.threadId) : undefined;
+          const threadFriendId = thread.threadId.startsWith("friend-") ? thread.threadId.slice(7) : null;
           const replyable =
             (result?.outcome === "lost" && !result.retriedLost) ||
             (result?.outcome === "thinking" && !result.followedUpThinking) ||
             (threadFriendId ? !!pendingFriendFavors[threadFriendId] : false);
           return (
-            <button className="thread-row" key={t.threadId} onClick={() => setSelected(t.threadId)}>
+            <button className="thread-row" key={thread.threadId} onClick={() => setSelected(thread.threadId)}>
               <div className="thread-row-info">
-                <p className="thread-row-name">{t.contactName}</p>
-                <p className="thread-row-preview">{t.lastMessage.text}</p>
+                <p className="thread-row-name">{thread.contactName}</p>
+                <p className="thread-row-preview">{thread.lastMessage.text}</p>
               </div>
-              {replyable && <span className="thread-row-badge">Yanıtla</span>}
+              {replyable && <span className="thread-row-badge">{t({ tr: "Yanıtla", en: "Reply" })}</span>}
             </button>
           );
         })}
@@ -76,7 +77,7 @@ export default function MessagesPanel({
   return (
     <div className="thread-detail">
       <button className="thread-back" onClick={() => setSelected(null)}>
-        <ChevronLeftIcon size={12} className="icon-inline" /> Tüm mesajlar
+        <ChevronLeftIcon size={12} className="icon-inline" /> {t({ tr: "Tüm mesajlar", en: "All messages" })}
       </button>
       <div className="thread-messages">
         {activeThread.messages.map((m) => (
@@ -87,33 +88,33 @@ export default function MessagesPanel({
       </div>
       {canRetry && (
         <button className="pixel-btn small" onClick={() => onRetry(selected)}>
-          Tekrar Dene
+          {t({ tr: "Tekrar Dene", en: "Try Again" })}
         </button>
       )}
       {activeResult?.outcome === "lost" && activeResult.retriedLost && (
-        <p className="menu-empty">Bu müşteriyle bir daha görüşme şansın kalmadı.</p>
+        <p className="menu-empty">{t({ tr: "Bu müşteriyle bir daha görüşme şansın kalmadı.", en: "You have no more chances to talk with this customer." })}</p>
       )}
       {canFollowUp && (
         <button className="pixel-btn small" onClick={() => onFollowUp(selected)}>
-          Takip Mesajı Gönder
+          {t({ tr: "Takip Mesajı Gönder", en: "Send Follow-Up Message" })}
         </button>
       )}
       {activeResult?.outcome === "thinking" && activeResult.followedUpThinking && (
-        <p className="menu-empty">Bu müşteriye zaten bir takip mesajı gönderdin.</p>
+        <p className="menu-empty">{t({ tr: "Bu müşteriye zaten bir takip mesajı gönderdin.", en: "You already sent a follow-up message to this customer." })}</p>
       )}
       {hasPendingFavor && friendIdFromThread && (
         <div className="favor-choice-row">
           <button className="pixel-btn small" onClick={() => onFriendFavor(friendIdFromThread, true)}>
-            Yardım Et
+            {t({ tr: "Yardım Et", en: "Help Out" })}
           </button>
           <button className="pixel-btn small ghost" onClick={() => onFriendFavor(friendIdFromThread, false)}>
-            Şimdi Olmaz
+            {t({ tr: "Şimdi Olmaz", en: "Not Now" })}
           </button>
         </div>
       )}
       {canAskForHelp && friendIdFromThread && (
         <button className="pixel-btn small" onClick={() => onAskForHelp(friendIdFromThread)}>
-          Yardım İste
+          {t({ tr: "Yardım İste", en: "Ask for Help" })}
         </button>
       )}
     </div>

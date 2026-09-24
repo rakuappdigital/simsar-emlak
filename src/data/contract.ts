@@ -22,9 +22,24 @@ const tadilatOptions = [
 export function generateContract(): ContractClause[] {
   const pick = <T extends { id: string }>(options: T[]) => options[Math.floor(Math.random() * options.length)].id;
   return [
-    { id: "teslim", title: "Teslim Tarihi", options: teslimOptions, preferredOptionId: pick(teslimOptions) },
-    { id: "depozito", title: "Depozito", options: depozitoOptions, preferredOptionId: pick(depozitoOptions) },
-    { id: "tadilat", title: "Tadilat Sorumluluğu", options: tadilatOptions, preferredOptionId: pick(tadilatOptions) },
+    {
+      id: "teslim",
+      title: { tr: "Teslim Tarihi", en: "Delivery Date" },
+      options: teslimOptions,
+      preferredOptionId: pick(teslimOptions),
+    },
+    {
+      id: "depozito",
+      title: { tr: "Depozito", en: "Deposit" },
+      options: depozitoOptions,
+      preferredOptionId: pick(depozitoOptions),
+    },
+    {
+      id: "tadilat",
+      title: { tr: "Tadilat Sorumluluğu", en: "Renovation Responsibility" },
+      options: tadilatOptions,
+      preferredOptionId: pick(tadilatOptions),
+    },
   ];
 }
 

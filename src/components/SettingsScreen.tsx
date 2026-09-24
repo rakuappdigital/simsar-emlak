@@ -143,9 +143,9 @@ export default function SettingsScreen({
         ))}
       </div>
 
-      <p className="settings-subsection-title">Ses</p>
+      <p className="settings-subsection-title">{language === "en" ? "Sound" : "Ses"}</p>
       <div className="sound-row">
-        <span>Müzik</span>
+        <span>{language === "en" ? "Music" : "Müzik"}</span>
         <input
           type="range"
           min={0}
@@ -155,7 +155,7 @@ export default function SettingsScreen({
         />
       </div>
       <div className="sound-row">
-        <span>Efektler</span>
+        <span>{language === "en" ? "Effects" : "Efektler"}</span>
         <input
           type="range"
           min={0}
@@ -166,7 +166,7 @@ export default function SettingsScreen({
         />
       </div>
 
-      <p className="settings-subsection-title">Zorluk</p>
+      <p className="settings-subsection-title">{language === "en" ? "Difficulty" : "Zorluk"}</p>
       <div className="difficulty-row">
         {difficulties.map((d) => (
           <button
@@ -178,9 +178,13 @@ export default function SettingsScreen({
           </button>
         ))}
       </div>
-      <p className="menu-empty">Şüphenin ne kadar hızlı arttığını etkiler. Normal, oyunun her zamanki dengesidir.</p>
+      <p className="menu-empty">
+        {language === "en"
+          ? "Affects how quickly suspicion rises. Normal is the game's usual balance."
+          : "Şüphenin ne kadar hızlı arttığını etkiler. Normal, oyunun her zamanki dengesidir."}
+      </p>
 
-      <p className="settings-subsection-title">Konuşma Tarzı</p>
+      <p className="settings-subsection-title">{language === "en" ? "Speaking Style" : "Konuşma Tarzı"}</p>
       <div className="difficulty-row">
         {dialogueStyles.map((s) => (
           <button
@@ -192,7 +196,11 @@ export default function SettingsScreen({
           </button>
         ))}
       </div>
-      <p className="menu-empty">Emlah'ın kendi cümlelerine ara sıra küçük bir dokunuş ekler (ünlem, gülücük) — hiçbir cümleyi değiştirmez.</p>
+      <p className="menu-empty">
+        {language === "en"
+          ? "Occasionally adds a small touch to Emlah's own lines (an exclamation, a smile) — never changes any dialogue."
+          : "Emlah'ın kendi cümlelerine ara sıra küçük bir dokunuş ekler (ünlem, gülücük) — hiçbir cümleyi değiştirmez."}
+      </p>
 
       <p className="settings-subsection-title">🏪 Store / Market</p>
       <p className="menu-empty">
@@ -278,7 +286,7 @@ export default function SettingsScreen({
       </button>
 
       <button className="menu-btn ghost" onClick={onBack}>
-        Geri
+        {language === "en" ? "Back" : "Geri"}
       </button>
     </div>
   );
