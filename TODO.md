@@ -1,3 +1,22 @@
+# Oyunu Bitir, randevu kilidi, market açıklamaları — Build 9 (2026-09-25)
+
+## ✅ TAMAMLANDI — Oyun içi "Oyunu Bitir"
+Oyun içinden açılan Ayarlar'a onaylı "Oyunu Bitir" eklendi (ana menüden açılınca görünmez). Ana menüye döner, ilerleme son otomatik kayıtta kalır.
+
+## ✅ TAMAMLANDI — Randevu verilen müşteride yeni güne geçememe (soft-lock)
+Kök neden: `OfficeScene` bekleyen ziyaret varken (status "scheduled" dahil) "Yeni Güne Geç"i gizliyordu; randevu geri sayımını azaltan tek yer `handleAdvanceDay` olduğu için oyun kilitleniyordu. Artık "Yeni Güne Geç — randevuya N gün" gösteriliyor. Ek olarak geri sayım `persist` ediliyor (eskiden yeniden açılışta sıfırlanıyordu) ve bekleme günlerinde günlük aktiviteler sıfırlanıyor. Regresyon testi: `tests/scheduled-visit-exit.mjs`.
+
+## ✅ TAMAMLANDI — Market açıklamaları
+Kartların altında kopuk duran açıklamalar kaldırıldı. Kullanıcıya 3 tasarım (pencere / açılır / kart içi) gösterildi, "B · Açılır" seçildi: karta dokununca açıklama + "Satın Al — fiyat" kartın satırının hemen altında açılıyor.
+
+## ℹ️ Dil seçimi
+Zaten istenen şekilde çalışıyor (splash → sadece ilk kurulumda dil seçimi → ana menü; ana menü Ayarlar'dan değişir, oyun içinde kilitli) — gerçek splash ile doğrulandı, değişiklik yapılmadı.
+
+## ✅ TAMAMLANDI — Build 9: TestFlight'a yüklendi
+Build 8→9, CLI pipeline (archive → export → `xcrun altool --upload-app`). "UPLOAD SUCCEEDED with no errors" (Delivery UUID `6ae5372e-ca79-454f-a18b-b04e69b91d7e`).
+
+---
+
 # Fiyat düzeltmesi, ikon yenileme, ödül/harcama döngüsü canlı testi (2026-09-25)
 
 ## ✅ TAMAMLANDI — Müzik fade bug'ı (kök neden bulundu)
