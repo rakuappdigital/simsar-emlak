@@ -1,5 +1,37 @@
 # Fiyat düzeltmesi, ikon yenileme, ödül/harcama döngüsü canlı testi (2026-09-25)
 
+## ✅ TAMAMLANDI — Müzik fade bug'ı (kök neden bulundu)
+`sound.ts`'teki `fadeVolume` tek bir paylaşılan modül-seviyesi `fadeRaf` kullanıyordu — `startSaleMusic()`/`stopSaleMusic()`'in aynı anda tetiklediği İKİ fade çağrısından ikincisi, birincinin henüz tek kare bile çalışmamış animasyonunu `cancelAnimationFrame` ile iptal ediyordu. Sonuç: eski parça asla `pause()` olmuyor, yeni parça üstüne biniyordu. `WeakMap<HTMLAudioElement, number>` ile her elemana kendi raf id'si verilerek düzeltildi.
+
+## ✅ TAMAMLANDI — Ödüllü reklam butonu tepki vermiyor sorunu
+`ads.ts`'te statik bir bug yoktu ama `resultPromise`'a 15sn güvenlik timeout'u (Dismissed/FailedToShow hiç gelmezse buton sonsuza kadar takılı kalmasın diye) ve `EnergyBreakScreen.tsx`'e başarısızlıkta görünür bir hata mesajı eklendi.
+
+## ✅ TAMAMLANDI — Ödüllü reklam gizli şarj sistemi (8 hak / 4 saatte 1)
+Yeni `src/data/adCharges.ts` — mini oyunlardaki hak sistemiyle aynı mantık, en fazla 8 şarj birikebiliyor, her biri 4 saatte bir yenileniyor. Kaç hak kaldığı ya da ne zaman yenileneceği kasıtlı olarak hiçbir yerde gösterilmiyor (sadece "izlenebilir mi" boole'u) — ücretli ürünlerin cazibesini korumak için. İzole bir simülasyonla regen matematiği doğrulandı.
+
+## ✅ TAMAMLANDI — Gün/iş akışı yeniden tasarlandı
+- **İş gelme olasılığı**: "Yeni Güne Geç" artık her zaman iş garanti etmiyor — %70, bir önceki ev satılmadıysa %42.
+- **Gecikmeli müşteri mesajı**: Satış bittiğinde anında değil, %15 ihtimalle (1 gün ya da 3-8 gün sonrasına rastgele) planlanıyor (`pendingCallbacks`) — eski "her yeni eve girerken artan ihtimalle anlık callback" sistemi kaldırıldı.
+- **"Evi Gez / Ofise Dön" seçimi**: Bugünün işi teklif edildiğinde artık otomatik satışa girilmiyor, oyuncuya seçim çıkıyor. "Ofise Dön" seçilirse ziyaret `pausedVisit` olarak bekletiliyor; yeni **İşler** sekmesinden (Mesajlar'ın yanına eklendi) açılınca %40 hemen kabul / %30 1-3 gün sonrasına erteleme (kabul/red) / %30 fırsat kaybı ruloları çalışıyor.
+
+## ✅ TAMAMLANDI — Diyaloga İltifat Et / İkram Et seçenekleri
+- **İltifat Et**: kariyer rütbesine göre ölçeklenen bonus (%80 başarı/%20 ters teper), her ev ziyaretinde en fazla 1 kez.
+- **İkram Et**: `seker-ikrami`/`kahve-ikrami` artık evden önce pasif bonus vermek yerine sahne-içi aktif bir seçenek (müşterinin o anki ilgisine göre kabul şansı); bu iki eşya `consumeOneOfEach`'in otomatik tüketiminden çıkarıldı.
+- **Test sırasında bulunan gerçek bug**: ilk halinde her iki seçenek de aynı diyalog düğümünde sınırsız tekrar sunulabiliyordu (istismar edilebilir stat farming) — `usedComplimentRef`/`usedIkramRef` ile ziyaret başına 1 kullanımla sınırlandı.
+
+## ✅ TAMAMLANDI — Market ekranı Ayarlar'dan ayrıldı + "Değer Rozetleri" tasarımı
+- Yeni `src/components/StoreScreen.tsx` — satın alma bloğu Ayarlar'dan çıkarıldı, tek bir "Market"/"Store" butonuna bağlandı.
+- Başlangıç paketi kartları artık üstü çizili referans fiyat + gerçek fiyat + tasarruf yüzdesi + en avantajlıda rozet/altın parlama gösteriyor (piksel hediye kutusu ikonuyla, 3 tasarım/3 ikon yönü Artifact üzerinde kullanıcıya sunulup seçildi).
+- TR başlangıç paketi fiyatları güncellendi (₺149,99/₺199,99/₺249,99 → ₺39,99/₺99,99/₺119,99) — App Store Connect API ile gerçek TUR fiyat noktalarına da uygulanıp GET ile doğrulandı.
+
+## ✅ TAMAMLANDI — İngilizce'de karakter adı: Emlah → Estetan
+Türkçe "Emlah" olarak kalıyor, İngilizce'de "Estetan" gösteriliyor. 248 "Emlah" geçen yerden TR metin/kod tanımlayıcıları/iç mekanizma kimlikleri (mesaj `from` alanı, balon hizalama karşılaştırması) ayıklanıp sadece görünen İngilizce metin (94 yer) değiştirildi. Test sırasında iki gerçek riski önceden yakalayıp düzeltildi: (1) diyalog konuşmacı portresi arama tablosu sadece "Emlah" anahtarıyla eşleşiyordu, "Estetan" takma adı eklendi; (2) `rivalDuel.ts`'te tr:/en: kalıbı dışında ayrı bir ternary'de kaçan bir cümle ikinci taramada bulundu.
+
+## ✅ TAMAMLANDI — Build 8: TestFlight'a yüklendi
+Yukarıdaki tüm değişiklikler + bir önceki oturumdan commit'lenmemiş işler (mini oyun yenileme, satış müziği, kapı eşiği ekranı, Hakkında bölümü) tek commit'te birleştirilip build numarası 7→8'e çıkarıldı, tam CLI pipeline'ıyla (archive → export → `xcrun altool --upload-app`) yüklendi. "UPLOAD SUCCEEDED with no errors" (Delivery UUID `cc02108c-89e2-40c5-9829-1ca869371497`).
+
+---
+
 ## ✅ TAMAMLANDI — Enerji mini oyunları yeniden kurgulandı (Kutu Bul + Adım At)
 Web'de artifact üzerinden birkaç tur onay alınarak (mekanik + görsel taşma bugları düzeltilerek) uygulandı:
 - **🔑 Anahtar Bul → Kutu Bul (shell game)**: 4 kutu, 2sn doğru anahtarı gösterir, kapanır ve gerçekten (FLIP animasyonlu, tüm kutuları en az bir kez karıştıran) 3 saniyelik shuffle'dan sonra seçim istenir.
