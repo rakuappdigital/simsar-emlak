@@ -210,11 +210,18 @@ export default function OfficeScene({
         <span className="office-balance">
           <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)}
         </span>
-        {pausedVisit ? (
+        {pausedVisit?.status === "office" ? (
           <button className="pixel-btn office-get-job-btn ghost" onClick={onOpenIsler}>
-            {pausedVisit.status === "office"
-              ? t({ tr: "Bugünün müşterisi İşler'de bekliyor", en: "Today's customer is waiting in Jobs" })
-              : t({ tr: "Bugünün müşterisi yanıt bekliyor — İşler'e bak", en: "Today's customer is thinking it over — check Jobs" })}
+            {t({ tr: "Bugünün müşterisi İşler'de bekliyor", en: "Today's customer is waiting in Jobs" })}
+          </button>
+        ) : pausedVisit?.status === "scheduled" ? (
+          // Randevu verilmiş müşteri — geri sayım yalnızca "Yeni Güne Geç" ile ilerler, bu yüzden buton burada şart.
+          <button className="pixel-btn office-get-job-btn" onClick={onAdvanceDay}>
+            📅{" "}
+            {t({
+              tr: `Yeni Güne Geç — randevuya ${pausedVisit.daysRemaining ?? 1} gün`,
+              en: `Advance to New Day — ${pausedVisit.daysRemaining ?? 1} day(s) to appointment`,
+            })}
           </button>
         ) : dayAdvanced && jobAvailable ? (
           <button className="pixel-btn office-get-job-btn" onClick={onGetJob}>

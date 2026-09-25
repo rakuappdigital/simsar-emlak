@@ -11,6 +11,8 @@ interface SettingsScreenProps {
   /** true once a run is in progress — dialogue/customer text is already committed to this language, so switching mid-game would mix languages. */
   languageLocked: boolean;
   onOpenStore: () => void;
+  /** Only passed mid-run — ends the session and returns to the main menu (progress stays at the last autosave). */
+  onExitGame?: () => void;
   onBack: () => void;
 }
 
@@ -35,12 +37,14 @@ export default function SettingsScreen({
   onLanguageChange,
   languageLocked,
   onOpenStore,
+  onExitGame,
   onBack,
 }: SettingsScreenProps) {
   const [music, setMusic] = useState(getMusicVolume);
   const [sfx, setSfx] = useState(getSfxVolume);
   const [difficulty, setDifficultyState] = useState(getDifficulty);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
 
   function handleMusicChange(v: number) {
     setMusic(v);
@@ -149,6 +153,33 @@ export default function SettingsScreen({
           <p className="about-body">{aboutText[language]}</p>
           <p className="about-signoff">{language === "en" ? "— with love, your developer" : "— sevgiyle, geliştiricin"}</p>
         </div>
+      )}
+
+      {onExitGame && (
+        <>
+          <p className="settings-subsection-title">{language === "en" ? "Game" : "Oyun"}</p>
+          {confirmExit ? (
+            <>
+              <p className="rehber-note">
+                {language === "en"
+                  ? "Return to the main menu? Your progress is kept up to the last autosave — you can continue from Saved Games."
+                  : "Ana menüye dönülsün mü? İlerlemen son otomatik kayda kadar saklanır — Kayıtlı Oyunlar'dan devam edebilirsin."}
+              </p>
+              <div className="difficulty-row">
+                <button className="difficulty-btn settings-exit-btn" onClick={onExitGame}>
+                  {language === "en" ? "Yes, End Game" : "Evet, Bitir"}
+                </button>
+                <button className="difficulty-btn" onClick={() => setConfirmExit(false)}>
+                  {language === "en" ? "Cancel" : "Vazgeç"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button className="menu-btn settings-exit-btn" onClick={() => setConfirmExit(true)}>
+              {language === "en" ? "End Game" : "Oyunu Bitir"}
+            </button>
+          )}
+        </>
       )}
 
       <button className="menu-btn ghost" onClick={onBack}>

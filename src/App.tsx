@@ -1678,6 +1678,19 @@ function App() {
     setDayAdvancedForIndex(null);
   }
 
+  /** Settings' "Oyunu Bitir" — leaves the run mid-game. Nothing extra to save: every checkpoint already went through persist(). */
+  function exitToMainMenu() {
+    setShowEmlahMenu(false);
+    setShowMessagesOnly(false);
+    setShowIsler(false);
+    setShowEnergyBreak(false);
+    setShowPhoneOverlay(false);
+    setPausedVisitOffer(null);
+    setSavedGames(loadAllSaves());
+    preSettingsStageRef.current = "menu";
+    setStage("menu");
+  }
+
   function openSaved() {
     setSavedGames(loadAllSaves());
     setStage("saved");
@@ -2655,8 +2668,13 @@ function App() {
     if (pausedVisit?.status === "scheduled") {
       // Müşterinin önerdiği tarihe bir gün daha yaklaşıldı — bu sırada yeni
       // bir iş rulosu atılmıyor, bugünün işi zaten belli (sadece ertelenmiş).
+      // Randevu beklenirken geçen her gün gerçek bir gün: aktiviteler sıfırlanır
+      // ve geri sayım kaydedilir (yoksa uygulama yeniden açılınca sayaç başa döner).
       const remaining = (pausedVisit.daysRemaining ?? 1) - 1;
-      setPausedVisit(remaining <= 0 ? { ...pausedVisit, status: "office", daysRemaining: undefined } : { ...pausedVisit, daysRemaining: remaining });
+      const newPausedVisit: PausedVisit = remaining <= 0 ? { ...pausedVisit, status: "office", daysRemaining: undefined } : { ...pausedVisit, daysRemaining: remaining };
+      setPausedVisit(newPausedVisit);
+      setDayActivitiesDone([]);
+      persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, pausedVisit: newPausedVisit });
     } else if (!pausedVisit) {
       // Bugün bir iş çıkar mı — sabit %70, ama bir önceki ev satılmadıysa
       // (thinking/lost) göreceli %40 düşüşle ~%42'ye iner. "Yeni Güne Geç"
@@ -3951,6 +3969,7 @@ function App() {
           onLanguageChange={setLanguage}
           languageLocked={preSettingsStageRef.current !== "menu"}
           onOpenStore={() => setStage("store")}
+          onExitGame={preSettingsStageRef.current !== "menu" ? exitToMainMenu : undefined}
           onBack={() => setStage(preSettingsStageRef.current)}
         />
       )}
