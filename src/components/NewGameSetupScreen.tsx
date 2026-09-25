@@ -63,7 +63,7 @@ export default function NewGameSetupScreen({ onContinue, onBack }: NewGameSetupS
       <p className="menu-empty">
         {t({
           tr: "Emlah'ın kendi cümlelerine ara sıra küçük bir dokunuş ekler (ünlem, gülücük) — hiçbir cümleyi değiştirmez. Oyun boyunca değiştirilemez, sadece burada seçilir.",
-          en: "Occasionally adds a small touch to Emlah's own lines (an exclamation, a smile) — never changes any dialogue. Locked for the whole playthrough, only chosen here.",
+          en: "Occasionally adds a small touch to Estetan's own lines (an exclamation, a smile) — never changes any dialogue. Locked for the whole playthrough, only chosen here.",
         })}
       </p>
 

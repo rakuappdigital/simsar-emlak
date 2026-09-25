@@ -26,6 +26,17 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Safety net for a Dismissed/FailedToShow event that never arrives (stuck native ad view) — resolves with `fallback` instead of hanging the caller's button forever. */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    promise.then((v) => {
+      clearTimeout(timer);
+      resolve(v);
+    });
+  });
+}
+
 let initPromise: Promise<void> | null = null;
 
 function ensureInitialized(): Promise<void> {
@@ -59,7 +70,7 @@ export async function showRewardedAd(): Promise<boolean> {
     ]);
 
     await AdMob.showRewardVideoAd();
-    const result = await resultPromise;
+    const result = await withTimeout(resultPromise, 15_000, false);
     await Promise.all(handles.map((h) => h.remove()));
     return result;
   } catch (e) {
@@ -88,7 +99,7 @@ export async function showInterstitialAd(): Promise<void> {
     ]);
 
     await AdMob.showInterstitial();
-    await resultPromise;
+    await withTimeout(resultPromise, 15_000, undefined);
     await Promise.all(handles.map((h) => h.remove()));
   } catch (e) {
     console.error("AdMob interstitial ad failed:", e);

@@ -263,7 +263,10 @@ export const perks: Perk[] = [
     id: "seker-ikrami",
     category: "sarf",
     title: { tr: "Şeker İkramı", en: "Candy Treat" },
-    description: { tr: "Bir sonraki evde eğlence puanı +5 ile başlarsın.", en: "You start the next house with +5 fun points." },
+    description: {
+      tr: "Görüşme sırasında müşteriye ikram etme seçeneği açar — kabul ederse ilgisi artar.",
+      en: "Unlocks an in-conversation option to offer the customer a treat — accepting boosts their interest.",
+    },
     cost: 5000,
     consumable: true,
   },
@@ -271,7 +274,10 @@ export const perks: Perk[] = [
     id: "kahve-ikrami",
     category: "sarf",
     title: { tr: "Kahve İkramı", en: "Coffee Treat" },
-    description: { tr: "Bir sonraki evde eğlence puanı +10 ile başlarsın.", en: "You start the next house with +10 fun points." },
+    description: {
+      tr: "Görüşme sırasında müşteriye ikram etme seçeneği açar — kabul ederse ilgisi artar.",
+      en: "Unlocks an in-conversation option to offer the customer a treat — accepting boosts their interest.",
+    },
     cost: 8000,
     consumable: true,
   },
@@ -331,9 +337,10 @@ export function hasPerk(owned: string[], id: string): boolean {
   return owned.includes(id);
 }
 
+// seker-ikrami/kahve-ikrami deliberately excluded — no longer a passive
+// pre-house bonus, see DialogueScene.tsx's "İkram Et" and App.tsx's
+// consumeOneOfEach/IKRAM_ITEMS_NOT_AUTO_CONSUMED.
 export const consumableEffects: Record<string, { suspicion?: number; interest?: number; fun?: number }> = {
-  "seker-ikrami": { fun: 5 },
-  "kahve-ikrami": { fun: 10 },
   "acil-temizlik": { suspicion: -10 },
   "sosyal-medya-reklami": { interest: 15 },
   "hediye-paketi": { interest: 10, fun: 10 },

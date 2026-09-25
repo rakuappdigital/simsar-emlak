@@ -2,6 +2,7 @@ import { useState } from "react";
 import { energyBreakActivities } from "../data/energyBreak";
 import { resolveText, t } from "../data/language";
 import { showRewardedAd } from "../data/ads";
+import { canWatchRewardedAd, consumeAdCharge } from "../data/adCharges";
 import { AD_ENERGY_REWARD } from "../data/energy";
 import { JETTON_ENERGY_REFILL_COST, JETTON_ENERGY_REFILL_AMOUNT } from "../data/jettons";
 import { miniGameByActivityId, type MiniGameTier } from "./EnergyMiniGames";
@@ -18,11 +19,11 @@ interface EnergyBreakScreenProps {
 }
 
 /**
- * Shown when energy is too low to take on today's job. Mini oyunlar are the
- * only recovery path — always available, no real-time cooldown, purely
- * skill-gated (see EnergyMiniGames.tsx). No ads, no purchases: the game is
- * paid up front, so there's nothing to gate behind a wait timer — the only
- * cost is the player's actual attention for a few seconds per play.
+ * Shown when energy is too low to take on today's job. Mini oyunlar are
+ * always available, no real-time cooldown, purely skill-gated (see
+ * EnergyMiniGames.tsx). The rewarded ad is separately gated by a hidden
+ * charge system (see data/adCharges.ts) so it can't fully replace Jetton/
+ * Tam Sürüm as a free unlimited energy source.
  */
 function formatLockedIn(nextAvailableAt: number): string {
   const ms = Math.max(0, nextAvailableAt - Date.now());
@@ -36,15 +37,27 @@ function formatLockedIn(nextAvailableAt: number): string {
 export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd, onSpendJettons, onClose }: EnergyBreakScreenProps) {
   const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
   const [watchingAd, setWatchingAd] = useState(false);
+  const [adFailed, setAdFailed] = useState(false);
+  // Deliberately just a boolean — see data/adCharges.ts for why the exact
+  // count/reset time is never surfaced to the player.
+  const [adAvailable, setAdAvailable] = useState(canWatchRewardedAd);
   // minigameSchedule reads localStorage directly (not React state) — bump this after every play to force a re-render.
   const [scheduleTick, setScheduleTick] = useState(0);
   const ActiveMiniGame = activeActivityId ? miniGameByActivityId[activeActivityId] : null;
 
   async function handleWatchAd() {
+    if (!adAvailable) return;
     setWatchingAd(true);
+    setAdFailed(false);
     const rewarded = await showRewardedAd();
     setWatchingAd(false);
-    if (rewarded) onWatchAd();
+    if (rewarded) {
+      consumeAdCharge();
+      setAdAvailable(canWatchRewardedAd());
+      onWatchAd();
+    } else {
+      setAdFailed(true);
+    }
   }
 
   if (ActiveMiniGame && activeActivityId) {
@@ -78,16 +91,20 @@ export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd
         <p className="menu-empty">
           {t({
             tr: `Emlah bugün çok yorgun (%${Math.round(energy)} enerji) — bir işe girişmeden önce biraz toparlanması lazım.`,
-            en: `Emlah is very tired today (${Math.round(energy)}% energy) — he needs to recover a bit before taking on a job.`,
+            en: `Estetan is very tired today (${Math.round(energy)}% energy) — he needs to recover a bit before taking on a job.`,
           })}
         </p>
 
         <p className="market-category-title">🎬 {t({ tr: "Reklam", en: "Ad" })} / 🪙 {t({ tr: "Jetton", en: "Token" })}</p>
         <div className="energy-break-list">
-          <button className="energy-break-card" onClick={handleWatchAd} disabled={watchingAd}>
+          <button className="energy-break-card" onClick={handleWatchAd} disabled={watchingAd || !adAvailable}>
             <span className="energy-break-icon">🎬</span>
             <span className="energy-break-label">
-              {watchingAd ? t({ tr: "Reklam oynatılıyor…", en: "Playing ad…" }) : t({ tr: "Reklam İzle", en: "Watch Ad" })}
+              {watchingAd
+                ? t({ tr: "Reklam oynatılıyor…", en: "Playing ad…" })
+                : adAvailable
+                  ? t({ tr: "Reklam İzle", en: "Watch Ad" })
+                  : t({ tr: "Reklam Şu An Yok", en: "No Ad Right Now" })}
             </span>
             <span className="energy-break-gain">
               +{AD_ENERGY_REWARD} {t({ tr: "Enerji", en: "Energy" })}
@@ -104,6 +121,14 @@ export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd
             </span>
           </button>
         </div>
+        {adFailed && (
+          <p className="rehber-note">
+            {t({
+              tr: "Reklam şu an yüklenemedi — birazdan tekrar dene.",
+              en: "The ad couldn't load right now — try again shortly.",
+            })}
+          </p>
+        )}
 
         <p className="market-category-title">🎮 {t({ tr: "Mini Oyunlar", en: "Mini Games" })}</p>
         <div className="energy-break-list" key={scheduleTick}>

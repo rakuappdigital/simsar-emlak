@@ -1,11 +1,13 @@
 /**
  * Mini oyun hak sistemi — her mini oyun (kendi id'si için ayrı ayrı) son 8
- * gerçek saatte en fazla 4 kez oynanabilir (4 oyun × 4 hak = günde 16
- * kullanım tavanı). Kayıt slotlarından bağımsız kendi localStorage
- * anahtarlarında yaşar (jetton/adSchedule/inventory ile aynı desen).
+ * gerçek saatte en fazla 2 kez oynanabilir. Bir "oynayış" artık kendi
+ * içinde ard arda 3 denemelik bir oturum (bkz EnergyMiniGames.tsx) —
+ * oturum kazanılsa da kaybedilse de tek hak sayılır. Kayıt slotlarından
+ * bağımsız kendi localStorage anahtarlarında yaşar (jetton/adSchedule/
+ * inventory ile aynı desen).
  */
 const WINDOW_MS = 8 * 60 * 60 * 1000;
-const MAX_PLAYS_PER_WINDOW = 4;
+const MAX_PLAYS_PER_WINDOW = 2;
 const KEY_PREFIX = "simsar-emlak-minigame-plays-";
 
 function getTimestamps(gameId: string): number[] {

@@ -35,7 +35,7 @@ const customerReplies: Localized[] = [
 const casualReplies: Localized[] = [
   { tr: "Yine mi? Powerbank alsana artık 😂", en: "Again? Just get a powerbank already 😂" },
   { tr: "Tamam kanka, şarj olunca yaz.", en: "Alright bro, text me when it's charged." },
-  { tr: "Emlah sen bu telefonla nasıl iş yapıyorsun ya 😅", en: "Emlah, how do you even do business with that phone 😅" },
+  { tr: "Emlah sen bu telefonla nasıl iş yapıyorsun ya 😅", en: "Estetan, how do you even do business with that phone 😅" },
   { tr: "Git şarja tak, ben buradayım.", en: "Go plug it in, I'll be right here." },
 ];
 

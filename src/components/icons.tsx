@@ -326,6 +326,68 @@ export function BriefcaseIcon(props: IconProps) {
   );
 }
 
+/** Store: Jetton package — octagonal coin medallion, distinct from MedalIcon's ribboned medal. */
+export function CoinIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="5" y="2" width="6" height="2" className="icon-hi" />
+      <rect x="3" y="4" width="10" height="8" />
+      <rect x="3" y="4" width="10" height="2" className="icon-hi" />
+      <rect x="3" y="10" width="10" height="2" className="icon-lo" />
+      <rect x="5" y="12" width="6" height="2" className="icon-lo" />
+      <rect x="6" y="6" width="4" height="4" className="icon-accent" />
+    </Grid>
+  );
+}
+
+/** Store: Full Version — an open padlock (shackle swung clear), body + keyhole below. */
+export function UnlockIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="4" y="2" width="2" height="4" className="icon-hi" />
+      <rect x="4" y="1" width="5" height="2" className="icon-hi" />
+      <rect x="9" y="0" width="2" height="3" className="icon-hi" />
+      <rect x="2" y="6" width="12" height="8" />
+      <rect x="2" y="6" width="12" height="2" className="icon-hi" />
+      <rect x="2" y="12" width="12" height="2" className="icon-lo" />
+      <rect x="7" y="9" width="2" height="2" className="icon-accent" />
+      <rect x="7" y="11" width="2" height="1" className="icon-accent" />
+    </Grid>
+  );
+}
+
+/** Store: Remove Ads — a megaphone with a diagonal "no" slash. */
+export function NoAdsIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="1" y="6" width="4" height="4" />
+      <rect x="5" y="4" width="4" height="8" className="icon-hi" />
+      <rect x="9" y="2" width="4" height="12" />
+      <rect x="9" y="2" width="4" height="2" className="icon-hi" />
+      <rect x="9" y="12" width="4" height="2" className="icon-lo" />
+      <rect x="1" y="12" width="2" height="2" fill="#e2574c" />
+      <rect x="4" y="10" width="2" height="2" fill="#e2574c" />
+      <rect x="7" y="8" width="2" height="2" fill="#e2574c" />
+      <rect x="10" y="6" width="2" height="2" fill="#e2574c" />
+      <rect x="13" y="4" width="2" height="2" fill="#e2574c" />
+    </Grid>
+  );
+}
+
+/** Store: Starter Bundles — a wrapped gift box with a crossed ribbon and bow. */
+export function GiftBundleIcon(props: IconProps) {
+  return (
+    <Grid {...props}>
+      <rect x="4" y="2" width="3" height="3" className="icon-hi" />
+      <rect x="9" y="2" width="3" height="3" className="icon-hi" />
+      <rect x="1" y="5" width="14" height="2" className="icon-hi" />
+      <rect x="2" y="7" width="12" height="7" />
+      <rect x="2" y="12" width="12" height="2" className="icon-lo" />
+      <rect x="7" y="5" width="2" height="9" className="icon-accent" />
+    </Grid>
+  );
+}
+
 export function CompassIcon(props: IconProps) {
   return (
     <Grid {...props}>

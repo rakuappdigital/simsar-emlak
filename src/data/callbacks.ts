@@ -171,9 +171,19 @@ export function maybeGenerateCallback(
 ): CallbackEvent | null {
   if (results.length === 0 || chance <= 0) return null;
   if (Math.random() > chance) return null;
-
   const resultIndex = Math.floor(Math.random() * results.length);
+  return generateCallbackForResult(resultIndex, results, allHouses, castAssignment);
+}
+
+/** Same message-generation as maybeGenerateCallback, but for a specific already-chosen result (no chance roll, no random pick) — used when a callback was scheduled in advance for a particular sale (see App.tsx's pendingCallbacks). */
+export function generateCallbackForResult(
+  resultIndex: number,
+  results: HouseResult[],
+  allHouses: HouseScene[],
+  castAssignment: Record<string, string[]> = {},
+): CallbackEvent | null {
   const result = results[resultIndex];
+  if (!result) return null;
   const house = allHouses.find((h) => h.id === result.houseId);
   if (!house) return null;
   const contactName = resolveCustomerNames(house, castAssignment)[0];

@@ -13,7 +13,7 @@ export default function OriginSelectScreen({ origins, onSelect, onBack }: Origin
   return (
     <div className="menu-screen">
       <div className="menu-title-block">
-        <h1 className="menu-title">{t({ tr: "Emlah'ın Geçmişi", en: "Emlah's Backstory" })}</h1>
+        <h1 className="menu-title">{t({ tr: "Emlah'ın Geçmişi", en: "Estetan's Backstory" })}</h1>
         <p className="menu-subtitle">
           {t({
             tr: "Bu işe nereden geldin? Seçimin, tüm oyun boyunca konuşma tarzını şekillendirecek.",

@@ -21,7 +21,7 @@ export function computeEnding(results: HouseResult[], earned: number): Ending {
   if (results.length === 0) {
     return {
       title: { tr: "Yarım Kalan Hikaye", en: "An Unfinished Story" },
-      description: { tr: "Emlah daha işe yeni başladı.", en: "Emlah has just started his journey." },
+      description: { tr: "Emlah daha işe yeni başladı.", en: "Estetan has just started his journey." },
     };
   }
 
@@ -35,7 +35,7 @@ export function computeEnding(results: HouseResult[], earned: number): Ending {
       title: { tr: "Kendi Ofisini Açtı", en: "Opened His Own Office" },
       description: {
         tr: "Dürüstlüğü ve başarısı bir arada — Emlah artık kendi adını taşıyan bir ofiste çalışıyor.",
-        en: "Honesty and success combined — Emlah now works in an office bearing his own name.",
+        en: "Honesty and success combined — Estetan now works in an office bearing his own name.",
       },
     };
   }
@@ -44,7 +44,7 @@ export function computeEnding(results: HouseResult[], earned: number): Ending {
       title: { tr: "Az Kazandı Ama Huzurlu", en: "Earned Less But Peaceful" },
       description: {
         tr: "Cebi pek dolmadı ama Emlah geceleri rahat uyuyor.",
-        en: "His pockets aren't bulging, but Emlah sleeps soundly at night.",
+        en: "His pockets aren't bulging, but Estetan sleeps soundly at night.",
       },
     };
   }
@@ -53,7 +53,7 @@ export function computeEnding(results: HouseResult[], earned: number): Ending {
       title: { tr: "Muzaffer Bey'in Ortağı Oldu", en: "Became Muzaffer Bey's Partner" },
       description: {
         tr: "Yöntemleri tartışmalı ama rakamlar ortada — Emlah artık şirketin yarısına ortak.",
-        en: "His methods are debatable, but the numbers speak for themselves — Emlah is now a half-partner in the company.",
+        en: "His methods are debatable, but the numbers speak for themselves — Estetan is now a half-partner in the company.",
       },
     };
   }
@@ -70,7 +70,7 @@ export function computeEnding(results: HouseResult[], earned: number): Ending {
     title: { tr: "Sektörde Sağlam Bir İsim Oldu", en: "Became a Solid Name in the Industry" },
     description: {
       tr: "Ne çok sinsi ne fazla dürüst — Emlah dengeyi buldu, istikrarlı bir kariyer kurdu.",
-      en: "Neither too sneaky nor overly honest — Emlah found the balance, building a steady career.",
+      en: "Neither too sneaky nor overly honest — Estetan found the balance, building a steady career.",
     },
   };
 }

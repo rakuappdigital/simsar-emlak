@@ -15,7 +15,7 @@ export const RIVAL_DUEL_BONUS_RATE = 0.02;
 const startMessages = [
   (title: string, rival: string) =>
     getLanguage() === "en"
-      ? `Emlah my friend, ${rival} is also interested in "${title}", act fast!`
+      ? `Estetan my friend, ${rival} is also interested in "${title}", act fast!`
       : `Emlah'ım, ${rival} de "${title}" ile ilgileniyormuş, çabuk davran!`,
   (title: string, rival: string) =>
     getLanguage() === "en"

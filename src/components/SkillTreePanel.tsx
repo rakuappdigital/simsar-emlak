@@ -22,7 +22,7 @@ export default function SkillTreePanel({ ownedSkillIds, skillXP, onUnlock }: Ski
       <p className="menu-empty">
         {t({
           tr: "Emlah'ın iç sesi — evlerden kazandığın Deneyim Puanı (XP) ile açılan pasif beceriler, para gerektirmez.",
-          en: "Emlah's inner voice — passive skills unlocked with Experience Points (XP) earned from houses, no money required.",
+          en: "Estetan's inner voice — passive skills unlocked with Experience Points (XP) earned from houses, no money required.",
         })}
       </p>
       <p className="market-category-title">

@@ -25,7 +25,7 @@ export function checkSelfReflectionTrigger(tally: Record<CompassAxis, number>): 
 
 export const selfReflectionText: Record<ReflectionKind, { title: Localized; paragraphs: Localized[] }> = {
   kurnaz: {
-    title: { tr: "Emlah'ın Boş Sayfası", en: "Emlah's Blank Page" },
+    title: { tr: "Emlah'ın Boş Sayfası", en: "Estetan's Blank Page" },
     paragraphs: [
       { tr: "Gece geç saatte, günün son evrakını imzaladıktan sonra, defterini açtı.", en: "Late at night, after signing the last paperwork of the day, he opened his notebook." },
       { tr: "\"Bugün yine bir şeyi atlattım. İyi bir pazarlıktı diyorum kendime, ama içimde bir yer biliyor ki bu kadar kolay olmamalıydı.\"", en: "\"I slipped out of something again today. I tell myself it was a good negotiation, but a part of me knows it shouldn't have been this easy.\"" },
@@ -34,7 +34,7 @@ export const selfReflectionText: Record<ReflectionKind, { title: Localized; para
     ],
   },
   durust: {
-    title: { tr: "Emlah'ın Boş Sayfası", en: "Emlah's Blank Page" },
+    title: { tr: "Emlah'ın Boş Sayfası", en: "Estetan's Blank Page" },
     paragraphs: [
       { tr: "Gece geç saatte, günün son evrakını imzaladıktan sonra, defterini açtı.", en: "Late at night, after signing the last paperwork of the day, he opened his notebook." },
       { tr: "\"Bugün de doğruyu söyledim, yine kolay yoldan gitmedim. Bazen bunun bir bedeli oluyor ama pişman değilim.\"", en: "\"I told the truth today too, didn't take the easy way out again. Sometimes this comes with a price, but I have no regrets.\"" },

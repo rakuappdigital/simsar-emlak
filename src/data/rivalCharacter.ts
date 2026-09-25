@@ -28,19 +28,19 @@ export const firatPortraits: Record<string, string> = {
 };
 
 const kendindenEminLines: DialogueLine[] = [
-  { speaker: "system", name: "Fırat Bey", text: { tr: "(kapıdan başını uzatır) Emlah'ım, sen de mi bu daireye göz koydun?", en: "(poking his head through the door) Emlah my boy, did you set your sights on this apartment too?" } },
+  { speaker: "system", name: "Fırat Bey", text: { tr: "(kapıdan başını uzatır) Emlah'ım, sen de mi bu daireye göz koydun?", en: "(poking his head through the door) Estetan my boy, did you set your sights on this apartment too?" } },
   { speaker: "system", name: "Fırat Bey", text: { tr: "Boş ver, ben zaten sahibiyle görüştüm bile — ama sen dene canım, hakkını yeme.", en: "Never mind, I already talked with the owner — but give it a try buddy, don't let me stop you." } },
   { speaker: "thought", text: { tr: "(içinden) Bu kadar rahat olması hiç iyiye işaret değil.", en: "(to himself) Him being this relaxed is not a good sign at all." } },
 ];
 
 const gerginLines: DialogueLine[] = [
-  { speaker: "system", name: "Fırat Bey", text: { tr: "(aceleyle içeri girer) Emlah, bu ay hiç iyi gitmiyor, biliyorsun değil mi?", en: "(rushing inside) Emlah, this month is not going well at all, you know that right?" } },
+  { speaker: "system", name: "Fırat Bey", text: { tr: "(aceleyle içeri girer) Emlah, bu ay hiç iyi gitmiyor, biliyorsun değil mi?", en: "(rushing inside) Estetan, this month is not going well at all, you know that right?" } },
   { speaker: "system", name: "Fırat Bey", text: { tr: "Bu evi de kaçırırsam ofis beni gerçekten sorgulayacak. Neyse, sen işine bak, ben de bakarım.", en: "If I miss out on this house too, the office will really question me. Anyway, you mind your business, I'll mind mine." } },
   { speaker: "thought", text: { tr: "(içinden) Fırat Bey'i bu kadar gergin görmemiştim — bu sefer işim kolay olabilir.", en: "(to himself) I haven't seen Fırat Bey this tense before — my job might be easy this time." } },
 ];
 
 const notrLines: DialogueLine[] = [
-  { speaker: "system", name: "Fırat Bey", text: { tr: "(elini uzatır) Emlah, yine aynı bölgede karşılaştık — meslek böyle bir şey işte.", en: "(extending his hand) Emlah, we ran into each other in the same district again — that's what the profession is about." } },
+  { speaker: "system", name: "Fırat Bey", text: { tr: "(elini uzatır) Emlah, yine aynı bölgede karşılaştık — meslek böyle bir şey işte.", en: "(extending his hand) Estetan, we ran into each other in the same district again — that's what the profession is about." } },
   { speaker: "system", name: "Fırat Bey", text: { tr: "Kazanan kazanır, iş burada biter. Kolay gelsin.", en: "Winner wins, business ends here. Good luck." } },
   { speaker: "thought", text: { tr: "(içinden) Fırat Bey ile aramızda hep bir centilmenlik oldu, en azından şimdilik.", en: "(to himself) There has always been a gentlemen's agreement between Fırat Bey and me, at least for now." } },
 ];
@@ -74,7 +74,7 @@ export function firatMoodFor(playerSoldCount: number, rivalTotal: number): Firat
  * addition instead of touching the duel/encounter machinery.
  */
 export const firatFullCircleLines: Localized[] = [
-  { tr: "Emlah, bir dakikan var mı?", en: "Emlah, do you have a minute?" },
+  { tr: "Emlah, bir dakikan var mı?", en: "Estetan, do you have a minute?" },
   { tr: "Bu şehirdeki herkesi geçtiğini duydum. Başta biraz canım sıkıldı, itiraf edeyim.", en: "I heard you passed everyone in this city. I was a bit bummed at first, I admit." },
   { tr: "Ama artık seni rakip değil, meslektaş olarak görüyorum. Hakkını verdin.", en: "But now I see you not as a rival, but as a colleague. You earned it." },
   { tr: "Belki bir gün birlikte iş yaparız, kim bilir. Kolay gelsin, şampiyon.", en: "Maybe one day we do business together, who knows. Good luck, champ." },

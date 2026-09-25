@@ -19,7 +19,7 @@ import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
-import { resolveText, resolveHouseTitle, resolveHouseLocation, t } from "../data/language";
+import { resolveText, resolveHouseTitle, resolveHouseLocation, t, type Localized } from "../data/language";
 import {
   isHeldFirmChoice,
   isDiscountContradiction,
@@ -62,6 +62,46 @@ const flirtChoice: Choice = {
   effects: { closingBias: 10, fun: 5 },
 };
 
+// "İltifat Et" — an occasional, house-agnostic mid-conversation option (not
+// closing-node-only like bonusChoice/flirtChoice above), gated by career
+// rank so it strengthens naturally with progress instead of a separate
+// skill-tree dependency. 20% chance it lands badly (per the design brief).
+const COMPLIMENT_APPEAR_CHANCE = 0.3;
+const COMPLIMENT_SUCCESS_CHANCE = 0.8;
+const COMPLIMENT_INTEREST_BY_RANK: Record<string, number> = {
+  Stajyer: 4,
+  Emlakçı: 6,
+  "Kıdemli Emlakçı": 8,
+  "Ofis Ortağı": 12,
+};
+const complimentPositiveReactions: Localized[] = [
+  { tr: "Ne kadar naziksiniz, bu sıcaklığı sevdim.", en: "How kind of you, I like this warmth." },
+  { tr: "Böyle güler yüzlü bir emlakçıyla iş yapmak keyifli.", en: "It's nice doing business with such a friendly agent." },
+  { tr: "Teşekkür ederim, kendimi rahat hissettim.", en: "Thank you, I feel at ease." },
+];
+const complimentNegativeReactions: Localized[] = [
+  { tr: "Şey... biraz fazla samimi oldunuz açıkçası.", en: "Um... that felt a bit too familiar, honestly." },
+  { tr: "İşe odaklansak daha iyi olur diye düşünüyorum.", en: "I think we'd be better off focusing on business." },
+  { tr: "Bu tarz yorumlar beni rahatsız ediyor biraz.", en: "Comments like that make me a little uncomfortable." },
+];
+
+// "İkram Et" — only appears when the player is carrying at least one
+// seker-ikrami/kahve-ikrami unit (see data/perks.ts — these switched from a
+// passive pre-house buff to this interactive use, see App.tsx's
+// consumeOneOfEach). Accept chance scales with the customer's CURRENT
+// interest, same stat the rest of the scene already reads/writes.
+const IKRAM_APPEAR_CHANCE = 0.3;
+const ikramPositiveReactions: Localized[] = [
+  { tr: "Aa, çok naziksiniz, seve seve alırım.", en: "Oh, that's so kind, I'd love some." },
+  { tr: "Tam da ihtiyacım vardı, teşekkürler.", en: "I could really use that, thank you." },
+  { tr: "İnce düşüncenize teşekkürler, tadı güzelmiş.", en: "Thanks for the thoughtful gesture, it's lovely." },
+];
+const ikramNegativeReactions: Localized[] = [
+  { tr: "Sağ olun ama şu an canım istemiyor.", en: "Thanks, but I don't feel like it right now." },
+  { tr: "Vaktimiz kısıtlı, işe devam edebilir miyiz?", en: "We're a bit short on time, can we continue?" },
+  { tr: "Gerek yoktu açıkçası, biraz tuhaf oldu.", en: "That really wasn't necessary, it felt a bit odd." },
+];
+
 interface DialogueSceneProps {
   house: HouseScene;
   stats: GameStats;
@@ -101,11 +141,15 @@ interface DialogueSceneProps {
   onOriginChoicePicked?: () => void;
   /** "Çelişki Motoru" — customers get sharper-eyed at higher career ranks. See data/contradiction.ts. */
   rankTitleText?: string;
+  /** "İkram Et" — which consumable stock (if any) is available to offer this customer. See data/perks.ts's seker-ikrami/kahve-ikrami. */
+  ikramKind?: "seker" | "kahve" | null;
+  /** Reports that the (available) ikram was actually offered, so App.tsx can decrement the matching consumable's stock. */
+  onIkramUsed?: () => void;
 }
 
 function speakerLabelFor(speaker: string): string {
-  if (speaker === "emlah") return "Emlah";
-  if (speaker === "thought") return t({ tr: "Emlah (içinden)", en: "Emlah (to himself)" });
+  if (speaker === "emlah") return t({ tr: "Emlah", en: "Estetan" });
+  if (speaker === "thought") return t({ tr: "Emlah (içinden)", en: "Estetan (to himself)" });
   return "";
 }
 
@@ -138,6 +182,8 @@ export default function DialogueScene({
   memoryReference,
   onOriginChoicePicked,
   rankTitleText,
+  ikramKind = null,
+  onIkramUsed,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [dialogueStyle] = useState(getDialogueStyle);
@@ -151,11 +197,18 @@ export default function DialogueScene({
   // this visit; a ref (not state) since it's read-only bookkeeping that
   // shouldn't trigger its own re-render. See data/contradiction.ts.
   const heldFirmCountRef = useRef(0);
+  // At most one compliment and one ikram offer per house visit — without
+  // this, looping back to the same node (see pickChoice's reaction handling)
+  // would let the player spam either choice for unlimited stat gain.
+  const usedComplimentRef = useRef(false);
+  const usedIkramRef = useRef(false);
 
   useEffect(() => {
     setNodeId(house.startNode);
     setLineIndex(0);
     heldFirmCountRef.current = 0;
+    usedComplimentRef.current = false;
+    usedIkramRef.current = false;
   }, [house]);
 
   const node = syntheticNode ?? house.nodes[nodeId];
@@ -321,6 +374,38 @@ export default function DialogueScene({
   const pressureUnlocked = isClosingNode && !dealAlreadyWon && pressureRoll < LAST_MINUTE_PRESSURE_CHANCE;
   const pressureChoice = useMemo(() => pickPressureChoice(), [nodeId]);
 
+  // "İltifat Et" — occasional, not closing-node-only, re-rolled per node.
+  const complimentAppearRoll = useMemo(() => Math.random(), [nodeId]);
+  const complimentSuccessRoll = useMemo(() => Math.random(), [nodeId]);
+  const complimentUnlocked = !isClosingNode && !usedComplimentRef.current && complimentAppearRoll < COMPLIMENT_APPEAR_CHANCE;
+  const complimentSuccess = complimentSuccessRoll < COMPLIMENT_SUCCESS_CHANCE;
+  const complimentBonus = COMPLIMENT_INTEREST_BY_RANK[rankTitleText ?? "Stajyer"] ?? 4;
+  const complimentChoice: Choice = useMemo(
+    () => ({
+      id: "compliment",
+      text: { tr: "(Küçük bir iltifat et)", en: "(Pay a small compliment)" },
+      next: nodeId,
+      effects: complimentSuccess ? { interest: complimentBonus } : { interest: -6, suspicion: 4 },
+    }),
+    [nodeId, complimentSuccess, complimentBonus],
+  );
+
+  // "İkram Et" — only when the player is carrying seker-ikrami/kahve-ikrami stock.
+  const ikramAppearRoll = useMemo(() => Math.random(), [nodeId]);
+  const ikramAcceptRoll = useMemo(() => Math.random(), [nodeId]);
+  const ikramUnlocked = !isClosingNode && !!ikramKind && !usedIkramRef.current && ikramAppearRoll < IKRAM_APPEAR_CHANCE;
+  const ikramAcceptChance = 0.35 + Math.min(0.4, stats.interest / 150);
+  const ikramAccepted = ikramAcceptRoll < ikramAcceptChance;
+  const ikramChoice: Choice = useMemo(
+    () => ({
+      id: "ikram-offer",
+      text: { tr: "(Çay/kahve ikram et)", en: "(Offer tea or coffee)" },
+      next: nodeId,
+      effects: ikramAccepted ? { interest: 8, fun: 6, suspicion: -4 } : { suspicion: 6, fun: -4 },
+    }),
+    [nodeId, ikramAccepted],
+  );
+
   const displayChoices = useMemo(() => {
     if (!node.choices) return undefined;
     let list = node.choices;
@@ -341,10 +426,12 @@ export default function DialogueScene({
     let finalList = bonusUnlocked ? [...list, bonusChoice] : list;
     if (flirtUnlocked) finalList = [...finalList, flirtChoice];
     if (pressureUnlocked) finalList = [...finalList, pressureChoice];
+    if (complimentUnlocked) finalList = [...finalList, complimentChoice];
+    if (ikramUnlocked) finalList = [...finalList, ikramChoice];
     if (isClosingNode && origin) finalList = [...finalList, origin.closingChoice];
     return shuffle(finalList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked, pressureUnlocked, pressureChoice, origin]);
+  }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked, pressureUnlocked, pressureChoice, complimentUnlocked, complimentChoice, ikramUnlocked, ikramChoice, origin]);
   // The synthetic flirt-exchange node carries its own single resolving
   // choice — bypass the bonus/flirt/pressure/origin augmentation above so
   // nothing stacks on top of it a second time.
@@ -417,6 +504,30 @@ export default function DialogueScene({
     if (choice.effects) onChoiceEffects(choice.effects);
     if (choice.effects?.fun) onLineChosen?.(resolveText(choice.text), choice.effects.fun);
     if (choice.effects) onToneChoice?.(choice.effects);
+
+    if (choice.id === "compliment" || choice.id === "ikram-offer") {
+      if (choice.id === "compliment") usedComplimentRef.current = true;
+      if (choice.id === "ikram-offer") usedIkramRef.current = true;
+      const positive = choice.id === "compliment" ? complimentSuccess : ikramAccepted;
+      const pool =
+        choice.id === "compliment"
+          ? positive
+            ? complimentPositiveReactions
+            : complimentNegativeReactions
+          : positive
+            ? ikramPositiveReactions
+            : ikramNegativeReactions;
+      const reactionLine = pool[Math.floor(Math.random() * pool.length)];
+      if (choice.id === "ikram-offer") onIkramUsed?.();
+      setSyntheticNode({
+        id: `${choice.id}-reaction`,
+        lines: [{ speaker: "customer1", text: reactionLine }],
+        choices: [{ id: `${choice.id}-continue`, text: { tr: "Devam ▸", en: "Continue ▸" }, next: choice.next }],
+      });
+      setLineIndex(0);
+      return;
+    }
+
     if (choice.id === "flirt-bond" && flirtCharacterId && flirtCharacter) {
       onFlirt?.(flirtCharacterId, flirtCharacter.name);
       // Defer the actual sale resolution to a short bonus exchange instead

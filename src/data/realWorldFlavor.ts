@@ -7,19 +7,19 @@ import { resolveText, type Localized } from "./language";
  * message from Muzaffer Bey, zero stat/economy effect.
  */
 const lateNightLines = [
-  { tr: "Bu saatte hâlâ ev mi bakıyorsun Emlah, git yat artık.", en: "Still looking at houses at this hour Emlah, go to sleep already." },
+  { tr: "Bu saatte hâlâ ev mi bakıyorsun Emlah, git yat artık.", en: "Still looking at houses at this hour Estetan, go to sleep already." },
   { tr: "Gece yarısını geçti, ekranın karşısında ne işin var senin?", en: "It past midnight, what are you doing in front of the screen?" },
   { tr: "Uykusuzluk bu işin bir parçası galiba, seni de yakaladı demek.", en: "Insomnia must be part of this job, caught you too I see." },
 ];
 
 const earlyMorningLines = [
-  { tr: "Erkenciymişsin be Emlah, daha güneş yeni doğdu.", en: "You're an early bird Emlah, the sun just rose." },
+  { tr: "Erkenciymişsin be Emlah, daha güneş yeni doğdu.", en: "You're an early bird Estetan, the sun just rose." },
   { tr: "Sabahın bu saatinde çalışkanlığına diyecek yok.", en: "Can't say anything against your diligence at this hour of the morning." },
 ];
 
 const fridayLines = [
   { tr: "Cuma bugün, herkes erken çıkmak istiyor ama bizde mesai bitmiyor.", en: "It's Friday today, everyone wants to leave early but our shift never ends." },
-  { tr: "Hafta sonu yaklaşıyor, son bir gayret Emlah.", en: "The weekend is approaching, one final push Emlah." },
+  { tr: "Hafta sonu yaklaşıyor, son bir gayret Emlah.", en: "The weekend is approaching, one final push Estetan." },
 ];
 
 const weekendLines = [

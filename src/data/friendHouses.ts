@@ -28,7 +28,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: { tr: "(gözlüğünü düzeltip elindeki ruloyu masaya açar) Emlah, bak, bu benim çizdiğim loft — ışık kuyusunu görmeden gitme diyorum.", en: "(adjusting his glasses and unrolling the blueprint on the table) Emlah, look, this is the loft I designed — I'm telling you, don't leave without seeing the light well." } },
+          { speaker: "customer1", name: "Ecrin", text: { tr: "(gözlüğünü düzeltip elindeki ruloyu masaya açar) Emlah, bak, bu benim çizdiğim loft — ışık kuyusunu görmeden gitme diyorum.", en: "(adjusting his glasses and unrolling the blueprint on the table) Estetan, look, this is the loft I designed — I'm telling you, don't leave without seeing the light well." } },
           { speaker: "customer1", name: "Ecrin", text: { tr: "Müşterim satmak istiyor, ben de çizimleri elimden bırakmadan direkt seni aradım.", en: "My client wants to sell it, and I called you directly without putting the drawings down." } },
         ],
         choices: [
@@ -84,7 +84,7 @@ export const friendHouses: HouseScene[] = [
       closing_lost: {
         id: "closing_lost",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: { tr: "(ruloyu tekrar sararken) Emlah, beni aceleye getirmene gerek yok, arkadaşız sonuçta.", en: "(rolling up the blueprint again) Emlah, you don't need to rush me, we're friends after all." } },
+          { speaker: "customer1", name: "Ecrin", text: { tr: "(ruloyu tekrar sararken) Emlah, beni aceleye getirmene gerek yok, arkadaşız sonuçta.", en: "(rolling up the blueprint again) Estetan, you don't need to rush me, we're friends after all." } },
           { speaker: "customer1", name: "Ecrin", text: { tr: "Sanırım bu sefer olmadı.", en: "I guess it didn't work out this time." } },
         ],
         end: "lost",
@@ -147,7 +147,7 @@ export const friendHouses: HouseScene[] = [
       closing_sold: {
         id: "closing_sold",
         lines: [
-          { speaker: "customer1", name: "Ecrin", text: { tr: "Meslektaşım da memnun kaldı, teşekkürler Emlah.", en: "My colleague was also satisfied, thanks Emlah." } },
+          { speaker: "customer1", name: "Ecrin", text: { tr: "Meslektaşım da memnun kaldı, teşekkürler Emlah.", en: "My colleague was also satisfied, thanks Estetan." } },
         ],
         end: "sold",
       },
@@ -178,7 +178,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Kutay", text: { tr: "(elindeki mühürlü belgeyi kaldırıp gösterir) Emlah, mesleğim gereği söylüyorum — bu tapunun geçmişi kristal gibi temiz.", en: "(lifting and showing the sealed document) Emlah, speaking as a notary — the history of this title deed is as crystal clean as glass." } },
+          { speaker: "customer1", name: "Kutay", text: { tr: "(elindeki mühürlü belgeyi kaldırıp gösterir) Emlah, mesleğim gereği söylüyorum — bu tapunun geçmişi kristal gibi temiz.", en: "(lifting and showing the sealed document) Estetan, speaking as a notary — the history of this title deed is as crystal clean as glass." } },
           { speaker: "customer1", name: "Kutay", text: { tr: "Otuz yıllık kayıtları tek tek kontrol ettim, imzası bende, mührü bende, hiçbir sorun yok.", en: "I checked thirty years of records one by one, I have the signature, I have the seal, there is no problem at all." } },
         ],
         choices: [
@@ -218,7 +218,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Kutay", text: { tr: "(belgeyi imzalar) İşte bu, doğru kararı verdin — tebrikler Emlah.", en: "(signing the document) There it is, you made the right decision — congratulations Emlah." } }],
+        lines: [{ speaker: "customer1", name: "Kutay", text: { tr: "(belgeyi imzalar) İşte bu, doğru kararı verdin — tebrikler Emlah.", en: "(signing the document) There it is, you made the right decision — congratulations Estetan." } }],
         end: "sold",
       },
       closing_thinking: {
@@ -288,7 +288,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Kutay", text: { tr: "Mirasçılar da memnun kalacak, teşekkürler Emlah.", en: "The heirs will be pleased too, thanks Emlah." } }],
+        lines: [{ speaker: "customer1", name: "Kutay", text: { tr: "Mirasçılar da memnun kalacak, teşekkürler Emlah.", en: "The heirs will be pleased too, thanks Estetan." } }],
         end: "sold",
       },
       closing_thinking: {
@@ -298,7 +298,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_lost: {
         id: "closing_lost",
-        lines: [{ speaker: "customer1", name: "Kutay", text: { tr: "Mirasçılar bu kadar indirime razı olmaz, üzgünüm Emlah.", en: "The heirs won't agree to this much of a discount, I'm sorry Emlah." } }],
+        lines: [{ speaker: "customer1", name: "Kutay", text: { tr: "Mirasçılar bu kadar indirime razı olmaz, üzgünüm Emlah.", en: "The heirs won't agree to this much of a discount, I'm sorry Estetan." } }],
         end: "lost",
       },
     },
@@ -318,7 +318,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Bengisu", text: { tr: "(kameranın ekranını çevirip gösterir) Emlah! Bu terasın gün batımını görünce çıldıracaksın, yemin ederim en iyi kareler burada.", en: "(turning the camera screen around) Emlah! You'll go crazy when you see the sunset of this terrace, I swear the best shots are here." } },
+          { speaker: "customer1", name: "Bengisu", text: { tr: "(kameranın ekranını çevirip gösterir) Emlah! Bu terasın gün batımını görünce çıldıracaksın, yemin ederim en iyi kareler burada.", en: "(turning the camera screen around) Estetan! You'll go crazy when you see the sunset of this terrace, I swear the best shots are here." } },
           { speaker: "customer1", name: "Bengisu", text: { tr: "Takipçilerim bile sordu \"bu neresi\" diye, o kadar güzel.", en: "Even my followers asked \"where is this\", it's that beautiful." } },
         ],
         choices: [
@@ -458,7 +458,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Alperen", text: { tr: "(telefonundaki grafiğe bakarken başını kaldırmadan konuşur) Emlah dostum, kendi lofttumu satıyorum — yeni bir işe girişiyorum, nakit lazım.", en: "(speaking without lifting his head while looking at the chart on his phone) Emlah my friend, I'm selling my own loft — starting a new venture, I need cash." } },
+          { speaker: "customer1", name: "Alperen", text: { tr: "(telefonundaki grafiğe bakarken başını kaldırmadan konuşur) Emlah dostum, kendi lofttumu satıyorum — yeni bir işe girişiyorum, nakit lazım.", en: "(speaking without lifting his head while looking at the chart on his phone) Estetan my friend, I'm selling my own loft — starting a new venture, I need cash." } },
           { speaker: "customer1", name: "Alperen", text: { tr: "Hem ev hem ofis olarak tasarladım, gerçek bir fırsat bu.", en: "I designed it as both home and office, this is a real opportunity." } },
         ],
         choices: [
@@ -598,7 +598,7 @@ export const friendHouses: HouseScene[] = [
       start: {
         id: "start",
         lines: [
-          { speaker: "customer1", name: "Duru", text: { tr: "(sakin bir sesle, ellerini kavuşturmuş) Emlah, biliyorsun yurt dışına taşınıyorum — kendi evimi sana bırakmak istiyorum.", en: "(in a calm voice, with hands clasped) Emlah, you know I'm moving abroad — I want to leave my own house to you." } },
+          { speaker: "customer1", name: "Duru", text: { tr: "(sakin bir sesle, ellerini kavuşturmuş) Emlah, biliyorsun yurt dışına taşınıyorum — kendi evimi sana bırakmak istiyorum.", en: "(in a calm voice, with hands clasped) Estetan, you know I'm moving abroad — I want to leave my own house to you." } },
           { speaker: "customer1", name: "Duru", text: { tr: "Bahçe katı, çok sessiz, uzun nöbetlerden sonra beni hep dinlendirdi burası.", en: "Garden floor, very quiet, it always rested me after long shifts." } },
         ],
         choices: [
@@ -638,7 +638,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Duru", text: { tr: "(gülümser) Teşekkür ederim Emlah, içim rahat şimdi. İyi bakarsın biliyorum.", en: "(smiling) Thank you Emlah, my mind is at ease now. I know you'll take good care of it." } }],
+        lines: [{ speaker: "customer1", name: "Duru", text: { tr: "(gülümser) Teşekkür ederim Emlah, içim rahat şimdi. İyi bakarsın biliyorum.", en: "(smiling) Thank you Estetan, my mind is at ease now. I know you'll take good care of it." } }],
         end: "sold",
       },
       closing_thinking: {
@@ -708,7 +708,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Duru", text: { tr: "Meslektaşım çok sevinecek, teşekkürler Emlah.", en: "My colleague will be very happy, thanks Emlah." } }],
+        lines: [{ speaker: "customer1", name: "Duru", text: { tr: "Meslektaşım çok sevinecek, teşekkürler Emlah.", en: "My colleague will be very happy, thanks Estetan." } }],
         end: "sold",
       },
       closing_thinking: {

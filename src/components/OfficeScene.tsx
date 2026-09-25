@@ -9,7 +9,7 @@ import { resolveText, t, getLanguage } from "../data/language";
 import { dayActivities } from "../data/dayActivities";
 import { WalletIcon, PhoneDeviceIcon } from "./icons";
 import MemoryWall from "./MemoryWall";
-import type { Badge, SignificantMemory } from "../types";
+import type { Badge, PausedVisit, SignificantMemory } from "../types";
 
 interface OfficeSceneProps {
   rankTitleText: string;
@@ -23,11 +23,16 @@ interface OfficeSceneProps {
   seasonalFilter: string;
   prestigeTitle?: string | null;
   dayAdvanced: boolean;
+  /** Whether today's job roll succeeded (see App.tsx's handleAdvanceDay) — only meaningful once dayAdvanced is true. */
+  jobAvailable: boolean;
+  /** Today's job, deferred via "Ofise Dön" instead of toured right away — see İşler. */
+  pausedVisit: PausedVisit | null;
   dayActivitiesDone: string[];
   onAdvanceDay: () => void;
   onDoActivity: (activityId: string) => void;
   onGetJob: () => void;
   onOpenMessages: () => void;
+  onOpenIsler: () => void;
   onOpenEnergyBreak: () => void;
   /** Gizli Dokunuş Menüsü — called on every tap of the office title. See App.tsx's handleOfficeTitleTap. */
   onTitleTap?: () => void;
@@ -56,11 +61,14 @@ export default function OfficeScene({
   seasonalFilter,
   prestigeTitle,
   dayAdvanced,
+  jobAvailable,
+  pausedVisit,
   dayActivitiesDone,
   onAdvanceDay,
   onDoActivity,
   onGetJob,
   onOpenMessages,
+  onOpenIsler,
   onOpenEnergyBreak,
   onTitleTap,
   badges,
@@ -106,7 +114,7 @@ export default function OfficeScene({
         />
         {image && <div className="pixel-bg-photo" style={{ backgroundImage: `url(${image})`, filter: combinedFilter }} />}
         <div className="office-title" onClick={onTitleTap}>
-          <span>{t({ tr: "Emlah'ın Ofisi", en: "Emlah's Office" })}</span>
+          <span>{t({ tr: "Emlah'ın Ofisi", en: "Estetan's Office" })}</span>
           <span className="office-rank-tag">
             {rankTitleDisplay(rankTitleText)}
             {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
@@ -116,10 +124,10 @@ export default function OfficeScene({
           className="emlah-mood-portrait"
           title={t({
             tr: `Emlah şu an ${resolveText(emlahMoodLabel[emlahMood])}`,
-            en: `Emlah is currently ${resolveText(emlahMoodLabel[emlahMood])}`,
+            en: `Estetan is currently ${resolveText(emlahMoodLabel[emlahMood])}`,
           })}
         >
-          <img className="emlah-mood-portrait-img" src={emlahMoodPortrait[emlahMood]} alt="Emlah" />
+          <img className="emlah-mood-portrait-img" src={emlahMoodPortrait[emlahMood]} alt={t({ tr: "Emlah", en: "Estetan" })} />
         </div>
         {(() => {
           const [datePart, timePart] = currentDateLabel.split(" • ");
@@ -202,13 +210,22 @@ export default function OfficeScene({
         <span className="office-balance">
           <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)}
         </span>
-        {dayAdvanced ? (
+        {pausedVisit ? (
+          <button className="pixel-btn office-get-job-btn ghost" onClick={onOpenIsler}>
+            {pausedVisit.status === "office"
+              ? t({ tr: "Bugünün müşterisi İşler'de bekliyor", en: "Today's customer is waiting in Jobs" })
+              : t({ tr: "Bugünün müşterisi yanıt bekliyor — İşler'e bak", en: "Today's customer is thinking it over — check Jobs" })}
+          </button>
+        ) : dayAdvanced && jobAvailable ? (
           <button className="pixel-btn office-get-job-btn" onClick={onGetJob}>
             {t({ tr: "Bugünün İşini Al", en: "Get Today's Job" })}
           </button>
         ) : (
           <button className="pixel-btn office-get-job-btn" onClick={onAdvanceDay}>
-            📅 {t({ tr: "Yeni Güne Geç", en: "Advance to New Day" })}
+            📅{" "}
+            {dayAdvanced
+              ? t({ tr: "Müşteri yok — Tekrar Dene", en: "No customer — Try Again" })
+              : t({ tr: "Yeni Güne Geç", en: "Advance to New Day" })}
           </button>
         )}
         <button
@@ -221,6 +238,13 @@ export default function OfficeScene({
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
+        </button>
+        <button
+          className={`pixel-btn small office-messages-btn ${pausedVisit?.status === "office" ? "office-messages-btn-alert" : "ghost"}`}
+          onClick={onOpenIsler}
+        >
+          {t({ tr: "İşler", en: "Jobs" })}
+          {pausedVisit?.status === "office" && <span className="unread-dot">1</span>}
         </button>
       </div>
     </div>

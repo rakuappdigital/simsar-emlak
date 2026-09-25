@@ -34,7 +34,7 @@ export const celebrities: Celebrity[] = [
     gender: "k",
     name: "Aslı Yıldız",
     personality: "kibirli",
-    introLine: { tr: "(içinden) Dur biraz... bu kesinlikle Aslı Yıldız! Sakin ol Emlah, sakin ol.", en: "(to himself) Wait a second... that is definitely Aslı Yıldız! Stay calm Emlah, stay calm." },
+    introLine: { tr: "(içinden) Dur biraz... bu kesinlikle Aslı Yıldız! Sakin ol Emlah, sakin ol.", en: "(to himself) Wait a second... that is definitely Aslı Yıldız! Stay calm Estetan, stay calm." },
     fanLine: { tr: "\"Sizi yıllardır dinliyorum, gerçekten çok büyük bir hayranınızım.\"", en: "\"I've been listening to you for years, I'm a really big fan of yours.\"" },
     fanReplyLine: { tr: "(kısaca gülümser) Tabii, çoğu insan öyle söylüyor zaten. Devam edelim mi?", en: "(smiles briefly) Sure, most people say that anyway. Shall we continue?" },
   },

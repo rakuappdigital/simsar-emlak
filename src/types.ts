@@ -262,6 +262,28 @@ export interface PendingDelivery {
   deferredAmount: number;
 }
 
+/** A future customer message scheduled right after a sale resolves — see App.tsx's finalizeResult/proceedToHouseIntro. Replaces the old "always roll a callback on the next house" behavior with a delayed, specific-to-this-sale one. */
+export interface PendingCallback {
+  resultIndex: number;
+  dueIndex: number;
+}
+
+/**
+ * A customer visit offered via "Bugünün İşini Al" that the player deferred
+ * ("Ofise Dön") instead of touring immediately — see App.tsx's
+ * handleIntroChoice/handleOpenPausedVisit. Tied to the CURRENT house index
+ * (the game's index only advances once a house resolves), so at most one
+ * can exist at a time — pausing doesn't skip to a different house, it just
+ * defers walking through today's door.
+ */
+export interface PausedVisit {
+  houseId: string;
+  contactName: string;
+  status: "office" | "scheduled";
+  /** Only set when status is "scheduled" — decremented once per "Yeni Güne Geç" press. */
+  daysRemaining?: number;
+}
+
 export interface SaveGame {
   version: 26;
   index: number;
@@ -303,6 +325,10 @@ export interface SaveGame {
   energy: number;
   /** Deferred sale payments waiting on their contract's delivery date — see data/calendar.ts. */
   pendingDeliveries: PendingDelivery[];
+  /** Scheduled future customer messages from resolved sales — see PendingCallback. */
+  pendingCallbacks: PendingCallback[];
+  /** Today's deferred house visit, or null if none — see PausedVisit. */
+  pausedVisit: PausedVisit | null;
   /** Patron Memnuniyeti — Muzaffer Bey's mood, 0-100. See data/bossMood.ts. */
   bossMood: number;
   /** weekIndex values whose scripted seasonalEvents.ts entry has already fired, so a locked-gate retry can't double-pay it. */

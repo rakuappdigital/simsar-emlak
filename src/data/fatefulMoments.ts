@@ -39,7 +39,7 @@ const beat1: Record<OriginId, FatefulMomentText> = {
   "emlakci-ailesi": {
     title: { tr: "İlk Şüphe", en: "First Suspicion" },
     paragraphs: [
-      { tr: "Bir müşteri \"ailenizi tanırım\" dediğinde, Emlah bir an kendi adını değil, ailesinin adını duydu.", en: "When a customer said \"I know your family\", Emlah heard his family's name instead of his own for a moment." },
+      { tr: "Bir müşteri \"ailenizi tanırım\" dediğinde, Emlah bir an kendi adını değil, ailesinin adını duydu.", en: "When a customer said \"I know your family\", Estetan heard his family's name instead of his own for a moment." },
       { tr: "Bu işte iyi olması kendi başarısı mıydı, yoksa sadece doğru soyadıyla doğmuş olması mı?", en: "Was being good at this job his own success, or was he just born with the right last name?" },
       { tr: "Cevabı bilmiyordu. Bugünlük bu soruyu bir kenara bıraktı — ama aklından tam çıkmadı.", en: "He didn't know the answer. He put this question aside for today — but it didn't quite leave his mind." },
     ],
@@ -68,14 +68,14 @@ const beat2: Record<OriginId, FatefulMomentText> = {
     paragraphs: [
       { tr: "Müşterinin yanındaki genç, bir an tanıdık geldi — sonra hatırladı: eski bir öğrencisiydi.", en: "The young man next to the client looked familiar for a moment — then remembered: it was an old student." },
       { tr: "Genç onu tanımadı. Neden tanısın ki, aradan geçen onca yıl, onca sınıf.", en: "The young man didn't recognize him/her. Why would he, after all those years, all those classes." },
-      { tr: "Emlah hiçbir şey söylemedi, sadece işine devam etti. Ama içi bir tuhaf oldu, hem gururlu hem hafif kırgın.", en: "Emlah didn't say anything, just continued his/her work. But he/she felt strange inside, both proud and slightly hurt." },
+      { tr: "Emlah hiçbir şey söylemedi, sadece işine devam etti. Ama içi bir tuhaf oldu, hem gururlu hem hafif kırgın.", en: "Estetan didn't say anything, just continued his/her work. But he/she felt strange inside, both proud and slightly hurt." },
     ],
   },
   "emlakci-ailesi": {
     title: { tr: "Tanıdık Bir Yüz", en: "A Familiar Face" },
     paragraphs: [
       { tr: "Komşulardan biri \"bu evi büyükbabanız satmıştı bize\" dedi, gülümseyerek.", en: "One of the neighbors said, \"your grandfather sold this house to us,\" smiling." },
-      { tr: "Emlah bu evi hiç görmemişti ama bir anda kendini ailesinin uzun tarihinin bir parçası gibi hissetti.", en: "Emlah had never seen this house but suddenly felt like a part of his/her family's long history." },
+      { tr: "Emlah bu evi hiç görmemişti ama bir anda kendini ailesinin uzun tarihinin bir parçası gibi hissetti.", en: "Estetan had never seen this house but suddenly felt like a part of his/her family's long history." },
       { tr: "Aynı sokaklar, aynı isim, yeni bir kuşak. Bu bazen ağır bir yüktü, bazen de bir çeşit huzur.", en: "The same streets, the same name, a new generation. This was sometimes a heavy burden, sometimes a kind of peace." },
     ],
   },
@@ -84,7 +84,7 @@ const beat2: Record<OriginId, FatefulMomentText> = {
     paragraphs: [
       { tr: "Müşterinin arkadaşı, eski iş ortağıydı — şirketi batarken en son onunla konuşmuştu.", en: "The client's friend was an old business partner — he/she had last talked to him/her when the company was going under." },
       { tr: "Kısa, garip bir selamlaşma oldu. İkisi de eski günlerden hiç bahsetmedi.", en: "It was a short, awkward greeting. Neither of them mentioned the old days at all." },
-      { tr: "Emlah işine devam ederken fark etti: o günden bu yana hiç bu kadar yakınından geçmemişti geçmişine.", en: "As Emlah continued his/her work, he/she realized: he/she had never passed this close to his/her past since that day." },
+      { tr: "Emlah işine devam ederken fark etti: o günden bu yana hiç bu kadar yakınından geçmemişti geçmişine.", en: "As Estetan continued his/her work, he/she realized: he/she had never passed this close to his/her past since that day." },
     ],
   },
   yurtdisi: {

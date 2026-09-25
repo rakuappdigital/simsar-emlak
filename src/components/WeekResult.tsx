@@ -67,12 +67,12 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
       )}
 
       <p className="journal-entry">
-        <span className="journal-entry-label">📓 {t({ tr: "Emlah'ın Günlüğü", en: "Emlah's Journal" })}</span>
+        <span className="journal-entry-label">📓 {t({ tr: "Emlah'ın Günlüğü", en: "Estetan's Journal" })}</span>
         <span className="journal-entry-text">{generateWeekJournalEntry(outcome)}</span>
       </p>
 
       <p className="journal-entry dream-entry">
-        <span className="journal-entry-label">🌙 {t({ tr: "Emlah'ın Rüyası", en: "Emlah's Dream" })}</span>
+        <span className="journal-entry-label">🌙 {t({ tr: "Emlah'ın Rüyası", en: "Estetan's Dream" })}</span>
         <span className="journal-entry-text">{dreamLine}</span>
       </p>
 

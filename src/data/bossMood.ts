@@ -29,13 +29,13 @@ export function bossMoodDeltaForSale(discountPercent: number): number {
 }
 
 const discountAngerLines: Localized[] = [
-  { tr: "Yine indirim mi yaptın Emlah, böyle gidersek zor durumda kalırız.", en: "Did you give another discount Emlah, we'll be in trouble at this rate." },
+  { tr: "Yine indirim mi yaptın Emlah, böyle gidersek zor durumda kalırız.", en: "Did you give another discount Estetan, we'll be in trouble at this rate." },
   { tr: "Bu kadar taviz vermeyi bırakmalısın, kâr marjımız eriyor.", en: "You need to stop making so many concessions, our profit margin is eroding." },
   { tr: "İndirim üstüne indirim... bu şirketin cebinden çıkıyor, unutma.", en: "Discount after discount... this is coming out of the company's pocket, remember." },
 ];
 
 const cleanSaleLines: Localized[] = [
-  { tr: "İşte bu, tam fiyatına sattın — böyle devam et Emlah.", en: "There it is, you sold it at full price — keep it up Emlah." },
+  { tr: "İşte bu, tam fiyatına sattın — böyle devam et Emlah.", en: "There it is, you sold it at full price — keep it up Estetan." },
   { tr: "Pazarlığı iyi tuttun, tebrikler.", en: "You held your ground well in negotiations, congrats." },
 ];
 

@@ -22,7 +22,7 @@ const moodLines: Record<Exclude<Mood, "neutral">, Localized[]> = {
     { tr: "Şu gidişata bak, ofisin gözdesi oluyorsun yakında.", en: "Look at this momentum, you'll be the darling of the office soon." },
   ],
   annoyed: [
-    { tr: "Emlah, son zamanlarda pek iyi gitmiyor ha, biraz toparlan.", en: "Emlah, things haven't been going so well lately huh, pull yourself together." },
+    { tr: "Emlah, son zamanlarda pek iyi gitmiyor ha, biraz toparlan.", en: "Estetan, things haven't been going so well lately huh, pull yourself together." },
     { tr: "Bu ayki kotayı nasıl tutturacağız bilmiyorum doğrusu.", en: "Frankly I don't know how we'll hit this month's quota." },
     { tr: "Biraz daha gayret bekliyorum senden açıkçası.", en: "Frankly, I expect a bit more effort from you." },
   ],
@@ -34,7 +34,7 @@ export function pickMoodLine(mood: Exclude<Mood, "neutral">): string {
 }
 
 const luckyLines = [
-  { tr: "Bugün havan yerinde galiba Emlah, içim rahat!", en: "You're in high spirits today I guess Emlah, my mind is at ease!" },
+  { tr: "Bugün havan yerinde galiba Emlah, içim rahat!", en: "You're in high spirits today I guess Estetan, my mind is at ease!" },
   { tr: "Bu sabah kahve fincanımda güzel bir şekil gördüm, bugün şanslı günündesin.", en: "I saw a nice shape in my coffee cup this morning, you're on your lucky day." },
   { tr: "Bugün her şey senin lehine dönecek gibi bir hissim var.", en: "I have a feeling everything will turn in your favor today." },
 ];

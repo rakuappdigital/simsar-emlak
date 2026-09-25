@@ -29,9 +29,9 @@ export const JETTON_DESCRIPTION = {
 // charges that real converted price regardless of what we display here. Keep
 // these three in sync with ASC's App Info > Pricing whenever it changes.
 export const JETTON_PACKAGES: JettonPackage[] = [
-  { id: "jetton-small", productId: "com.rakuappdigital.simsaremlak.jetton_20", amount: 20, priceTR: "₺49,99", priceIntl: "$0.99" },
-  { id: "jetton-medium", productId: "com.rakuappdigital.simsaremlak.jetton_50", amount: 50, priceTR: "₺99,99", priceIntl: "$1.69" },
-  { id: "jetton-large", productId: "com.rakuappdigital.simsaremlak.jetton_100", amount: 100, priceTR: "₺149,99", priceIntl: "$2.99" },
+  { id: "jetton-small", productId: "com.rakuappdigital.simsaremlak.jetton_20", amount: 20, priceTR: "₺19,99", priceIntl: "$0.99" },
+  { id: "jetton-medium", productId: "com.rakuappdigital.simsaremlak.jetton_50", amount: 50, priceTR: "₺39,99", priceIntl: "$1.69" },
+  { id: "jetton-large", productId: "com.rakuappdigital.simsaremlak.jetton_100", amount: 100, priceTR: "₺79,99", priceIntl: "$2.99" },
 ];
 
 /** Enerji Molası'nda reklamın (ücretsiz, +%10) yanında sunulan jeton karşılığı hızlı enerji dolumu: 2 Jetton = enerjinin %50'si. */

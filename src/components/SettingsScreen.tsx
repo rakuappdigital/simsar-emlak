@@ -2,39 +2,15 @@ import { useState } from "react";
 import { getSfxVolume, getMusicVolume, setSfxVolume, setMusicVolume, startMusic, stopMusic, playClick } from "../data/sound";
 import { getDifficulty, setDifficulty, difficultyLabels, type Difficulty } from "../data/difficulty";
 import { setLanguage as persistLanguage, resolveText, type Language } from "../data/language";
-import { JETTON_PACKAGES, JETTON_DESCRIPTION, type JettonPackage } from "../data/jettons";
-import {
-  FULL_UNLOCK_PRICE_TR,
-  FULL_UNLOCK_PRICE_INTL,
-  FULL_UNLOCK_DESCRIPTION,
-  REMOVE_ADS_PRICE_TR,
-  REMOVE_ADS_PRICE_INTL,
-  REMOVE_ADS_DESCRIPTION,
-  BUNDLE_FULL_JETTON30_PRICE_INTL,
-  BUNDLE_FULL_JETTON30_PRICE_TR,
-  BUNDLE_FULL_JETTON30_DESCRIPTION,
-  BUNDLE_FULL_NOADS_PRICE_INTL,
-  BUNDLE_FULL_NOADS_PRICE_TR,
-  BUNDLE_FULL_NOADS_DESCRIPTION,
-  BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL,
-  BUNDLE_FULL_NOADS_JETTON30_PRICE_TR,
-  BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION,
-} from "../data/purchases";
 import oddEstateLogo from "../assets/branding/oddestate-logo.png";
+import { HeartIcon, CartIcon } from "./icons";
 
 interface SettingsScreenProps {
   language: Language;
   onLanguageChange: (lang: Language) => void;
-  jettons: number;
-  fullUnlocked: boolean;
-  adsRemoved: boolean;
-  onBuyJetton: (pkg: JettonPackage) => Promise<void>;
-  onBuyFullVersion: () => Promise<void>;
-  onBuyRemoveAds: () => Promise<void>;
-  onBuyBundleFullJetton30: () => Promise<void>;
-  onBuyBundleFullNoAds: () => Promise<void>;
-  onBuyBundleFullNoAdsJetton30: () => Promise<void>;
-  onRestorePurchases: () => Promise<void>;
+  /** true once a run is in progress — dialogue/customer text is already committed to this language, so switching mid-game would mix languages. */
+  languageLocked: boolean;
+  onOpenStore: () => void;
   onBack: () => void;
 }
 
@@ -45,6 +21,11 @@ const languages: { id: Language; label: string }[] = [
 
 const difficulties: Difficulty[] = ["kolay", "normal", "zor"];
 
+const aboutText = {
+  tr: "Odd Estate büyük bir stüdyo değil — tek bir bağımsız geliştirici tarafından, boş zamanlarda ve sevgiyle yapılıyor. Oyunu beğendiysen, desteğin (bir yorum ya da mağazadaki bir paket) bu projenin büyümesine gerçekten yardımcı oluyor. Her güncelleme sizin geri bildirimlerinizle şekilleniyor.",
+  en: "Odd Estate isn't made by a big studio — it's built by one independent developer, in spare time, with a lot of care. If you're enjoying it, your support (a review, or one of the store packs) genuinely helps this project keep growing. Every update is shaped by player feedback.",
+};
+
 /**
  * Single settings screen with room to grow: each future setting gets its
  * own "menu-section-title" block below Ses, not a whole new menu stage.
@@ -52,53 +33,14 @@ const difficulties: Difficulty[] = ["kolay", "normal", "zor"];
 export default function SettingsScreen({
   language,
   onLanguageChange,
-  jettons,
-  fullUnlocked,
-  adsRemoved,
-  onBuyJetton,
-  onBuyFullVersion,
-  onBuyRemoveAds,
-  onBuyBundleFullJetton30,
-  onBuyBundleFullNoAds,
-  onBuyBundleFullNoAdsJetton30,
-  onRestorePurchases,
+  languageLocked,
+  onOpenStore,
   onBack,
 }: SettingsScreenProps) {
   const [music, setMusic] = useState(getMusicVolume);
   const [sfx, setSfx] = useState(getSfxVolume);
   const [difficulty, setDifficultyState] = useState(getDifficulty);
-  const [buyingId, setBuyingId] = useState<string | null>(null);
-  const [restoring, setRestoring] = useState(false);
-
-  async function handleRestore() {
-    setRestoring(true);
-    await onRestorePurchases();
-    setRestoring(false);
-  }
-
-  async function handleBuyJetton(pkg: JettonPackage) {
-    setBuyingId(pkg.id);
-    await onBuyJetton(pkg);
-    setBuyingId(null);
-  }
-
-  async function handleBuyFullVersion() {
-    setBuyingId("full-unlock");
-    await onBuyFullVersion();
-    setBuyingId(null);
-  }
-
-  async function handleBuyRemoveAds() {
-    setBuyingId("remove-ads");
-    await onBuyRemoveAds();
-    setBuyingId(null);
-  }
-
-  async function handleBuyBundle(id: string, action: () => Promise<void>) {
-    setBuyingId(id);
-    await action();
-    setBuyingId(null);
-  }
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   function handleMusicChange(v: number) {
     setMusic(v);
@@ -128,7 +70,9 @@ export default function SettingsScreen({
           <button
             key={l.id}
             className={`difficulty-btn ${language === l.id ? "active" : ""}`}
+            disabled={languageLocked && language !== l.id}
             onClick={() => {
+              if (languageLocked) return;
               persistLanguage(l.id);
               onLanguageChange(l.id);
             }}
@@ -137,6 +81,13 @@ export default function SettingsScreen({
           </button>
         ))}
       </div>
+      {languageLocked && (
+        <p className="rehber-note">
+          {language === "en"
+            ? "Language is locked once a run has started — start a new game to change it."
+            : "Bir tur başladıktan sonra dil değiştirilemez — değiştirmek için yeni oyun başlatman gerekir."}
+        </p>
+      )}
 
       <p className="settings-subsection-title">{language === "en" ? "Sound" : "Ses"}</p>
       <div className="sound-row">
@@ -179,98 +130,26 @@ export default function SettingsScreen({
           : "Şüphenin ne kadar hızlı arttığını etkiler. Normal, oyunun her zamanki dengesidir."}
       </p>
 
-      <p className="settings-subsection-title">🏪 Store / Market</p>
-      <p className="menu-empty">
-        {language === "en" ? "Your balance" : "Bakiyen"}: <strong>🪙 {jettons}</strong>
-      </p>
-      <p className="menu-empty">{JETTON_DESCRIPTION[language]}</p>
-      <div className="day-activity-list day-activity-list-3col">
-        {JETTON_PACKAGES.map((pkg) => (
-          <button
-            key={pkg.id}
-            className="day-activity-card"
-            onClick={() => handleBuyJetton(pkg)}
-            disabled={buyingId !== null}
-          >
-            <span className="day-activity-icon">🪙</span>
-            <span className="day-activity-label">{pkg.amount} Jetton</span>
-            <span className="day-activity-gain">
-              {buyingId === pkg.id ? "…" : language === "en" ? pkg.priceIntl : pkg.priceTR}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      <div className="day-activity-list">
-        <button className="day-activity-card" onClick={handleBuyFullVersion} disabled={buyingId !== null || fullUnlocked}>
-          <span className="day-activity-icon">🔓</span>
-          <span className="day-activity-label">{language === "en" ? "Full Version" : "Tam Sürüm"}</span>
-          <span className="day-activity-gain">
-            {fullUnlocked ? "✅" : buyingId === "full-unlock" ? "…" : language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR}
-          </span>
-        </button>
-        <button className="day-activity-card" onClick={handleBuyRemoveAds} disabled={buyingId !== null || adsRemoved}>
-          <span className="day-activity-icon">🚫</span>
-          <span className="day-activity-label">{language === "en" ? "Remove Ads" : "Reklamları Kaldır"}</span>
-          <span className="day-activity-gain">
-            {adsRemoved ? "✅" : buyingId === "remove-ads" ? "…" : language === "en" ? REMOVE_ADS_PRICE_INTL : REMOVE_ADS_PRICE_TR}
-          </span>
-        </button>
-      </div>
-      <p className="menu-empty">{FULL_UNLOCK_DESCRIPTION[language]}</p>
-      <p className="menu-empty">{REMOVE_ADS_DESCRIPTION[language]}</p>
-
-      {!fullUnlocked && (
-        <>
-          <p className="settings-subsection-title">🎁 {language === "en" ? "Starter Bundles" : "Başlangıç Paketleri"}</p>
-          <div className="day-activity-list">
-            <button
-              className="day-activity-card"
-              onClick={() => handleBuyBundle("bundle-jetton30", onBuyBundleFullJetton30)}
-              disabled={buyingId !== null}
-            >
-              <span className="day-activity-icon">🔓🪙</span>
-              <span className="day-activity-label">{language === "en" ? "Full + 30 Jetton" : "Full + 30 Jetton"}</span>
-              <span className="day-activity-gain">
-                {buyingId === "bundle-jetton30" ? "…" : language === "en" ? BUNDLE_FULL_JETTON30_PRICE_INTL : BUNDLE_FULL_JETTON30_PRICE_TR}
-              </span>
-            </button>
-            <button
-              className="day-activity-card"
-              onClick={() => handleBuyBundle("bundle-noads", onBuyBundleFullNoAds)}
-              disabled={buyingId !== null}
-            >
-              <span className="day-activity-icon">🔓🚫</span>
-              <span className="day-activity-label">{language === "en" ? "Full + No Ads" : "Full + Reklamsız"}</span>
-              <span className="day-activity-gain">
-                {buyingId === "bundle-noads" ? "…" : language === "en" ? BUNDLE_FULL_NOADS_PRICE_INTL : BUNDLE_FULL_NOADS_PRICE_TR}
-              </span>
-            </button>
-            <button
-              className="day-activity-card"
-              onClick={() => handleBuyBundle("bundle-noads-jetton30", onBuyBundleFullNoAdsJetton30)}
-              disabled={buyingId !== null}
-            >
-              <span className="day-activity-icon">🔓🚫🪙</span>
-              <span className="day-activity-label">{language === "en" ? "Full + No Ads + 30 Jetton" : "Full + Reklamsız + 30 Jetton"}</span>
-              <span className="day-activity-gain">
-                {buyingId === "bundle-noads-jetton30"
-                  ? "…"
-                  : language === "en"
-                    ? BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL
-                    : BUNDLE_FULL_NOADS_JETTON30_PRICE_TR}
-              </span>
-            </button>
-          </div>
-          <p className="menu-empty">{BUNDLE_FULL_JETTON30_DESCRIPTION[language]}</p>
-          <p className="menu-empty">{BUNDLE_FULL_NOADS_DESCRIPTION[language]}</p>
-          <p className="menu-empty">{BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION[language]}</p>
-        </>
-      )}
-
-      <button className="menu-btn ghost" onClick={handleRestore} disabled={restoring}>
-        {restoring ? "…" : language === "en" ? "Restore Purchases" : "Satın Alımları Geri Yükle"}
+      <p className="settings-subsection-title">{language === "en" ? "Store" : "Market"}</p>
+      <button className="menu-btn" onClick={onOpenStore}>
+        <CartIcon size={16} className="icon-inline" /> {language === "en" ? "Store" : "Market"}
       </button>
+
+      <button className={`about-toggle ${aboutOpen ? "open" : ""}`} onClick={() => setAboutOpen((o) => !o)} aria-expanded={aboutOpen}>
+        <HeartIcon size={16} className="about-heart" />
+        <span className="about-toggle-label">{language === "en" ? "About" : "Hakkında"}</span>
+        <span className="about-chevron">▾</span>
+      </button>
+      {aboutOpen && (
+        <div className="about-card">
+          <div className="about-header">
+            <span className="about-label">{language === "en" ? "About" : "Hakkında"}</span>
+            <span className="about-version">v1.0</span>
+          </div>
+          <p className="about-body">{aboutText[language]}</p>
+          <p className="about-signoff">{language === "en" ? "— with love, your developer" : "— sevgiyle, geliştiricin"}</p>
+        </div>
+      )}
 
       <button className="menu-btn ghost" onClick={onBack}>
         {language === "en" ? "Back" : "Geri"}

@@ -255,7 +255,7 @@ export const houseHayaletliDaire: HouseScene = {
       id: "rooms_b",
       lines: [
         { speaker: "customer1", name: "Nermin Hanım", text: { tr: "(gözleri parlar) Aynen öyle düşünüyorum ben de!", en: "(eyes sparkle) That's exactly what I think too!" } },
-        { speaker: "customer2", name: "Kaan", text: { tr: "(Emlah'a bakar) Siz de mi bu işe girdiniz şimdi...", en: "(looks at Emlah) Are you getting into this now too..." } },
+        { speaker: "customer2", name: "Kaan", text: { tr: "(Emlah'a bakar) Siz de mi bu işe girdiniz şimdi...", en: "(looks at Estetan) Are you getting into this now too..." } },
       ],
       next: "kaan",
     },
@@ -272,7 +272,7 @@ export const houseHayaletliDaire: HouseScene = {
     kaan: {
       id: "kaan",
       lines: [
-        { speaker: "customer2", name: "Kaan", text: { tr: "Emlah Bey, açıkçası ben bu hikayelere pek inanmıyorum.", en: "Emlah Bey, frankly I don't really believe in these stories." } },
+        { speaker: "customer2", name: "Kaan", text: { tr: "Emlah Bey, açıkçası ben bu hikayelere pek inanmıyorum.", en: "Estetan Bey, frankly I don't really believe in these stories." } },
         { speaker: "customer2", name: "Kaan", text: { tr: "Siz gerçekten burada oturur muydunuz?", en: "Would you really live here?" } },
       ],
       choices: [
@@ -324,7 +324,7 @@ export const houseHayaletliDaire: HouseScene = {
       id: "closing_sold_ruh",
       lines: [
         { speaker: "customer1", name: "Nermin Hanım", text: { tr: "Biz bu daireyi alıyoruz, kararımı verdim.", en: "We are buying this apartment, I've made my decision." } },
-        { speaker: "customer2", name: "Kaan", text: { tr: "(Emlah'a göz kırpar) Sağ olun, annemi mutlu ettiniz.", en: "(winks at Emlah) Thanks, you made my mom happy." } },
+        { speaker: "customer2", name: "Kaan", text: { tr: "(Emlah'a göz kırpar) Sağ olun, annemi mutlu ettiniz.", en: "(winks at Estetan) Thanks, you made my mom happy." } },
         { speaker: "emlah", text: { tr: "Ben teşekkür ederim, hayırlı olsun.", en: "Thank you, best of luck." } },
       ],
       end: "sold",
@@ -333,7 +333,7 @@ export const houseHayaletliDaire: HouseScene = {
       id: "closing_thinking",
       lines: [
         { speaker: "customer1", name: "Nermin Hanım", text: { tr: "Mantıklı konuştunuz, biraz daha düşünmemiz lazım yine de.", en: "You spoke logically, but we still need to think about it a bit more." } },
-        { speaker: "customer2", name: "Kaan", text: { tr: "Teşekkürler Emlah Bey, size döneriz.", en: "Thanks Emlah Bey, we'll get back to you." } },
+        { speaker: "customer2", name: "Kaan", text: { tr: "Teşekkürler Emlah Bey, size döneriz.", en: "Thanks Estetan Bey, we'll get back to you." } },
       ],
       end: "thinking",
     },
@@ -362,7 +362,7 @@ export const houseDenizeSifir: HouseScene = {
     start: {
       id: "start",
       lines: [
-        { speaker: "customer1", name: "Orhan Bey", text: { tr: "Emlah Bey, ilanda \"denize sıfır\" yazıyordu, doğru mu bu?", en: "Emlah Bey, the listing said \"seafront\", is this true?" } },
+        { speaker: "customer1", name: "Orhan Bey", text: { tr: "Emlah Bey, ilanda \"denize sıfır\" yazıyordu, doğru mu bu?", en: "Estetan Bey, the listing said \"seafront\", is this true?" } },
         { speaker: "customer1", name: "Orhan Bey", text: { tr: "Ben ömrüm boyunca pencereden deniz görmek istedim.", en: "I've wanted to see the sea from my window all my life." } },
       ],
       choices: [
@@ -583,7 +583,7 @@ export const houseKamburBalkon: HouseScene = {
       id: "kapanis",
       lines: [
         { speaker: "customer1", name: "Ela", text: { tr: "Barış, bence sorun değil, ben bu evi çok sevdim.", en: "Baris, I think it's not a problem, I really loved this house." } },
-        { speaker: "customer2", name: "Barış", text: { tr: "Emin değilim ama... Emlah Bey, siz ne dersiniz?", en: "I'm not sure but... Emlah Bey, what do you say?" } },
+        { speaker: "customer2", name: "Barış", text: { tr: "Emin değilim ama... Emlah Bey, siz ne dersiniz?", en: "I'm not sure but... Estetan Bey, what do you say?" } },
       ],
       choices: [
         { id: "a", text: { tr: "\"Ustaya baktırıp güvenli olduğunu belgeleterek ilerleyelim, üstüne %5 indirim de ayarlarım.\"", en: "\"Let's proceed by having a repairman check it and document that it's safe, plus I'll arrange a 5% discount.\"" }, next: "closing_sold", effects: { closingBias: 35,  discountPercent: 5 } },
@@ -719,7 +719,7 @@ export const houseAsansorsuzZirve: HouseScene = {
     start: {
       id: "start",
       lines: [
-        { speaker: "customer1", name: "Nadir Bey", text: { tr: "(nefes nefese) Emlah Bey... asansör... nerede?", en: "(panting) Emlah Bey... elevator... where is it?" } },
+        { speaker: "customer1", name: "Nadir Bey", text: { tr: "(nefes nefese) Emlah Bey... asansör... nerede?", en: "(panting) Estetan Bey... elevator... where is it?" } },
         { speaker: "customer2", name: "Sevim Teyze", text: { tr: "Nadir, otur biraz, nefesini topla.", en: "Nadir, sit a bit, catch your breath." } },
       ],
       choices: [

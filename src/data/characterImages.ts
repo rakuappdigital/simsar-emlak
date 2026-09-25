@@ -32,6 +32,10 @@ import duru from "../assets/portraits/duru.webp";
 
 export const characterImages: Record<string, string> = {
   Emlah: emlah,
+  // English localization displays the player character as "Estetan" (see
+  // speakerLabelFor in DialogueScene.tsx) — same portrait, just a second
+  // lookup key so the EN display name still resolves to an image.
+  Estetan: emlah,
   Ceylin: ceylin,
   Kaan: kaan,
   "Nermin Hanım": nermin,

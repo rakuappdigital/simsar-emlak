@@ -1,5 +1,39 @@
 # Fiyat düzeltmesi, ikon yenileme, ödül/harcama döngüsü canlı testi (2026-09-25)
 
+## ✅ TAMAMLANDI — Enerji mini oyunları yeniden kurgulandı (Kutu Bul + Adım At)
+Web'de artifact üzerinden birkaç tur onay alınarak (mekanik + görsel taşma bugları düzeltilerek) uygulandı:
+- **🔑 Anahtar Bul → Kutu Bul (shell game)**: 4 kutu, 2sn doğru anahtarı gösterir, kapanır ve gerçekten (FLIP animasyonlu, tüm kutuları en az bir kez karıştıran) 3 saniyelik shuffle'dan sonra seçim istenir.
+- **🚶 Adım At**: sabit "4sn'de 10+ tıkla" yerine artık 3 aşamalı (10→15→20 adım) kademeli zorluk.
+- **Ortak "3 hak, birinde tutarsa ödül" mantığı**: her iki oyun da tek oturumda peş peşe 3 deneme hakkı veriyor, hangisinde tutturursa orada duruyor; 3'ü de kaçarsa ödül yok (eskiden "fail" de küçük bir ödül veriyordu, o kaldırıldı).
+- `minigameSchedule.ts`: 8 saatlik pencere başına hak sayısı 4'ten **2**'ye düşürüldü (bir "hak" artık tüm 3-denemelik oturumu kapsıyor).
+- `src/components/EnergyMiniGames.tsx` tamamen yeniden yazıldı, `src/game.css`'e `.minigame-attempt-*`/`.minigame-key-*` sınıfları eklendi.
+
+## ✅ TAMAMLANDI — Ayarlar ikonundaki eski emoji kaldırıldı
+Oyun içi header'daki ayarlar/jeton pili hem `GearIcon` (SVG) hem de 🪙 emojisi birden gösteriyordu — emoji kaldırıldı, sadece jeton sayısı + gear icon kaldı (`App.tsx`). Jeton bakiyesi zaten Ayarlar ekranında ayrıca gösteriliyor.
+
+## ✅ TAMAMLANDI — Türkiye fiyatları güncellendi (kod + gerçek ASC fiyat şeması)
+- Kod: `jettons.ts`/`purchases.ts` — jetton 20/50/100 → ₺19,99/₺39,99/₺79,99, Tam Sürüm → ₺39,99, Reklamları Kaldır → ₺79,99.
+- **App Store Connect API ile gerçek manuel TUR fiyat noktaları da ayarlandı** (sadece görünen metin değil — 5 ürünün hepsi için `inAppPurchasePriceSchedules` POST edildi, ASC'nin sunduğu TUR price point'lerinden birebir eşleşen değerler bulunup uygulandı, GET ile doğrulandı). Önceki oturumdaki "hayati" fiyat uyuşmazlığı bug'ının aynısına düşülmedi.
+
+## ✅ TAMAMLANDI — Satış müziği (ayrı playlist + crossfade)
+- `sound.ts`'e ana menü müziğinden tamamen bağımsız ikinci bir `<audio>` sistemi eklendi: `startSaleMusic()`/`stopSaleMusic()`, 1 saniyelik fade-out/fade-in.
+- Satış diyaloğuna girerken (yeni "kapı eşiği" popup'ı onaylanınca) ana müzik fade-out, 3 satış müziğinden rastgele biri fade-in; satıştan çıkınca tam tersi.
+- Müzik dosyaları: kullanıcı `~/Desktop/oddmus/1-3.mp3` içine koydu, ana menü müziklerinden farklı olduğu checksum ile doğrulandı, `public/audio/sale1-3.mp3` olarak yerleştirildi.
+
+## ✅ TAMAMLANDI — Satışa giriş popup'ı ("kapı eşiği")
+- Yeni `src/components/SaleIntroModal.tsx` — eve girmeden önce açılan, ev/müşteri/fiyat bilgisi gösteren, "Satışa Başla" ile onaylanan bir ara ekran. Ana menü müziği popup açıkken çalmaya devam ediyor, onaylayınca satış müziğine crossfade ediyor.
+- Görsel: kullanıcının ürettiği iki kapı konseptinden (`door.png`/`door2.png`, Desktop) yakın çekim olan `door2.png` seçildi (küçük kart alanında daha güçlü okunuyor) → `src/assets/ui/sale-intro-door.webp`.
+- `App.tsx`'e `saleIntroConfirmed` state'i + stage-geçiş `useEffect`'i eklendi (satıştan çıkınca müzik otomatik geri dönüyor).
+
+## ✅ TAMAMLANDI — "Hakkında" bölümü (Ayarlar)
+- Kullanıcıya iki ton önerisi (Sıcak/Kişisel vs Doğrudan Çağrı) artifact üzerinde TR/EN karşılaştırmalı gösterildi, "Sıcak/Kişisel" seçildi.
+- Ayarlar ekranının altına, tıklanınca açılan (accordion, slide-down animasyonlu) bir buton olarak eklendi — bağımsız geliştirici olduğunu ve desteğin (yorum/mağaza paketi) projeyi büyütmeye yardımcı olduğunu anlatan TR/EN metin, kalp ikonu, v1.0 rozeti.
+
+## ✅ TAMAMLANDI — Build 7: TestFlight'a yüklendi
+Yukarıdaki tüm değişiklikleri içeren build, build numarası 6→7'ye çıkarılıp tam CLI pipeline'ıyla (archive → export → `xcrun altool --upload-app`) yüklendi. "UPLOAD SUCCEEDED with no errors" — Apple'ın işleyip TestFlight'ta göstermesi ~5-15 dk sürüyor.
+
+---
+
 ## ✅ TAMAMLANDI — Kritik Türkiye fiyat uyuşmazlığı ("hayati" olarak işaretlendi)
 - **Kök neden**: Sadece USD manuel fiyat girilip diğer ülkeler Apple'ın otomatik para birimi çevrimine bırakılmıştı. Uygulama içindeki `priceTR` sabitleri ise elle tahmin/eski değerlerdi — gerçek ASC fiyat noktalarıyla (base64 decode edilmiş TUR price point'leri) uyuşmuyordu.
 - Düzeltme: `src/data/jettons.ts` ve `src/data/purchases.ts`'teki tüm `priceTR` sabitleri ASC API'den okunan gerçek değerlerle güncellendi (Full Unlock ₺29,99→₺99,99, Remove Ads ₺59,99→₺149,99, jeton paketleri de düzeltildi).
@@ -23,8 +57,8 @@ Kullanıcı "bu mekanikler boş dönmesin, sadece kod okuyarak değil gerçekten
 
 Test yazarken bulunan 3 test-script hatası (uygulama hatası değil) düzeltildi: (1) sözleşme (contract) ekranındaki genel "ilk boş seçeneği tıkla" mantığı aynı madde içinde sonsuz döngüye giriyordu — madde-bazlı seçim mantığına çevrildi; (2) ikinci evi yüklerken bazen çıkan rastgele "Staging" hazırlık ekranı handle edilmiyordu; (3) test kaydı `full-unlock` flag'i içermediği için 3. eve geçerken gerçek demo sınırına (`DEMO_HOUSE_LIMIT=2`) takılıp "Demo Complete" ekranına düşüyordu.
 
-## 🟡 DEVAM EDİYOR — Build 6 yükleme
-Yukarıdaki fiyat + ikon düzeltmelerini içeren build 6 archive/export/upload aşamasında (bkz alttaki genel ASC durumu için önceki günlük notlar).
+## ✅ TAMAMLANDI — Build 6 yükleme
+Yukarıdaki fiyat + ikon düzeltmelerini içeren build 6 yüklendi. (Sonradan build 7 ile birlikte üstteki yeni maddeler de eklendi — bkz "Build 7" bölümü.)
 
 ---
 

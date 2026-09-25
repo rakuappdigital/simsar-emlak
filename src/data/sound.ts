@@ -224,3 +224,89 @@ export function stopMusic(): void {
   if (!musicEl) return;
   musicEl.pause();
 }
+
+// ---------- Sale music (separate playlist, crossfaded with the menu music) ----------
+
+/**
+ * Satış müzikleri — ana menü/oyun içi gezinme müziklerinden (musicTracks,
+ * yukarıda) tamamen ayrı bir havuz. Bir eve girerken (satış diyaloğu
+ * başlarken) ana müzik fade-out, bu müziklerden rastgele biri fade-in olur;
+ * satıştan çıkınca tam tersi. Dosyalar build-time bundling'e girmesin diye
+ * public/audio altında düz path olarak referanslanıyor.
+ */
+const saleMusicTracks = ["/audio/sale1.mp3", "/audio/sale2.mp3", "/audio/sale3.mp3"];
+
+const FADE_MS = 1000;
+let lastSaleTrackIndex = -1;
+let saleMusicEl: HTMLAudioElement | null = null;
+// Her <audio> elemanının kendi fade animasyon kare id'si — tek bir paylaşılan
+// değişken kullanılsaydı (eski hâli), startSaleMusic()/stopSaleMusic()'in aynı
+// anda tetiklediği İKİ fadeVolume() çağrısından ikincisi, birincinin henüz tek
+// kare bile çalışmamış animasyonunu cancelAnimationFrame ile iptal ederdi —
+// eski parça asla 0'a inip pause() olmaz, yeni parça üstüne biner (iki parça
+// aynı anda çalar). Elemana özel id saklamak bu yarışı ortadan kaldırıyor.
+const fadeRafs = new WeakMap<HTMLAudioElement, number>();
+
+function fadeVolume(el: HTMLAudioElement, to: number, ms: number, onDone?: () => void): void {
+  const existingRaf = fadeRafs.get(el);
+  if (existingRaf) cancelAnimationFrame(existingRaf);
+  const from = el.volume;
+  const start = performance.now();
+  function step(now: number) {
+    const t = Math.min(1, (now - start) / ms);
+    el.volume = from + (to - from) * t;
+    if (t < 1) {
+      fadeRafs.set(el, requestAnimationFrame(step));
+    } else {
+      fadeRafs.delete(el);
+      onDone?.();
+    }
+  }
+  fadeRafs.set(el, requestAnimationFrame(step));
+}
+
+function ensureSaleMusicEl(): HTMLAudioElement | null {
+  if (typeof Audio === "undefined") return null;
+  if (saleMusicEl) return saleMusicEl;
+  const el = new Audio();
+  el.loop = false;
+  el.addEventListener("ended", () => {
+    el.src = pickNextSaleTrack();
+    el.play().catch(() => {});
+  });
+  saleMusicEl = el;
+  return el;
+}
+
+function pickNextSaleTrack(): string {
+  let idx = Math.floor(Math.random() * saleMusicTracks.length);
+  if (saleMusicTracks.length > 1 && idx === lastSaleTrackIndex) {
+    idx = (idx + 1) % saleMusicTracks.length;
+  }
+  lastSaleTrackIndex = idx;
+  return saleMusicTracks[idx];
+}
+
+/** Ana müziği fade-out edip durdurur, satış müziklerinden rastgele birini fade-in ile başlatır. */
+export function startSaleMusic(): void {
+  if (musicEl && !musicEl.paused) {
+    fadeVolume(musicEl, 0, FADE_MS, () => musicEl?.pause());
+  }
+  const el = ensureSaleMusicEl();
+  if (!el) return;
+  el.src = pickNextSaleTrack();
+  el.volume = 0;
+  el.play().catch(() => {});
+  fadeVolume(el, (musicVolume / 100) * 0.6, FADE_MS);
+}
+
+/** Satış müziğini fade-out edip durdurur, ana müziği (kaldığı yerden) fade-in ile geri getirir. */
+export function stopSaleMusic(): void {
+  if (saleMusicEl && !saleMusicEl.paused) {
+    fadeVolume(saleMusicEl, 0, FADE_MS, () => saleMusicEl?.pause());
+  }
+  if (musicEl) {
+    musicEl.play().catch(() => {});
+    fadeVolume(musicEl, (musicVolume / 100) * 0.6, FADE_MS);
+  }
+}
