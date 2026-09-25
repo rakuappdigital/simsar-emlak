@@ -1,3 +1,33 @@
+# Fiyat düzeltmesi, ikon yenileme, ödül/harcama döngüsü canlı testi (2026-09-25)
+
+## ✅ TAMAMLANDI — Kritik Türkiye fiyat uyuşmazlığı ("hayati" olarak işaretlendi)
+- **Kök neden**: Sadece USD manuel fiyat girilip diğer ülkeler Apple'ın otomatik para birimi çevrimine bırakılmıştı. Uygulama içindeki `priceTR` sabitleri ise elle tahmin/eski değerlerdi — gerçek ASC fiyat noktalarıyla (base64 decode edilmiş TUR price point'leri) uyuşmuyordu.
+- Düzeltme: `src/data/jettons.ts` ve `src/data/purchases.ts`'teki tüm `priceTR` sabitleri ASC API'den okunan gerçek değerlerle güncellendi (Full Unlock ₺29,99→₺99,99, Remove Ads ₺59,99→₺149,99, jeton paketleri de düzeltildi).
+- **Bonus bulunan ikinci bug**: 3 başlangıç paketinin (`bundle_full_jetton30` vb.) hiç Türkçe fiyatı yoktu, dil ne olursa olsun ham USD fiyatı gösteriliyordu. 3 yeni `BUNDLE_*_PRICE_TR` sabiti eklendi, `SettingsScreen.tsx`'teki gösterim dil bazlı ternary'e çevrildi.
+- Commit: `8eb78e4`.
+
+## ✅ TAMAMLANDI — "Warm Pixel" ikon yenileme
+- Kullanıcıya 3 konsept yön Artifact üzerinden sunuldu, "B · Warm Pixel" seçildi.
+- `src/index.css`'e `--c-accent-hi`/`--c-accent-lo` custom property'leri, `src/game.css`'e `.icon-hi`/`.icon-lo` sınıfları eklendi.
+- `src/components/icons.tsx`'teki ~20 ikona (WalletIcon, CartIcon, HouseIcon, LogoIcon, GearIcon vb.) highlight/shadow şeridi eklendi.
+- Commit: `8eb78e4`.
+
+## ✅ TAMAMLANDI — Ödül/harcama döngülerinin canlı (Playwright) testi
+Kullanıcı "bu mekanikler boş dönmesin, sadece kod okuyarak değil gerçekten test et" dedi. `tests/reward-loops.mjs` yazıldı (commit `d88c6fc`), gerçek tarayıcıda uçtan uca doğrulandı:
+- Mini-oyunla enerji kazanımı (before=15→after=17)
+- Jetonla enerji satın alma (jeton düşüyor + enerji artıyor)
+- Ödüllü reklam izleyince enerji artıyor
+- Jeton paketi satın alma gerçekten jeton ekliyor
+- Jetonla Şüphe Kalkanı satın alma jetonu düşürüyor VE **bir sonraki evde gerçekten -12 şüphe indirimi olarak sahaya çıkıyor** (en kritik doğrulama — sadece satın alındı değil, gerçek oyun etkisi kontrol edildi)
+- Sıfır konsol/sayfa hatası
+
+Test yazarken bulunan 3 test-script hatası (uygulama hatası değil) düzeltildi: (1) sözleşme (contract) ekranındaki genel "ilk boş seçeneği tıkla" mantığı aynı madde içinde sonsuz döngüye giriyordu — madde-bazlı seçim mantığına çevrildi; (2) ikinci evi yüklerken bazen çıkan rastgele "Staging" hazırlık ekranı handle edilmiyordu; (3) test kaydı `full-unlock` flag'i içermediği için 3. eve geçerken gerçek demo sınırına (`DEMO_HOUSE_LIMIT=2`) takılıp "Demo Complete" ekranına düşüyordu.
+
+## 🟡 DEVAM EDİYOR — Build 6 yükleme
+Yukarıdaki fiyat + ikon düzeltmelerini içeren build 6 archive/export/upload aşamasında (bkz alttaki genel ASC durumu için önceki günlük notlar).
+
+---
+
 # App Store Connect Submission Durumu (2026-09-24 güncellemesi)
 
 API ile tamamlananlar (bu oturumda):
