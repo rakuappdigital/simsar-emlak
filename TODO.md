@@ -24,6 +24,9 @@ Web prototipleri (https://claude.ai/artifact/Qatos7JhJp71enHRqbRb8B) arasından 
 ## ✅ TAMAMLANDI — Kayıt yüklerken kayıt bozulması (kritik)
 continueSaved() enterPhone'u senkron çağırıyordu; içindeki persist() yüklenmemiş (eski/varsayılan) state'i diske yazıyordu: harcama 0 (bakiye şişiyor), rozet/bonus kazanç siliniyor, enerji 100, bekleyen iş null. Oyuncu yükleyip hemen çıkarsa kayıt bozuk kalıyordu (~2/3 yüklemede). enterPhone artık state işlendikten sonraki render'da çalışıyor. Test: `tests/load-integrity.mjs`.
 
+## ✅ TAMAMLANDI — Build 10: TestFlight'a yüklendi
+Build 9→10, CLI pipeline (archive → export → `xcrun altool --upload-app`). "UPLOAD SUCCEEDED with no errors" (Delivery UUID `bb93b810-36d4-4b88-814f-fd44e83a89b5`).
+
 ## ℹ️ Testler
 Kayıt yüklemede ~1/3 ihtimalle araya ofis görevi giriyor (mevcut tasarım); bunu hesaba katmayan eski testler (energy, energy-office-regen, final-touches, scheduled-visit-exit, smoke, firat) sağlamlaştırıldı. `node tests/run-all.mjs` 19/19 yeşil.
 
