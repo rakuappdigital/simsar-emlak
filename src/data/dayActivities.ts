@@ -11,6 +11,8 @@ export interface DayActivity {
   icon: string;
   label: Localized;
   description: Localized;
+  /** Kartta gösterilen kısa etki etiketi — oyuncu neye enerji harcadığını görsün. */
+  effect: Localized;
   energyCost: number;
 }
 
@@ -23,6 +25,7 @@ export const dayActivities: DayActivity[] = [
       tr: "Bugünkü müşteriyi önceden araştır — şüphesi biraz daha düşük başlar.",
       en: "Look into today's client beforehand — they start a bit less suspicious.",
     },
+    effect: { tr: "Bugünkü müşteri −8 şüphe", en: "Today's client −8 suspicion" },
     energyCost: 5,
   },
   {
@@ -33,6 +36,7 @@ export const dayActivities: DayActivity[] = [
       tr: "Sosyal medyada küçük bir paylaşım yap — Muzaffer Bey'in keyfi biraz artar.",
       en: "Post something small on social media — Muzaffer Bey's mood improves a bit.",
     },
+    effect: { tr: "Mini oyun · Patron +1 / +3 / +5", en: "Mini-game · Boss +1 / +3 / +5" },
     energyCost: 8,
   },
   {
@@ -43,10 +47,17 @@ export const dayActivities: DayActivity[] = [
       tr: "Evrak işlerini hallet — küçük bir ek kazanç.",
       en: "Handle some paperwork — a small extra payout.",
     },
+    effect: { tr: "Mini oyun · +₺2.500 / 5.000 / 7.500", en: "Mini-game · +₺2,500 / 5,000 / 7,500" },
     energyCost: 10,
   },
 ];
 
 export const RESEARCH_SUSPICION_DISCOUNT = 8;
-export const MARKETING_BOSS_MOOD_GAIN = 3;
-export const OFFICE_WORK_BONUS_EARNINGS = 5000;
+/** Pazarlama (Vitrin Karesi) — kademe başına patron memnuniyeti: yarım / tam / mükemmel. */
+export const MARKETING_BOSS_MOOD_BY_TIER = [1, 3, 5] as const;
+/** Mükemmel ilan fotoğrafı bugünkü müşterinin ilgisini de artırır. */
+export const MARKETING_PERFECT_INTEREST = 5;
+/** Ofis İşleri (Tapu Masası) — kademe başına ek kazanç. */
+export const OFFICE_WORK_EARNINGS_BY_TIER = [2500, 5000, 7500] as const;
+/** Tapu Masası'nda mükemmel skorla kaçmış bir müşteriye tekrar ulaşma hakkı bulunma ihtimali. */
+export const FORGOTTEN_FILE_CHANCE = 0.25;

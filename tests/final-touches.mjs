@@ -91,6 +91,11 @@ await page.locator("text=Kayıtlı Oyunlar").click({ timeout: 10000 });
 await page.waitForTimeout(400);
 await page.locator(".pixel-btn").first().click({ timeout: 10000 });
 await page.waitForTimeout(1000);
+// Continuing a save can roll an office-task detour first — clear it until the office shows.
+for (let i = 0; i < 15 && !(await page.locator(".office-messages-btn").first().isVisible().catch(() => false)); i++) {
+  await page.locator(".work-task-screen .choice-btn, .quick-call-screen .choice-btn, .choice-btn, button.phone-continue").first().click({ timeout: 500 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
 // Messages now open via their own dedicated phone-only view (OfficeScene's
 // Messages button), not the tabbed Emlah menu — see App.tsx's openMessagesOnly.
 await page.locator(".office-messages-btn").first().click({ timeout: 5000 }).catch(() => {});

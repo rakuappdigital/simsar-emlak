@@ -98,7 +98,9 @@ await page.waitForTimeout(1000);
 // for whichever actionable button shows up next instead of a fixed wait
 // sequence — same resilience approach as smoke.mjs's tick().
 async function clickNextStep() {
-  const continueBtn = page.locator("button.phone-continue").first();
+  // Today's job intro now ends on "Evi Gez / Ofise Dön" instead of a bare
+  // "Devam Et" — "Evi Gez" is what calls afterIntro().
+  const continueBtn = page.locator("button.phone-continue, .phone-choices .choice-btn:has-text('Evi Gez')").first();
   if (await continueBtn.isVisible().catch(() => false)) {
     await continueBtn.click({ timeout: 3000 }).catch(() => {});
     return "continue";

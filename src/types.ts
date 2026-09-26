@@ -130,6 +130,8 @@ export interface HouseResult {
   retriedLost?: boolean;
   /** True once the player has used their one manual follow-up message from the inbox on a "thinking" sale. See data/followUp.ts. */
   followedUpThinking?: boolean;
+  /** İşler'den "Reddet" ile hiç gezilmeden kapatılan iş — outcome "lost" olarak sayılır (seri/hafta hesapları için), retriedLost da true'dur ki hiçbir geri arama akışına girmesin. */
+  declined?: boolean;
   /** Tone of the most recent negotiation choice picked for this customer (closing choice or callback) — used to catch a pushy↔patient about-face across separate attempts. See data/contradiction.ts. */
   lastNegotiationTone?: "empathetic" | "pushy" | "patient";
   /** Text of the highest-fun choice picked during this house's dialogue, if any. */
@@ -282,6 +284,12 @@ export interface PausedVisit {
   status: "office" | "scheduled";
   /** Only set when status is "scheduled" — decremented once per "Yeni Güne Geç" press. */
   daysRemaining?: number;
+  /** Bu iş bir kez "Ertele" ile ileri atıldı — ikinci kez ertelenemez, müşteri biraz soğuk başlar. */
+  postponed?: boolean;
+  /** Erteleme cezası (+şüphe) bu ziyarette zaten uygulandı (kapıdan "Vazgeç" sonrası tekrar uygulanmasın). */
+  penaltyApplied?: boolean;
+  /** Eve giriş hazırlığı (enerji, düello/easter egg zarları) zaten yapıldı — kapıdan "Vazgeç" ile dönülmüş ziyaret. Tekrar girişte afterIntro atlanır. */
+  introDone?: boolean;
 }
 
 export interface SaveGame {

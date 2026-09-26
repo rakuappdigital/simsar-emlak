@@ -38,6 +38,9 @@ export const JETTON_PACKAGES: JettonPackage[] = [
 export const JETTON_ENERGY_REFILL_COST = 2;
 export const JETTON_ENERGY_REFILL_AMOUNT = 50;
 
+/** Portföy kilidi ekranında bir sonraki tier'ı şartları beklemeden açmanın bedeli. */
+export const TIER_SKIP_JETTON_COST = 50;
+
 export function getJettons(): number {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

@@ -1,3 +1,37 @@
+# Portföy kilidi, İşler kararları, aktivite düzeltmeleri (2026-09-26)
+
+## ✅ TAMAMLANDI — Dil seçimi her açılışta
+Splash → bayraklı dil ekranı (son seçim vurgulu) → ana menü. Eskiden sadece ilk kurulumda çıkıyordu, güncelleme alan TestFlight kullanıcıları hiç görmüyordu.
+
+## ✅ TAMAMLANDI — İltifat döngüsü (kritik)
+Tepkiden sonraki "Devam" aynı düğüme dönüp satırları baştan oynatıyordu. Artık iltifat + cevap sonrası düğümün kalan seçenekleri geri geliyor. 8 gerçek iltifat cümlesi (TR/EN). Test: `tests/compliment-flow.mjs`.
+
+## ✅ TAMAMLANDI — Enerji kilidi (kritik)
+Pasif dolum sadece ev geçişlerinde hesaplanıyordu; enerjisi eşiğin altında ofiste kalan oyuncu hiç toparlanamıyordu. Ofisteyken dakikada bir + uygulamaya dönüşte de hesaplanıyor. Test: `tests/energy-office-regen.mjs`.
+
+## ✅ TAMAMLANDI — Portföy kilidi (kritik)
+Tier şartları karşılanmadan kilide gelen oyuncu kalıcı takılıyordu. Kilit ekranı: şart listesi, "Kaçan Müşterileri Tekrar Ara" listesi (mevcut geri arama akışı, bitince kilide döner), "50 Jetton ile Geç". Test: `tests/tier-lock.mjs`.
+
+## ✅ TAMAMLANDI — İşler: Şimdi Git / Ertele / Reddet
+Eski tek buton ("Ziyareti Aç", %40/%30/%30 zar) kaldırıldı. Ertele: 1 kez, müşteri +5 şüphe ile başlar. Reddet: onaylı, sonuç "reddedildi" (lost + retriedLost, geri aramalara girmez), seri bozulur, patron −5, enerji harcanmaz. Kapı ekranında "← Vazgeç, İşler'e dön" (enerji iade, tekrar girişte hazırlık tekrarlanmaz). Test: `tests/job-decisions.mjs`.
+
+## ✅ TAMAMLANDI — Günün aktiviteleri
+Kartlarda etki gösteriliyor. Müşteri Araştırması'nın −8 şüphesi bir SONRAKİ eve gidiyordu, artık bugünkü müşteriye uygulanıyor.
+
+## ✅ TAMAMLANDI — Aktivite mini oyunları (Vitrin Karesi + Tapu Masası)
+Web prototipleri (https://claude.ai/artifact/Qatos7JhJp71enHRqbRb8B) arasından kullanıcı ikisini seçti. `src/components/ActivityMiniGames.tsx`: Pazarlama → Vitrin Karesi (Patron +1/+3/+5, mükemmelde müşteri +5 ilgi), Ofis İşleri → Tapu Masası (+₺2.500/5.000/7.500, mükemmelde %25 "unutulmuş dosya" = kaçmış müşterinin geri arama hakkı yenilenir). Enerji giriş ücreti, oyun bitince kesilir. Profil Avı seçilmedi, Müşteri Araştırması doğrudan uygulanmaya devam ediyor. Test: `tests/activity-minigames.mjs`.
+
+## ✅ TAMAMLANDI — Kayıt yüklerken kayıt bozulması (kritik)
+continueSaved() enterPhone'u senkron çağırıyordu; içindeki persist() yüklenmemiş (eski/varsayılan) state'i diske yazıyordu: harcama 0 (bakiye şişiyor), rozet/bonus kazanç siliniyor, enerji 100, bekleyen iş null. Oyuncu yükleyip hemen çıkarsa kayıt bozuk kalıyordu (~2/3 yüklemede). enterPhone artık state işlendikten sonraki render'da çalışıyor. Test: `tests/load-integrity.mjs`.
+
+## ℹ️ Testler
+Kayıt yüklemede ~1/3 ihtimalle araya ofis görevi giriyor (mevcut tasarım); bunu hesaba katmayan eski testler (energy, energy-office-regen, final-touches, scheduled-visit-exit, smoke, firat) sağlamlaştırıldı. `node tests/run-all.mjs` 19/19 yeşil.
+
+## 💡 NOT — Detaylı düşünülecek: "Esnafla Çay" aktivitesi
+Yeni günlük aktivite fikri: mahalle esnafıyla çay içip dedikodu dinlemek → bugünkü evde ekstra bir "yerel bilgi" diyalog seçeneği açılır (ör. "Karşı apartmana metro geliyormuş"). Kullanıcı bunun üzerine ayrıca detaylı düşünmek istiyor — otomatik uygulanmayacak. Yan görev / easter egg paketiyle birlikte ele alınabilir.
+
+---
+
 # Oyunu Bitir, randevu kilidi, market açıklamaları — Build 9 (2026-09-25)
 
 ## ✅ TAMAMLANDI — Oyun içi "Oyunu Bitir"

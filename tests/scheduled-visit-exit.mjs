@@ -64,6 +64,11 @@ await page.locator("text=Kayıtlı Oyunlar").click({ timeout: 5000 });
 await page.waitForTimeout(300);
 await page.locator(".pixel-btn").first().click({ timeout: 5000 });
 await page.waitForTimeout(800);
+// Continuing a save can roll an office-task detour first — clear it until the office shows.
+for (let i = 0; i < 15 && !(await page.locator(".office-messages-btn").first().isVisible().catch(() => false)); i++) {
+  await page.locator(".work-task-screen .choice-btn, .quick-call-screen .choice-btn, .choice-btn, button.phone-continue").first().click({ timeout: 500 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
 // Dismiss any incidental popup (daily reward etc.) sitting over the office.
 await page.keyboard.press("Escape").catch(() => {});
 

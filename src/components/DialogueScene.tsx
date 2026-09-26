@@ -19,7 +19,7 @@ import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
-import { resolveText, resolveHouseTitle, resolveHouseLocation, t, type Localized } from "../data/language";
+import { resolveText, resolveHouseTitle, resolveHouseLocation, t, type Localized, type LocalizedText } from "../data/language";
 import {
   isHeldFirmChoice,
   isDiscountContradiction,
@@ -74,15 +74,29 @@ const COMPLIMENT_INTEREST_BY_RANK: Record<string, number> = {
   "Kıdemli Emlakçı": 8,
   "Ofis Ortağı": 12,
 };
+// What Emlah actually says — house- and customer-agnostic (single customer
+// or couple), about their taste/attitude rather than looks, so every line
+// fits any node it can land on.
+const complimentLines: LocalizedText[] = [
+  { tr: "Açıkçası sizin gibi ne istediğini bilen müşteriye az rastlıyorum.", en: "Honestly, I rarely meet clients who know exactly what they want like you do." },
+  { tr: "Sorduğunuz sorulardan belli, bu işlerden gerçekten anlıyorsunuz.", en: "I can tell from your questions that you really know your stuff." },
+  { tr: "Detaylara bu kadar dikkat etmeniz hoşuma gitti, çoğu kişi bunları hiç sormaz.", en: "I love how you notice the details — most people never ask about these things." },
+  { tr: "Sizinle konuşmak çok keyifli, zamanın nasıl geçtiğini anlamadım.", en: "You're great company — I didn't even notice the time fly." },
+  { tr: "Bakılması gereken yerlere bakıyorsunuz, iyi bir gözünüz var.", en: "You're looking at exactly the right spots — you've got a good eye." },
+  { tr: "Bu mahalleye tam yakışacak birisiniz, komşular şanslı olur.", en: "You'd fit right into this neighborhood — the neighbors would be lucky." },
+  { tr: "Sakin ve net tavrınız işimi çok kolaylaştırıyor, teşekkür ederim.", en: "Your calm, clear way of going about this makes my job so much easier, thank you." },
+  { tr: "Zevkinize güveniyorum, bu evi sizin kadar iyi değerlendirecek biri zor bulunur.", en: "I trust your taste — it's hard to find someone who'd appreciate this place like you would." },
+];
 const complimentPositiveReactions: Localized[] = [
-  { tr: "Ne kadar naziksiniz, bu sıcaklığı sevdim.", en: "How kind of you, I like this warmth." },
-  { tr: "Böyle güler yüzlü bir emlakçıyla iş yapmak keyifli.", en: "It's nice doing business with such a friendly agent." },
-  { tr: "Teşekkür ederim, kendimi rahat hissettim.", en: "Thank you, I feel at ease." },
+  { tr: "Aa, teşekkür ederim! Bunu duymak hoş oldu açıkçası.", en: "Oh, thank you! That's actually nice to hear." },
+  { tr: "Estağfurullah, siz de işinizi çok güzel yapıyorsunuz.", en: "That's kind of you — you're pretty good at your job too." },
+  { tr: "Sağ olun, şimdi kendimi çok daha rahat hissediyorum.", en: "Thanks, I feel a lot more at ease now." },
+  { tr: "İltifata pek gelemem ama bu hoşuma gitti, devam edelim.", en: "I'm not great with compliments, but I liked that one. Let's go on." },
 ];
 const complimentNegativeReactions: Localized[] = [
-  { tr: "Şey... biraz fazla samimi oldunuz açıkçası.", en: "Um... that felt a bit too familiar, honestly." },
-  { tr: "İşe odaklansak daha iyi olur diye düşünüyorum.", en: "I think we'd be better off focusing on business." },
-  { tr: "Bu tarz yorumlar beni rahatsız ediyor biraz.", en: "Comments like that make me a little uncomfortable." },
+  { tr: "Hmm... bunu her müşterinize söylüyorsunuzdur herhalde.", en: "Hmm... I bet you say that to all your clients." },
+  { tr: "Teşekkürler ama iltifatla ev satılmaz, işe dönelim.", en: "Thanks, but compliments don't sell houses — back to business." },
+  { tr: "Bu kadar tatlı dil... evde bir kusur mu saklıyorsunuz yoksa?", en: "All this sweet talk... are you hiding a flaw in this place?" },
 ];
 
 // "İkram Et" — only appears when the player is carrying at least one
@@ -299,7 +313,7 @@ export default function DialogueScene({
   // Fırat Bey'in yüzü — App.tsx only sets this when isDuel is also true for
   // this exact house, so no extra roll/guard needed here.
   const firatLines: DialogueLine[] = firatEncounter && nodeId === house.startNode ? firatEncounter.lines : [];
-  const prependedLines = [
+  const prependedLines = syntheticNode ? [] : [
     ...originIntroLines,
     ...celebrityIntroLines,
     ...conditionWarningLines,
@@ -346,7 +360,7 @@ export default function DialogueScene({
   useEffect(() => {
     setTypedLength(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId, lineIndex]);
+  }, [nodeId, lineIndex, syntheticNode]);
 
   useEffect(() => {
     if (typedLength >= currentText.length) return;
@@ -380,14 +394,16 @@ export default function DialogueScene({
   const complimentUnlocked = !isClosingNode && !usedComplimentRef.current && complimentAppearRoll < COMPLIMENT_APPEAR_CHANCE;
   const complimentSuccess = complimentSuccessRoll < COMPLIMENT_SUCCESS_CHANCE;
   const complimentBonus = COMPLIMENT_INTEREST_BY_RANK[rankTitleText ?? "Stajyer"] ?? 4;
+  const complimentLine = useMemo(() => complimentLines[Math.floor(Math.random() * complimentLines.length)], [nodeId]);
   const complimentChoice: Choice = useMemo(
     () => ({
       id: "compliment",
-      text: { tr: "(Küçük bir iltifat et)", en: "(Pay a small compliment)" },
+      // Quoted like the houses' own spoken choices; the reaction exchange shows it unquoted.
+      text: { tr: `"${t(complimentLine, "tr")}"`, en: `"${t(complimentLine, "en")}"` },
       next: nodeId,
       effects: complimentSuccess ? { interest: complimentBonus } : { interest: -6, suspicion: 4 },
     }),
-    [nodeId, complimentSuccess, complimentBonus],
+    [nodeId, complimentLine, complimentSuccess, complimentBonus],
   );
 
   // "İkram Et" — only when the player is carrying seker-ikrami/kahve-ikrami stock.
@@ -519,10 +535,18 @@ export default function DialogueScene({
             : ikramNegativeReactions;
       const reactionLine = pool[Math.floor(Math.random() * pool.length)];
       if (choice.id === "ikram-offer") onIkramUsed?.();
+      // The reaction hands the SAME node's remaining choices straight back
+      // instead of a "Devam" that re-enters the node — re-entering replayed
+      // the node's (and on the first node, the whole intro's) lines from the
+      // top, which read as the conversation looping on itself.
+      const remainingChoices = (choicesToShow ?? []).filter((c) => c.id !== choice.id);
       setSyntheticNode({
         id: `${choice.id}-reaction`,
-        lines: [{ speaker: "customer1", text: reactionLine }],
-        choices: [{ id: `${choice.id}-continue`, text: { tr: "Devam ▸", en: "Continue ▸" }, next: choice.next }],
+        lines: [
+          ...(choice.id === "compliment" ? [{ speaker: "emlah" as const, text: complimentLine }] : []),
+          { speaker: "customer1", text: reactionLine },
+        ],
+        choices: remainingChoices,
       });
       setLineIndex(0);
       return;
@@ -682,6 +706,7 @@ export default function DialogueScene({
               <button
                 key={c.id}
                 className="choice-btn"
+                data-choice-id={c.id}
                 onClick={() => pickChoice(c)}
               >
                 {resolveText(c.text)}

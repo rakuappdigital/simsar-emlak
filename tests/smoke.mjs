@@ -34,6 +34,11 @@ async function tick(page) {
     await phoneChoices.first().click().catch(() => {});
     return true;
   }
+  const saleIntroBtn = page.locator("button.sale-intro-btn");
+  if ((await saleIntroBtn.count()) > 0 && (await saleIntroBtn.first().isVisible().catch(() => false))) {
+    await saleIntroBtn.first().click().catch(() => {});
+    return true;
+  }
   const choiceBtns = page.locator(".dialogue-box .choices .choice-btn");
   if ((await choiceBtns.count()) > 0) {
     await choiceBtns.first().click().catch(() => {});

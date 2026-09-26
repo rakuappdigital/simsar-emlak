@@ -8,6 +8,8 @@ interface SaleIntroModalProps {
   house: HouseScene;
   castAssignment: Record<string, string[]>;
   onConfirm: () => void;
+  /** "Vazgeç, İşler'e dön" — ziyareti İşler'deki bekleyen işe geri koyar. */
+  onBack?: () => void;
 }
 
 const tierFlavor: Record<HouseScene["tier"], { tr: string; en: string }> = {
@@ -24,7 +26,7 @@ const tierFlavor: Record<HouseScene["tier"], { tr: string; en: string }> = {
  * DialogueScene'i açar hem de startSaleMusic() ile müzik crossfade'ini
  * tetikler (bkz sound.ts).
  */
-export default function SaleIntroModal({ house, castAssignment, onConfirm }: SaleIntroModalProps) {
+export default function SaleIntroModal({ house, castAssignment, onConfirm, onBack }: SaleIntroModalProps) {
   const customerName = resolveCustomerNames(house, castAssignment)[0];
 
   return (
@@ -52,6 +54,11 @@ export default function SaleIntroModal({ house, castAssignment, onConfirm }: Sal
         <button className="pixel-btn sale-intro-btn" onClick={onConfirm}>
           {t({ tr: "Satışa Başla", en: "Start the Sale" })}
         </button>
+        {onBack && (
+          <button className="sale-intro-back" onClick={onBack}>
+            {t({ tr: "← Vazgeç, İşler'e dön", en: "← Not now, back to Jobs" })}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -96,10 +96,15 @@ await page.waitForTimeout(500);
 // "Yeni Güne Geç" — first click advances the day (same .office-get-job-btn
 // class, different handler until dayAdvanced flips true), second click is
 // the actual "Bugünün İşini Al" job attempt that hits the energy gate.
-await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(300);
-await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(300);
+// Continuing a save can roll an office-task detour first — clear it, advance
+// the day, then hit "Bugünün İşini Al" (the energy gate).
+for (let i = 0; i < 15 && !(await page.locator(".energy-break-modal").isVisible().catch(() => false)); i++) {
+  const officeBtn = page.locator(".office-get-job-btn").first();
+  if (await officeBtn.isVisible().catch(() => false)) await officeBtn.click({ timeout: 800 }).catch(() => {});
+  else await page.locator("button.phone-continue, .work-task-screen .choice-btn, .quick-call-screen .choice-btn, .choice-btn").first().click({ timeout: 800 }).catch(() => {});
+  await page.waitForTimeout(500);
+}
+await page.locator(".energy-break-modal").first().waitFor({ timeout: 3000 }).catch(() => {});
 assert((await page.locator(".energy-break-modal").count()) > 0, "low energy opens the Enerji Molası modal");
 assert((await page.locator(".energy-break-card").count()) === 4, "all 2 mini-games + rewarded-ad + jetton cards are available, even with minigamePlaysRemaining at 0 (vestigial field, no longer gates anything)");
 assert((await page.locator(".energy-break-other-btn, .energy-break-soon").count()) === 0, "no leftover ad/purchase placeholder buttons");

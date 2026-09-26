@@ -198,6 +198,7 @@ export default function OfficeScene({
                 >
                   <span className="day-activity-icon">{a.icon}</span>
                   <span className="day-activity-label">{resolveText(a.label)}</span>
+                  <span className="day-activity-effect">{resolveText(a.effect)}</span>
                   <span className="day-activity-gain">{done ? "✅" : `-${a.energyCost} ${t({ tr: "Enerji", en: "Energy" })}`}</span>
                 </button>
               );

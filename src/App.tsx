@@ -46,11 +46,20 @@ import { getPlaysRemaining, recordPlay, hasPlayedAllMinigames } from "./data/min
 import { initGameCenter, unlockAchievement, ACHIEVEMENT_IDS, submitLeaderboardScore } from "./data/gameCenter";
 import { claimDailyRewardIfEligible } from "./data/dailyReward";
 import { initRevenueCat } from "./data/revenuecat";
-import { dayActivities, RESEARCH_SUSPICION_DISCOUNT, MARKETING_BOSS_MOOD_GAIN, OFFICE_WORK_BONUS_EARNINGS } from "./data/dayActivities";
+import {
+  dayActivities,
+  RESEARCH_SUSPICION_DISCOUNT,
+  MARKETING_BOSS_MOOD_BY_TIER,
+  MARKETING_PERFECT_INTEREST,
+  OFFICE_WORK_EARNINGS_BY_TIER,
+  FORGOTTEN_FILE_CHANCE,
+} from "./data/dayActivities";
+import { activityMiniGames, type ActivityTier } from "./components/ActivityMiniGames";
 import {
   getJettons,
   addJettons,
   spendJettons,
+  TIER_SKIP_JETTON_COST,
   purchaseJettonPackage,
   JETTON_ENERGY_REFILL_COST,
   JETTON_ENERGY_REFILL_AMOUNT,
@@ -267,6 +276,7 @@ import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dail
 import { generateContract } from "./data/contract";
 import { perks, hasPerk, effectiveCost } from "./data/perks";
 import { tieredShuffle } from "./data/shuffle";
+import { POSTPONE_SUSPICION_PENALTY, DECLINE_BOSS_MOOD_PENALTY, pickDeclineBossLine } from "./data/jobDecisions";
 import { computeEnding } from "./data/endings";
 import type {
   Badge,
@@ -394,7 +404,8 @@ const outcomeTextByLang: Record<SceneOutcome, { tr: string; en: string }> = {
   thinking: { tr: "Müşteri düşünüyor...", en: "Customer is thinking..." },
   lost: { tr: "Satış kaybedildi.", en: "Sale lost." },
 };
-function outcomeText(outcome: SceneOutcome): string {
+function outcomeText(outcome: SceneOutcome, declined?: boolean): string {
+  if (declined) return t({ tr: "İşi reddettin. Sıradaki müşteriye geçiliyor.", en: "You turned the job down. Moving on to the next client." });
   return resolveText(outcomeTextByLang[outcome]);
 }
 
@@ -790,10 +801,42 @@ function App() {
   useEffect(() => {
     if (stage === "phone") setShowPhoneOverlay(false);
   }, [stage]);
+  // Açık aktivite mini oyunu (Vitrin Karesi / Tapu Masası) ve bu oyunda bulunan "unutulmuş dosya"nın sonuç indeksi.
+  const [activeActivityGame, setActiveActivityGame] = useState<string | null>(null);
+  const forgottenFileRef = useRef<number | null>(null);
+  const [resumeRequest, setResumeRequest] = useState<{ savedGame: SaveGame; catchUpRegenAt: number } | null>(null);
+  // Kapıdan "Vazgeç" için: son eve girişte gerçekten harcanan enerji ve bu ziyaretin erteleme durumu.
+  const lastHouseEnergyCostRef = useRef(0);
+  const activeVisitMetaRef = useRef<{ postponed?: boolean; penaltyApplied?: boolean }>({});
+  // Mağaza kilit ekranından (jeton yetmeyince) açıldıysa "Geri" oraya döner.
+  const storeReturnStageRef = useRef<Stage>("settings");
+  // Pasif enerji dolumu ev geçişlerinde hesaplanıyordu; enerjisi iş eşiğinin
+  // altında ofiste kalan oyuncu ev geçişi yapamadığı için saatlerce beklese de
+  // enerji hiç dolmuyordu (kilit). Ofisteyken dakikada bir ve uygulamaya
+  // geri dönüldüğünde de aynı gerçek-saat hesabını uygula.
+  useEffect(() => {
+    if (stage !== "phone") return;
+    function catchUp() {
+      const { gained, newLastRegenAt } = computePassiveEnergyRegen(energyLastRegenAt, Date.now());
+      if (gained <= 0) return;
+      setEnergy((e) => Math.min(ENERGY_MAX, e + gained));
+      setEnergyLastRegenAt(newLastRegenAt);
+    }
+    catchUp();
+    const timer = setInterval(catchUp, 60 * 1000);
+    document.addEventListener("visibilitychange", catchUp);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", catchUp);
+    };
+  }, [stage, energyLastRegenAt]);
   // Otomasyon/test ortamında (Playwright, navigator.webdriver) splash'ı atla — gerçek kullanıcıda hep gösterilir.
   const [showSplash, setShowSplash] = useState(() => !navigator.webdriver);
-  // İlk açılışta bir kere gösterilen dil seçim ekranı — Ayarlar'dan istendiği zaman değiştirilebilir.
-  const [languageChosen, setLanguageChosen] = useState(hasChosenLanguage);
+  // Dil seçim ekranı her açılışta splash'ın hemen ardından gelir (son seçim
+  // vurgulu) — eskiden sadece ilk kurulumda çıkıyordu, güncelleme alan
+  // TestFlight kullanıcıları onu hiç görmüyordu. Otomasyonda eski davranış
+  // korunur ki testler her reload'da bu ekrana takılmasın.
+  const [languageChosen, setLanguageChosen] = useState(() => navigator.webdriver && hasChosenLanguage());
   const [language, setLanguage] = useState<Language>(getLanguage);
 
   const [tutorialDismissed, setTutorialDismissed] = useState(() => {
@@ -1569,6 +1612,12 @@ function App() {
     if (stage === "locked" && house.tier <= maxUnlockedTier) {
       enterPhone(index, results, ownedPerks, consumables, unlockedTiers);
     }
+    // Kilit ekranından açılan geri arama bitince (satış olsun olmasın) akış
+    // "phone"a döner — ev hâlâ kilitliyse ofise değil kilit ekranına geri gel,
+    // yoksa oyuncu kilitli tier'ın evine "Bugünün İşini Al" ile girebilirdi.
+    if (stage === "phone" && house && house.tier > maxUnlockedTier) {
+      setStage("locked");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlockedTiers, stage]);
 
@@ -1696,6 +1745,44 @@ function App() {
     setStage("saved");
   }
 
+  // continueSaved()'in ertelenmiş eve geçişi — bkz oradaki yorum.
+  useEffect(() => {
+    if (!resumeRequest) return;
+    const { savedGame, catchUpRegenAt } = resumeRequest;
+    setResumeRequest(null);
+    enterPhone(
+      savedGame.index,
+      savedGame.results,
+      savedGame.ownedPerks,
+      savedGame.consumables,
+      savedGame.unlockedTiers,
+      savedGame.houseOrder,
+      savedGame.inbox,
+      savedGame.castAssignment,
+      savedGame.dailyQuest,
+      savedGame.origin ?? null,
+      savedGame.voiceTally ?? { eglenceli: 0, samimi: 0, atilgan: 0 },
+      savedGame.compassTally ?? { durustluk: 0, kurnazlik: 0 },
+      savedGame.significantMemories ?? [],
+      savedGame.originChoiceCount ?? 0,
+      savedGame.selfReflectionShown ?? false,
+      savedGame.unlockedFriendHouseIds ?? [],
+      savedGame.friendHouseResults ?? [],
+      catchUpRegenAt,
+      savedGame.minigameNextAvailableAt ?? Date.now(),
+      savedGame.minigamePlaysRemaining ?? 2,
+      savedGame.ownedSkillIds ?? [],
+      savedGame.skillXP ?? 0,
+      savedGame.defeatedRivalIds ?? [],
+      savedGame.friendBondCounts ?? {},
+      savedGame.friendBondMilestonesShown ?? [],
+      savedGame.flashbackShown ?? false,
+      savedGame.secondChanceOffered ?? false,
+      savedGame.firedFatefulMomentIndices ?? [],
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeRequest]);
+
   function continueSaved(slot: number) {
     const savedGame = savedGames[slot];
     if (!savedGame) return;
@@ -1767,36 +1854,12 @@ function App() {
     setActiveFriendHouseId(null);
     setShowEndingSequence(false);
     lastRankRef.current = null;
-    enterPhone(
-      savedGame.index,
-      savedGame.results,
-      savedGame.ownedPerks,
-      savedGame.consumables,
-      savedGame.unlockedTiers,
-      savedGame.houseOrder,
-      savedGame.inbox,
-      savedGame.castAssignment,
-      savedGame.dailyQuest,
-      savedGame.origin ?? null,
-      savedGame.voiceTally ?? { eglenceli: 0, samimi: 0, atilgan: 0 },
-      savedGame.compassTally ?? { durustluk: 0, kurnazlik: 0 },
-      savedGame.significantMemories ?? [],
-      savedGame.originChoiceCount ?? 0,
-      savedGame.selfReflectionShown ?? false,
-      savedGame.unlockedFriendHouseIds ?? [],
-      savedGame.friendHouseResults ?? [],
-      catchUpRegenAt,
-      savedGame.minigameNextAvailableAt ?? Date.now(),
-      savedGame.minigamePlaysRemaining ?? 2,
-      savedGame.ownedSkillIds ?? [],
-      savedGame.skillXP ?? 0,
-      savedGame.defeatedRivalIds ?? [],
-      savedGame.friendBondCounts ?? {},
-      savedGame.friendBondMilestonesShown ?? [],
-      savedGame.flashbackShown ?? false,
-      savedGame.secondChanceOffered ?? false,
-      savedGame.firedFatefulMomentIndices ?? [],
-    );
+    // enterPhone() bu turda senkron çağrılırsa içindeki persist(), yukarıdaki
+    // setX'ler henüz işlenmediği için ESKİ (menüdeki/varsayılan) state'i
+    // okuyup diske yazıyordu: harcama 0'a, rozetler/bonuslar boşa, enerji
+    // 100'e, bekleyen iş null'a dönüyordu (oyuncu yükleyip hemen çıkarsa
+    // kayıt bozuk kalıyordu). Yüklenen state işlendikten sonraki render'da çalıştır.
+    setResumeRequest({ savedGame, catchUpRegenAt });
   }
 
   function deleteSaved(slot: number) {
@@ -1813,7 +1876,13 @@ function App() {
     }
   }
 
-  function finalizeResult(outcome: SceneOutcome, contractModifier: number, contractSelections?: Record<string, string>) {
+  function finalizeResult(
+    outcome: SceneOutcome,
+    contractModifier: number,
+    contractSelections?: Record<string, string>,
+    opts?: { declined?: boolean },
+  ) {
+    const declined = opts?.declined === true;
     const priorStreak = computeStreak(results);
     const rawSale =
       outcome === "sold"
@@ -1854,6 +1923,8 @@ function App() {
       finalSuspicion: stats.suspicion,
       bestLine: bestLineThisHouse?.text,
       bestLineFun: bestLineThisHouse?.fun,
+      // Reddedilen iş hiç gezilmedi — retriedLost ile tüm geri arama/ikinci şans akışlarının dışında kalır.
+      ...(declined ? { declined: true, retriedLost: true } : {}),
     };
     const newResults = [...results, newResult];
     setResults(newResults);
@@ -1864,22 +1935,22 @@ function App() {
     // gelsin diye kaydediyoruz. Tüketimi proceedToHouseIntro'da olur.
     let newPendingCallbacks = pendingCallbacks;
     const callbackChance = 0.15 + (hasPerk(ownedPerks, "referans-agi") ? 0.15 : 0);
-    if (Math.random() < callbackChance) {
+    if (!declined && Math.random() < callbackChance) {
       const dueOffset = Math.random() < 0.5 ? 1 : 3 + Math.floor(Math.random() * 6);
       newPendingCallbacks = [...pendingCallbacks, { resultIndex: newResults.length - 1, dueIndex: index + dueOffset }];
       setPendingCallbacks(newPendingCallbacks);
     }
 
     // "Emlah'ın İç Sesi" — a small, guaranteed XP trickle regardless of outcome.
-    const newSkillXP = skillXP + xpForOutcome(outcome);
+    const newSkillXP = declined ? skillXP : skillXP + xpForOutcome(outcome);
     setSkillXP(newSkillXP);
-    const newContactedCustomers = addContactedCustomer(house, castAssignment, contactedCustomers);
+    const newContactedCustomers = declined ? contactedCustomers : addContactedCustomer(house, castAssignment, contactedCustomers);
     setContactedCustomers(newContactedCustomers);
 
     // Karar Anıları — record a new defining moment (if this one qualifies),
     // and clear whichever memory this house may have just referenced.
     let newSignificantMemories = significantMemories;
-    const newMemory = maybeRecordMemory(outcome, stats, house.id, house.title, index);
+    const newMemory = declined ? null : maybeRecordMemory(outcome, stats, house.id, house.title, index);
     if (newMemory) newSignificantMemories = pushMemory(significantMemories, newMemory);
     if (newSignificantMemories !== significantMemories) setSignificantMemories(newSignificantMemories);
     if (activeMemoryReference?.houseId === house.id) setActiveMemoryReference(null);
@@ -1939,6 +2010,10 @@ function App() {
     // a clean one pleases him. Never feeds back into resolveOutcome/scoring,
     // only gates the separate weekly "zam" bonus below.
     let newBossMood = bossMood;
+    if (declined) {
+      newBossMood = clampBossMood(bossMood - DECLINE_BOSS_MOOD_PENALTY);
+      newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: pickDeclineBossLine() }], index + 1);
+    }
     if (outcome === "sold" && sale) {
       triggerHaptic("success");
       const angry = stats.discountPercent > DISCOUNT_ANGER_THRESHOLD;
@@ -2033,7 +2108,7 @@ function App() {
     if (newInbox !== inbox) setInbox(newInbox);
     if (newBonusEarnings !== bonusEarnings) setBonusEarnings(newBonusEarnings);
 
-    persist({ results: newResults, weekOutcomes: newWeekOutcomes, badges: newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers: newContactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries: newPendingDeliveries, pendingCallbacks: newPendingCallbacks, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories: newSignificantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP: newSkillXP, defeatedRivalIds: newDefeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown });
+    persist({ results: newResults, weekOutcomes: newWeekOutcomes, badges: newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers: newContactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries: newPendingDeliveries, pendingCallbacks: newPendingCallbacks, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories: newSignificantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP: newSkillXP, defeatedRivalIds: newDefeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, ...(declined ? { pausedVisit: null } : {}) });
     setStage("result");
   }
 
@@ -2688,6 +2763,35 @@ function App() {
 
   function handleDoDayActivity(activityId: string) {
     if (dayActivitiesDone.includes(activityId)) return;
+    // Pazarlama ve Ofis İşleri artık mini oyun — etki oyun bitince kademeye göre uygulanır.
+    if (activityMiniGames[activityId]) {
+      forgottenFileRef.current = null;
+      setActiveActivityGame(activityId);
+      return;
+    }
+    applyDayActivity(activityId, 1);
+  }
+
+  /** Tapu Masası mükemmel bittiğinde: şansla kaçmış bir müşteriye tekrar ulaşma hakkı (geri arama bayrağı sıfırlanır). */
+  function rollForgottenFile(): string | null {
+    if (Math.random() >= FORGOTTEN_FILE_CHANCE) return null;
+    const candidates = results
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) => !r.declined && ((r.outcome === "lost" && r.retriedLost) || (r.outcome === "thinking" && r.followedUpThinking)));
+    if (candidates.length === 0) return null;
+    const { r, i } = candidates[Math.floor(Math.random() * candidates.length)];
+    const h = allHouses.find((x) => x.id === r.houseId);
+    if (!h) return null;
+    forgottenFileRef.current = i;
+    const name = resolveCustomerNames(h, castAssignment)[0] ?? resolveHouseTitle(h);
+    return t({
+      tr: `📁 Unutulmuş dosya! ${name} ile tekrar görüşme hakkın açıldı (Mesajlar).`,
+      en: `📁 Forgotten file! You can reach out to ${name} again (Messages).`,
+    });
+  }
+
+  function applyDayActivity(activityId: string, tier: ActivityTier) {
+    if (dayActivitiesDone.includes(activityId)) return;
     const activity = dayActivities.find((a) => a.id === activityId);
     if (!activity) return;
     const newEnergy = Math.max(0, energy - activity.energyCost);
@@ -2695,16 +2799,27 @@ function App() {
     setDayActivitiesDone((prev) => [...prev, activityId]);
     let newBossMood = bossMood;
     let newBonusEarnings = bonusEarnings;
+    let newResults = results;
     if (activityId === "research") {
-      setPendingSuspicionDiscount((d) => d + RESEARCH_SUSPICION_DISCOUNT);
+      // Bugünkü evin statları enterPhone'da zaten kuruldu — bekleyen indirim
+      // havuzuna atmak etkiyi bir SONRAKİ müşteriye kaydırıyordu. Doğrudan
+      // bugünkü müşterinin başlangıç şüphesinden düş.
+      setStats((st) => ({ ...st, suspicion: Math.max(0, st.suspicion - RESEARCH_SUSPICION_DISCOUNT) }));
     } else if (activityId === "marketing") {
-      newBossMood = clampBossMood(bossMood + MARKETING_BOSS_MOOD_GAIN);
+      newBossMood = clampBossMood(bossMood + MARKETING_BOSS_MOOD_BY_TIER[tier]);
       setBossMood(newBossMood);
+      if (tier === 2) setStats((st) => ({ ...st, interest: Math.min(100, st.interest + MARKETING_PERFECT_INTEREST) }));
     } else if (activityId === "office-work") {
-      newBonusEarnings = bonusEarnings + OFFICE_WORK_BONUS_EARNINGS;
+      newBonusEarnings = bonusEarnings + OFFICE_WORK_EARNINGS_BY_TIER[tier];
       setBonusEarnings(newBonusEarnings);
+      const fileIdx = forgottenFileRef.current;
+      forgottenFileRef.current = null;
+      if (tier === 2 && fileIdx !== null && results[fileIdx]) {
+        newResults = results.map((r, i) => (i === fileIdx ? { ...r, retriedLost: false, followedUpThinking: false } : r));
+        setResults(newResults);
+      }
     }
-    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
+    persist({ results: newResults, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining });
   }
 
   function unlockSkill(skillId: string) {
@@ -2715,6 +2830,26 @@ function App() {
     setOwnedSkillIds(newOwnedSkillIds);
     setSkillXP(newSkillXP);
     persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds: newOwnedSkillIds, skillXP: newSkillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown });
+  }
+
+  // Portföy kilidi — satış/eşya/para şartlarını beklemeden bir sonraki tier'ı
+  // jetonla açar. Tier perk'ü de sahiplenilir ki bir sonraki tier'ın
+  // `requires` zinciri (tier3 → tier2 ...) bozulmasın.
+  function skipTierWithJettons() {
+    const tierPerk = perks.find((p) => p.unlocksTier === house.tier);
+    if (!tierPerk || unlockedTiers.includes(house.tier)) return;
+    if (getJettons() < TIER_SKIP_JETTON_COST) {
+      storeReturnStageRef.current = "locked";
+      setStage("store");
+      return;
+    }
+    if (!spendJettons(TIER_SKIP_JETTON_COST)) return;
+    setJettonsState(getJettons());
+    const newOwned = ownedPerks.includes(tierPerk.id) ? ownedPerks : [...ownedPerks, tierPerk.id];
+    const newUnlockedTiers = [...unlockedTiers, house.tier];
+    setOwnedPerks(newOwned);
+    setUnlockedTiers(newUnlockedTiers);
+    persist({ results, weekOutcomes, badges, index, ownedPerks: newOwned, spent, consumables, unlockedTiers: newUnlockedTiers });
   }
 
   function buyItem(itemId: string) {
@@ -2993,6 +3128,7 @@ function App() {
   /** "Evi Gez / Ofise Dön" — the choice shown right after today's job intro finishes typing. */
   function handleIntroChoice(choiceId: string) {
     if (choiceId === "visit" || !house) {
+      activeVisitMetaRef.current = {};
       afterIntro();
       return;
     }
@@ -3004,37 +3140,84 @@ function App() {
     persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, pausedVisit: newPausedVisit });
   }
 
-  /** İşler panelinden bekleyen ziyareti açma — rastgele bir müşteri tepkisi rulosu. */
-  function handleOpenPausedVisit() {
+  /**
+   * İşler — "Şimdi Git". Eskiden %40/%30/%30'luk bir zar atılıyordu (ve
+   * "müsait değil" dalı aynı evi sonra yine "Bugünün İşini Al"a geri
+   * koyuyordu); artık oyuncunun kararı neyse o olur.
+   */
+  function handleGoNowPausedVisit() {
     if (!pausedVisit || pausedVisit.status !== "office") return;
-    const roll = Math.random();
-    if (roll < 0.4) {
-      // Müşteri hemen kabul ediyor — ana mekanikteki gibi eve giriyoruz.
-      setPausedVisit(null);
+    // Normal "Bugünün İşini Al" ile aynı enerji kapısı — arada aktivite yapılmış olabilir.
+    const entryCost = pausedVisit.introDone ? ENERGY_DEPLETION_PER_HOUSE : 0;
+    if (energy < ENERGY_WORK_MIN_THRESHOLD) {
       setShowIsler(false);
-      persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, pausedVisit: null });
-      afterIntro();
-    } else if (roll < 0.7) {
-      // Müşteri 1-3 gün sonra bir tarih öneriyor — oyuncu kabul/red edecek.
-      const daysOffset = 1 + Math.floor(Math.random() * 3);
-      setPausedVisitOffer({ daysOffset });
-    } else {
-      // Müşteri artık müsait değil — fırsat kayboldu.
-      setPausedVisit(null);
-      setShowIsler(false);
-      persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, pausedVisit: null });
+      setShowEnergyBreak(true);
+      return;
     }
+    const visit = pausedVisit;
+    const applyPenalty = !!visit.postponed && !visit.penaltyApplied;
+    activeVisitMetaRef.current = { postponed: visit.postponed, penaltyApplied: visit.penaltyApplied || applyPenalty };
+    setPausedVisit(null);
+    setPausedVisitOffer(null);
+    setShowIsler(false);
+    if (applyPenalty) setStats((st) => ({ ...st, suspicion: st.suspicion + POSTPONE_SUSPICION_PENALTY }));
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, energy, pausedVisit: null });
+    if (visit.introDone) {
+      // Hazırlık (düello/easter egg zarları vb.) zaten yapılmıştı — sadece iade edilen enerjiyi tekrar düş ve kapıya dön.
+      lastHouseEnergyCostRef.current = Math.min(energy, entryCost);
+      setEnergy((e) => Math.max(0, e - entryCost));
+      setStage("house");
+      return;
+    }
+    afterIntro();
   }
 
+  /** İşler — "Ertele": müşteri 1-3 gün sonrası için bir tarih önerir. Her iş en fazla bir kez. */
+  function handlePostponePausedVisit() {
+    if (!pausedVisit || pausedVisit.status !== "office" || pausedVisit.postponed) return;
+    setPausedVisitOffer({ daysOffset: 1 + Math.floor(Math.random() * 3) });
+  }
+
+  /** Müşterinin önerdiği tarih — kabul edilirse randevu kurulur, "Geri" ile karar kartına dönülür (iş kaybolmaz). */
   function handleRescheduleResponse(accept: boolean) {
     if (!pausedVisit || !pausedVisitOffer) return;
-    const newPausedVisit: PausedVisit | null = accept
-      ? { ...pausedVisit, status: "scheduled", daysRemaining: pausedVisitOffer.daysOffset }
-      : null;
-    setPausedVisit(newPausedVisit);
     setPausedVisitOffer(null);
-    if (!accept) setShowIsler(false);
-    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, energy, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, pausedVisit: newPausedVisit });
+    if (!accept) return;
+    const newPausedVisit: PausedVisit = { ...pausedVisit, status: "scheduled", daysRemaining: pausedVisitOffer.daysOffset, postponed: true };
+    setPausedVisit(newPausedVisit);
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, energy, pausedVisit: newPausedVisit });
+  }
+
+  /** İşler — "Reddet": iş hiç gezilmeden kapanır, sıradaki eve geçilir (sonuç ekranı + normal ilerleme akışı). */
+  function handleDeclinePausedVisit() {
+    if (!pausedVisit) return;
+    setPausedVisit(null);
+    setPausedVisitOffer(null);
+    setShowIsler(false);
+    finalizeResult("lost", 0, undefined, { declined: true });
+  }
+
+  /** Kapı ekranı — "Vazgeç, İşler'e dön": ev bekleyen işe döner, harcanan enerji iade edilir. */
+  function handleBackOutOfSale() {
+    if (stage !== "house" || saleIntroConfirmed) return;
+    const refund = lastHouseEnergyCostRef.current;
+    lastHouseEnergyCostRef.current = 0;
+    const newEnergy = Math.min(ENERGY_MAX, energy + refund);
+    const meta = activeVisitMetaRef.current;
+    const contactName = resolveCustomerNames(house, castAssignment)[0];
+    const newPausedVisit: PausedVisit = {
+      houseId: house.id,
+      contactName,
+      status: "office",
+      introDone: true,
+      ...(meta.postponed ? { postponed: true } : {}),
+      ...(meta.penaltyApplied ? { penaltyApplied: true } : {}),
+    };
+    setEnergy(newEnergy);
+    setPausedVisit(newPausedVisit);
+    setShowPhoneOverlay(false);
+    setStage("phone");
+    persist({ results, weekOutcomes, badges, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers, activeNewsId, pendingDeliveries, pendingCallbacks, bossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP, defeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, energy: newEnergy, pausedVisit: newPausedVisit });
   }
 
   function afterIntro() {
@@ -3170,6 +3353,8 @@ function App() {
       }
     }
     // Emlah'ın Enerjisi — depletes a fixed amount per house walked into.
+    // Harcanan miktar saklanır ki kapıdan "Vazgeç" ile dönülürse aynen iade edilsin.
+    lastHouseEnergyCostRef.current = Math.min(energy, ENERGY_DEPLETION_PER_HOUSE);
     setEnergy((e) => Math.max(0, e - ENERGY_DEPLETION_PER_HOUSE));
     if (index === 0) {
       setStage("house");
@@ -3522,7 +3707,7 @@ function App() {
   // "Zor Zamanlar" — eligibility is fully derived, no persisted "pending" flag needed.
   const recentLossStreak =
     results.length >= HARD_TIMES_LOSS_STREAK &&
-    results.slice(-HARD_TIMES_LOSS_STREAK).every((r) => r.outcome === "lost");
+    results.slice(-HARD_TIMES_LOSS_STREAK).every((r) => r.outcome === "lost" && !r.declined);
   const emlahStruggling = bossMood < HARD_TIMES_BOSS_MOOD_THRESHOLD || recentLossStreak;
   const unreadCount = inbox.slice(seenInboxCount).filter((m) => !m.fromPlayer).length;
 
@@ -3585,6 +3770,7 @@ function App() {
     return (
       <div className="game-root">
         <LanguageSelectScreen
+          current={hasChosenLanguage() ? language : undefined}
           onChosen={(lang) => {
             setLanguage(lang);
             setLanguageChosen(true);
@@ -3987,29 +4173,94 @@ function App() {
           onBuyBundleFullNoAds={handleBuyBundleFullNoAds}
           onBuyBundleFullNoAdsJetton30={handleBuyBundleFullNoAdsJetton30}
           onRestorePurchases={handleRestorePurchases}
-          onBack={() => setStage("settings")}
+          onBack={() => {
+            const back = storeReturnStageRef.current;
+            storeReturnStageRef.current = "settings";
+            setStage(back);
+          }}
         />
       )}
 
-      {stage === "locked" && (
-        <div className="result-screen locked-preview">
-          <p className="locked-preview-tag">
-            🔒 Tier {house.tier} — {t({ tr: "henüz erişimin yok", en: "you don't have access yet" })}
-          </p>
-          <p className="locked-preview-title">{resolveHouseTitle(house)}</p>
-          <p className="locked-preview-location">{resolveHouseLocation(house)}</p>
-          <p className="locked-preview-price">{formatTL(house.askingPrice)}</p>
-          <p className="menu-empty">
-            {t({
-              tr: 'Bu evi görebilmek için Ofis Marketi\'nden "Portföy Kilidi" bölümüne bakabilirsin.',
-              en: 'To unlock this house, check the "Portfolio Lock" section in the Office Market.',
-            })}
-          </p>
-          <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
-            {t({ tr: "Marketi Aç", en: "Open Market" })}
-          </button>
-        </div>
-      )}
+      {stage === "locked" && (() => {
+        const tierPerk = perks.find((p) => p.unlocksTier === house.tier);
+        const soldCount = results.filter((r) => r.outcome === "sold").length;
+        const ofisCount = countOwnedOfisItems(ownedPerks);
+        const tierPrice = tierPerk ? effectiveCost(tierPerk, badges, weekIndexForHouse(index)) : 0;
+        const callbackCandidates = results
+          .map((r) => ({ r, h: allHouses.find((x) => x.id === r.houseId) }))
+          .filter(({ r, h }) => h && ((r.outcome === "lost" && !r.retriedLost) || (r.outcome === "thinking" && !r.followedUpThinking)));
+        return (
+          <div className="result-screen locked-preview">
+            <p className="locked-preview-tag">
+              🔒 Tier {house.tier} — {t({ tr: "henüz erişimin yok", en: "you don't have access yet" })}
+            </p>
+            <p className="locked-preview-title">{resolveHouseTitle(house)}</p>
+            <p className="locked-preview-location">{resolveHouseLocation(house)}</p>
+            <p className="locked-preview-price">{formatTL(house.askingPrice)}</p>
+
+            {tierPerk && (
+              <ul className="locked-requirements">
+                {tierPerk.requiresSoldCount !== undefined && (
+                  <li className={soldCount >= tierPerk.requiresSoldCount ? "met" : ""}>
+                    {soldCount >= tierPerk.requiresSoldCount ? "✅" : "⬜"} {t({ tr: "Satış", en: "Sales" })}: {soldCount}/{tierPerk.requiresSoldCount}
+                  </li>
+                )}
+                {tierPerk.requiresOfisItemCount !== undefined && (
+                  <li className={ofisCount >= tierPerk.requiresOfisItemCount ? "met" : ""}>
+                    {ofisCount >= tierPerk.requiresOfisItemCount ? "✅" : "⬜"} {t({ tr: "Ofis eşyası", en: "Office items" })}: {ofisCount}/{tierPerk.requiresOfisItemCount}
+                  </li>
+                )}
+                <li className={balance >= tierPrice ? "met" : ""}>
+                  {balance >= tierPrice ? "✅" : "⬜"} {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)} / {formatTL(tierPrice)}
+                </li>
+              </ul>
+            )}
+
+            <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
+              {t({ tr: "Marketi Aç", en: "Open Market" })}
+            </button>
+
+            <div className="locked-section">
+              <p className="locked-section-title">{t({ tr: "📞 Kaçan Müşterileri Tekrar Ara", en: "📞 Call Back Missed Customers" })}</p>
+              {callbackCandidates.length === 0 ? (
+                <p className="menu-empty">
+                  {t({ tr: "Tekrar aranabilecek müşteri kalmadı.", en: "There are no customers left to call back." })}
+                </p>
+              ) : (
+                <div className="locked-callback-list">
+                  {callbackCandidates.map(({ r, h }) => (
+                    <button
+                      key={r.houseId}
+                      className="choice-btn locked-callback-btn"
+                      onClick={() => (r.outcome === "lost" ? retryFromInbox(r.houseId) : followUpThinking(r.houseId))}
+                    >
+                      <span>{[resolveCustomerNames(h!, castAssignment)[0], resolveHouseTitle(h!)].filter(Boolean).join(" — ")}</span>
+                      <span className="locked-callback-tag">
+                        {r.outcome === "lost" ? t({ tr: "kaçtı", en: "lost" }) : t({ tr: "düşünüyor", en: "thinking" })}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="locked-section">
+              <p className="locked-skip-text">
+                {t({
+                  tr: "İstersen eski müşterilere dönmek yerine ufak bir yardımla bu kısmı atlayabilirsin...",
+                  en: "If you'd rather not chase old customers, a little help can get you past this part...",
+                })}
+              </p>
+              <button className="pixel-btn locked-skip-btn" onClick={skipTierWithJettons}>
+                🪙 {t({ tr: `${TIER_SKIP_JETTON_COST} Jetton ile Geç`, en: `Skip for ${TIER_SKIP_JETTON_COST} Jettons` })}
+              </button>
+              <p className="locked-skip-balance">
+                {t({ tr: `Bakiyen: ${jettons} Jetton`, en: `Your balance: ${jettons} Jettons` })}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       {stage === "paywall" && (
         <PaywallScreen
@@ -4083,13 +4334,53 @@ function App() {
         />
       )}
 
+      {activeActivityGame && activityMiniGames[activeActivityGame] && (() => {
+        const Game = activityMiniGames[activeActivityGame];
+        const rewardLabels: [string, string, string] =
+          activeActivityGame === "marketing"
+            ? [
+                t({ tr: `Patron +${MARKETING_BOSS_MOOD_BY_TIER[0]}`, en: `Boss +${MARKETING_BOSS_MOOD_BY_TIER[0]}` }),
+                t({ tr: `Patron +${MARKETING_BOSS_MOOD_BY_TIER[1]}`, en: `Boss +${MARKETING_BOSS_MOOD_BY_TIER[1]}` }),
+                t({
+                  tr: `Patron +${MARKETING_BOSS_MOOD_BY_TIER[2]} · müşteri +${MARKETING_PERFECT_INTEREST} ilgi`,
+                  en: `Boss +${MARKETING_BOSS_MOOD_BY_TIER[2]} · client +${MARKETING_PERFECT_INTEREST} interest`,
+                }),
+              ]
+            : [
+                `+${formatTL(OFFICE_WORK_EARNINGS_BY_TIER[0])}`,
+                `+${formatTL(OFFICE_WORK_EARNINGS_BY_TIER[1])}`,
+                `+${formatTL(OFFICE_WORK_EARNINGS_BY_TIER[2])} · ${t({ tr: "unutulmuş dosya şansı", en: "forgotten file chance" })}`,
+              ];
+        return (
+          <div className="modal-overlay">
+            <div className="market-modal activity-game-modal">
+              <Game
+                rewardLabels={rewardLabels}
+                onFinish={(tier) => {
+                  if (tier === 2) playReward();
+                  else if (tier === 1) playThinking();
+                  else playLost();
+                  return activeActivityGame === "office-work" && tier === 2 ? rollForgottenFile() : null;
+                }}
+                onComplete={(tier) => {
+                  applyDayActivity(activeActivityGame, tier);
+                  setActiveActivityGame(null);
+                }}
+              />
+            </div>
+          </div>
+        );
+      })()}
+
       {showIsler && (
         <IslerPanel
           pausedVisit={pausedVisit}
           pausedVisitOffer={pausedVisitOffer}
           results={results}
           allHouses={allHouses}
-          onOpenPausedVisit={handleOpenPausedVisit}
+          onGoNow={handleGoNowPausedVisit}
+          onPostpone={handlePostponePausedVisit}
+          onDecline={handleDeclinePausedVisit}
           onRescheduleResponse={handleRescheduleResponse}
           onClose={() => {
             setShowIsler(false);
@@ -4196,6 +4487,7 @@ function App() {
             startSaleMusic();
             setSaleIntroConfirmed(true);
           }}
+          onBack={handleBackOutOfSale}
         />
       )}
 
@@ -4264,7 +4556,7 @@ function App() {
           {lastResult.outcome === "sold" && lastResult.sale && (
             <SaleStamp discountPercent={lastResult.sale.discountPercent} />
           )}
-          <p>{outcomeText(lastResult.outcome)}</p>
+          <p>{outcomeText(lastResult.outcome, lastResult.declined)}</p>
           {lastResult.sale && (
             <div className="sale-summary">
               <p>

@@ -2644,6 +2644,13 @@
   text-align: center;
 }
 
+.day-activity-effect {
+  font-size: 0.6rem;
+  color: var(--c-success);
+  text-align: center;
+  line-height: 1.35;
+}
+
 .day-activity-gain {
   font-size: 0.7rem;
   color: var(--c-accent);
@@ -3747,4 +3754,556 @@
 @keyframes store-inline-open {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Splash sonrası dil seçimi — iki büyük bayrak kartı yan yana. */
+.language-select-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.language-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 8px;
+}
+
+.language-select-btn.active {
+  border-color: var(--c-accent);
+}
+
+.language-select-flag {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+/* Portföy kilidi ekranı — şartlar, geri arama listesi, jetonla geçiş. */
+.locked-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.62rem;
+  text-align: left;
+}
+
+.locked-requirements li.met {
+  color: var(--c-accent);
+}
+
+.locked-section {
+  width: 100%;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--c-border-light);
+}
+
+.locked-section-title {
+  font-size: 0.66rem;
+  margin-bottom: 10px;
+}
+
+.locked-callback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.locked-callback-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.locked-callback-tag {
+  font-size: 0.55rem;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.locked-skip-text {
+  font-size: 0.62rem;
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.locked-skip-balance {
+  font-size: 0.55rem;
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+/* ---------- İşler: bugünün işi için üç karar ---------- */
+.isler-job-card {
+  border-color: var(--c-accent-lo);
+}
+
+.isler-job-scheduled {
+  border-style: dashed;
+}
+
+.isler-job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.isler-job-house {
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.isler-job-price {
+  font-size: 0.72rem;
+  color: var(--c-accent);
+  white-space: nowrap;
+}
+
+.isler-job-status {
+  font-size: 0.72rem;
+  margin: 10px 0 12px;
+  color: var(--c-text-faint2);
+}
+
+.isler-job-note {
+  color: var(--c-text-faint);
+}
+
+.isler-decisions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.isler-decision {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: var(--c-surface-alt);
+  border: 2px solid var(--c-border-light);
+  border-radius: 8px;
+  color: var(--c-text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s ease-out, border-color 0.1s ease-out;
+}
+
+.isler-decision:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--c-accent);
+}
+
+.isler-decision:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.isler-decision-go {
+  border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 14%, var(--c-surface-alt));
+}
+
+.isler-decision-decline:hover:not(:disabled) {
+  border-color: var(--c-danger);
+}
+
+.isler-decision-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.isler-decision-label {
+  font-size: 0.72rem;
+  font-weight: bold;
+}
+
+.isler-decision-cost {
+  font-size: 0.58rem;
+  color: var(--c-text-dim);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.isler-job-offer {
+  background: var(--c-surface);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.isler-job-confirm {
+  border: 1px solid var(--c-danger);
+}
+
+.isler-job-offer-text {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.isler-btn-danger {
+  background: var(--c-danger);
+  border-color: var(--c-danger);
+  color: #fff;
+}
+
+.sale-intro-back {
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: var(--c-text-dim);
+  font-family: inherit;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sale-intro-back:hover {
+  color: var(--c-text);
+}
+
+/* ---------- Aktivite mini oyunları: Vitrin Karesi / Tapu Masası ---------- */
+.activity-game-modal {
+  max-width: 380px;
+  width: 100%;
+  padding: 14px;
+}
+
+.activity-game {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-game-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-game-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.62rem;
+  color: var(--c-accent);
+}
+
+.activity-game-meta {
+  font-size: 0.8rem;
+  color: var(--c-text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.activity-game-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 320 / 380;
+  max-width: 100%;
+  background: var(--c-surface-dark);
+  border: 2px solid var(--c-border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.activity-game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.activity-game-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px;
+  text-align: center;
+  background: rgba(13, 13, 26, 0.93);
+}
+
+.activity-game-summary {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.activity-game-rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.activity-game-reward-chip {
+  font-size: 0.78rem;
+  border: 1px solid var(--c-border-light);
+  border-radius: 6px;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.activity-game-reward-chip.activity-tier-2 {
+  border-color: var(--c-accent-lo);
+  color: var(--c-accent);
+}
+
+.activity-game-result-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.85rem;
+  margin: 0;
+  color: var(--c-text-dim);
+}
+
+.activity-game-result-title.activity-tier-1 {
+  color: var(--c-text);
+}
+
+.activity-game-result-title.activity-tier-2 {
+  color: var(--c-accent);
+}
+
+.activity-game-reward {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  line-height: 1.7;
+  color: var(--c-success);
+  margin: 0;
+}
+
+.activity-game-extra {
+  margin: 0;
+  color: var(--c-accent);
+}
+
+.vitrin-shots {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 62px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.vitrin-shot {
+  flex: 1;
+  height: 30px;
+  border: 2px solid var(--c-border-light);
+  border-radius: 5px;
+  background: var(--c-surface);
+  display: grid;
+  place-items: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.5rem;
+  color: var(--c-text-dim);
+}
+
+.vitrin-shot-done {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.vitrin-snap {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.vitrin-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.tapu-stage {
+  background: #1c1730;
+}
+
+.tapu-rules {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 2;
+  background: var(--c-surface);
+  border: 2px solid var(--c-accent-lo);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.tapu-rules-updated {
+  border-color: var(--c-success);
+}
+
+.tapu-rules-title {
+  display: block;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.45rem;
+  color: var(--c-accent);
+  margin-bottom: 4px;
+}
+
+.tapu-rule-new {
+  color: var(--c-success);
+}
+
+.tapu-toast {
+  position: absolute;
+  bottom: 66px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  z-index: 5;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  pointer-events: none;
+}
+
+.tapu-toast-good {
+  color: var(--c-success);
+}
+
+.tapu-toast-bad {
+  color: var(--c-danger);
+}
+
+.tapu-doc {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 78%;
+  transform: translate(-50%, -30%);
+  background: #f3ead2;
+  color: #2b2233;
+  border-radius: 4px;
+  padding: 9px 11px;
+  box-shadow: 0 5px 0 #000;
+  font-size: 0.85rem;
+  line-height: 1.15;
+  transition: transform 0.22s ease-out, opacity 0.22s;
+}
+
+.tapu-doc-out-ok {
+  transform: translate(110%, -30%) rotate(8deg);
+  opacity: 0;
+}
+
+.tapu-doc-out-no {
+  transform: translate(-210%, -30%) rotate(-8deg);
+  opacity: 0;
+}
+
+.tapu-doc-title {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.45rem;
+  letter-spacing: 0.06em;
+  margin: 0 0 6px;
+}
+
+.tapu-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px dashed #b9a98a;
+  padding: 2px 0;
+}
+
+.tapu-row span:first-child {
+  color: #6b5d77;
+}
+
+.tapu-signature {
+  font-family: "Snell Roundhand", "Brush Script MT", cursive;
+  font-size: 1.15rem;
+  color: #1f3b8a;
+  min-height: 1.3em;
+}
+
+.tapu-seal {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px double #b8323e;
+  color: #b8323e;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.3rem;
+  line-height: 1.4;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  transform: rotate(-14deg);
+}
+
+.tapu-choices {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 10px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tapu-choice {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  padding: 13px 4px;
+  border-radius: 8px;
+  border: 2px solid #000;
+  cursor: pointer;
+}
+
+.tapu-choice:active {
+  transform: translateY(2px);
+}
+
+.tapu-choice-no {
+  background: var(--c-danger);
+  color: #fff;
+  box-shadow: 0 4px 0 #8a1f3c;
+}
+
+.tapu-choice-yes {
+  background: var(--c-success);
+  color: #0d0d1a;
+  box-shadow: 0 4px 0 #04805f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tapu-doc {
+    transition: none;
+  }
 }

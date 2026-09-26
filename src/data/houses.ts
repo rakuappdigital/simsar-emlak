@@ -639,7 +639,7 @@ export const houseKediCenneti: HouseScene = {
       ],
     },
     start_a: { id: "start_a", lines: [{ speaker: "customer1", name: "Gül Hanım", text: { tr: "(gülümser) Ben zaten hayvanlara bayılırım.", en: "(smiles) I already adore animals." } }], next: "bahce" },
-    start_b: { id: "start_b", lines: [{ speaker: "customer1", name: "Gül Hanım", text: "Dürüstlüğünüzü takdir ederim." }], next: "bahce" },
+    start_b: { id: "start_b", lines: [{ speaker: "customer1", name: "Gül Hanım", text: { tr: "Dürüstlüğünüzü takdir ederim.", en: "I appreciate your honesty." } }], next: "bahce" },
     start_c: { id: "start_c", lines: [{ speaker: "customer1", name: "Gül Hanım", text: { tr: "(gözleri parlar) Belki de haklısınız.", en: "(eyes sparkle) Maybe you're right." } }], next: "bahce" },
 
     bahce: {
@@ -2200,7 +2200,7 @@ export const houseBatakliKoyEvi: HouseScene = {
         { id: "c", text: { tr: "\"Bataklık suyu doğal spa etkisi de yapıyor, bedava bir avantaj sayılır.\"", en: "\"Swamp water also has a natural spa effect, it counts as a free advantage.\"" }, next: "sink_c", effects: { fun: 15, suspicion: 10 } },
       ],
     },
-    sink_a: { id: "sink_a", lines: [{ speaker: "customer2", text: "\"Öngörülebilir\" derken bir de takvim mi vereceksiniz?" }], next: "smell" },
+    sink_a: { id: "sink_a", lines: [{ speaker: "customer2", text: { tr: "\"Öngörülebilir\" derken bir de takvim mi vereceksiniz?", en: "\"Predictable\"? Are you going to give us a schedule too?" } }], next: "smell" },
     sink_b: { id: "sink_b", lines: [{ speaker: "customer1", text: { tr: "Güçlendirme fikri en azından bir çözüm sunuyor.", en: "The strengthening idea at least offers a solution." } }], next: "smell" },
     sink_c: { id: "sink_c", lines: [{ speaker: "customer2", text: { tr: "(kahkaha) {isim}, bedava spa diyor, ciddi mi bu adam?", en: "(laughs out loud) {isim}, he says free spa, is this guy serious?" } }], next: "smell" },
 
