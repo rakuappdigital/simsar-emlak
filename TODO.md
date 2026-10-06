@@ -7,11 +7,11 @@ Testler: `node tests/run-all.mjs` → 20/20 (yeni `tests/side-quests.mjs` dahil)
 ## ⏳ Kullanıcı kararı / onayı bekleyen
 - [ ] **G8** (diyalog ilk izlenim) — uygulanmadı; rapordaki G8-a (öğretici baloncuk) / G8-b (barlarda sayı+ikon) / G8-c (+8/−5 değişim sayısı) / G8-d (metin hızı ayarı) seçimini bekliyor.
 - [ ] **O0 ATT** — build 12'yi temiz kur, ekran kaydı al, App Review Notes + 2.1 yanıtı.
-- [ ] **Gizlilik sayfası** — privacy(-tr).html TelemetryDeck maddesi yayında değil; incelemeden ÖNCE App Store'daki gizlilik URL'sine yayınlanmalı (onayla).
-- [ ] **O2 TR fiyat** — ASC'de doğrulandı: full_unlock ₺39,99 = bundle_full_jetton30 ₺39,99 (USA $1.99/$2.99). Öneri: paket ₺59,99 ya da tam sürüm ₺29,99.
+- [x] **Gizlilik sayfası** — yayında (simsar-emlak.vercel.app/privacy.html + privacy-tr.html, canlı = yerel doğrulandı, push sonrası Vercel otomatik).
+- [x] **O2 TR fiyat** — ASC API ile: full_unlock TR ₺29,99, bundle_full_jetton30 TR ₺49,99 (USA $1.99/$2.99 korundu); kod sabitleri eşlendi. Build 12'de eski ₺39,99 metni var → sonraki build'de düzelir.
 - [ ] **O1** — remove_ads + 2 noads paketi READY_TO_SUBMIT (hiç satılmadı). SİLME; sürümü gönderirken IAP listesine ekleme.
-- [ ] **O4 yan not** — EN mağaza metni karaktere "Emlah" diyor, oyunun EN'inde "Estetan". Hangisi?
-- [ ] **O6** commit + push (onayla).
+- [x] **Karakter adı** — kullanıcı: TR'de Emlah, diğer TÜM dillerde Estetan. Mağaza en-US/ro/ar-SA zaten Estetan; store/asc'deki 13 yeni dilde Emlah yok.
+- [x] **O6** commit `2ce57dc` push edildi. `store/asc/*.py` (ASC Issuer/Key kimlikleri) repo AÇIK olduğu için .gitignore'da, yerelde duruyor.
 - [x] O3 Game Center "Tam Destek" açıklaması → "Purchase the Full Version." (API ile güncellendi)
 - [x] O5 kararsız testler düzeltildi (energy-minigames durum bekliyor; fateful-moments araya giren iş görevini geçiyor)
 
