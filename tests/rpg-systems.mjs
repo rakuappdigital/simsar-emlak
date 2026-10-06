@@ -4,6 +4,7 @@
 //
 // Usage: BASE_URL=http://localhost:4173 node tests/rpg-systems.mjs
 import { chromium } from "playwright";
+import { openEmlahTab } from "./helpers/emlah.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const errors = [];
@@ -109,7 +110,7 @@ await page.locator(".wallet-pill-btn").first().click({ timeout: 5000 }).catch(()
 await page.waitForTimeout(300);
 
 async function openTab(label) {
-  await page.locator(".emlah-tab-btn", { hasText: label }).first().click({ timeout: 3000 });
+  await openEmlahTab(page, label);
   await page.waitForTimeout(250);
 }
 

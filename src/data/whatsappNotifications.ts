@@ -10,14 +10,12 @@ import { resolveText } from "./language";
 
 export interface WhatsAppSender {
   name: string;
-  emoji: string;
   messages: Localized[];
 }
 
 export const whatsappSenders: WhatsAppSender[] = [
   {
     name: "Annem",
-    emoji: "👩",
     messages: [
       { tr: "Oğlum yemek yedin mi, cevap ver", en: "Son did you eat, answer me" },
       { tr: "Kaç kere aradım, telefon neden kapalı", en: "How many times did I call, why is your phone off" },
@@ -43,7 +41,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Babam",
-    emoji: "👨",
     messages: [
       { tr: "Arabanın yağını değiştirdin mi", en: "Did you change the car's oil" },
       { tr: "Bu ay kazancın nasıl, iyi mi", en: "How are your earnings this month, are they good" },
@@ -69,7 +66,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Dayı Nurettin",
-    emoji: "🕵️",
     messages: [
       { tr: "Bu videoyu izle, çok önemli!", en: "Watch this video, it's very important!" },
       { tr: "Doları şimdi bozdurma, düşecek diyorlar", en: "Don't exchange dollars now, they say it will fall" },
@@ -95,7 +91,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Teyzem Gülcan",
-    emoji: "🍰",
     messages: [
       { tr: "Böreği yeni çıkardım fırından", en: "I just took the pastry out of the oven" },
       { tr: "Kızım seni soruyor, ne zaman geleceksin", en: "My daughter is asking about you, when are you coming" },
@@ -121,7 +116,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Kuzen Tayfun",
-    emoji: "💼",
     messages: [
       { tr: "Kanka bir iş fikrim var, konuşalım", en: "Bro I have a business idea, let's talk" },
       { tr: "Kripto paraya girdim, çok kazandım", en: "I got into crypto, made a lot" },
@@ -147,7 +141,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Komşu Nazan Hanım",
-    emoji: "🏘️",
     messages: [
       { tr: "Asansör yine bozuldu, aidat ne oldu", en: "The elevator broke again, what happened to the dues" },
       { tr: "Üst kattaki gürültüyü duydun mu", en: "Did you hear the noise upstairs" },
@@ -173,7 +166,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Eski Patronum Vahit Bey",
-    emoji: "🗄️",
     messages: [
       { tr: "Nasılsın evlat, iyi gidiyor mu işler", en: "How are you kid, is work going well" },
       { tr: "Eski ofise uğra bir ara", en: "Drop by the old office sometime" },
@@ -199,7 +191,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Astroloji Hattı",
-    emoji: "🔮",
     messages: [
       { tr: "Bugün Merkür sana şans getiriyor", en: "Mercury brings you luck today" },
       { tr: "Venüs burcunla uyumlu, yeni fırsatlar seni bekliyor", en: "Venus is compatible with your sign, new opportunities await you" },
@@ -225,7 +216,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Apartman Yönetimi",
-    emoji: "🏠",
     messages: [
       { tr: "Aidatlar bu ay 15'ine kadar yatırılmalı", en: "Dues must be deposited by the 15th this month" },
       { tr: "Asansör bakımı yarın yapılacak, kullanmayın", en: "Elevator maintenance will be done tomorrow, do not use" },
@@ -251,7 +241,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Mahalle Esnaf Grubu",
-    emoji: "🛒",
     messages: [
       { tr: "Bakkal yarın kapalı olacak, haberiniz olsun", en: "The grocery store will be closed tomorrow, just so you know" },
       { tr: "Yeni fırın açıldı köşede, lezzetli", en: "A new bakery opened on the corner, delicious" },
@@ -277,7 +266,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Lise Mezunları 2007",
-    emoji: "🎓",
     messages: [
       { tr: "Bu yıl da buluşma yapalım mı", en: "Shall we do a reunion this year too" },
       { tr: "Kim nerede çalışıyor şimdi, yazın", en: "Who is working where now, write it down" },
@@ -303,7 +291,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Kirve İnşaat",
-    emoji: "📢",
     messages: [
       { tr: "Havuzlu villa, peşinatsız, hemen ara!", en: "Villa with pool, no down payment, call now!" },
       { tr: "Sıfır daire fırsatı, kaçırmayın", en: "Brand new apartment opportunity, don't miss it" },
@@ -329,7 +316,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Halı Saha Ekibi",
-    emoji: "⚽",
     messages: [
       { tr: "Bu hafta kadromuz eksik, gelen var mı", en: "Our squad is incomplete this week, anyone coming" },
       { tr: "Maç saati 21:00 olarak değişti", en: "Match time changed to 21:00" },
@@ -355,7 +341,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Aile Grubu",
-    emoji: "❤️",
     messages: [
       { tr: "Bayram ne zaman toplanıyoruz", en: "When are we gathering for the holiday" },
       { tr: "Herkes iyi mi, uzun zaman oldu", en: "Is everyone okay, it's been a long time" },
@@ -381,7 +366,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "İş Fikirleri (Tayfun'un Grubu)",
-    emoji: "💡",
     messages: [
       { tr: "Yeni bir e-ticaret fikrim var", en: "I have a new e-commerce idea" },
       { tr: "Kripto grubuna da katılın derim", en: "I say join the crypto group too" },
@@ -407,7 +391,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Emlakçılar Birliği İstanbul",
-    emoji: "🏙️",
     messages: [
       { tr: "Bu ay piyasa raporu paylaşıldı", en: "The market report was shared this month" },
       { tr: "Yeni yönetmelik hakkında bilgilendirme var", en: "There is a briefing about the new regulation" },
@@ -433,7 +416,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Kampanya Botu",
-    emoji: "🎁",
     messages: [
       { tr: "Tebrikler! Bir ödül kazandınız, tıklayın", en: "Congratulations! You won a prize, click" },
       { tr: "Son gün! %70 indirim kaçmasın", en: "Last day! Don't miss 70% discount" },
@@ -459,7 +441,6 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
   {
     name: "Astroloji ve Enerji Grubu",
-    emoji: "🌙",
     messages: [
       { tr: "Bugün grup meditasyonu var, katılın", en: "There's group meditation today, join" },
       { tr: "Enerjinizi yükseltecek 5 dakikalık egzersiz", en: "5-minute exercise to raise your energy" },
@@ -485,8 +466,8 @@ export const whatsappSenders: WhatsAppSender[] = [
   },
 ];
 
-export function pickWhatsAppNotification(): { icon: string; name: string; text: string } {
+export function pickWhatsAppNotification(): { name: string; text: string } {
   const sender = whatsappSenders[Math.floor(Math.random() * whatsappSenders.length)];
   const text = resolveText(sender.messages[Math.floor(Math.random() * sender.messages.length)]);
-  return { icon: sender.emoji, name: sender.name, text };
+  return { name: sender.name, text };
 }

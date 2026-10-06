@@ -50,8 +50,8 @@ export const friendMessageSets: FriendMessageSet[] = [
       },
       {
         id: "joke",
-        text: { tr: "Emlakçıdan borç istemek biraz ironik değil mi? 😄", en: "Isn't asking a realtor for a loan a bit ironic? 😄" },
-        reaction: { tr: "Haha haklısın, ama denemeden olmaz dedim 😅", en: "Haha you're right, but I figured I had to try 😅" },
+        text: { tr: "Emlakçıdan borç istemek biraz ironik değil mi?", en: "Isn't asking a realtor for a loan a bit ironic?" },
+        reaction: { tr: "Haha haklısın, ama denemeden olmaz dedim", en: "Haha you're right, but I figured I had to try" },
         loanAction: "decline",
       },
     ],
@@ -75,7 +75,7 @@ export const friendMessageSets: FriendMessageSet[] = [
       },
       {
         id: "decline-joke",
-        text: { tr: "Ben zaten başkasının evini satıyorum, kendime yetmiyor 😄", en: "I'm already selling someone else's house, barely covers myself 😄" },
+        text: { tr: "Ben zaten başkasının evini satıyorum, kendime yetmiyor", en: "I'm already selling someone else's house, barely covers myself" },
         reaction: { tr: "Haha mantıklı, boş ver o zaman.", en: "Haha makes sense, never mind then." },
         investAction: "decline",
       },
@@ -84,10 +84,10 @@ export const friendMessageSets: FriendMessageSet[] = [
   {
     id: "melike-dedikodu",
     contactName: "Melike",
-    prompt: { tr: "Duydun mu, mahallenin ünlü çifti ayrılmış! 👀", en: "Did you hear, the neighborhood's famous couple broke up! 👀" },
+    prompt: { tr: "Duydun mu, mahallenin ünlü çifti ayrılmış!", en: "Did you hear, the neighborhood's famous couple broke up!" },
     choices: [
       { id: "a", text: { tr: "Yok artık, ciddi misin?", en: "No way, are you serious?" }, reaction: { tr: "Valla öyle diyorlar, herkes konuşuyor.", en: "I swear that's what they say, everyone is talking." } },
-      { id: "b", text: { tr: "Ben dedikoduya karışmam 😄", en: "I don't get involved in gossip 😄" }, reaction: { tr: "Aman ne temiz insansın.", en: "Oh what a clean person you are." } },
+      { id: "b", text: { tr: "Ben dedikoduya karışmam", en: "I don't get involved in gossip" }, reaction: { tr: "Aman ne temiz insansın.", en: "Oh what a clean person you are." } },
       { id: "c", text: { tr: "Kimden duydun bunu?", en: "Who did you hear this from?" }, reaction: { tr: "Sorma sen, kaynağım sağlam.", en: "Don't ask, my source is solid." } },
     ],
   },
@@ -96,7 +96,7 @@ export const friendMessageSets: FriendMessageSet[] = [
     contactName: "Melike",
     prompt: { tr: "Bu arada bir ev bakıyorum da, sen bilirsin bu işleri, tavsiyen var mı?", en: "By the way I'm looking for a house, you know this business, any advice?" },
     choices: [
-      { id: "a", text: { tr: "Bana gel, sana özel bir şeyler bulurum.", en: "Come to me, I'll find something special for you." }, reaction: { tr: "Vay be, iş insanı gibi konuştun şimdi 😄", en: "Wow, you talked like a business person just now 😄" } },
+      { id: "a", text: { tr: "Bana gel, sana özel bir şeyler bulurum.", en: "Come to me, I'll find something special for you." }, reaction: { tr: "Vay be, iş insanı gibi konuştun şimdi", en: "Wow, you talked like a business person just now" } },
       { id: "b", text: { tr: "Acele etme, iyi araştır.", en: "Don't rush, research well." }, reaction: { tr: "Haklısın, acele işe şeytan karışır derler.", en: "You're right, haste makes waste as they say." } },
       { id: "c", text: { tr: "Şu an biraz meşgulüm, akşam konuşalım mı?", en: "I'm a bit busy right now, shall we talk in the evening?" }, reaction: { tr: "Tamam tamam, kolay gelsin!", en: "Okay okay, take it easy!" } },
     ],
@@ -173,7 +173,7 @@ export const friendMessageSets: FriendMessageSet[] = [
     choices: [
       { id: "week", text: { tr: "\"Bu hafta görmek isterim.\"", en: "\"Let's look this week for sure.\"" }, reaction: { tr: "Yaşasın, bu hafta ayarlıyorum!", en: "I'm setting it up, for this week." }, houseTipAction: "accept", houseTipHouseId: "bengisu-gunbatimi-terasi", houseTipWeekOffset: 0 },
       { id: "next", text: { tr: "\"Gelecek hafta daha uygun.\"", en: "\"Next week is fine.\"" }, reaction: { tr: "Tamam, gelecek haftaya not.", en: "Noted for next week." }, houseTipAction: "accept", houseTipHouseId: "bengisu-gunbatimi-terasi", houseTipWeekOffset: 1 },
-      { id: "decline", text: { tr: "\"Şu an olmaz, sağ ol.\"", en: "\"Not interested right now.\"" }, reaction: { tr: "Tamam, kaçırdın ama olsun 😄", en: "Okay, we'll talk later." }, houseTipAction: "decline" },
+      { id: "decline", text: { tr: "\"Şu an olmaz, sağ ol.\"", en: "\"Not interested right now.\"" }, reaction: { tr: "Tamam, kaçırdın ama olsun", en: "Okay, we'll talk later." }, houseTipAction: "decline" },
     ],
   },
   {

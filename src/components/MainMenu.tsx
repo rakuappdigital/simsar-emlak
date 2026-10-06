@@ -1,6 +1,7 @@
 import { LogoIcon } from "./icons";
 import { getPrestigeCompletions, prestigeTitle } from "../data/prestige";
 import type { Language } from "../data/language";
+import { TrophyIcon } from "./icons";
 
 interface MainMenuProps {
   hasSave: boolean;
@@ -26,7 +27,7 @@ export default function MainMenu({ hasSave, language, onNewGame, onOpenSaved, on
         <LogoIcon size={56} className="app-logo" />
         <h1 className="menu-title">Odd Estate</h1>
         <p className="menu-subtitle">{strings.subtitle[language]}</p>
-        {title && <p className="menu-prestige-tag">🏆 {title} — {strings.prestigeTag[language]}</p>}
+        {title && <p className="menu-prestige-tag"><TrophyIcon size={12} className="icon-inline" /> {title} — {strings.prestigeTag[language]}</p>}
       </div>
       <nav className="menu-buttons">
         <button className="menu-btn" onClick={onNewGame}>

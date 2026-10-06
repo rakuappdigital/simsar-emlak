@@ -1,0 +1,257 @@
+ODD ESTATE — APP STORE LOCALIZATIONS
+English (US) is the primary locale. Turkish is intentionally omitted: its approved translation already exists.
+
+=== Arabic ===
+
+name:
+Odd Estate
+
+subtitle:
+تحدث، خداع وبِع في إسطنبول
+
+Promotional Text:
+اتبع مفتاحًا قديمًا إلى منزل لم يره أحد. حلّ الحكايات الجانبية في أنحاء المدينة، واجمع الغرائب في ألبومك، واكتشف من يعيش حقًا خلف الباب الخامس والخمسين.
+
+Description:
+[بانتظار النص الإنجليزي الكامل المعتمد للوصف.]
+
+keywords:
+تفاوض,عقارات,حوار,رواية,خيارات,قصة,سرد,rpg,إدارة,محاكي,وكيل,بكسل
+
+=== Romanian ===
+
+name:
+Odd Estate
+
+subtitle:
+Vorbește, blufează și vinde în Istanbul
+
+Promotional Text:
+Urmează o cheie veche spre o casă pe care nimeni n-a văzut-o. Rezolvă povești secundare prin oraș, adună ciudățenii în album și află cine locuiește cu adevărat în spatele celei de-a 55-a uși.
+
+Description:
+[ÎN AȘTEPTARE: este necesar textul integral aprobat al descrierii în engleză.]
+
+keywords:
+negociere,imobiliare,dialog,romanvizual,alegeri,poveste,narațiune,rpg,tycoon,simulator,pixel
+
+=== Spanish (Mexico) ===
+
+name:
+Odd Estate
+
+subtitle:
+Habla, engaña y vende en Estambul
+
+Promotional Text:
+Sigue una vieja llave hasta una casa que nadie ha visto. Resuelve historias secundarias por la ciudad, colecciona rarezas en tu álbum y descubre quién vive realmente tras la puerta 55.
+
+Description:
+[PENDIENTE: se necesita el texto completo aprobado de la descripción en inglés.]
+
+keywords:
+negociación,inmuebles,diálogo,novelavisual,decisiones,historia,rpg,tycoon,simulador,píxel
+
+=== Portuguese (Brazil) ===
+
+name:
+Odd Estate
+
+subtitle:
+Converse, Blefe e Venda em Istambul
+
+Promotional Text:
+Siga uma chave antiga até uma casa que ninguém viu. Resolva histórias paralelas pela cidade, colecione curiosidades no seu álbum e descubra quem realmente mora atrás da 55ª porta.
+
+Description:
+[PENDENTE: é necessário o texto integral aprovado da descrição em inglês.]
+
+keywords:
+negociação,corretor,diálogo,novelavisual,escolhas,história,rpg,tycoon,simulador,pixel
+
+=== Polish ===
+
+name:
+Odd Estate
+
+subtitle:
+Rozmawiaj, blefuj i sprzedawaj w Stambule
+
+Promotional Text:
+Podążaj za starym kluczem do domu, którego nikt nie widział. Rozwiązuj poboczne historie w całym mieście, zbieraj osobliwości do albumu i odkryj, kto naprawdę mieszka za 55. drzwiami.
+
+Description:
+[OCZEKUJE: potrzebny jest pełny, zatwierdzony angielski tekst opisu.]
+
+keywords:
+negocjacje,nieruchomości,dialog,powieśćwizualna,wybory,fabuła,rpg,tycoon,simulator,piksel
+
+=== Indonesian ===
+
+name:
+Odd Estate
+
+subtitle:
+Ngobrol, Menggertak & Menjual di Istanbul
+
+Promotional Text:
+Ikuti kunci tua menuju rumah yang belum pernah dilihat siapa pun. Pecahkan kisah sampingan di seluruh kota, kumpulkan keanehan dalam album, dan cari tahu siapa yang sebenarnya tinggal di balik pintu ke-55.
+
+Description:
+[MENUNGGU: teks lengkap deskripsi bahasa Inggris yang disetujui diperlukan.]
+
+keywords:
+negosiasi,makelar,dialog,novel visual,pilihan,cerita,narasi,rpg,tycoon,simulator,agen,piksel
+
+=== Russian ===
+
+name:
+Odd Estate
+
+subtitle:
+Говори, блефуй и продавай в Стамбуле
+
+Promotional Text:
+Проследуй за старым ключом к дому, которого никто не видел. Распутывай побочные истории по всему городу, собирай диковинки в альбом и узнай, кто на самом деле живёт за 55-й дверью.
+
+Description:
+[ОЖИДАЕТСЯ: необходим полный утверждённый английский текст описания.]
+
+keywords:
+переговоры,риелтор,диалоги,новелла,выборы,история,сюжет,rpg,магнат,симулятор,пиксель
+
+=== Korean ===
+
+name:
+Odd Estate
+
+subtitle:
+이스탄불에서 말하고, 속이고, 팔아라
+
+Promotional Text:
+아무도 본 적 없는 집으로 이어지는 낡은 열쇠를 따라가세요. 도시 곳곳의 곁이야기를 풀고, 앨범에 기묘한 물건을 모으며, 55번째 문 뒤에 누가 정말 사는지 알아내세요.
+
+Description:
+[대기 중: 승인된 영문 설명 전문이 필요합니다.]
+
+keywords:
+협상,부동산,대화,비주얼노벨,선택,스토리,서사,rpg,경영,시뮬레이터,픽셀
+
+=== Spanish (Spain) ===
+
+name:
+Odd Estate
+
+subtitle:
+Habla, farolea y vende en Estambul
+
+Promotional Text:
+Sigue una llave antigua hasta una casa que nadie ha visto. Resuelve historias secundarias por toda la ciudad, reúne rarezas en tu álbum y descubre quién vive de verdad tras la puerta 55.
+
+Description:
+[PENDIENTE: se necesita el texto completo aprobado de la descripción en inglés.]
+
+keywords:
+negociación,inmobiliaria,diálogo,novelavisual,decisiones,historia,rpg,tycoon,simulador,píxel
+
+=== Japanese ===
+
+name:
+Odd Estate
+
+subtitle:
+イスタンブールで話し、はったりをかまし、売り抜けろ
+
+Promotional Text:
+誰も見たことのない家へと続く古い鍵を追え。街じゅうのサイドストーリーを解き、奇妙な品々をアルバムに集め、55番目の扉の向こうに本当に住んでいるのが誰なのかを突き止めよう。
+
+Description:
+[保留中：承認済みの英語版説明文の全文が必要です。]
+
+keywords:
+交渉,不動産,会話,ビジュアルノベル,選択,物語,rpg,経営,シミュレーター,ピクセル
+
+=== Ukrainian ===
+
+name:
+Odd Estate
+
+subtitle:
+Говори, блефуй і продавай у Стамбулі
+
+Promotional Text:
+Йди за старим ключем до будинку, якого ніхто не бачив. Розплутуй побічні історії по всьому місту, збирай дивини до альбому й дізнайся, хто насправді живе за 55-ми дверима.
+
+Description:
+[ОЧІКУЄТЬСЯ: потрібен повний затверджений англійський текст опису.]
+
+keywords:
+переговори,рієлтор,діалоги,новела,вибір,історія,сюжет,rpg,магнат,симулятор,піксель
+
+=== German ===
+
+name:
+Odd Estate
+
+subtitle:
+Rede, bluffe und verkaufe in Istanbul
+
+Promotional Text:
+Folge einem alten Schlüssel zu einem Haus, das niemand gesehen hat. Löse Nebengeschichten in der ganzen Stadt, sammle Kuriositäten in deinem Album und finde heraus, wer wirklich hinter der 55. Tür lebt.
+
+Description:
+[AUSSTEHEND: Der vollständige freigegebene englische Beschreibungstext wird benötigt.]
+
+keywords:
+verhandlung,makler,dialog,visualnovel,entscheidungen,geschichte,rpg,tycoon,simulation,pixel
+
+=== French ===
+
+name:
+Odd Estate
+
+subtitle:
+Parlez, bluffez et vendez à Istanbul
+
+Promotional Text:
+Suivez une vieille clé jusqu'à une maison que personne n'a vue. Résolvez des histoires secondaires dans toute la ville, collectionnez des curiosités dans votre album et découvrez qui vit vraiment derrière la 55e porte.
+
+Description:
+[EN ATTENTE : le texte anglais intégral et approuvé de la description est nécessaire.]
+
+keywords:
+négociation,immobilier,dialogue,romanvisuel,choix,histoire,récit,rpg,tycoon,simulateur,pixel
+
+=== Italian ===
+
+name:
+Odd Estate
+
+subtitle:
+Parla, bluffa e vendi a Istanbul
+
+Promotional Text:
+Segui una vecchia chiave fino a una casa che nessuno ha mai visto. Risolvi storie secondarie in tutta la città, raccogli stranezze nel tuo album e scopri chi vive davvero dietro la 55ª porta.
+
+Description:
+[IN ATTESA: è necessario il testo completo approvato della descrizione in inglese.]
+
+keywords:
+negoziazione,immobiliare,dialogo,visualnovel,scelte,storia,narrazione,rpg,tycoon,simulatore,pixel
+
+=== Dutch ===
+
+name:
+Odd Estate
+
+subtitle:
+Praat, bluf en verkoop in Istanbul
+
+Promotional Text:
+Volg een oude sleutel naar een huis dat niemand ooit heeft gezien. Los zijverhalen in de hele stad op, verzamel eigenaardigheden in je album en ontdek wie er echt achter de 55e deur woont.
+
+Description:
+[IN AFWACHTING: de volledige goedgekeurde Engelse beschrijvingstekst is nodig.]
+
+keywords:
+onderhandelen,makelaar,dialogen,visueleroman,keuzes,verhaal,rpg,tycoon,simulator,pixel

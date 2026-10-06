@@ -124,7 +124,13 @@ await page.waitForTimeout(500);
 // as part of continueSaved()'s own load — the modal appears immediately,
 // no further clicks needed.
 await page.locator(".pixel-btn").first().click({ timeout: 15000 });
-await page.waitForTimeout(1200);
+// Yükleme anında rastgele bir iş görevi araya girebilir (WORK_TASK_CHANCE) —
+// o zaman Kader Anı görevden sonra açılır. Görevi geçip pencereyi bekle.
+for (let i = 0; i < 20; i++) {
+  if (await page.locator(".flashback-card").isVisible().catch(() => false)) break;
+  await page.locator(".work-task-screen .choice-btn, .quick-call-screen .choice-btn, button.phone-continue").first().click({ timeout: 300 }).catch(() => {});
+  await page.waitForTimeout(400);
+}
 
 const modalText = await page.locator(".flashback-card").innerText().catch(() => "");
 assert(modalText.includes("İlk Şüphe"), `the ogretmen-origin beat-1 modal actually shows ("${modalText.slice(0, 40)}")`);

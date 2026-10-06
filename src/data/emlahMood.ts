@@ -30,8 +30,8 @@ export const emlahMoodPortrait: Record<EmlahMood, string> = {
 };
 
 export const emlahMoodLabel: Record<EmlahMood, Localized> = {
-  yorgun: { tr: "yorgun 😴", en: "tired 😴" },
-  gergin: { tr: "gergin 😬", en: "tense 😬" },
-  enerjik: { tr: "enerjik ✨", en: "energetic ✨" },
-  notr: { tr: "sakin 🙂", en: "calm 🙂" },
+  yorgun: { tr: "yorgun", en: "tired" },
+  gergin: { tr: "gergin", en: "tense" },
+  enerjik: { tr: "enerjik", en: "energetic" },
+  notr: { tr: "sakin", en: "calm" },
 };

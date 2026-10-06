@@ -17,7 +17,7 @@ export interface EasterEgg {
 export const easterEggs: EasterEgg[] = [
   {
     id: "hayalet-ev",
-    tag: { tr: "👻 Tuhaf Bir An", en: "👻 A Strange Moment" },
+    tag: { tr: "Tuhaf Bir An", en: "A Strange Moment" },
     lines: [
       { speaker: "thought", text: { tr: "(içinden) Neden bilmiyorum ama bu evde tuylerim diken diken oldu...", en: "(to himself) I don't know why but this house gave me goosebumps..." } },
       { speaker: "customer1", text: { tr: "Bazen gece kapılar kendiliğinden açılıyor... ama boş verin, alışkınız artık.", en: "Sometimes doors open by themselves at night... but never mind, we're used to it now." } },
@@ -27,7 +27,7 @@ export const easterEggs: EasterEgg[] = [
   },
   {
     id: "ufo-komsu",
-    tag: { tr: "🛸 Tuhaf Bir An", en: "🛸 A Strange Moment" },
+    tag: { tr: "Tuhaf Bir An", en: "A Strange Moment" },
     lines: [
       { speaker: "customer1", text: { tr: "Balkondan geçen ay tuhaf ışıklar gördük, komşular da doğruladı.", en: "We saw strange lights passing from the balcony last month, neighbors confirmed it too." } },
       { speaker: "thought", text: { tr: "(içinden) UFO mu, drone mu, yoksa hayal gücü mü — hiç sormayayım.", en: "(to himself) UFO, drone, or imagination — better not ask." } },
@@ -36,7 +36,7 @@ export const easterEggs: EasterEgg[] = [
   },
   {
     id: "kedi-konseyi",
-    tag: { tr: "🐈 Tuhaf Bir An", en: "🐈 A Strange Moment" },
+    tag: { tr: "Tuhaf Bir An", en: "A Strange Moment" },
     lines: [
       { speaker: "thought", text: { tr: "(içinden) Salonda yedi kedi var ve hepsi bana aynı anda bakıyor.", en: "(to himself) There are seven cats in the living room and they are all looking at me at the same time." } },
       { speaker: "customer1", text: { tr: "Onlara aldırmayın, sadece yeni gelenleri değerlendiriyorlar.", en: "Don't mind them, they are just evaluating newcomers." } },
@@ -46,7 +46,7 @@ export const easterEggs: EasterEgg[] = [
   },
   {
     id: "zaman-yolcusu",
-    tag: { tr: "🕰️ Tuhaf Bir An", en: "🕰️ A Strange Moment" },
+    tag: { tr: "Tuhaf Bir An", en: "A Strange Moment" },
     lines: [
       { speaker: "customer1", text: { tr: "Duvar kağıdının altında eski bir not bulduk, 1987 tarihli, bir emlakçıya yazılmış.", en: "We found an old note under the wallpaper, dated 1987, written to a real estate agent." } },
       { speaker: "thought", text: { tr: "(içinden) O emlakçı da tam bugün, tam bu cümleyi mi kurmuş acaba?", en: "(to himself) I wonder if that real estate agent uttered this exact sentence today, right now?" } },
@@ -55,7 +55,7 @@ export const easterEggs: EasterEgg[] = [
   },
   {
     id: "gizli-oyuncu",
-    tag: { tr: "🎭 Tuhaf Bir An", en: "🎭 A Strange Moment" },
+    tag: { tr: "Tuhaf Bir An", en: "A Strange Moment" },
     lines: [
       { speaker: "customer1", text: { tr: "(fısıltıyla, ezbere) \"Bu ev... benim kaderim...\" Kusura bakmayın, bir repliği tekrar ediyordum.", en: "(whispering, from memory) \"This house... is my destiny...\" Sorry, I was repeating a line." } },
       { speaker: "thought", text: { tr: "(içinden) Galiba bir oyunculuk kursundan çıkmışlar. Devam edelim.", en: "(to himself) I guess they just came out of an acting class. Let's continue." } },

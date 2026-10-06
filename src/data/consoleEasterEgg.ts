@@ -14,12 +14,12 @@ export function printConsoleEasterEgg(): void {
   console.log(`%c${art}`, "color:#ffd166;font-family:monospace;font-size:10px;");
   console.log(
     en
-      ? "%cHello developer friend 👋 Are you trying to sell houses too, or just curious?"
-      : "%cMerhaba geliştirici arkadaşım 👋 Sen de mi ev satmaya çalışıyorsun, yoksa sadece meraklısın mı?",
+      ? "%cHello developer friend Are you trying to sell houses too, or just curious?"
+      : "%cMerhaba geliştirici arkadaşım Sen de mi ev satmaya çalışıyorsun, yoksa sadece meraklısın mı?",
     "color:#a78bfa;font-size:13px;font-weight:bold;",
   );
   console.log(
-    en ? "%cNo need to look for something secret here... or is there? 😉" : "%cBurada gizli bir şey aramana gerek yok... ya da var mı? 😉",
+    en ? "%cNo need to look for something secret here... or is there?" : "%cBurada gizli bir şey aramana gerek yok... ya da var mı?",
     "color:#888;font-size:11px;",
   );
 }

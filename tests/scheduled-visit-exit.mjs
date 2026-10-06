@@ -92,7 +92,7 @@ assert(
 );
 
 // "Oyunu Bitir" from the in-game settings.
-await page.locator(".jetton-pill").click();
+await page.locator(".topbar-settings").click();
 await page.waitForTimeout(300);
 await page.locator("button", { hasText: "Oyunu Bitir" }).click({ timeout: 3000 });
 await page.locator("button", { hasText: "Evet, Bitir" }).click({ timeout: 3000 });

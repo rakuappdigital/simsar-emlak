@@ -7,6 +7,7 @@ import type { Localized } from "./language";
  */
 export interface InventoryItem {
   id: string;
+  /** GameIcon anahtarı (bkz. components/GameIcon.tsx) — emoji değil. */
   icon: string;
   name: Localized;
   description: Localized;
@@ -17,7 +18,7 @@ export interface InventoryItem {
 export const inventoryItems: InventoryItem[] = [
   {
     id: "suspicion-shield",
-    icon: "🛡️",
+    icon: "shield",
     name: { tr: "Şüphe Kalkanı", en: "Suspicion Shield" },
     description: {
       tr: "Sıradaki 3 evde şüphe daha düşük başlar.",
@@ -28,7 +29,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "lucky-call",
-    icon: "🍀",
+    icon: "clover",
     name: { tr: "Şanslı Çağrı", en: "Lucky Call" },
     description: {
       tr: "Sıradaki müşteri görüşmesi garanti yüksek ilgiyle başlar.",
@@ -39,7 +40,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "energy-box",
-    icon: "⚡",
+    icon: "bolt",
     name: { tr: "Enerji Kutusu", en: "Energy Box" },
     description: {
       tr: "Enerjini anında %100'e tamamlar.",
@@ -50,7 +51,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "confidence-outfit",
-    icon: "👔",
+    icon: "tie",
     name: { tr: "Özgüven Kıyafeti", en: "Confidence Outfit" },
     description: {
       tr: "Sıradaki evde şüphe daha düşük başlar.",
@@ -62,7 +63,7 @@ export const inventoryItems: InventoryItem[] = [
   // --- Ofis eşyaları (TL) ---
   {
     id: "desk-lamp",
-    icon: "💡",
+    icon: "lamp",
     name: { tr: "Masa Lambası", en: "Desk Lamp" },
     description: { tr: "Sıradaki evde ilgi biraz daha yüksek başlar.", en: "Your next house starts with a bit more interest." },
     currency: "money",
@@ -70,7 +71,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "wall-painting",
-    icon: "🖼️",
+    icon: "frame",
     name: { tr: "Duvar Tablosu", en: "Wall Painting" },
     description: { tr: "Sıradaki evde eğlence biraz daha yüksek başlar.", en: "Your next house starts with a bit more fun." },
     currency: "money",
@@ -78,7 +79,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "potted-plant",
-    icon: "🪴",
+    icon: "plant",
     name: { tr: "Yeşil Saksı", en: "Potted Plant" },
     description: { tr: "Sıradaki evde şüphe biraz daha düşük başlar.", en: "Your next house starts a bit less suspicious." },
     currency: "money",
@@ -86,7 +87,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "coffee-machine",
-    icon: "☕",
+    icon: "cup",
     name: { tr: "Kahve Makinesi", en: "Coffee Machine" },
     description: { tr: "Enerjine anında küçük bir takviye yapar.", en: "Gives your energy a small instant boost." },
     currency: "money",
@@ -94,7 +95,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "comfort-chair",
-    icon: "🪑",
+    icon: "chair",
     name: { tr: "Konfor Koltuğu", en: "Comfort Chair" },
     description: { tr: "Enerjine anında orta düzey bir takviye yapar.", en: "Gives your energy a moderate instant boost." },
     currency: "money",
@@ -102,7 +103,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "trophy-shelf",
-    icon: "🏆",
+    icon: "trophy",
     name: { tr: "Plaket Rafı", en: "Trophy Shelf" },
     description: { tr: "Sıradaki evde ilgi daha da yüksek başlar.", en: "Your next house starts with noticeably more interest." },
     currency: "money",
@@ -110,7 +111,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "new-sign",
-    icon: "🪧",
+    icon: "sign",
     name: { tr: "Yeni Tabela", en: "New Sign" },
     description: { tr: "Patron memnuniyetine anında küçük bir katkı sağlar.", en: "Gives an instant small boost to your boss's mood." },
     currency: "money",
@@ -119,7 +120,7 @@ export const inventoryItems: InventoryItem[] = [
   // --- Jetonla, oyuna etki eden ürünler ---
   {
     id: "guaranteed-second-chance",
-    icon: "🔄",
+    icon: "refresh",
     name: { tr: "Garantili İkinci Şans", en: "Guaranteed Second Chance" },
     description: {
       tr: "Kaybettiğin, henüz tekrar denemediğin bir evi hemen tekrar arar. Uygun ev yoksa satın alınamaz.",
@@ -130,7 +131,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "flawless-impression",
-    icon: "✨",
+    icon: "spark",
     name: { tr: "Kusursuz İzlenim", en: "Flawless Impression" },
     description: { tr: "Sıradaki evde eğlence garantili yüksek başlar.", en: "Your next house starts with guaranteed high fun." },
     currency: "jetton",
@@ -138,7 +139,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "boss-note",
-    icon: "📨",
+    icon: "envelope",
     name: { tr: "Patron Notu", en: "Boss's Note" },
     description: { tr: "Patron memnuniyetine anında belirgin bir katkı sağlar.", en: "Gives an instant, noticeable boost to your boss's mood." },
     currency: "jetton",
@@ -146,7 +147,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "solid-reference",
-    icon: "📋",
+    icon: "clipboard",
     name: { tr: "Sağlam Referans", en: "Solid Reference" },
     description: { tr: "Sıradaki evde şüphe belirgin şekilde düşük başlar.", en: "Your next house starts noticeably less suspicious." },
     currency: "jetton",
@@ -154,7 +155,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "energy-reserve",
-    icon: "🔋",
+    icon: "battery",
     name: { tr: "Ekstra Enerji Deposu", en: "Extra Energy Reserve" },
     description: { tr: "Enerjine anında orta-büyük bir takviye yapar.", en: "Gives your energy a fairly large instant boost." },
     currency: "jetton",
@@ -162,7 +163,7 @@ export const inventoryItems: InventoryItem[] = [
   },
   {
     id: "lucky-appointment",
-    icon: "🎯",
+    icon: "target",
     name: { tr: "Şanslı Randevu", en: "Lucky Appointment" },
     description: { tr: "Sıradaki evde ilgi garantili yüksek başlar.", en: "Your next house starts with guaranteed high interest." },
     currency: "jetton",

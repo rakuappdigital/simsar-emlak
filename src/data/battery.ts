@@ -28,14 +28,14 @@ export function lowBatteryLine(): string {
 const customerReplies: Localized[] = [
   { tr: "Tamam, müsait olduğunuzda devam ederiz.", en: "Okay, we can continue whenever you are available." },
   { tr: "Sorun değil, sonra tekrar yazışalım.", en: "No problem, let's chat again later." },
-  { tr: "Anladım, iyi şarjlar 😄", en: "Understood, happy charging 😄" },
+  { tr: "Anladım, iyi şarjlar", en: "Understood, happy charging" },
   { tr: "Peki, bekliyorum o zaman.", en: "Alright, I'll wait then." },
 ];
 
 const casualReplies: Localized[] = [
-  { tr: "Yine mi? Powerbank alsana artık 😂", en: "Again? Just get a powerbank already 😂" },
+  { tr: "Yine mi? Powerbank alsana artık", en: "Again? Just get a powerbank already" },
   { tr: "Tamam kanka, şarj olunca yaz.", en: "Alright bro, text me when it's charged." },
-  { tr: "Emlah sen bu telefonla nasıl iş yapıyorsun ya 😅", en: "Estetan, how do you even do business with that phone 😅" },
+  { tr: "Emlah sen bu telefonla nasıl iş yapıyorsun ya", en: "Estetan, how do you even do business with that phone" },
   { tr: "Git şarja tak, ben buradayım.", en: "Go plug it in, I'll be right here." },
 ];
 

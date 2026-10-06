@@ -1,5 +1,6 @@
 import { t } from "../data/language";
 import { CloseIcon } from "./icons";
+import GameIcon from "./GameIcon";
 
 interface PurchaseConfirmModalProps {
   icon?: string;
@@ -23,7 +24,7 @@ export default function PurchaseConfirmModal({ icon, title, description, priceLa
         <button className="market-close" onClick={onCancel} aria-label={t({ tr: "Kapat", en: "Close" })}>
           <CloseIcon size={12} />
         </button>
-        {icon && <span className="purchase-confirm-icon">{icon}</span>}
+        {icon && <span className="purchase-confirm-icon"><GameIcon name={icon} size={28} /></span>}
         <p className="purchase-confirm-title">{title}</p>
         <p className="purchase-confirm-description">{description}</p>
         <button className="pixel-btn purchase-confirm-buy" onClick={onConfirm}>

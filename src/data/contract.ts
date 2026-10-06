@@ -1,21 +1,21 @@
 import type { ContractClause } from "../types";
 
 const teslimOptions = [
-  { id: "hemen", label: { tr: "Hemen (1 hafta içinde)", en: "Immediately (within 1 week)" } },
-  { id: "bir-ay", label: { tr: "1 ay sonra", en: "After 1 month" } },
-  { id: "uc-ay", label: { tr: "3 ay sonra", en: "After 3 months" } },
+  { id: "hemen", label: { tr: "Hemen (1 hafta içinde)", en: "Immediately (within 1 week)" }, short: { tr: "Hemen", en: "Now" } },
+  { id: "bir-ay", label: { tr: "1 ay sonra", en: "After 1 month" }, short: { tr: "1 ay", en: "1 month" } },
+  { id: "uc-ay", label: { tr: "3 ay sonra", en: "After 3 months" }, short: { tr: "3 ay", en: "3 months" } },
 ];
 
 const depozitoOptions = [
-  { id: "yuzde5", label: { tr: "%5 depozito", en: "5% deposit" } },
-  { id: "yuzde10", label: { tr: "%10 depozito", en: "10% deposit" } },
-  { id: "yuzde15", label: { tr: "%15 depozito", en: "15% deposit" } },
+  { id: "yuzde5", label: { tr: "%5 depozito", en: "5% deposit" }, short: { tr: "%5", en: "5%" } },
+  { id: "yuzde10", label: { tr: "%10 depozito", en: "10% deposit" }, short: { tr: "%10", en: "10%" } },
+  { id: "yuzde15", label: { tr: "%15 depozito", en: "15% deposit" }, short: { tr: "%15", en: "15%" } },
 ];
 
 const tadilatOptions = [
-  { id: "alici", label: { tr: "Tadilat masrafı alıcıya ait", en: "Renovation cost borne by buyer" } },
-  { id: "satici", label: { tr: "Tadilat masrafı satıcıya ait", en: "Renovation cost borne by seller" } },
-  { id: "yari", label: { tr: "Masraf yarı yarıya paylaşılır", en: "Costs shared 50/50" } },
+  { id: "alici", label: { tr: "Tadilat masrafı alıcıya ait", en: "Renovation cost borne by buyer" }, short: { tr: "Alıcı", en: "Buyer" } },
+  { id: "satici", label: { tr: "Tadilat masrafı satıcıya ait", en: "Renovation cost borne by seller" }, short: { tr: "Satıcı", en: "Seller" } },
+  { id: "yari", label: { tr: "Masraf yarı yarıya paylaşılır", en: "Costs shared 50/50" }, short: { tr: "Yarı yarıya", en: "50/50" } },
 ];
 
 /** Generates a fresh contract with a randomly hidden customer preference per clause. */

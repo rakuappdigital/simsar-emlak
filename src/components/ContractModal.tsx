@@ -2,6 +2,14 @@ import { useState } from "react";
 import type { ContractClause } from "../types";
 import { evaluateContract, MAX_CONTRACT_ROUNDS, type ContractOutcome } from "../data/contract";
 import { resolveText, t } from "../data/language";
+import { CheckIcon, WarnIcon } from "./icons";
+
+/** Teslim tarihinin bilinen etkisi: komisyonun ne kadarı hemen, ne kadarı teslimde gelir (bkz. calendar.ts). */
+function deliveryNote(optionId: string): string {
+  if (optionId === "bir-ay") return t({ tr: "Komisyonun %85'i hemen, kalanı 1 ay sonra teslimde.", en: "85% of your commission now, the rest on delivery in 1 month." });
+  if (optionId === "uc-ay") return t({ tr: "Komisyonun %70'i hemen, kalanı 3 ay sonra teslimde.", en: "70% of your commission now, the rest on delivery in 3 months." });
+  return t({ tr: "Komisyonun tamamı hemen.", en: "Your full commission right away." });
+}
 
 interface ContractModalProps {
   clauses: ContractClause[];
@@ -19,6 +27,7 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
   const [outcome, setOutcome] = useState<ContractOutcome | null>(null);
 
   const allSelected = clauses.every((c) => selections[c.id]);
+  const remaining = clauses.filter((c) => !selections[c.id]).length;
   const mismatched = clauses.filter((c) => selections[c.id] !== c.preferredOptionId);
   const allConceded = mismatched.every((c) => concessions[c.id] !== undefined);
 
@@ -61,24 +70,42 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
 
         {stage === "picking" && (
           <>
-            {clauses.map((c) => (
-              <div className="contract-clause" key={c.id}>
-                <p className="contract-clause-title">{resolveText(c.title)}</p>
-                <div className="contract-options">
-                  {c.options.map((o) => (
-                    <button
-                      key={o.id}
-                      className={`contract-option-btn ${selections[c.id] === o.id ? "selected" : ""}`}
-                      onClick={() => setSelections((s) => ({ ...s, [c.id]: o.id }))}
-                    >
-                      {resolveText(o.label)}
-                    </button>
-                  ))}
+            <p className="contract-intro">
+              {t({
+                tr: `${customerName}'in gizli tercihleri var. Hepsini tutturursan +%5 komisyon, hiçbirini tutturamazsan −%5. Uymayan maddelerde pazarlık turu açılır.`,
+                en: `${customerName} has hidden preferences. Match all of them for +5% commission, none for −5%. Mismatched clauses open a negotiation round.`,
+              })}
+            </p>
+            {clauses.map((c) => {
+              const picked = c.options.find((o) => o.id === selections[c.id]);
+              return (
+                <div className="contract-clause" key={c.id}>
+                  <p className="contract-clause-title">{resolveText(c.title)}</p>
+                  <div className="contract-seg" role="radiogroup" aria-label={resolveText(c.title)}>
+                    {c.options.map((o) => (
+                      <button
+                        key={o.id}
+                        role="radio"
+                        aria-checked={selections[c.id] === o.id}
+                        className={`contract-option-btn contract-seg-btn ${selections[c.id] === o.id ? "selected" : ""}`}
+                        onClick={() => setSelections((s) => ({ ...s, [c.id]: o.id }))}
+                        title={resolveText(o.label)}
+                      >
+                        {resolveText(o.short ?? o.label)}
+                      </button>
+                    ))}
+                  </div>
+                  {c.id === "teslim" && picked && (
+                    <p className="contract-clause-effect">{deliveryNote(picked.id)}</p>
+                  )}
+                  {c.id !== "teslim" && picked && <p className="contract-clause-effect">{resolveText(picked.label)}</p>}
                 </div>
-              </div>
-            ))}
-            <button className="pixel-btn" disabled={!allSelected} onClick={submitInitialPick}>
-              {t({ tr: `Sözleşmeyi ${customerName}'e Sun`, en: `Present the Contract to ${customerName}` })}
+              );
+            })}
+            <button className="pixel-btn contract-submit" disabled={!allSelected} onClick={submitInitialPick}>
+              {allSelected
+                ? t({ tr: `Sözleşmeyi ${customerName}'e Sun`, en: `Present the Contract to ${customerName}` })
+                : t({ tr: `${remaining} seçim kaldı`, en: `${remaining} choice(s) left` })}
             </button>
           </>
         )}
@@ -102,7 +129,7 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
                     {t({ tr: `${customerName} şunu istiyor`, en: `${customerName} wants` })}:{" "}
                     <strong>{preferredOption ? resolveText(preferredOption.label) : ""}</strong>
                   </p>
-                  <div className="contract-options">
+                  <div className="contract-seg contract-seg-2">
                     <button
                       className={`contract-option-btn ${concessions[c.id] === true ? "selected" : ""}`}
                       onClick={() => setConcessions((s) => ({ ...s, [c.id]: true }))}
@@ -132,8 +159,8 @@ export default function ContractModal({ clauses, customerName, onFinish }: Contr
             {clauses.map((c) => {
               const matched = selections[c.id] === c.preferredOptionId;
               return (
-                <p key={c.id}>
-                  {matched ? "✅" : "⚠️"} {resolveText(c.title)}:{" "}
+                <p key={c.id} className={`contract-result-row ${matched ? "contract-result-ok" : "contract-result-warn"}`}>
+                  {matched ? <CheckIcon size={12} className="icon-inline" /> : <WarnIcon size={12} className="icon-inline" />} {resolveText(c.title)}:{" "}
                   {matched
                     ? t({ tr: `${customerName} bu maddeyi kabul etti.`, en: `${customerName} accepted this clause.` })
                     : t({

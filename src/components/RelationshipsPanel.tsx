@@ -6,6 +6,7 @@ import { friendCharacters } from "../data/friendCharacters";
 import { resolveText, t } from "../data/language";
 import { stageForBondCount, type RelationshipStage } from "../data/relationshipStages";
 import type { ToneBucket, CompassAxis } from "../types";
+import { HeartIcon } from "./icons";
 
 interface RelationshipsPanelProps {
   bossMood: number;
@@ -55,10 +56,10 @@ export default function RelationshipsPanel({
       <div className="portfolio-row">
         <div className="portfolio-row-info">
           <p className="portfolio-row-location">
-            🎭 {t({ tr: "Baskın ton", en: "Dominant tone" })}: {tone ? toneLabel(tone) : t({ tr: "Henüz belirsiz", en: "Not yet clear" })}
+            {t({ tr: "Baskın ton", en: "Dominant tone" })}: {tone ? toneLabel(tone) : t({ tr: "Henüz belirsiz", en: "Not yet clear" })}
           </p>
           <p className="portfolio-row-location">
-            🧭 {compass ?? t({ tr: "Pusula henüz belirsiz — daha fazla karar vermen gerek.", en: "The compass isn't clear yet — you need to make more decisions." })}
+            {compass ?? t({ tr: "Pusula henüz belirsiz — daha fazla karar vermen gerek.", en: "The compass isn't clear yet — you need to make more decisions." })}
           </p>
         </div>
       </div>
@@ -111,7 +112,7 @@ export default function RelationshipsPanel({
                     tr: `sıradaki evreye ${Math.max(0, nextThreshold - count)} adım`,
                     en: `${Math.max(0, nextThreshold - count)} steps to the next stage`,
                   })}`}
-                {friendFavorAccepted[friend.id] && ` · 🤝 ${t({ tr: "bir iyilik yaptın", en: "you did a favor" })}`}
+                {friendFavorAccepted[friend.id] && ` · ${t({ tr: "bir iyilik yaptın", en: "you did a favor" })}`}
               </p>
             </div>
           </div>
@@ -129,7 +130,9 @@ export default function RelationshipsPanel({
             <div className="portfolio-row-info">
               <p className="portfolio-row-title">{character?.name ?? characterId}</p>
               <p className="relationship-pips">
-                {Array.from({ length: FRIEND_BOND_PIPS }, (_, i) => (i < points ? "❤️" : "🤍")).join(" ")}
+                {Array.from({ length: FRIEND_BOND_PIPS }, (_, i) => (
+                  <HeartIcon key={i} size={12} className={i < points ? "bond-pip-on" : "bond-pip-off"} />
+                ))}
               </p>
             </div>
           </div>

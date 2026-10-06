@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { t } from "../data/language";
+import { KeyIcon, BoxIcon, WalkIcon } from "./icons";
 
 export type MiniGameTier = "fail" | "ok" | "great";
 
@@ -126,11 +127,11 @@ export function KeyFindMiniGame({ onComplete }: MiniGameProps) {
 
   const promptText =
     phase === "watch"
-      ? t({ tr: "🔑 Doğru anahtarı ezberle!", en: "🔑 Memorize the right key!" })
+      ? t({ tr: "Doğru anahtarı ezberle!", en: "Memorize the right key!" })
       : phase === "shuffle"
-        ? t({ tr: "🔀 Karıştırılıyor...", en: "🔀 Shuffling..." })
+        ? t({ tr: "Karıştırılıyor...", en: "Shuffling..." })
         : phase === "pick"
-          ? t({ tr: "🔑 Hangi kutu?", en: "🔑 Which box?" })
+          ? t({ tr: "Hangi kutu?", en: "Which box?" })
           : phase === "between"
             ? t({ tr: "Olmadı, sıradaki deneme...", en: "Missed it, next try..." })
             : sessionResult === "great"
@@ -157,7 +158,7 @@ export function KeyFindMiniGame({ onComplete }: MiniGameProps) {
               disabled={phase !== "pick"}
               aria-label={t({ tr: "kutu", en: "box" })}
             >
-              {showKey ? "🔑" : "📦"}
+              {showKey ? <KeyIcon size={30} className="minigame-key-gold" /> : <BoxIcon size={30} />}
             </button>
           );
         })}
@@ -245,7 +246,7 @@ export function WalkMiniGame({ onComplete }: MiniGameProps) {
     <div className="minigame">
       <AttemptRow statuses={attemptStatus} current={attemptIndex} />
       <p className="minigame-prompt">
-        🚶 {t({ tr: "Hedef:", en: "Target:" })} {target} {t({ tr: "adım", en: "steps" })}
+        <WalkIcon size={14} className="icon-inline" /> {t({ tr: "Hedef:", en: "Target:" })} {target} {t({ tr: "adım", en: "steps" })}
       </p>
       {running && (
         <>

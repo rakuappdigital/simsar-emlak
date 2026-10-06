@@ -8,8 +8,8 @@ interface SkillTreePanelProps {
 }
 
 const branchLabelsByLang: Record<SkillBranch, { tr: string; en: string }> = {
-  "sakin-kafa": { tr: "🧊 Sakin Kafa", en: "🧊 Cool Head" },
-  karizma: { tr: "✨ Karizma", en: "✨ Charisma" },
+  "sakin-kafa": { tr: "Sakin Kafa", en: "Cool Head" },
+  karizma: { tr: "Karizma", en: "Charisma" },
 };
 function branchLabel(branch: SkillBranch): string {
   return t(branchLabelsByLang[branch]);
@@ -53,7 +53,7 @@ export default function SkillTreePanel({ ownedSkillIds, skillXP, onUnlock }: Ski
                   <div className="portfolio-row-meta">
                     <span className="portfolio-row-price">{skill.cost} XP</span>
                     {owned ? (
-                      <span className="portfolio-row-status">✅ {t({ tr: "Açıldı", en: "Unlocked" })}</span>
+                      <span className="portfolio-row-status">{t({ tr: "Açıldı", en: "Unlocked" })}</span>
                     ) : (
                       <button className="pixel-btn small" disabled={!unlockable} onClick={() => onUnlock(skill.id)}>
                         {t({ tr: "Aç", en: "Unlock" })}

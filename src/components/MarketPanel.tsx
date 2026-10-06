@@ -52,7 +52,7 @@ export default function MarketPanel({
     <div className="market-panel">
       {campaignActive && (
         <p className="market-campaign-banner">
-          🎉 {t({ tr: "Bu hafta kampanya var — Enerji İçeceği indirimli!", en: "There's a campaign this week — Energy Drink is discounted!" })}
+          {t({ tr: "Bu hafta kampanya var — Enerji İçeceği indirimli!", en: "There's a campaign this week — Energy Drink is discounted!" })}
         </p>
       )}
       {categoryOrder.map((cat) => {
@@ -120,14 +120,14 @@ export default function MarketPanel({
                     {discounted && !alreadyOwned && (
                       <p className="market-item-discount">
                         {isCampaignItem
-                          ? `🎉 ${t({ tr: "Haftalık kampanya indirimi uygulandı", en: "Weekly campaign discount applied" })}`
-                          : `🏅 ${t({ tr: "Dürüstlük Serisi indirimi uygulandı", en: "Honesty Streak discount applied" })}`}
+                          ? `${t({ tr: "Haftalık kampanya indirimi uygulandı", en: "Weekly campaign discount applied" })}`
+                          : `${t({ tr: "Dürüstlük Serisi indirimi uygulandı", en: "Honesty Streak discount applied" })}`}
                       </p>
                     )}
                   </div>
                   <button className="pixel-btn small" disabled={disabled} onClick={() => setPendingItemId(item.id)}>
                     {alreadyOwned || tierAlready ? (
-                      `${t({ tr: "Alındı", en: "Owned" })} ✓`
+                      `${t({ tr: "Alındı", en: "Owned" })}`
                     ) : discounted ? (
                       <>
                         <span className="market-item-price-original">{formatTL(item.cost)}</span> {formatTL(price)}

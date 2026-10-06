@@ -197,6 +197,12 @@ export interface InboxMessage {
   fromPlayer?: boolean;
   /** 1-based house position this message is associated with, for chronological ordering/flavor. */
   day: number;
+  /**
+   * Okundu mu? Oyuncunun kendi mesajları ve canlı (telefon ekranında) görülen
+   * sohbetler hemen okundu sayılır; diğerleri sohbet açılana kadar okunmamış.
+   * Bu alan yokken kaydedilmiş eski oyunlar yüklenirken okundu kabul edilir.
+   */
+  read?: boolean;
 }
 
 export interface DailyQuestDef {
@@ -389,12 +395,16 @@ export interface SaveGame {
   hardTimesUsed: Record<string, boolean>;
   /** "Kader Anları" — house indices whose one-time, origin-specific narrative beat has already fired. See data/fatefulMoments.ts. */
   firedFatefulMomentIndices: number[];
+  /** Yan görevler (2026-10-06) — yoksa boş durumla açılır, bkz. data/sideQuests.ts normalizeSideQuests. */
+  sideQuests?: import("./data/sideQuests").SideQuestState;
   savedAt: string;
 }
 
 export interface ContractClauseOption {
   id: string;
   label: Localized;
+  /** S7 — segment düğmesinde görünen kısa ad. */
+  short?: Localized;
 }
 
 export interface ContractClause {

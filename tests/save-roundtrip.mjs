@@ -6,6 +6,7 @@
 //
 // Usage: BASE_URL=http://localhost:4173 node tests/save-roundtrip.mjs
 import { chromium } from "playwright";
+import { openEmlahTab } from "./helpers/emlah.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const errors = [];
@@ -90,7 +91,7 @@ assert(restored?.selfReflectionShown === true, "selfReflectionShown survives the
 await page.waitForTimeout(500);
 await page.locator(".wallet-pill-btn").first().click({ timeout: 5000 }).catch(() => {});
 await page.waitForTimeout(300);
-await page.locator(".emlah-tab-btn", { hasText: "Arkadaşlarım" }).first().click({ timeout: 3000 });
+await openEmlahTab(page, "Arkadaşlarım");
 await page.waitForTimeout(250);
 const friendTabText = await page.locator(".emlah-tab-content").innerText();
 assert(friendTabText.includes("Işık Kuyulu Loft"), "Arkadaşlarım tab shows the restored unlocked house");

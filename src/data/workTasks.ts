@@ -38,7 +38,7 @@ export const workTasks: WorkTaskDef[] = [
     choices: [
       { id: "a", text: { tr: "\"Hayalinizdeki ev bir tık uzağınızda!\"", en: "\"Your dream home is just a click away!\"" }, reward: { interest: 10 } },
       { id: "b", text: { tr: "\"Güvenilir hizmet, şeffaf süreç.\"", en: "\"Reliable service, transparent process.\"" }, reward: { suspicion: -6 } },
-      { id: "c", text: { tr: "\"Emlak dünyasında komik bir gün daha 😄\"", en: "\"Another funny day in the real estate world 😄\"" }, reward: { fun: 10 } },
+      { id: "c", text: { tr: "\"Emlak dünyasında komik bir gün daha \"", en: "\"Another funny day in the real estate world \"" }, reward: { fun: 10 } },
     ],
   },
   {

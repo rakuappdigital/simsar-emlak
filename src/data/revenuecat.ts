@@ -1,5 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor";
+import { track } from "./analytics";
 
 /**
  * RevenueCat Public API Key (App Store app) — get this from the RevenueCat
@@ -9,6 +10,11 @@ import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor";
 export const REVENUECAT_API_KEY = "appl_uVsZyMczueBQjNNiklkCqXqPfZL";
 
 let configured = false;
+
+/** "com.rakuappdigital.simsaremlak.full_unlock" → "full_unlock" (ölçüm panosunda kısa görünsün). */
+function shortProductId(productId: string): string {
+  return productId.split(".").pop() ?? productId;
+}
 
 export function isRevenueCatAvailable(): boolean {
   return Capacitor.isNativePlatform() && REVENUECAT_API_KEY.length > 0;
@@ -36,10 +42,15 @@ export async function purchaseByProductId(productId: string): Promise<boolean> {
       return false;
     }
     await Purchases.purchaseStoreProduct({ product });
+    track("purchase", { product: shortProductId(productId), result: "ok" });
     return true;
   } catch (e: any) {
-    if (e?.userCancelled) return false;
+    if (e?.userCancelled) {
+      track("purchase", { product: shortProductId(productId), result: "cancelled" });
+      return false;
+    }
     console.error(`RevenueCat purchase failed for ${productId}:`, e);
+    track("purchase", { product: shortProductId(productId), result: "error" });
     return false;
   }
 }

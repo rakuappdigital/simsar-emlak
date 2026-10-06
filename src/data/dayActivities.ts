@@ -8,7 +8,6 @@ import type { Localized } from "./language";
  */
 export interface DayActivity {
   id: string;
-  icon: string;
   label: Localized;
   description: Localized;
   /** Kartta gösterilen kısa etki etiketi — oyuncu neye enerji harcadığını görsün. */
@@ -19,7 +18,6 @@ export interface DayActivity {
 export const dayActivities: DayActivity[] = [
   {
     id: "research",
-    icon: "🔍",
     label: { tr: "Müşteri Araştırması", en: "Customer Research" },
     description: {
       tr: "Bugünkü müşteriyi önceden araştır — şüphesi biraz daha düşük başlar.",
@@ -30,7 +28,6 @@ export const dayActivities: DayActivity[] = [
   },
   {
     id: "marketing",
-    icon: "📣",
     label: { tr: "Pazarlama", en: "Marketing" },
     description: {
       tr: "Sosyal medyada küçük bir paylaşım yap — Muzaffer Bey'in keyfi biraz artar.",
@@ -41,7 +38,6 @@ export const dayActivities: DayActivity[] = [
   },
   {
     id: "office-work",
-    icon: "🗂️",
     label: { tr: "Ofis İşleri", en: "Office Work" },
     description: {
       tr: "Evrak işlerini hallet — küçük bir ek kazanç.",
@@ -49,6 +45,16 @@ export const dayActivities: DayActivity[] = [
     },
     effect: { tr: "Mini oyun · +₺2.500 / 5.000 / 7.500", en: "Mini-game · +₺2,500 / 5,000 / 7,500" },
     energyCost: 10,
+  },
+  {
+    id: "tea",
+    label: { tr: "Esnafla Çay", en: "Tea with Shopkeepers" },
+    description: {
+      tr: "Mahalle esnafıyla çay iç, Muhtar Cemal'in defterine bak — küçük işler, yerel bilgiler.",
+      en: "Have tea with the local shopkeepers and check Headman Cemal's notebook — small favors, local tips.",
+    },
+    effect: { tr: "Muhtar'ın Defteri", en: "Headman's Notebook" },
+    energyCost: 4,
   },
 ];
 

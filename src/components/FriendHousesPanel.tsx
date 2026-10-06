@@ -2,6 +2,8 @@ import type { HouseResult, HouseScene, SceneOutcome } from "../types";
 import { formatTL } from "../data/economy";
 import { friendCharacterForHouseId } from "../data/friendCharacters";
 import { resolveHouseTitle, resolveHouseLocation, t } from "../data/language";
+import LockedCard from "./LockedCard";
+import { PeopleIcon } from "./icons";
 
 interface FriendHousesPanelProps {
   friendHouses: HouseScene[];
@@ -11,9 +13,9 @@ interface FriendHousesPanelProps {
 }
 
 function outcomeLabel(outcome: SceneOutcome): string {
-  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })} ✅`;
-  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })} 🤔`;
-  return `${t({ tr: "Kaybedildi", en: "Lost" })} ❌`;
+  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })}`;
+  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })}`;
+  return `${t({ tr: "Kaybedildi", en: "Lost" })}`;
 }
 
 export default function FriendHousesPanel({ friendHouses, unlockedIds, friendHouseResults, onOpen }: FriendHousesPanelProps) {
@@ -27,9 +29,14 @@ export default function FriendHousesPanel({ friendHouses, unlockedIds, friendHou
         })}
       </p>
       {visible.length === 0 && (
-        <p className="menu-empty">
-          {t({ tr: "Henüz kabul edilmiş bir arkadaş randevusu yok.", en: "No accepted friend appointments yet." })}
-        </p>
+        <LockedCard
+          icon={<PeopleIcon size={16} />}
+          title={t({ tr: "Henüz arkadaş randevusu yok", en: "No friend appointments yet" })}
+          hint={t({
+            tr: "Bir arkadaşın ev önerdiğinde Telefon'daki mesajdan randevuyu kabul et; ev burada belirir.",
+            en: "When a friend suggests a house, accept the appointment from their message in Phone; it shows up here.",
+          })}
+        />
       )}
       {visible.map((h) => {
         const result = friendHouseResults.find((r) => r.houseId === h.id);
@@ -49,7 +56,7 @@ export default function FriendHousesPanel({ friendHouses, unlockedIds, friendHou
           <div className={`portfolio-row ${statusClass}`} key={h.id}>
             <div className="portfolio-row-info">
               <p className="portfolio-row-title">
-                {resolveHouseTitle(h)} {friend && <span className="friend-tag">🤝 {friend.name}</span>}
+                {resolveHouseTitle(h)} {friend && <span className="friend-tag"> {friend.name}</span>}
               </p>
               <p className="portfolio-row-location">{resolveHouseLocation(h)}</p>
             </div>

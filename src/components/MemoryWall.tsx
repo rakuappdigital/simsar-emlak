@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { Badge, SignificantMemory } from "../types";
 import { MedalIcon } from "./icons";
 import { resolveText } from "../data/language";
+import type { ReactNode } from "react";
+import { ShadesIcon, HandshakeIcon, BrokenHeartIcon } from "./icons";
 
 interface MemoryWallProps {
   badges: string[];
@@ -12,14 +14,14 @@ interface MemoryWallProps {
 interface WallItem {
   id: string;
   label: string;
-  emoji?: string;
+  icon?: ReactNode;
   useMedalIcon?: boolean;
 }
 
-const memoryEmoji: Record<SignificantMemory["kind"], string> = {
-  "kurnaz-satis": "🕶️",
-  "durust-satis": "🤝",
-  "buyuk-kayip": "💔",
+const memoryIcon: Record<SignificantMemory["kind"], ReactNode> = {
+  "kurnaz-satis": <ShadesIcon size={13} />,
+  "durust-satis": <HandshakeIcon size={13} />,
+  "buyuk-kayip": <BrokenHeartIcon size={13} />,
 };
 
 const MAX_WALL_ITEMS = 6;
@@ -41,7 +43,7 @@ export default function MemoryWall({ badges, allBadges, significantMemories }: M
   const memoryItems: WallItem[] = significantMemories.map((m) => ({
     id: `memory-${m.id}`,
     label: m.houseTitle,
-    emoji: memoryEmoji[m.kind],
+    icon: memoryIcon[m.kind],
   }));
   const items = [...badgeItems, ...memoryItems].slice(-MAX_WALL_ITEMS);
 
@@ -56,7 +58,7 @@ export default function MemoryWall({ badges, allBadges, significantMemories }: M
     <div className="memory-wall">
       {items.map((item) => (
         <button key={item.id} className="memory-wall-pin" onClick={() => handlePin(item.label)} aria-label={item.label}>
-          {item.useMedalIcon ? <MedalIcon size={13} /> : <span>{item.emoji}</span>}
+          {item.useMedalIcon ? <MedalIcon size={13} /> : item.icon}
         </button>
       ))}
       {activeLabel && <div className="memory-wall-toast">{activeLabel}</div>}

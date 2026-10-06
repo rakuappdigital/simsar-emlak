@@ -45,7 +45,7 @@ export const meetupActivities: MeetupActivity[] = [
     bonus: { fun: 8 },
     bondGain: 1,
     goodReplies: [
-      { tr: "Kahve güzeldi, uzun uzun sohbet ettik. 😊", en: "The coffee was nice, we chatted for a long time. 😊" },
+      { tr: "Kahve güzeldi, uzun uzun sohbet ettik.", en: "The coffee was nice, we chatted for a long time." },
       { tr: "Keyifli bir molaydı, tekrar yapalım.", en: "It was an enjoyable break, let's do it again." },
     ],
     cantAffordReplies: [
@@ -75,8 +75,8 @@ export const meetupActivities: MeetupActivity[] = [
     bonus: { interest: 10, fun: 14 },
     bondGain: 2,
     goodReplies: [
-      { tr: "O akşamı hiç unutmayacağım. 😉", en: "I will never forget that evening. 😉" },
-      { tr: "Gecenin geri kalanını konuşarak... ve başka şekillerde geçirdik. 😉", en: "We spent the rest of the night talking... and in other ways. 😉" },
+      { tr: "O akşamı hiç unutmayacağım.", en: "I will never forget that evening." },
+      { tr: "Gecenin geri kalanını konuşarak... ve başka şekillerde geçirdik.", en: "We spent the rest of the night talking... and in other ways." },
     ],
     cantAffordReplies: [
       { tr: "O akşam için hiç param yoktu, iptal etmek zorunda kaldım, gerçekten kötü hissettim.", en: "I had zero money for that evening, had to cancel, felt really bad." },

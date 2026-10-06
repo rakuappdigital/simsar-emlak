@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { t } from "../data/language";
+import { MegaphoneIcon, CameraIcon, FolderIcon, CrossIcon, CheckIcon } from "./icons";
 
 /**
  * "Bugünün Aktiviteleri" mini oyunları — enerji aktivitenin giriş ücreti,
@@ -13,8 +14,11 @@ export type ActivityTier = 0 | 1 | 2;
 export interface ActivityMiniGameProps {
   /** Her kademe için oyuncuya gösterilecek ödül metni. */
   rewardLabels: [string, string, string];
-  /** Sonuç ekranına eklenecek ekstra satır (ör. "Unutulmuş dosya bulundu") — kademeye göre App karar verir. */
-  onFinish: (tier: ActivityTier) => string | null;
+  /** Sonuç ekranına eklenecek ekstra satır (ör. "Unutulmuş dosya bulundu") — kademeye göre App karar verir.
+   *  `secret`: oyun içi gizli başarı (B2 "cat", B3 "forgery-firat" / "forgery-former"). */
+  onFinish: (tier: ActivityTier, secret?: string) => string | null;
+  /** B3 — Tapu Masası'na bir kez karışacak sahte imzalı tanıdık belge. */
+  specialSigner?: { name: string; kind: "firat" | "former" } | null;
   onComplete: (tier: ActivityTier) => void;
 }
 
@@ -51,7 +55,7 @@ function ResultPanel({
 }
 
 /* ================================================================ */
-/* 📣 Vitrin Karesi — ilan için 3 fotoğraf                            */
+/* Vitrin Karesi — ilan için 3 fotoğraf                            */
 /* ================================================================ */
 
 const VITRIN_W = 320;
@@ -68,13 +72,115 @@ type RoomItem = { e: string; x: number; y: number; s: number; points: number };
 const VITRIN_FULL = 7;
 const VITRIN_BEST = 13;
 
+
+/** Vitrin Karesi eşyaları — emoji yerine elle çizilmiş piksel sprite'lar (her karakter bir piksel; "." boş). */
+const SPRITE_PALETTE: Record<string, string> = {
+  b: "#6b4a2b", B: "#8a6238", g: "#9fd3ea", G: "#cfeaf6", w: "#f1ead8",
+  l: "#4f9a4a", L: "#78c26b", p: "#b5562f", P: "#d06f43",
+  r: "#a63d5b", R: "#c95577", y: "#e0b13a", Y: "#f3d47a", s: "#5d8fc7", m: "#5fa35a",
+  t: "#c79a5b", T: "#e2bd84", c: "#e98a3a", C: "#f5ad62", k: "#1c1424", W: "#ffffff",
+};
+const SPRITES: Record<string, string[]> = {
+  window: [
+    "bbbbbbbbbbbb",
+    "bGGGGbGGGGGb",
+    "bGgggbgggggb",
+    "bGgggbgggggb",
+    "bGgggbgggggb",
+    "bbbbbbbbbbbb",
+    "bGgggbgggggb",
+    "bGgggbgggggb",
+    "bGgggbgggggb",
+    "bgggggbggggb",
+    "bbbbbbbbbbbb",
+    "BBBBBBBBBBBB",
+  ],
+  plant: [
+    "....L..L....",
+    "...LLlLLL...",
+    "..LlLLlLlL..",
+    ".LLlLlLLlLL.",
+    "..LlLLLlLL..",
+    "...LlLLlL...",
+    "....llll....",
+    "..PPPPPPPP..",
+    "..pPPPPPPp..",
+    "...pPPPPp...",
+    "...pppppp...",
+    "....pppp....",
+  ],
+  sofa: [
+    "..RRRRRRRRRRRR..",
+    ".RrrrrrrrrrrrrR.",
+    ".RrrrrrrrrrrrrR.",
+    "RRRRRRRRRRRRRRRR",
+    "RrrRRRRRRRRRRrrR",
+    "RrrrrrrrrrrrrrrR",
+    "RrrrrrrrrrrrrrrR",
+    "rrrrrrrrrrrrrrrr",
+    "b..............b",
+    "b..............b",
+  ],
+  painting: [
+    "yyyyyyyyyyyy",
+    "yYYYYYYYYYYy",
+    "yYsssssssWYy",
+    "yYsssssssssy",
+    "yYssmmssssYy",
+    "yYsmmmmsmmYy",
+    "yYmmmmmmmmYy",
+    "yYYYYYYYYYYy",
+    "yyyyyyyyyyyy",
+  ],
+  laundry: [
+    "..wRw.sw.R..",
+    ".wwRwswwRRw.",
+    "TTTTTTTTTTTT",
+    "TtTtTtTtTtTT",
+    "TTtTtTtTtTtT",
+    "TtTtTtTtTtTT",
+    ".TtTtTtTtTt.",
+    ".TTTTTTTTTT.",
+    "..tttttttt..",
+  ],
+  cat: [
+    "C.C...........",
+    "CCC...........",
+    "CkCc.........c",
+    "CCCCc.......cc",
+    ".CCCcccccccc..",
+    "..cCCCCCCCCc..",
+    "..cCCCCCCCCc..",
+    "..cc.cc..cc.c.",
+    "..cc.cc..cc...",
+  ],
+};
+
+function drawSprite(ctx: CanvasRenderingContext2D, key: string, cx: number, cy: number, width: number) {
+  const rows = SPRITES[key];
+  if (!rows) return;
+  const cols = rows[0].length;
+  const px = width / cols;
+  const h = rows.length * px;
+  const x0 = Math.round(cx - width / 2);
+  const y0 = Math.round(cy - h / 2);
+  for (let r = 0; r < rows.length; r++) {
+    for (let c = 0; c < cols; c++) {
+      const color = SPRITE_PALETTE[rows[r][c]];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(x0 + c * px, y0 + r * px, Math.ceil(px), Math.ceil(px));
+    }
+  }
+}
+
 function buildRoom(): RoomItem[] {
   return [
-    { e: "🪟", x: 120 + Math.random() * 60, y: 105, s: 60, points: 3 },
-    { e: "🪴", x: 330 + Math.random() * 60, y: 200, s: 46, points: 2 },
-    { e: "🛋️", x: 560 + Math.random() * 60, y: 200, s: 60, points: 2 },
-    { e: "🖼️", x: 760 + Math.random() * 50, y: 105, s: 42, points: 1 },
-    { e: "🧺", x: 240 + Math.random() * 380, y: 222, s: 38, points: -2 },
+    { e: "window", x: 120 + Math.random() * 60, y: 105, s: 60, points: 3 },
+    { e: "plant", x: 330 + Math.random() * 60, y: 200, s: 46, points: 2 },
+    { e: "sofa", x: 560 + Math.random() * 60, y: 200, s: 60, points: 2 },
+    { e: "painting", x: 760 + Math.random() * 50, y: 105, s: 42, points: 1 },
+    { e: "laundry", x: 240 + Math.random() * 380, y: 222, s: 38, points: -2 },
     { e: "crack", x: 180 + Math.random() * 560, y: 135, s: 40, points: -3 },
   ];
 }
@@ -88,6 +194,8 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
   const [result, setResult] = useState<{ tier: ActivityTier; extra: string | null } | null>(null);
   const scoresRef = useRef<number[]>([]);
   const finishedRef = useRef(false);
+  /** B2 — karede yalnızca kedinin olduğu çekim sayısı. */
+  const catOnlyRef = useRef(0);
   // Animasyon durumu her karede değişir — React state yerine ref (gereksiz render yok).
   const sim = useRef({
     items: buildRoom(),
@@ -139,15 +247,13 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
         ctx.lineTo(sx + 16, it.y + 20);
         ctx.stroke();
       } else {
-        ctx.font = `${it.s}px serif`;
-        ctx.fillText(it.e, sx, it.y);
+        drawSprite(ctx, it.e, sx, it.y, it.s);
       }
     }
-    ctx.font = "38px serif";
     ctx.save();
     ctx.translate(toScreen(s.cat.x, cam), 238);
-    ctx.scale(s.cat.dir, 1);
-    ctx.fillText("🐈", 0, 0);
+    ctx.scale(-s.cat.dir, 1);
+    drawSprite(ctx, "cat", 0, 0, 40);
     ctx.restore();
 
     const left = (VITRIN_W - FRAME_W) / 2;
@@ -182,7 +288,7 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
     setScores(padded);
     const total = padded.reduce((a, b) => a + b, 0);
     const tier: ActivityTier = total >= VITRIN_BEST ? 2 : total >= VITRIN_FULL ? 1 : 0;
-    setResult({ tier, extra: onFinish(tier) });
+    setResult({ tier, extra: onFinish(tier, catOnlyRef.current >= 3 ? "cat" : undefined) });
     setPhase("done");
   }
 
@@ -234,8 +340,16 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
     if (phase !== "play" || finishedRef.current) return;
     const s = sim.current;
     let score = 0;
-    for (const it of s.items) if (inFrame(it.x, s.cam)) score += it.points;
-    if (inFrame(s.cat.x, s.cam)) score -= 3;
+    let anyItem = false;
+    for (const it of s.items) {
+      if (inFrame(it.x, s.cam)) {
+        score += it.points;
+        anyItem = true;
+      }
+    }
+    const catIn = inFrame(s.cat.x, s.cam);
+    if (catIn) score -= 3;
+    if (catIn && !anyItem) catOnlyRef.current += 1;
     s.shot += 1;
     setFlash(true);
     setTimeout(() => setFlash(false), 90);
@@ -250,9 +364,9 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
   return (
     <div className="activity-game">
       <div className="activity-game-head">
-        <span className="activity-game-title">📣 {t({ tr: "Vitrin Karesi", en: "Listing Shot" })}</span>
+        <span className="activity-game-title"><MegaphoneIcon size={14} className="icon-inline" /> {t({ tr: "Vitrin Karesi", en: "Listing Shot" })}</span>
         <span className="activity-game-meta">
-          {phase === "play" ? `⏱ ${timeLeft}s · ${total} ${t({ tr: "puan", en: "pts" })}` : ""}
+          {phase === "play" ? `${timeLeft}s · ${total} ${t({ tr: "puan", en: "pts" })}` : ""}
         </span>
       </div>
       <div className="activity-game-stage">
@@ -266,7 +380,7 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
         </div>
         {phase === "play" && (
           <button className="pixel-btn vitrin-snap" onClick={snap}>
-            📸 {t({ tr: "ÇEK", en: "SNAP" })}
+            <CameraIcon size={16} className="icon-inline" /> {t({ tr: "ÇEK", en: "SNAP" })}
           </button>
         )}
         {flash && <div className="vitrin-flash" />}
@@ -305,7 +419,7 @@ export function VitrinKaresiGame({ rewardLabels, onFinish, onComplete }: Activit
 }
 
 /* ================================================================ */
-/* 🗂️ Tapu Masası — kurallara göre onayla / reddet                    */
+/* Tapu Masası — kurallara göre onayla / reddet                    */
 /* ================================================================ */
 
 const TAPU_DURATION = 25;
@@ -323,7 +437,7 @@ const NUMBER_WORDS: Record<number, { tr: string; en: string }> = {
   9: { tr: "dokuz", en: "nine" },
 };
 
-type Flaw = "sig" | "year" | "amount" | "seal";
+type Flaw = "sig" | "year" | "amount" | "seal" | "forged";
 interface TapuDoc {
   key: number;
   name: string;
@@ -368,12 +482,13 @@ function makeTapuDoc(key: number, sealRule: boolean): TapuDoc {
 
 const FLAW_TEXT: Record<Flaw, { tr: string; en: string }> = {
   sig: { tr: "İmza yoktu!", en: "No signature!" },
+  forged: { tr: "İmza sahteydi!", en: "The signature was forged!" },
   year: { tr: "Tarih yanlıştı!", en: "Wrong date!" },
   amount: { tr: "Tutar tutmuyordu!", en: "Amounts didn't match!" },
   seal: { tr: "Mühür yoktu!", en: "No seal!" },
 };
 
-export function TapuMasasiGame({ rewardLabels, onFinish, onComplete }: ActivityMiniGameProps) {
+export function TapuMasasiGame({ rewardLabels, onFinish, onComplete, specialSigner }: ActivityMiniGameProps) {
   const [phase, setPhase] = useState<"intro" | "play" | "done">("intro");
   const [timeLeft, setTimeLeft] = useState(TAPU_DURATION);
   const [doc, setDoc] = useState<TapuDoc | null>(null);
@@ -383,12 +498,20 @@ export function TapuMasasiGame({ rewardLabels, onFinish, onComplete }: ActivityM
   const [toast, setToast] = useState<{ text: string; good: boolean } | null>(null);
   const [result, setResult] = useState<{ tier: ActivityTier; extra: string | null } | null>(null);
   const countRef = useRef(0);
+  const forgeryCaughtRef = useRef(false);
   const scoreRef = useRef({ correct: 0, wrong: 0 });
   const sealRule = countRef.current > SEAL_RULE_AFTER;
 
   function nextDoc() {
     countRef.current += 1;
-    setDoc(makeTapuDoc(countRef.current, countRef.current > SEAL_RULE_AFTER));
+    const fresh = makeTapuDoc(countRef.current, countRef.current > SEAL_RULE_AFTER);
+    // B3 — üçüncü belge: alıcı tanıdık biri, ama imza başkasının baş harfleri. Geri kalan her şey kusursuz.
+    if (specialSigner && countRef.current === 3) {
+      const wrongSig = TAPU_SIGNATURES.find((sg) => sg[0] !== specialSigner.name[0]) ?? TAPU_SIGNATURES[0];
+      setDoc({ ...fresh, name: specialSigner.name, signature: wrongSig, year: 2026, word: fresh.num, sealed: true, flaw: "forged" });
+    } else {
+      setDoc(fresh);
+    }
     setLeaving(null);
   }
 
@@ -403,7 +526,7 @@ export function TapuMasasiGame({ rewardLabels, onFinish, onComplete }: ActivityM
         const { correct: c, wrong: w } = scoreRef.current;
         const net = c - w;
         const tier: ActivityTier = net >= 11 && w <= 1 ? 2 : net >= 6 ? 1 : 0;
-        setResult({ tier, extra: onFinish(tier) });
+        setResult({ tier, extra: onFinish(tier, forgeryCaughtRef.current && specialSigner ? `forgery-${specialSigner.kind}` : undefined) });
         setPhase("done");
       }
     }, 200);
@@ -428,11 +551,12 @@ export function TapuMasasiGame({ rewardLabels, onFinish, onComplete }: ActivityM
 
   function decide(approve: boolean) {
     if (phase !== "play" || !doc || leaving) return;
+    if (doc.flaw === "forged" && !approve) forgeryCaughtRef.current = true;
     const valid = doc.flaw === null;
     if (approve === valid) {
       scoreRef.current.correct += 1;
       setCorrect(scoreRef.current.correct);
-      setToast({ text: t({ tr: "DOĞRU ✓", en: "CORRECT ✓" }), good: true });
+      setToast({ text: t({ tr: "DOĞRU", en: "CORRECT" }), good: true });
     } else {
       scoreRef.current.wrong += 1;
       setWrong(scoreRef.current.wrong);
@@ -443,24 +567,24 @@ export function TapuMasasiGame({ rewardLabels, onFinish, onComplete }: ActivityM
   }
 
   const rules = [
-    t({ tr: "✍️ İmza olmalı", en: "✍️ Must be signed" }),
-    t({ tr: "📅 Tarih 2026 olmalı", en: "📅 Date must be 2026" }),
+    t({ tr: "İmza olmalı", en: "Must be signed" }),
+    t({ tr: "Tarih 2026 olmalı", en: "Date must be 2026" }),
     t({ tr: "₺ Rakam ve yazı aynı olmalı", en: "₺ Figures and words must match" }),
   ];
 
   return (
     <div className="activity-game">
       <div className="activity-game-head">
-        <span className="activity-game-title">🗂️ {t({ tr: "Tapu Masası", en: "Deed Desk" })}</span>
+        <span className="activity-game-title"><FolderIcon size={14} className="icon-inline" /> {t({ tr: "Tapu Masası", en: "Deed Desk" })}</span>
         <span className="activity-game-meta">
-          {phase === "play" ? `⏱ ${timeLeft}s · ${correct} ${t({ tr: "doğru", en: "correct" })}` : ""}
+          {phase === "play" ? `${timeLeft}s · ${correct} ${t({ tr: "doğru", en: "correct" })}` : ""}
         </span>
       </div>
       <div className="activity-game-stage tapu-stage">
         <div className={`tapu-rules ${sealRule ? "tapu-rules-updated" : ""}`}>
           <span className="tapu-rules-title">{t({ tr: "BUGÜNÜN KURALLARI", en: "TODAY'S RULES" })}</span>
           {rules.join(" · ")}
-          {sealRule && <span className="tapu-rule-new"> · {t({ tr: "🔴 YENİ: Mühür olmalı", en: "🔴 NEW: Must be sealed" })}</span>}
+          {sealRule && <span className="tapu-rule-new"> · {t({ tr: "YENİ: Mühür olmalı", en: "NEW: Must be sealed" })}</span>}
         </div>
         {toast && <p className={`tapu-toast ${toast.good ? "tapu-toast-good" : "tapu-toast-bad"}`}>{toast.text}</p>}
         {phase === "play" && doc && (
@@ -500,10 +624,10 @@ export function TapuMasasiGame({ rewardLabels, onFinish, onComplete }: ActivityM
         {phase === "play" && (
           <div className="tapu-choices">
             <button className="tapu-choice tapu-choice-no" onClick={() => decide(false)}>
-              ✖ {t({ tr: "REDDET", en: "REJECT" })}
+              <CrossIcon size={14} className="icon-inline" /> {t({ tr: "REDDET", en: "REJECT" })}
             </button>
             <button className="tapu-choice tapu-choice-yes" onClick={() => decide(true)}>
-              ✔ {t({ tr: "ONAYLA", en: "APPROVE" })}
+              <CheckIcon size={14} className="icon-inline" /> {t({ tr: "ONAYLA", en: "APPROVE" })}
             </button>
           </div>
         )}

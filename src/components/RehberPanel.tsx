@@ -8,9 +8,9 @@ interface RehberPanelProps {
 }
 
 function outcomeLabel(outcome: SceneOutcome): string {
-  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })} ✅`;
-  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })} 🤔`;
-  return `${t({ tr: "Kaybedildi", en: "Lost" })} ❌`;
+  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })}`;
+  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })}`;
+  return `${t({ tr: "Kaybedildi", en: "Lost" })}`;
 }
 
 export default function RehberPanel({ contacts }: RehberPanelProps) {
@@ -61,7 +61,7 @@ export default function RehberPanel({ contacts }: RehberPanelProps) {
               {c.houseTitle} — {c.district}
             </p>
             <p className="rehber-note">"{c.note}"</p>
-            {c.bestLine && <p className="rehber-note rehber-bestline">💬 {c.bestLine}</p>}
+            {c.bestLine && <p className="rehber-note rehber-bestline"> {c.bestLine}</p>}
           </div>
           <div className="portfolio-row-meta">
             <span className="portfolio-row-status">{outcomeLabel(c.outcome)}</span>

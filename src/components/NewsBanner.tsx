@@ -1,5 +1,6 @@
 import type { MarketNews } from "../data/marketNews";
 import { resolveText, t } from "../data/language";
+import { ChartUpIcon, ChartDownIcon } from "./icons";
 
 interface NewsBannerProps {
   news: MarketNews | null;
@@ -11,7 +12,7 @@ export default function NewsBanner({ news }: NewsBannerProps) {
   return (
     <div className={`news-banner news-banner-${news.direction}`}>
       <span className="news-banner-tag">
-        {news.direction === "up" ? "📈" : "📉"} {t({ tr: "EMLAK GÜNDEMİ", en: "REAL ESTATE NEWS" })}
+        {news.direction === "up" ? <ChartUpIcon size={12} className="icon-inline" /> : <ChartDownIcon size={12} className="icon-inline" />} {t({ tr: "EMLAK GÜNDEMİ", en: "REAL ESTATE NEWS" })}
       </span>
       <span className="news-banner-text">{resolveText(news.headline)}</span>
     </div>

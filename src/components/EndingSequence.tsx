@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { t } from "../data/language";
+import GameIcon from "./GameIcon";
 
 export interface EndingSlide {
+  /** GameIcon anahtarı (emoji değil). */
   icon: string;
   eyebrow: string;
   title: string;
@@ -36,7 +38,7 @@ export default function EndingSequence({ slides, onFinish }: EndingSequenceProps
         {t({ tr: "Atla", en: "Skip" })} ›
       </button>
       <div className="ending-sequence-card" key={index}>
-        <span className="ending-sequence-icon">{slide.icon}</span>
+        <span className="ending-sequence-icon"><GameIcon name={slide.icon} size={40} /></span>
         <p className="ending-sequence-eyebrow">{slide.eyebrow}</p>
         <p className="ending-sequence-title">{slide.title}</p>
         {slide.body.map((line, i) => (

@@ -28,7 +28,7 @@ import SkillTreePanel from "./SkillTreePanel";
 import type { ContactEntry } from "../data/contactBook";
 import type { DistrictPin } from "../data/istanbulMap";
 import type { RenovationLevel } from "../data/renovation";
-import { WalletIcon, CartIcon, HouseIcon, StarIcon, MedalIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon, KeyRingIcon } from "./icons";
+import { WalletIcon, CartIcon, HouseIcon, StarIcon, CloseIcon, CalendarIcon, HeartIcon, BriefcaseIcon, CompassIcon, ChalkboardIcon, KeyRingIcon, ChartUpIcon, PeopleIcon, ContactBookIcon, EnvelopeIcon, IdCardIcon } from "./icons";
 
 export type EmlahTab =
   | "market"
@@ -99,22 +99,38 @@ interface EmlahMenuProps {
   ownedSkillIds: string[];
   skillXP: number;
   onUnlockSkill: (skillId: string) => void;
+  /** A1 — haritadaki soru işareti. */
+  keyHintDistrict?: string | null;
 }
 
+type EmlahSection = "carsi" | "isim" | "insanlar" | "ben";
+
 const tabs: { id: EmlahTab; icon: ReactNode; label: { tr: string; en: string } }[] = [
-  { id: "market", icon: <CartIcon size={14} />, label: { tr: "Market", en: "Market" } },
+  { id: "market", icon: <CartIcon size={14} />, label: { tr: "Alışveriş", en: "Shop" } },
   { id: "envanter", icon: <KeyRingIcon size={14} />, label: { tr: "Envanter", en: "Inventory" } },
   { id: "portfoy", icon: <HouseIcon size={14} />, label: { tr: "Portföy", en: "Portfolio" } },
-  { id: "kariyer", icon: <StarIcon size={14} />, label: { tr: "Kariyer", en: "Career" } },
-  { id: "davet", icon: <MedalIcon size={14} />, label: { tr: "Özel Davetler", en: "Special Invites" } },
-  { id: "yatirim", icon: <HouseIcon size={14} />, label: { tr: "Yatırım Evleri", en: "Investment Properties" } },
   { id: "teslimler", icon: <CalendarIcon size={14} />, label: { tr: "Bekleyen Teslimler", en: "Pending Deliveries" } },
+  { id: "yatirim", icon: <ChartUpIcon size={14} />, label: { tr: "Yatırım Evleri", en: "Investment Properties" } },
   { id: "iliskiler", icon: <HeartIcon size={14} />, label: { tr: "İlişkiler", en: "Relationships" } },
-  { id: "arkadaslar", icon: <HouseIcon size={14} />, label: { tr: "Arkadaşlarım", en: "My Friends" } },
-  { id: "rehber", icon: <BriefcaseIcon size={14} />, label: { tr: "Rehber", en: "Contacts" } },
-  { id: "harita", icon: <CompassIcon size={14} />, label: { tr: "Şehir Haritası", en: "City Map" } },
+  { id: "arkadaslar", icon: <PeopleIcon size={14} />, label: { tr: "Arkadaşlarım", en: "My Friends" } },
+  { id: "rehber", icon: <ContactBookIcon size={14} />, label: { tr: "Rehber", en: "Contacts" } },
+  { id: "davet", icon: <EnvelopeIcon size={14} />, label: { tr: "Özel Davetler", en: "Special Invites" } },
+  { id: "kariyer", icon: <StarIcon size={14} />, label: { tr: "Kariyer", en: "Career" } },
   { id: "beceri", icon: <ChalkboardIcon size={14} />, label: { tr: "Beceriler", en: "Skills" } },
+  { id: "harita", icon: <CompassIcon size={14} />, label: { tr: "Şehir Haritası", en: "City Map" } },
 ];
+
+/** G2 — 12 sekme dört bölümde: üstte sabit 4'lü bölüm seçici, altında o bölümün sekmeleri. */
+const sections: { id: EmlahSection; icon: ReactNode; label: { tr: string; en: string }; tabs: EmlahTab[] }[] = [
+  { id: "carsi", icon: <CartIcon size={16} />, label: { tr: "Çarşı", en: "Bazaar" }, tabs: ["market", "envanter"] },
+  { id: "isim", icon: <BriefcaseIcon size={16} />, label: { tr: "İşim", en: "My Work" }, tabs: ["portfoy", "teslimler", "yatirim"] },
+  { id: "insanlar", icon: <PeopleIcon size={16} />, label: { tr: "İnsanlar", en: "People" }, tabs: ["iliskiler", "arkadaslar", "rehber", "davet"] },
+  { id: "ben", icon: <IdCardIcon size={16} />, label: { tr: "Ben", en: "Me" }, tabs: ["kariyer", "beceri", "harita"] },
+];
+
+function sectionOf(tab: EmlahTab): EmlahSection {
+  return sections.find((sec) => sec.tabs.includes(tab))?.id ?? "carsi";
+}
 
 export default function EmlahMenu({
   initialTab,
@@ -171,8 +187,11 @@ export default function EmlahMenu({
   ownedSkillIds,
   skillXP,
   onUnlockSkill,
+  keyHintDistrict = null,
 }: EmlahMenuProps) {
   const [tab, setTab] = useState<EmlahTab>(initialTab);
+  const currentSection = sectionOf(tab);
+  const sectionTabs = tabs.filter((tb) => sections.find((sec) => sec.id === currentSection)!.tabs.includes(tb.id));
 
   return (
     <div className="modal-overlay">
@@ -187,18 +206,36 @@ export default function EmlahMenu({
           </button>
         </div>
 
-        <div className="emlah-tabs">
-          {tabs.map((tabDef) => (
+        <div className="emlah-sections" role="tablist">
+          {sections.map((sec) => (
             <button
-              key={tabDef.id}
-              className={`emlah-tab-btn ${tab === tabDef.id ? "active" : ""}`}
-              onClick={() => setTab(tabDef.id)}
+              key={sec.id}
+              role="tab"
+              aria-selected={currentSection === sec.id}
+              className={`emlah-section-btn ${currentSection === sec.id ? "active" : ""}`}
+              data-tabs={`|${sec.tabs.map((id) => { const d = tabs.find((x) => x.id === id)!; return `${d.label.tr}|${d.label.en}`; }).join("|")}|`}
+              onClick={() => setTab(sec.tabs[0])}
             >
-              {tabDef.icon}
-              <span>{t(tabDef.label)}</span>
+              {sec.icon}
+              <span>{t(sec.label)}</span>
             </button>
           ))}
         </div>
+
+        {sectionTabs.length > 1 && (
+          <div className="emlah-tabs">
+            {sectionTabs.map((tabDef) => (
+              <button
+                key={tabDef.id}
+                className={`emlah-tab-btn ${tab === tabDef.id ? "active" : ""}`}
+                onClick={() => setTab(tabDef.id)}
+              >
+                {tabDef.icon}
+                <span>{t(tabDef.label)}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="emlah-tab-content">
           {tab === "market" && (
@@ -253,6 +290,7 @@ export default function EmlahMenu({
               unlockedIds={unlockedPremiumIds}
               premiumResults={premiumResults}
               onOpen={onOpenPremium}
+              earned={earned}
             />
           )}
           {tab === "yatirim" && (
@@ -268,6 +306,7 @@ export default function EmlahMenu({
               onRenovate={onRenovate}
               contactedCustomers={contactedCustomers}
               onPitchInvestment={onPitchInvestment}
+              earned={earned}
             />
           )}
           {tab === "teslimler" && (
@@ -292,7 +331,7 @@ export default function EmlahMenu({
             />
           )}
           {tab === "rehber" && <RehberPanel contacts={contacts} />}
-          {tab === "harita" && <CityMapPanel pins={districtPins} />}
+          {tab === "harita" && <CityMapPanel pins={districtPins} hintDistrict={keyHintDistrict} />}
           {tab === "beceri" && <SkillTreePanel ownedSkillIds={ownedSkillIds} skillXP={skillXP} onUnlock={onUnlockSkill} />}
         </div>
       </div>

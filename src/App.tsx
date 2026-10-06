@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState, lazy, Suspense, type MouseEvent, type ReactElement, type SVGProps } from "react";
+import { useCallback, useMemo, useEffect, useRef, useState, lazy, Suspense, type MouseEvent, type ReactElement, type SVGProps } from "react";
 import PhoneScreen from "./components/PhoneScreen";
+import ResultCard from "./components/ResultCard";
+import SideStoryModal from "./components/SideStoryModal";
+import { useSideQuests } from "./hooks/useSideQuests";
+import { emptySideQuests, normalizeSideQuests } from "./data/sideQuests";
+import { secretHouseById } from "./data/secretHouses";
+import { isNightHours } from "./data/specialDays";
 import OfficeScene from "./components/OfficeScene";
 import DialogueScene from "./components/DialogueScene";
 import StatsBar from "./components/StatsBar";
@@ -12,10 +18,7 @@ import {
   isFullUnlocked,
   isAdsRemoved,
   purchaseFullUnlock,
-  purchaseRemoveAds,
   purchaseBundleFullJetton30,
-  purchaseBundleFullNoAds,
-  purchaseBundleFullNoAdsJetton30,
   syncPurchasesFromRevenueCat,
 } from "./data/purchases";
 import { showInterstitialAd } from "./data/ads";
@@ -46,6 +49,7 @@ import { getPlaysRemaining, recordPlay, hasPlayedAllMinigames } from "./data/min
 import { initGameCenter, unlockAchievement, ACHIEVEMENT_IDS, submitLeaderboardScore } from "./data/gameCenter";
 import { claimDailyRewardIfEligible } from "./data/dailyReward";
 import { initRevenueCat } from "./data/revenuecat";
+import { waitForTrackingDecision } from "./data/tracking";
 import {
   dayActivities,
   RESEARCH_SUSPICION_DISCOUNT,
@@ -75,7 +79,7 @@ import type { EmlahTab } from "./components/EmlahMenu";
 const EmlahMenu = lazy(() => import("./components/EmlahMenu"));
 const MessagesPanel = lazy(() => import("./components/MessagesPanel"));
 const IslerPanel = lazy(() => import("./components/IslerPanel"));
-import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon, GearIcon, PhoneDeviceIcon, CloseIcon } from "./components/icons";
+import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon, GearIcon, PhoneDeviceIcon, DiskIcon, CoinIcon, IdCardIcon, OfficeIcon, ShopBagIcon, GiftBundleIcon, TrophyIcon, LockIcon, CheckIcon, PhoneCallIcon, HeartIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward, playThinking, playPurchase, playDayAdvance, startMusic, getMusicVolume, startSaleMusic, stopSaleMusic } from "./data/sound";
 import SaleIntroModal from "./components/SaleIntroModal";
 import { houseIntros, defaultIntro, welcomeIntro } from "./data/intro";
@@ -98,9 +102,11 @@ import {
 import { generateShareCard } from "./data/shareCard";
 import { getDifficulty, difficultyMultiplier } from "./data/difficulty";
 import { loadHouseImage } from "./data/houseImages";
-import { logMessages, pruneInbox } from "./data/inbox";
+import { logMessages, pruneInbox, markThreadRead, unreadCountOf, isUnread, isFlavorThread, logFlavorMessage } from "./data/inbox";
+import { pickWhatsAppNotification } from "./data/whatsappNotifications";
+import NotificationBanner, { type BannerData } from "./components/NotificationBanner";
 import { assignCast, resolveCustomerNames, resolvePortrait, poolCharacterById } from "./data/characterPool";
-import { injectCelebrities } from "./data/celebrities";
+import { injectCelebrities, celebrityById } from "./data/celebrities";
 import { countOwnedOfisItems } from "./data/officeImages";
 import { RIVAL_DUEL_CHANCE, RIVAL_DUEL_BONUS_RATE, pickDuelStartMessage, pickDuelWinMessage, pickDuelLoseMessage } from "./data/rivalDuel";
 import { rivalTotalSales } from "./data/rival";
@@ -204,7 +210,6 @@ import { characterImages } from "./data/characterImages";
 import { allHouses } from "./data/houses";
 import { premiumHouses, unlockedPremiumHouseIds, ranksUnlockNewPremium } from "./data/premiumHouses";
 const PremiumHouseScene = lazy(() => import("./components/PremiumHouseScene"));
-import SaleStamp from "./components/SaleStamp";
 const SecretStatsScreen = lazy(() => import("./components/SecretStatsScreen"));
 import { investmentHouses, isInvestmentUnlocked } from "./data/investmentHouses";
 import { marketNews, pickMarketNews } from "./data/marketNews";
@@ -271,13 +276,14 @@ import {
   HARD_TIMES_LOSS_STREAK,
   HARD_TIMES_BOND_BONUS,
 } from "./data/relationshipStages";
-import { loadAllSaves, writeSave, clearSave, firstAvailableSlot } from "./data/save";
+import { loadAllSaves, writeSave, clearSave, firstAvailableSlot, markSavedThreadRead, patchSave } from "./data/save";
 import { pickDailyQuest, checkDailyQuest, applyRecoveryBonus } from "./data/dailyQuest";
 import { generateContract } from "./data/contract";
 import { perks, hasPerk, effectiveCost } from "./data/perks";
 import { tieredShuffle } from "./data/shuffle";
 import { POSTPONE_SUSPICION_PENALTY, DECLINE_BOSS_MOOD_PENALTY, pickDeclineBossLine } from "./data/jobDecisions";
 import { computeEnding } from "./data/endings";
+import { track, setAnalyticsContext } from "./data/analytics";
 import type {
   Badge,
   ChoiceEffects,
@@ -399,8 +405,13 @@ interface PendingHouseEntry {
   dailyQuestParam: DailyQuestDef | null;
 }
 
+/** Kilit ekranı gereklilik işareti — emoji yerine kendi ikonumuz. */
+function ReqMark({ met }: { met: boolean }) {
+  return met ? <CheckIcon size={12} className="icon-inline req-met" /> : <span className="req-box" aria-hidden />;
+}
+
 const outcomeTextByLang: Record<SceneOutcome, { tr: string; en: string }> = {
-  sold: { tr: "Satış tamamlandı! 🎉", en: "Sale complete! 🎉" },
+  sold: { tr: "Satış tamamlandı!", en: "Sale complete!" },
   thinking: { tr: "Müşteri düşünüyor...", en: "Customer is thinking..." },
   lost: { tr: "Satış kaybedildi.", en: "Sale lost." },
 };
@@ -552,6 +563,7 @@ function App() {
     preSettingsStageRef.current = stage;
     setStage("settings");
   }
+  const [questExpanded, setQuestExpanded] = useState(false);
   const [index, setIndex] = useState(0);
   const [houseOrder, setHouseOrder] = useState<number[]>(() => tieredShuffle(allHouses.map((h) => h.tier)));
   const [stats, setStats] = useState<GameStats>({ suspicion: 0, interest: 0, fun: 0, discountPercent: 0 });
@@ -574,6 +586,14 @@ function App() {
   const hasSave = savedGames.some((s) => s !== null);
   const [showEmlahMenu, setShowEmlahMenu] = useState(false);
   const [showMessagesOnly, setShowMessagesOnly] = useState(false);
+  const [messagesInitialThread, setMessagesInitialThread] = useState<string | null>(null);
+  const [activeSecretHouseId, setActiveSecretHouseId] = useState<string | null>(null);
+  const [radioSecret, setRadioSecret] = useState(false);
+  const [sideToast, setSideToast] = useState<string | null>(null);
+  const sideQuestsRef = useRef(emptySideQuests());
+  const [notificationBanner, setNotificationBanner] = useState<BannerData | null>(null);
+  /** S5 — hangi mesajları zaten "gördük" (bildirim tetiklemesin diye); null = bir sonraki gelen kutusunu temel al. */
+  const knownMessageIdsRef = useRef<Set<string> | null>(null);
   const [emlahMenuTab, setEmlahMenuTab] = useState<EmlahTab>("market");
   const [inbox, setInbox] = useState<InboxMessage[]>([]);
   const [castAssignment, setCastAssignment] = useState<Record<string, string[]>>({});
@@ -646,7 +666,6 @@ function App() {
     targetHouse: HouseScene;
     projectedStats: GameStats;
   } | null>(null);
-  const [seenInboxCount, setSeenInboxCount] = useState(0);
   const [ownedInvestmentHouses, setOwnedInvestmentHouses] = useState<OwnedInvestmentHouse[]>([]);
   const [investmentResults, setInvestmentResults] = useState<HouseResult[]>([]);
   const [contactedCustomers, setContactedCustomers] = useState<ContactedCustomer[]>([]);
@@ -679,7 +698,6 @@ function App() {
   // Jetton — prestige.ts ile aynı desen: 3 kayıt slotundan bağımsız, hesap genelinde kalıcı.
   const [jettons, setJettonsState] = useState(getJettons);
   const [fullUnlockedState, setFullUnlockedState] = useState(isFullUnlocked);
-  const [adsRemovedState, setAdsRemovedState] = useState(isAdsRemoved);
   // "Yeni Güne Geç" — keyed by house index so it self-resets the moment the
   // player moves to the next house, no explicit reset call needed anywhere.
   const [dayAdvancedForIndex, setDayAdvancedForIndex] = useState<number | null>(null);
@@ -693,7 +711,8 @@ function App() {
   }, [index]);
   useEffect(() => {
     initRevenueCat().then(() => syncPurchasesFromRevenueCat());
-    initGameCenter();
+    // Game Center girişi kendi penceresini açabiliyor; ATT penceresini yutmasın diye önce izin cevabı beklenir.
+    waitForTrackingDecision().then(() => initGameCenter());
     const dailyAmount = navigator.webdriver ? null : claimDailyRewardIfEligible();
     if (dailyAmount !== null) {
       addJettons(dailyAmount);
@@ -801,6 +820,11 @@ function App() {
   useEffect(() => {
     if (stage === "phone") setShowPhoneOverlay(false);
   }, [stage]);
+  // Ölçüm — her olaya hangi ekranda / kaçıncı evde olunduğu eklenir (app_background'da "nerede bıraktı").
+  useEffect(() => {
+    setAnalyticsContext({ stage, houseNo: index + 1, paid: isFullUnlocked() ? "full" : "free", origin: origin ?? "" });
+    if (stage === "store") track("store_open", { from: storeReturnStageRef.current });
+  }, [stage, index, origin]);
   // Açık aktivite mini oyunu (Vitrin Karesi / Tapu Masası) ve bu oyunda bulunan "unutulmuş dosya"nın sonuç indeksi.
   const [activeActivityGame, setActiveActivityGame] = useState<string | null>(null);
   const forgottenFileRef = useRef<number | null>(null);
@@ -810,6 +834,11 @@ function App() {
   const activeVisitMetaRef = useRef<{ postponed?: boolean; penaltyApplied?: boolean }>({});
   // Mağaza kilit ekranından (jeton yetmeyince) açıldıysa "Geri" oraya döner.
   const storeReturnStageRef = useRef<Stage>("settings");
+  /** Mağaza'yı oyunun içinden (jeton çipi / alt çubuk) açar; geri dönüş bulunduğun ekrana. */
+  function openStoreFromGame() {
+    storeReturnStageRef.current = stage;
+    setStage("store");
+  }
   // Pasif enerji dolumu ev geçişlerinde hesaplanıyordu; enerjisi iş eşiğinin
   // altında ofiste kalan oyuncu ev geçişi yapamadığı için saatlerce beklese de
   // enerji hiç dolmuyordu (kilit). Ofisteyken dakikada bir ve uygulamaya
@@ -885,6 +914,7 @@ function App() {
       const milestone = recordClick();
       if (milestone !== null) {
         setClickMilestoneMsg(milestoneMessage(milestone));
+        sq.album("tiklama");
         triggerHaptic("light");
       }
     }
@@ -965,6 +995,7 @@ function App() {
       firatFullCircleShown: p.firatFullCircleShown ?? firatFullCircleShown,
       hardTimesUsed: p.hardTimesUsed ?? hardTimesUsed,
       firedFatefulMomentIndices: p.firedFatefulMomentIndices ?? firedFatefulMomentIndices,
+      sideQuests: sideQuestsRef.current,
       savedAt: new Date().toISOString(),
     };
     const targetSlot = p.slot ?? activeSlot;
@@ -976,14 +1007,19 @@ function App() {
   function openEmlahMenu(tab: EmlahTab = "market") {
     setEmlahMenuTab(tab);
     setShowEmlahMenu(true);
-    setSeenInboxCount(inbox.length);
   }
 
   /** Messages get their own dedicated, phone-only view (not the full tabbed Emlah menu) — see OfficeScene's Messages button. */
-  function openMessagesOnly() {
+  function openMessagesOnly(threadId: string | null = null) {
+    setMessagesInitialThread(threadId);
     setShowMessagesOnly(true);
-    setSeenInboxCount(inbox.length);
     drainPhoneBattery();
+  }
+
+  /** Bir sohbet açıldığında (veya telefonda canlı görüldüğünde) okundu işaretle — hem state'te hem kayıtta. */
+  function markThreadAsRead(threadId: string) {
+    setInbox((prev) => markThreadRead(prev, threadId));
+    markSavedThreadRead(activeSlot, threadId);
   }
 
   // Telefon şarjı — rolled every time a phone-style screen is opened; see data/battery.ts.
@@ -999,7 +1035,7 @@ function App() {
     if (phoneBattery > BATTERY_LOW_THRESHOLD) return choices;
     return [
       ...choices,
-      { id: LOW_BATTERY_CHOICE_ID, text: t({ tr: "😩 Şarjım bitiyor, kısa keseyim...", en: "😩 My battery's dying, let me keep this short..." }) },
+      { id: LOW_BATTERY_CHOICE_ID, text: t({ tr: "Şarjım bitiyor, kısa keseyim...", en: "My battery's dying, let me keep this short..." }) },
     ];
   }
 
@@ -1378,7 +1414,7 @@ function App() {
         setBonusEarnings(newBonusEarnings);
         loanInbox = logMessages(
           loanInbox, "muzaffer", "Muzaffer Bey",
-          [{ from: "Muzaffer Bey", text: `📅 ${formatGameDate(gameDateForIndex(newIndex))} — ${resolveText(event.headline)}${event.bonusEarnings !== 0 ? ` (${event.bonusEarnings > 0 ? "+" : ""}${formatTL(event.bonusEarnings)})` : ""}` }],
+          [{ from: "Muzaffer Bey", text: `${formatGameDate(gameDateForIndex(newIndex))} — ${resolveText(event.headline)}${event.bonusEarnings !== 0 ? ` (${event.bonusEarnings > 0 ? "+" : ""}${formatTL(event.bonusEarnings)})` : ""}` }],
           newIndex + 1,
         );
         newFiredSeasonalEventWeeks = [...firedSeasonalEventWeeks, weekIdx];
@@ -1440,6 +1476,7 @@ function App() {
       const memory = pickFlashbackMemory(significantMemories);
       if (memory) {
         setActiveFlashback(memory);
+        sq.album("zaman-yolcusu");
         setFlashbackShown(true);
       }
     }
@@ -1664,6 +1701,7 @@ function App() {
     setLastTaskId(undefined);
     setActiveCallback(null);
     const prestigeCompletions = getPrestigeCompletions();
+    track("game_start", { origin: originId, difficulty: getDifficulty(), prestige: prestigeCompletions });
     setBonusEarnings(prestigeStartingBonus(prestigeCompletions));
     setPrestigeTitleThisRun(prestigeTitle(prestigeCompletions));
     setPendingLoan(null);
@@ -1674,7 +1712,7 @@ function App() {
     setTasksCompleted(0);
     setChitchatBonuses(0);
     setPremiumResults([]);
-    setSeenInboxCount(0);
+    sq.setState(emptySideQuests());
     setOwnedInvestmentHouses([]);
     setInvestmentResults([]);
     setContactedCustomers([]);
@@ -1807,7 +1845,7 @@ function App() {
     setTasksCompleted(savedGame.tasksCompleted);
     setChitchatBonuses(savedGame.chitchatBonuses);
     setPremiumResults(savedGame.premiumResults ?? []);
-    setSeenInboxCount(savedGame.inbox.length);
+    sq.setState(normalizeSideQuests(savedGame.sideQuests));
     setOwnedInvestmentHouses(savedGame.ownedInvestmentHouses ?? []);
     setInvestmentResults(savedGame.investmentResults ?? []);
     setContactedCustomers(savedGame.contactedCustomers ?? []);
@@ -1929,6 +1967,17 @@ function App() {
     const newResults = [...results, newResult];
     setResults(newResults);
     setBestLineThisHouse(null);
+    track("house_result", {
+      house: house.id,
+      tier: house.tier,
+      outcome: declined ? "declined" : outcome,
+      suspicion: Math.round(stats.suspicion),
+      interest: Math.round(stats.interest),
+      fun: Math.round(stats.fun),
+      discount: stats.discountPercent,
+      commission: sale?.commission ?? 0,
+      energy,
+    });
 
     // Takip Mesajı zamanlaması — satış anında değil, %15 ihtimalle ileride
     // (en erken 1 gün sonra, bazen 3-8 gün arası) bu müşteriden bir mesaj
@@ -1981,7 +2030,7 @@ function App() {
     // + save-state advance, never touches suspicion/interest/fun/closingBias.
     let newDefeatedRivalIds = defeatedRivalIds;
     const totalSoldCount = newResults.filter((r) => r.outcome === "sold").length;
-    if (totalSoldCount >= activeRival.threshold && !defeatedRivalIds.includes(activeRival.id)) {
+    if (totalSoldCount + sq.rivalHeadStart >= activeRival.threshold && !defeatedRivalIds.includes(activeRival.id)) {
       newDefeatedRivalIds = [...defeatedRivalIds, activeRival.id];
       setDefeatedRivalIds(newDefeatedRivalIds);
       newInbox = logMessages(newInbox, "muzaffer", "Muzaffer Bey", [{ from: "Muzaffer Bey", text: resolveText(activeRival.victoryLine) }], index + 1);
@@ -2004,6 +2053,7 @@ function App() {
         index + 1,
       );
       setMysteryShopperHouseId(null);
+      sq.album("gizli-musteri");
     }
     if (activeEasterEgg?.houseId === house.id) setActiveEasterEgg(null);
     // Patron Memnuniyeti — a heavily discounted sale annoys Muzaffer Bey;
@@ -2061,6 +2111,15 @@ function App() {
       newWeekOutcomes = [...weekOutcomes, weekOutcome];
       setWeekOutcomes(newWeekOutcomes);
       setPendingWeekOutcome(weekOutcome);
+      track("week_end", {
+        week: weekIdx + 1,
+        sales: weekOutcome.salesMade,
+        target: weekOutcome.salesTarget,
+        salesGoal: weekOutcome.salesGoalMet ? 1 : 0,
+        honestyGoal: weekOutcome.honestyGoalMet ? 1 : 0,
+        avgSuspicion: Math.round(weekOutcome.avgSuspicion),
+        bossMood,
+      });
 
       // Patron Memnuniyeti — hitting the week's sales target pleases him too,
       // and at week's end his mood gates a separate small "haftalık zam"
@@ -2109,7 +2168,28 @@ function App() {
     if (newBonusEarnings !== bonusEarnings) setBonusEarnings(newBonusEarnings);
 
     persist({ results: newResults, weekOutcomes: newWeekOutcomes, badges: newBadgesState, index, ownedPerks, spent, consumables, unlockedTiers, houseOrder, inbox: newInbox, castAssignment, dailyQuest, slot: activeSlot, bonusEarnings: newBonusEarnings, pendingLoan, tasksCompleted, chitchatBonuses, premiumResults, pendingInvestment, friendBonds, ownedInvestmentHouses, investmentResults, contactedCustomers: newContactedCustomers, activeNewsId, energy: newEnergy, pendingDeliveries: newPendingDeliveries, pendingCallbacks: newPendingCallbacks, bossMood: newBossMood, firedSeasonalEventWeeks, voiceTally, origin, compassTally, significantMemories: newSignificantMemories, originChoiceCount, selfReflectionShown, unlockedFriendHouseIds, friendHouseResults, energyLastRegenAt, minigameNextAvailableAt, minigamePlaysRemaining, ownedSkillIds, skillXP: newSkillXP, defeatedRivalIds: newDefeatedRivalIds, friendBondCounts, friendBondMilestonesShown, flashbackShown, ...(declined ? { pausedVisit: null } : {}) });
+    sq.onHouseResolved(outcome, stats, house, sale, index, declined);
     setStage("result");
+  }
+
+  /** Gizli evler (A1 yalı, B7 55. ev) — Özel Davet gibi oynanır, sonuç yan görev durumuna yazılır. */
+  function finishSecretHouse(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats) {
+    const id = activeSecretHouseId;
+    const secret = id ? secretHouseById(id) : undefined;
+    setActiveSecretHouseId(null);
+    if (!id || !secret) return;
+    if (outcome === "sold") {
+      const sale = computeSale(secret.askingPrice, finalStats.discountPercent, 0, contractModifier, rankBonus(earned));
+      setBonusEarnings((b) => b + sale.commission);
+      playSale();
+      triggerHaptic("success");
+    } else if (outcome === "lost") playLost();
+    else playThinking();
+    sq.finishSecretHouse(id, outcome);
+    if (id === "emlahin-evi") {
+      setShowEndingSequence(true);
+      setStage("summary");
+    }
   }
 
   function openPremiumHouse(houseId: string) {
@@ -2120,6 +2200,8 @@ function App() {
   function finishPremiumHouse(outcome: SceneOutcome, contractModifier: number, finalStats: GameStats, contractSelections?: Record<string, string>) {
     const premiumHouse = premiumHouses.find((h) => h.id === activePremiumHouseId);
     if (!premiumHouse) return;
+    const premiumCastId = castAssignment[premiumHouse.id]?.[0];
+    if (premiumCastId && celebrityById(premiumCastId)) sq.album("unlu");
     const rawSale =
       outcome === "sold"
         ? computeSale(premiumHouse.askingPrice, finalStats.discountPercent, 0, contractModifier, rankBonus(earned))
@@ -2389,12 +2471,28 @@ function App() {
     setShowEmlahMenu(true);
   }
 
+  function trackGameEnd() {
+    track("game_end", {
+      ending: resolveText(computeEnding(results, earned).title, "tr"), // panoda dil fark etmeksizin tek ad
+      origin,
+      sold: results.filter((r) => r.outcome === "sold").length,
+      earned,
+      bossMood,
+    });
+  }
+
   function proceedAfterResult() {
     if (pendingWeekOutcome) {
       setStage("weekGoal");
       return;
     }
     if (isLastHouse) {
+      trackGameEnd();
+      // B7 — şartları sağlayan oyuncuya gizli 55. ev, finalden hemen önce.
+      if (sq.shouldOfferHome(results, compassTally)) {
+        setActiveSecretHouseId("emlahin-evi");
+        return;
+      }
       setShowEndingSequence(true);
       setStage("summary");
     } else {
@@ -2406,6 +2504,12 @@ function App() {
     setPendingWeekOutcome(null);
     setDailyQuestResult(null);
     if (isLastHouse) {
+      trackGameEnd();
+      // B7 — şartları sağlayan oyuncuya gizli 55. ev, finalden hemen önce.
+      if (sq.shouldOfferHome(results, compassTally)) {
+        setActiveSecretHouseId("emlahin-evi");
+        return;
+      }
       setShowEndingSequence(true);
       setStage("summary");
     } else {
@@ -2438,7 +2542,7 @@ function App() {
     const soldCount = results.filter((r) => r.outcome === "sold").length;
 
     slides.push({
-      icon: "🏁",
+      icon: "trophy",
       eyebrow: t({ tr: "Kariyerinin Sonu", en: "The End of Your Career" }),
       title: rankTitleDisplay(rankTitle(earned)),
       body: [
@@ -2457,7 +2561,7 @@ function App() {
       const bestHouse = [...allHouses, ...premiumHouses, ...investmentHouses, ...friendHouses].find((h) => h.id === best.houseId);
       if (bestHouse) {
         slides.push({
-          icon: "💰",
+          icon: "coin",
           eyebrow: t({ tr: "En İyi Satışın", en: "Your Best Sale" }),
           title: resolveHouseTitle(bestHouse),
           body: [
@@ -2474,7 +2578,7 @@ function App() {
     if (allResultsWithLine.length > 0) {
       const best = allResultsWithLine.reduce((a, b) => ((b.bestLineFun ?? 0) > (a.bestLineFun ?? 0) ? b : a));
       slides.push({
-        icon: "💬",
+        icon: "chat",
         eyebrow: t({ tr: "En Akılda Kalan Anın", en: "Your Most Memorable Moment" }),
         title: `"${best.bestLine}"`,
         body: [],
@@ -2483,7 +2587,7 @@ function App() {
 
     if (badges.length > 0) {
       slides.push({
-        icon: "🏅",
+        icon: "medal",
         eyebrow: t({ tr: "Kazanılan Rozetler", en: "Badges Earned" }),
         title: t({ tr: `${badges.length} rozet`, en: `${badges.length} badges` }),
         body: badges.slice(0, 3).map((id) => (allBadges[id] ? resolveText(allBadges[id].title) : id)),
@@ -2494,17 +2598,19 @@ function App() {
     const compass = compassVerdict(compassTally);
     if (personality || compass) {
       slides.push({
-        icon: "🎭",
+        icon: "smile",
         eyebrow: t({ tr: "Karakterin", en: "Your Character" }),
         title: t({ tr: "Emlah Kimdi?", en: "Who Was Estetan?" }),
         body: [personality, compass].filter((s): s is string => !!s),
       });
     }
 
+    slides.push(...sq.endingSlides());
+
     const ending = computeEnding(results, earned);
     const epilogue = originEndingLine(origin, resolveText(ending.title));
     slides.push({
-      icon: "🎬",
+      icon: "clapper",
       eyebrow: t({ tr: "Son", en: "The End" }),
       title: resolveText(ending.title),
       body: [resolveText(ending.description), epilogue].filter((s): s is string => !!s),
@@ -2520,7 +2626,7 @@ function App() {
     if (completions >= 1) unlockAchievement(ACHIEVEMENT_IDS.prestigeCompleted);
     const nextBonus = prestigeStartingBonus(completions);
     slides.push({
-      icon: "♾️",
+      icon: "star",
       eyebrow: t({ tr: "Bu Hikaye Burada Bitse De", en: "Even Though This Story Ends Here" }),
       title: prestigeTitle(completions) ?? t({ tr: "Efsane", en: "Legend" }),
       body: [
@@ -2538,7 +2644,7 @@ function App() {
     });
 
     slides.push({
-      icon: "🚀",
+      icon: "spark",
       eyebrow: t({ tr: "Hikaye Burada Bitmiyor", en: "The Story Doesn't End Here" }),
       title: t({ tr: "Odd Estate Gelişmeye Devam Ediyor", en: "Odd Estate Keeps Growing" }),
       body: [
@@ -2675,16 +2781,8 @@ function App() {
     if (ok) {
       setFullUnlockedState(true);
       playPurchase();
-      if (isAdsRemoved()) unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
-    }
-  }
-
-  async function handleBuyRemoveAds() {
-    const ok = await purchaseRemoveAds();
-    if (ok) {
-      setAdsRemovedState(true);
-      playPurchase();
-      if (isFullUnlocked()) unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
+      // Tam sürüm artık geçiş reklamlarını da kaldırıyor — "Tam Destek" tek alımla açılır.
+      unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
     }
   }
 
@@ -2694,26 +2792,6 @@ function App() {
       setFullUnlockedState(true);
       setJettonsState(getJettons());
       playPurchase();
-    }
-  }
-
-  async function handleBuyBundleFullNoAds() {
-    const ok = await purchaseBundleFullNoAds();
-    if (ok) {
-      setFullUnlockedState(true);
-      setAdsRemovedState(true);
-      playPurchase();
-      unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
-    }
-  }
-
-  async function handleBuyBundleFullNoAdsJetton30() {
-    const ok = await purchaseBundleFullNoAdsJetton30();
-    if (ok) {
-      setFullUnlockedState(true);
-      setAdsRemovedState(true);
-      setJettonsState(getJettons());
-      playPurchase();
       unlockAchievement(ACHIEVEMENT_IDS.fullSupport);
     }
   }
@@ -2721,7 +2799,6 @@ function App() {
   async function handleRestorePurchases() {
     await syncPurchasesFromRevenueCat();
     setFullUnlockedState(isFullUnlocked());
-    setAdsRemovedState(isAdsRemoved());
   }
 
   async function handleAdvanceDay() {
@@ -2770,6 +2847,8 @@ function App() {
       return;
     }
     applyDayActivity(activityId, 1);
+    // A3 — Esnafla Çay: Muhtar Cemal'in defteri.
+    if (activityId === "tea") sq.openMuhtar(true);
   }
 
   /** Tapu Masası mükemmel bittiğinde: şansla kaçmış bir müşteriye tekrar ulaşma hakkı (geri arama bayrağı sıfırlanır). */
@@ -2785,8 +2864,8 @@ function App() {
     forgottenFileRef.current = i;
     const name = resolveCustomerNames(h, castAssignment)[0] ?? resolveHouseTitle(h);
     return t({
-      tr: `📁 Unutulmuş dosya! ${name} ile tekrar görüşme hakkın açıldı (Mesajlar).`,
-      en: `📁 Forgotten file! You can reach out to ${name} again (Messages).`,
+      tr: `Unutulmuş dosya! ${name} ile tekrar görüşme hakkın açıldı (Mesajlar).`,
+      en: `Forgotten file! You can reach out to ${name} again (Messages).`,
     });
   }
 
@@ -3331,6 +3410,7 @@ function App() {
       const egg = pickEasterEgg(lastEasterEggId);
       setLastEasterEggId(egg.id);
       setActiveEasterEgg({ houseId: house.id, egg });
+      sq.onEasterEggShown(egg.id);
       setEasterEggsSeenCount((c) => c + 1);
       triggerHaptic("light");
     } else if (!realWorldFlavorShownRef.current && Math.random() < REAL_WORLD_FLAVOR_CHANCE) {
@@ -3503,7 +3583,7 @@ function App() {
       newBonusEarnings = bonusEarnings + amount;
       setBonusEarnings(newBonusEarnings);
       bulkDealReaction = big
-        ? t({ tr: `Anlaşma büyük çıktı, payınız: +${formatTL(amount)} 🎉`, en: `The deal came in big, your share: +${formatTL(amount)} 🎉` })
+        ? t({ tr: `Anlaşma büyük çıktı, payınız: +${formatTL(amount)}`, en: `The deal came in big, your share: +${formatTL(amount)}` })
         : t({
             tr: `Anlaşma beklediğimizden küçük oldu ama yine de bir pay çıktı: +${formatTL(amount)}`,
             en: `The deal came in smaller than expected, but you still got a share: +${formatTL(amount)}`,
@@ -3709,7 +3789,114 @@ function App() {
     results.length >= HARD_TIMES_LOSS_STREAK &&
     results.slice(-HARD_TIMES_LOSS_STREAK).every((r) => r.outcome === "lost" && !r.declined);
   const emlahStruggling = bossMood < HARD_TIMES_BOSS_MOOD_THRESHOLD || recentLossStreak;
-  const unreadCount = inbox.slice(seenInboxCount).filter((m) => !m.fromPlayer).length;
+  // ---------------- Yan görevler & easter egg paketi (hooks/useSideQuests.ts) ----------------
+  const sq = useSideQuests({
+    stage,
+    index,
+    houseOrder,
+    allHouses,
+    castAssignment,
+    origin,
+    setInbox,
+    setBonusEarnings,
+    setBossMood,
+    setStats,
+    setEnergy,
+    energy,
+    awardBadge: (id) => {
+      const badge = allBadges[id];
+      if (!badge) return;
+      setBadges((prev) => (prev.includes(id) ? prev : [...prev, id]));
+      setBadgeCelebration([badge]);
+    },
+    grantJettons: (amount) => {
+      addJettons(amount);
+      setJettonsState(getJettons());
+    },
+    openSecretHouse: (id) => setActiveSecretHouseId(id),
+    showToast: (text) => setSideToast(text),
+  });
+  sideQuestsRef.current = sq.state;
+  // Yan görev durumu değişince kayda sessizce yaz — persist() bir sonraki kayıtta da taşır.
+  useEffect(() => {
+    if (stage === "menu" || stage === "saved" || stage === "setup" || stage === "origin") return;
+    patchSave(activeSlot, { sideQuests: sq.state });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sq.state]);
+  useEffect(() => {
+    if (!sideToast) return;
+    const timer = setTimeout(() => setSideToast(null), 3200);
+    return () => clearTimeout(timer);
+  }, [sideToast]);
+  useEffect(() => {
+    if (!cityPulseMsg) setRadioSecret(false);
+  }, [cityPulseMsg]);
+  // Ziyaret başına sabit — her render'da yeniden karıştırılmasın (DialogueScene memo'su nodeId'ye bağlı).
+  const sideDialogue = useMemo(
+    () => (house ? sq.dialogueFor(house, index) : { choices: [] }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [house?.id, index, sq.state.lastTick],
+  );
+  // B3 — Tapu Masası her açıldığında bir kez zar atılır.
+  const tapuSigner = useMemo(
+    () => (activeActivityGame === "office-work" ? sq.rollTapuSigner(contactedCustomers.map((c) => c.name).filter(Boolean)) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeActivityGame],
+  );
+
+  const unreadCount = unreadCountOf(inbox);
+  /** G7 — telefon sahnelerinde oyunun üst barı gizlenir; telefon tüm ekranı kullanır. */
+  const phoneSceneActive = (stage === "phone" && showPhoneOverlay) || stage === "callback" || stage === "chitchat";
+  /** Ofis ekranı — alt çubuk (S1) yalnızca burada görünür; ev turunda sahne bölünmez. */
+  const inOffice = stage === "phone" && !!intro && !showPhoneOverlay;
+
+  // Telefon ekranında canlı akan sohbet zaten görülmüş sayılır — gelen
+  // kutusunda "okunmamış" diye ikinci kez bağırmasın.
+  const liveThreadId: string | null =
+    stage === "phone" && intro && showPhoneOverlay
+      ? "muzaffer"
+      : stage === "callback" && activeCallback
+        ? (results[activeCallback.resultIndex]?.houseId ?? null)
+        : stage === "chitchat" && activeChitchat
+          ? "muzaffer"
+          : stage === "chitchat" && activeFriendChat
+            ? `friend-${activeFriendChat.set.contactName.toLowerCase()}`
+            : stage === "chitchat" && activeMeetup
+              ? `meetup-${activeMeetup.characterId}`
+              : null;
+  useEffect(() => {
+    if (liveThreadId) setInbox((prev) => markThreadRead(prev, liveThreadId));
+  }, [liveThreadId, inbox]);
+
+  // S5 — yeni gelen gerçek mesaj için bildirim. Ana menü/kayıt ekranlarında
+  // ya da bir kayıt yüklenirken (toplu değişim) temel küme yeniden kurulur,
+  // böylece eski mesajlar bildirim olarak patlamaz.
+  const liveThreadIdRef = useRef<string | null>(null);
+  liveThreadIdRef.current = liveThreadId;
+  useEffect(() => {
+    const known = knownMessageIdsRef.current;
+    const inGame = stage !== "menu" && stage !== "saved" && stage !== "setup" && stage !== "origin";
+    if (known === null || !inGame) {
+      knownMessageIdsRef.current = new Set(inbox.map((m) => m.id));
+      return;
+    }
+    const fresh = inbox.filter((m) => !known.has(m.id));
+    for (const m of fresh) known.add(m.id);
+    if (fresh.length === 0 || fresh.length > 4) return;
+    const candidate = [...fresh]
+      .reverse()
+      .find((m) => isUnread(m) && !isFlavorThread(m.threadId) && m.threadId !== liveThreadIdRef.current);
+    if (!candidate) return;
+    setNotificationBanner({
+      key: candidate.id,
+      threadId: candidate.threadId,
+      name: candidate.contactName,
+      text: candidate.text,
+      avatarSrc: contactAvatar(candidate.contactName, allHouses.some((h) => h.id === candidate.threadId) ? candidate.threadId : undefined, castAssignment),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inbox, stage]);
+  const dismissBanner = useCallback(() => setNotificationBanner(null), []);
 
   function handleRootClick(e: MouseEvent<HTMLDivElement>) {
     const target = (e.target as HTMLElement).closest(
@@ -3781,33 +3968,54 @@ function App() {
   }
 
   return (
-    <div className="game-root" onClick={handleRootClick}>
+    <div className={`game-root ${inOffice ? "game-root-with-nav" : ""}`} onClick={handleRootClick}>
       <Suspense fallback={null}>
-      {marketVisible && (
-        <header className="game-header">
-          <h1>Odd Estate</h1>
-          <span className="subtitle">
-            {t({ tr: "Emlah'ın günü", en: "Estetan's day" })} — {t({ tr: "Ev", en: "House" })} {index + 1}/{allHouses.length} ·{" "}
-            {rankTitleDisplay(rankTitle(earned))}
-          </span>
-          {dailyQuest && (
-            <span className="quest-banner" title={resolveText(dailyQuest.description)}>
-              🎯 {resolveText(dailyQuest.title)}
+      {marketVisible && !phoneSceneActive && (
+        // S2 — tek satırlık üst bar: konum solda, bakiye/jeton/ayarlar sağda.
+        // Bakiye yalnızca bilgi; jeton Mağaza'yı, dişli Ayarlar'ı açar. Emlah
+        // menüsü ofisteyken alt çubukta, diğer ekranlarda buradaki düğmede.
+        <header className="topbar">
+          <div className="topbar-row">
+            <span className="topbar-loc">
+              <strong>
+                {t({ tr: "Ev", en: "House" })} {(pendingHouseEntry ? pendingHouseEntry.newIndex : index) + 1}/{allHouses.length}
+              </strong>
+              <span className="topbar-rank">{rankTitleDisplay(rankTitle(earned))}</span>
             </span>
-          )}
-          <div className="header-actions">
-            <button className="wallet-pill wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
-              <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)} · {t({ tr: "Emlah", en: "Estetan" })}
-              {unreadCount > 0 && (
-                <span className="unread-dot" key={unreadCount}>
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
+            <span
+              className={`topbar-save ${showSavedToast ? "topbar-save-on" : ""}`}
+              role="status"
+              aria-label={showSavedToast ? t({ tr: "Kaydedildi", en: "Saved" }) : undefined}
+            >
+              <DiskIcon size={12} />
+            </span>
+            <span className="topbar-chip" title={t({ tr: "Bakiye", en: "Balance" })}>
+              <WalletIcon size={12} className="icon-inline" /> {formatTL(balance)}
+            </span>
+            <button className="topbar-chip topbar-chip-btn jetton-pill" onClick={openStoreFromGame} aria-label={t({ tr: "Jeton — Mağaza", en: "Jetton — Store" })}>
+              <CoinIcon size={12} className="icon-inline" /> {jettons}
             </button>
-            <button className="wallet-pill wallet-pill-btn jetton-pill" onClick={openSettings}>
-              <GearIcon size={12} className="icon-inline" /> {jettons}
+            {!inOffice && unreadCount > 0 && (
+              <span className="topbar-unread" key={unreadCount} title={t({ tr: "Okunmamış mesajlar — ofiste Telefon'dan oku", en: "Unread messages — read them from Phone in the office" })}>
+                <PhoneDeviceIcon size={12} className="icon-inline" /> {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+            {!inOffice && (
+              <button className="topbar-icon wallet-pill-btn" onClick={() => openEmlahMenu("market")} aria-label={t({ tr: "Emlah menüsü", en: "Estetan menu" })}>
+                <IdCardIcon size={16} />
+              </button>
+            )}
+            <button className="topbar-icon topbar-settings" onClick={openSettings} aria-label={t({ tr: "Ayarlar", en: "Settings" })}>
+              <GearIcon size={16} />
             </button>
           </div>
+          {dailyQuest && (
+            <button className="topbar-quest" onClick={() => setQuestExpanded((v) => !v)} aria-expanded={questExpanded}>
+              <span className="topbar-quest-label">{t({ tr: "Günün görevi", en: "Daily quest" })}</span>
+              <span className="topbar-quest-title">{resolveText(dailyQuest.title)}</span>
+              {questExpanded && <span className="topbar-quest-desc">{resolveText(dailyQuest.description)}</span>}
+            </button>
+          )}
         </header>
       )}
 
@@ -3837,12 +4045,12 @@ function App() {
             <p className="rankup-title">{rankUpTitle ? rankTitleDisplay(rankUpTitle) : rankUpTitle}</p>
             {rankUpUnlockedInvites && (
               <p className="rankup-invite-note">
-                🎁 {t({ tr: "Ününüz yayılıyor — yeni özel davetler açıldı!", en: "Your reputation is spreading — new special invites unlocked!" })}
+                {t({ tr: "Ününüz yayılıyor — yeni özel davetler açıldı!", en: "Your reputation is spreading — new special invites unlocked!" })}
               </p>
             )}
             {rankUpSkillBonus && (
               <p className="rankup-invite-note">
-                🧠 +{rankUpSkillBonus} {t({ tr: "Deneyim Puanı kazandın!", en: "Experience Points earned!" })}
+                +{rankUpSkillBonus} {t({ tr: "Deneyim Puanı kazandın!", en: "Experience Points earned!" })}
               </p>
             )}
           </div>
@@ -3852,14 +4060,14 @@ function App() {
       {starterPromoPopup && (
         <div className="rankup-overlay" onClick={() => setStarterPromoPopup(false)}>
           <div className="rankup-card">
-            <span className="rankup-label">🎁</span>
+            <span className="rankup-label"><GiftBundleIcon size={32} /></span>
             <p className="rankup-title">
               {language === "en" ? "Welcome Offer" : "Karşılama Teklifi"}
             </p>
             <p className="menu-empty">
               {language === "en"
-                ? "Check out the Starter Bundles in Settings — the best value way to unlock the full game."
-                : "Ayarlar'daki Başlangıç Paketlerine göz at — oyunu tam açmanın en avantajlı yolu."}
+                ? "Check out the Starter Bundle in the Store — the best value way to unlock the full game, with no interstitial ads."
+                : "Mağaza'daki Başlangıç Paketine göz at — oyunu tam açmanın ve geçiş reklamlarından kurtulmanın en avantajlı yolu."}
             </p>
             <button
               className="pixel-btn small"
@@ -3877,7 +4085,7 @@ function App() {
       {dailyRewardPopup !== null && (
         <div className="rankup-overlay" onClick={() => setDailyRewardPopup(null)}>
           <div className="rankup-card">
-            <span className="rankup-label">🪙</span>
+            <span className="rankup-label"><CoinIcon size={32} /></span>
             <p className="rankup-title">
               {language === "en" ? "Daily Login Reward" : "Günlük Giriş Ödülü"}
             </p>
@@ -3943,9 +4151,39 @@ function App() {
         </div>
       )}
 
-      {showSavedToast && <div className="saved-toast">Kaydedildi ✓</div>}
 
-      <RadioTicker text={cityPulseMsg} />
+      <RadioTicker
+        text={cityPulseMsg}
+        tappable={inOffice}
+        secret={radioSecret}
+        onTap={() => {
+          const secret = sq.onRadioTap();
+          if (secret) {
+            setRadioSecret(true);
+            setCityPulseMsg(secret);
+          }
+        }}
+      />
+
+      {sq.story && <SideStoryModal title={sq.story.title} lines={sq.story.lines} closeLabel={sq.story.closeLabel} onClose={sq.closeStory} />}
+
+      {sideToast && (
+        <div className="social-toast click-milestone-toast">
+          <span className="social-toast-comment">{sideToast}</span>
+        </div>
+      )}
+
+      {notificationBanner && (
+        <NotificationBanner
+          banner={notificationBanner}
+          onDone={dismissBanner}
+          onTap={() => {
+            const target = notificationBanner.threadId;
+            setNotificationBanner(null);
+            if (inOffice) openMessagesOnly(target);
+          }}
+        />
+      )}
 
       {showEnergyBreak && (
         <EnergyBreakScreen
@@ -3960,7 +4198,7 @@ function App() {
 
       {socialReaction && (
         <div className="social-toast">
-          <span className="social-toast-likes">❤️ {socialReaction.likes}</span>
+          <span className="social-toast-likes"><HeartIcon size={12} className="icon-inline" /> {socialReaction.likes}</span>
           <span className="social-toast-comment">{socialReaction.comment}</span>
           <span className="social-toast-commenter">— {socialReaction.commenter}</span>
         </div>
@@ -3968,7 +4206,7 @@ function App() {
 
       {clickMilestoneMsg && (
         <div className="social-toast click-milestone-toast">
-          <span className="social-toast-comment">👀 {clickMilestoneMsg}</span>
+          <span className="social-toast-comment">{clickMilestoneMsg}</span>
         </div>
       )}
 
@@ -4038,33 +4276,37 @@ function App() {
           ownedSkillIds={ownedSkillIds}
           skillXP={skillXP}
           onUnlockSkill={unlockSkill}
+          keyHintDistrict={sq.keyMapHint}
         />
       )}
 
       {showMessagesOnly && (
-        <div className="modal-overlay" onClick={() => setShowMessagesOnly(false)}>
-          <div className="market-modal messages-only-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="market-header">
-              <PhoneDeviceIcon size={16} className="icon-inline" />
-              <h2 className="market-title">{t({ tr: "Mesajlar", en: "Messages" })}</h2>
-              <button className="market-close" onClick={() => setShowMessagesOnly(false)} aria-label={t({ tr: "Kapat", en: "Close" })}>
-                <CloseIcon size={12} />
-              </button>
+        <div className="modal-overlay msg-overlay" onClick={() => setShowMessagesOnly(false)}>
+          <div className="msg-phone" onClick={(e) => e.stopPropagation()}>
+            <div className="msg-phone-statusbar">
+              <span>{gameTimeForIndex(index)}</span>
+              <span className="msg-phone-notch" aria-hidden />
+              <span>{phoneBattery}%</span>
             </div>
-            <div className="emlah-tab-content">
-              <MessagesPanel
-                inbox={inbox}
-                results={results}
-                onRetry={retryFromInbox}
-                onFollowUp={followUpThinking}
-                pendingFriendFavors={pendingFriendFavors}
-                onFriendFavor={resolveFriendFavor}
-                friendBondCounts={friendBondCounts}
-                hardTimesUsed={hardTimesUsed}
-                emlahStruggling={emlahStruggling}
-                onAskForHelp={resolveHardTimesAsk}
-              />
-            </div>
+            <MessagesPanel
+              inbox={inbox}
+              results={results}
+              onRetry={retryFromInbox}
+              onFollowUp={followUpThinking}
+              pendingFriendFavors={pendingFriendFavors}
+              onFriendFavor={resolveFriendFavor}
+              friendBondCounts={friendBondCounts}
+              hardTimesUsed={hardTimesUsed}
+              emlahStruggling={emlahStruggling}
+              onAskForHelp={resolveHardTimesAsk}
+              onMarkRead={markThreadAsRead}
+              avatarFor={(threadId, name) =>
+                contactAvatar(name, allHouses.some((h) => h.id === threadId) ? threadId : undefined, castAssignment)
+              }
+              onClose={() => setShowMessagesOnly(false)}
+              initialThreadId={messagesInitialThread}
+            />
+            <div className="phone-home-indicator" />
           </div>
         </div>
       )}
@@ -4080,6 +4322,23 @@ function App() {
               results={results}
               allHouses={allHouses}
               onFinish={finishPremiumHouse}
+              energy={energy}
+            />
+          </div>
+        </div>
+      )}
+
+      {activeSecretHouseId && secretHouseById(activeSecretHouseId) && (
+        <div className="premium-overlay">
+          <div className="premium-overlay-inner">
+            <PremiumHouseScene
+              house={secretHouseById(activeSecretHouseId)!}
+              ownedPerks={ownedPerks}
+              consumables={consumables}
+              castAssignment={castAssignment}
+              results={results}
+              allHouses={allHouses}
+              onFinish={finishSecretHouse}
               energy={energy}
             />
           </div>
@@ -4165,13 +4424,9 @@ function App() {
           language={language}
           jettons={jettons}
           fullUnlocked={fullUnlockedState}
-          adsRemoved={adsRemovedState}
           onBuyJetton={handleBuyJettonPackage}
           onBuyFullVersion={handleBuyFullVersionFromStore}
-          onBuyRemoveAds={handleBuyRemoveAds}
           onBuyBundleFullJetton30={handleBuyBundleFullJetton30}
-          onBuyBundleFullNoAds={handleBuyBundleFullNoAds}
-          onBuyBundleFullNoAdsJetton30={handleBuyBundleFullNoAdsJetton30}
           onRestorePurchases={handleRestorePurchases}
           onBack={() => {
             const back = storeReturnStageRef.current;
@@ -4192,7 +4447,7 @@ function App() {
         return (
           <div className="result-screen locked-preview">
             <p className="locked-preview-tag">
-              🔒 Tier {house.tier} — {t({ tr: "henüz erişimin yok", en: "you don't have access yet" })}
+              <LockIcon size={14} className="icon-inline" /> Tier {house.tier} — {t({ tr: "henüz erişimin yok", en: "you don't have access yet" })}
             </p>
             <p className="locked-preview-title">{resolveHouseTitle(house)}</p>
             <p className="locked-preview-location">{resolveHouseLocation(house)}</p>
@@ -4202,26 +4457,26 @@ function App() {
               <ul className="locked-requirements">
                 {tierPerk.requiresSoldCount !== undefined && (
                   <li className={soldCount >= tierPerk.requiresSoldCount ? "met" : ""}>
-                    {soldCount >= tierPerk.requiresSoldCount ? "✅" : "⬜"} {t({ tr: "Satış", en: "Sales" })}: {soldCount}/{tierPerk.requiresSoldCount}
+                    <ReqMark met={soldCount >= tierPerk.requiresSoldCount} /> {t({ tr: "Satış", en: "Sales" })}: {soldCount}/{tierPerk.requiresSoldCount}
                   </li>
                 )}
                 {tierPerk.requiresOfisItemCount !== undefined && (
                   <li className={ofisCount >= tierPerk.requiresOfisItemCount ? "met" : ""}>
-                    {ofisCount >= tierPerk.requiresOfisItemCount ? "✅" : "⬜"} {t({ tr: "Ofis eşyası", en: "Office items" })}: {ofisCount}/{tierPerk.requiresOfisItemCount}
+                    <ReqMark met={ofisCount >= tierPerk.requiresOfisItemCount} /> {t({ tr: "Ofis eşyası", en: "Office items" })}: {ofisCount}/{tierPerk.requiresOfisItemCount}
                   </li>
                 )}
                 <li className={balance >= tierPrice ? "met" : ""}>
-                  {balance >= tierPrice ? "✅" : "⬜"} {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)} / {formatTL(tierPrice)}
+                  <ReqMark met={balance >= tierPrice} /> {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)} / {formatTL(tierPrice)}
                 </li>
               </ul>
             )}
 
             <button className="pixel-btn" onClick={() => openEmlahMenu("market")}>
-              {t({ tr: "Marketi Aç", en: "Open Market" })}
+              {t({ tr: "Çarşıyı Aç", en: "Open the Bazaar" })}
             </button>
 
             <div className="locked-section">
-              <p className="locked-section-title">{t({ tr: "📞 Kaçan Müşterileri Tekrar Ara", en: "📞 Call Back Missed Customers" })}</p>
+              <p className="locked-section-title"><PhoneCallIcon size={12} className="icon-inline" /> {t({ tr: "Kaçan Müşterileri Tekrar Ara", en: "Call Back Missed Customers" })}</p>
               {callbackCandidates.length === 0 ? (
                 <p className="menu-empty">
                   {t({ tr: "Tekrar aranabilecek müşteri kalmadı.", en: "There are no customers left to call back." })}
@@ -4252,7 +4507,7 @@ function App() {
                 })}
               </p>
               <button className="pixel-btn locked-skip-btn" onClick={skipTierWithJettons}>
-                🪙 {t({ tr: `${TIER_SKIP_JETTON_COST} Jetton ile Geç`, en: `Skip for ${TIER_SKIP_JETTON_COST} Jettons` })}
+                <CoinIcon size={12} className="icon-inline" /> {t({ tr: `${TIER_SKIP_JETTON_COST} Jetton ile Geç`, en: `Skip for ${TIER_SKIP_JETTON_COST} Jettons` })}
               </button>
               <p className="locked-skip-balance">
                 {t({ tr: `Bakiyen: ${jettons} Jetton`, en: `Your balance: ${jettons} Jettons` })}
@@ -4295,12 +4550,39 @@ function App() {
         />
       )}
 
+      {inOffice && (
+        // S1 — ofisin alt sekme çubuğu. DOM'da OfficeScene'den ÖNCE durur (görsel
+        // olarak sabit/altta): böylece ".office-messages-btn" ilk eşleşme
+        // Telefon (Mesajlar), son eşleşme ofisteki İşler düğmesi olarak kalır.
+        <nav className="bottom-nav" aria-label={t({ tr: "Ana gezinme", en: "Main navigation" })}>
+          <button className="bottom-nav-btn bottom-nav-active" aria-current="page">
+            <OfficeIcon size={20} />
+            <span>{t({ tr: "Ofis", en: "Office" })}</span>
+          </button>
+          <button className="bottom-nav-btn office-messages-btn" onClick={() => openMessagesOnly()}>
+            <PhoneDeviceIcon size={20} />
+            <span>{t({ tr: "Telefon", en: "Phone" })}</span>
+            {unreadCount > 0 && (
+              <span className="bottom-nav-badge" key={unreadCount}>
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+          <button className="bottom-nav-btn wallet-pill-btn" onClick={() => openEmlahMenu("market")}>
+            <IdCardIcon size={20} />
+            <span>{t({ tr: "Emlah", en: "Estetan" })}</span>
+          </button>
+          <button className="bottom-nav-btn" onClick={openStoreFromGame}>
+            <ShopBagIcon size={20} />
+            <span>{t({ tr: "Mağaza", en: "Store" })}</span>
+          </button>
+        </nav>
+      )}
+
       {stage === "phone" && intro && !showPhoneOverlay && (
         <OfficeScene
           rankTitleText={rankTitle(earned)}
           ownedPerks={ownedPerks}
-          balance={balance}
-          unreadCount={unreadCount}
           energy={energy}
           bossMood={bossMood}
           currentDateLabel={formatGameDateTime(index)}
@@ -4314,6 +4596,7 @@ function App() {
           onDoActivity={handleDoDayActivity}
           onGetJob={() => {
             if (!isFullUnlocked() && index >= DEMO_HOUSE_LIMIT) {
+              track("paywall_shown", { from: "job" });
               setStage("paywall");
               return;
             }
@@ -4323,14 +4606,22 @@ function App() {
             }
             setShowPhoneOverlay(true);
             drainPhoneBattery();
+            // G7 — eski üst bildirim yerine: arada bir kozmetik bir "boş" mesaj Telefon'a düşer (bildirimsiz).
+            if (Math.random() < 0.5) {
+              const flavor = pickWhatsAppNotification();
+              setInbox((prev) => logFlavorMessage(prev, flavor.name, flavor.text, index + 1));
+            }
           }}
-          onOpenMessages={openMessagesOnly}
           onOpenIsler={() => setShowIsler(true)}
           onOpenEnergyBreak={() => setShowEnergyBreak(true)}
           onTitleTap={handleOfficeTitleTap}
           badges={badges}
           allBadges={allBadges}
           significantMemories={significantMemories}
+          sideCards={sq.officeCards}
+          specialDayBanner={sq.specialDay ? resolveText(sq.specialDay.banner) : null}
+          festive={!!sq.specialDay?.festive}
+          night={isNightHours()}
         />
       )}
 
@@ -4356,7 +4647,10 @@ function App() {
             <div className="market-modal activity-game-modal">
               <Game
                 rewardLabels={rewardLabels}
-                onFinish={(tier) => {
+                specialSigner={activeActivityGame === "office-work" ? tapuSigner : null}
+                onFinish={(tier, secret) => {
+                  if (secret === "cat") sq.onCatPhotographer();
+                  if (secret === "forgery-firat" || secret === "forgery-former") sq.onTapuForgeryCaught(secret === "forgery-firat" ? "firat" : "former");
                   if (tier === 2) playReward();
                   else if (tier === 1) playThinking();
                   else playLost();
@@ -4527,7 +4821,7 @@ function App() {
             isDuel={activeDuelHouseId === house.id}
             duelRivalName={activeDuelHouseId === house.id ? activeRivalFor(defeatedRivalIds).name : undefined}
             firatEncounter={activeDuelHouseId === house.id ? (activeFiratMood ?? undefined) : undefined}
-            easterEgg={activeEasterEgg?.houseId === house.id ? activeEasterEgg.egg : undefined}
+            easterEgg={activeEasterEgg?.houseId === house.id ? activeEasterEgg.egg : sideDialogue.intro}
             contactedCustomers={contactedCustomers}
             onToneChoice={handleToneChoice}
             voiceTally={voiceTally}
@@ -4539,6 +4833,8 @@ function App() {
             rankTitleText={rankTitle(earned)}
             ikramKind={ikramKind}
             onIkramUsed={handleIkramUsed}
+            sideChoices={sideDialogue.choices}
+            onSideChoice={(id) => sq.onSideChoice(id, house, index)}
           />
         </>
       )}
@@ -4552,53 +4848,15 @@ function App() {
       )}
 
       {stage === "result" && lastResult && (
-        <div className={`result-screen ${lastResult.outcome === "sold" ? "result-sold" : ""}`}>
-          {lastResult.outcome === "sold" && lastResult.sale && (
-            <SaleStamp discountPercent={lastResult.sale.discountPercent} />
-          )}
-          <p>{outcomeText(lastResult.outcome, lastResult.declined)}</p>
-          {lastResult.sale && (
-            <div className="sale-summary">
-              <p>
-                {t({ tr: "Satış Fiyatı", en: "Sale Price" })}: {formatTL(lastResult.sale.finalPrice)}
-                {lastResult.sale.discountPercent > 0 &&
-                  ` (${t({ tr: `%${lastResult.sale.discountPercent} indirimli`, en: `${lastResult.sale.discountPercent}% discount` })})`}
-              </p>
-              {lastResult.sale.streakBonus > 0 && (
-                <p>
-                  {t({ tr: "Seri bonusu", en: "Streak bonus" })}: +%{Math.round(lastResult.sale.streakBonus * 100)} 🔥
-                </p>
-              )}
-              {lastResult.sale.rankBonus > 0 && (
-                <p>
-                  {t({ tr: "Rütbe bonusu", en: "Rank bonus" })}: +%{Math.round(lastResult.sale.rankBonus * 100)}{" "}
-                  <StarIcon size={12} className="icon-inline" />
-                </p>
-              )}
-              {lastResult.sale.contractModifier !== 0 && (
-                <p>
-                  {t({ tr: "Sözleşme etkisi", en: "Contract effect" })}: {lastResult.sale.contractModifier > 0 ? "+" : ""}%
-                  {Math.round(lastResult.sale.contractModifier * 100)}
-                </p>
-              )}
-              <p>
-                {t({ tr: "Komisyonunuz", en: "Your Commission" })}: {formatTL(lastResult.sale.commission)}
-              </p>
-            </div>
-          )}
-          {pendingNewBadges.length > 0 && (
-            <div className="badge-popup">
-              {pendingNewBadges.map((b) => (
-                <p key={b.id}>
-                  <MedalIcon size={14} className="icon-inline" /> {t({ tr: "Yeni rozet", en: "New badge" })}: {resolveText(b.title)}
-                </p>
-              ))}
-            </div>
-          )}
-          <button className="pixel-btn" onClick={proceedAfterResult}>
-            {isLastHouse ? t({ tr: "Günü Bitir", en: "End the Day" }) : t({ tr: "Devam Et", en: "Continue" })}
-          </button>
-        </div>
+        <ResultCard
+          result={lastResult}
+          houseTitle={house ? resolveHouseTitle(house) : ""}
+          customerName={house ? (resolveCustomerNames(house, castAssignment)[0] ?? "") : ""}
+          avatarSrc={house ? contactAvatar(resolveCustomerNames(house, castAssignment)[0] ?? "", house.id, castAssignment) : undefined}
+          isLastHouse={isLastHouse}
+          newBadges={pendingNewBadges}
+          onContinue={proceedAfterResult}
+        />
       )}
 
       {stage === "weekGoal" && pendingWeekOutcome && (
@@ -4665,23 +4923,23 @@ function App() {
             Muzaffer Bey: "
             {anySold
               ? t({ tr: "Aferin aslanım, devam!", en: "Well done, keep it up!" })
-              : t({ tr: "Emlah'ım biraz gayret 😐", en: "Come on Estetan, a bit more effort 😐" })}
+              : t({ tr: "Emlah'ım biraz gayret.", en: "Come on Estetan, a bit more effort." })}
             "
           </p>
           {personalitySummary(voiceTally) && (
             <p className="ending-card">
-              <span className="ending-title">🎭 {t({ tr: "Emlah'ın Kişilik Profili", en: "Estetan's Personality Profile" })}</span>
+              <span className="ending-title">{t({ tr: "Emlah'ın Kişilik Profili", en: "Estetan's Personality Profile" })}</span>
               <span className="ending-description">{personalitySummary(voiceTally)}</span>
             </p>
           )}
           {compassVerdict(compassTally) && (
             <p className="ending-card">
-              <span className="ending-title">🧭 {t({ tr: "Değerler Pusulası", en: "Values Compass" })}</span>
+              <span className="ending-title">{t({ tr: "Değerler Pusulası", en: "Values Compass" })}</span>
               <span className="ending-description">{compassVerdict(compassTally)}</span>
             </p>
           )}
           <p className="menu-prestige-tag">
-            🏆{" "}
+            <TrophyIcon size={12} className="icon-inline" />{" "}
             {t({
               tr: `Bu senin ${getPrestigeCompletions()}. turun! Yeni bir oyuna başladığında ${formatTL(prestigeStartingBonus(getPrestigeCompletions()))} ile başlayacaksın.`,
               en: `This is your playthrough #${getPrestigeCompletions()}! Your next game will start with ${formatTL(prestigeStartingBonus(getPrestigeCompletions()))}.`,

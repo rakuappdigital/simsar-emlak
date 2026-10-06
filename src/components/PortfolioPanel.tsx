@@ -12,9 +12,9 @@ interface PortfolioPanelProps {
 }
 
 function outcomeLabel(outcome: SceneOutcome): string {
-  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })} ✅`;
-  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })} 🤔`;
-  return `${t({ tr: "Kaybedildi", en: "Lost" })} ❌`;
+  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })}`;
+  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })}`;
+  return `${t({ tr: "Kaybedildi", en: "Lost" })}`;
 }
 
 export default function PortfolioPanel({
@@ -59,7 +59,7 @@ export default function PortfolioPanel({
           status = outcomeLabel(result.outcome) + (result.converted ? ` (${t({ tr: "sonradan ikna", en: "convinced later" })})` : "");
           statusClass = `status-${result.outcome}`;
         } else if (h.tier > maxUnlockedTier) {
-          status = `${t({ tr: "Kilitli", en: "Locked" })} 🔒`;
+          status = `${t({ tr: "Kilitli", en: "Locked" })}`;
           statusClass = "status-locked";
         } else if (playedIdx === currentIndex) {
           status = t({ tr: "Şu an burada", en: "Here now" });

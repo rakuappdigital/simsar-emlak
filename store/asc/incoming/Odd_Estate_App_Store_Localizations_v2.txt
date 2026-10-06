@@ -1,0 +1,320 @@
+=== Arabic ===
+
+name:
+Odd Estate
+
+subtitle:
+بِع في إسطنبول
+
+Promotional Text:
+اتبع مفتاحًا قديمًا إلى منزل غامض، واكشف سر الباب 55.
+
+Description:
+أنت إستيتان: مفلس، غير مُثبت لنفسك، وشهر سيئ واحد يفصلك عن فقدان مكتبك. لا يهم سوق العقارات في إسطنبول سيرتك الذاتية؛ بل يهمه أن تعرف كيف تقرأ الغرفة، وتكشف الكذبة، وتُتم الصفقة قبل أن يرحل الزبون.
+
+Odd Estate لعبة تفاوض تقودها الحوارات، حيث كل معاينة مبارزة نفسية. اضغط أكثر من اللازم فيرتفع الشك، والعب بأمان شديد فيخطف وكيل منافس البيع. كل جملة تختارها تغيّر الموازين: افهم الزبون، أدر التوتر، وأغلق الصفقة ما دامت ممكنة.
+
+54 منزلًا، 54 حكاية
+من استوديو رطب ذي ماضٍ حزين إلى شقة بنتهاوس يخفي مالكها أشياء كثيرة، لكل عقار شخصياته وأسراره وأسبابه للابتعاد.
+
+حكايات جانبية في أنحاء المدينة
+يسلمك زبون مسن مفتاحًا ببطاقة باهتة. يلمّح مديرك إلى منزل طفولته، ولدى مختار الحي دفتر مليء بالمجاملات الصغيرة. اتبع هذه الخيوط من منزل إلى آخر لتفتح أبوابًا لا تفتحها القوائم العادية.
+
+أسرار تستحق المطاردة
+شقة مسكونة بتفسير عادي جدًا، وزبون منتصف الليل لا يسأل إلا إن كانت الستائر تحجب الضوء، ومجلس من سبع قطط. كل غرابة تكتشفها تذهب إلى ألبومك، والصفحات الفارغة تترك تلميحًا. بعض الأسرار لا تظهر إلا في أيام خاصة من التقويم الحقيقي.
+
+من متدرب إلى شريك
+كل عمولة ترفعك في سلم المكتب. وكل رتبة تفتح أدوات ونفوذًا وطرقًا جديدة لإتمام البيع.
+
+خمسة منافسين في طريقك
+يريد وكلاء آخرون الزبائن أنفسهم. ناورهم أو شاهدهم يأخذون صفقتك.
+
+الناس يتذكرونك
+يعود الزبائن، ويتصل الأصدقاء، وتظهر اختياراتك القديمة من جديد. صادقًا كنت أم ماكرًا، فسمعتك تلاحقك.
+
+اشترِ وجدّد وبِع
+افتح سوق الاستثمار: اشترِ بسعر منخفض، جدّد، وبِع بسعر مرتفع.
+
+أسلوبك الخاص
+اختر خلفية، وطوّر شجرة مهارات، واعثر على صوتك: ساحرًا أو صادقًا أو جريئًا. ألعاب مصغّرة تملأ أيامك بين المعاينات.
+
+نهايات كثيرة
+افتح مكتبك، أو تصبح شريك مديرك، أو تُفصل. نهاية مسيرتك تعتمد على طريقة لعبك.
+
+جرّب المنازل الأولى مجانًا، ثم افتح المسيرة الكاملة بشراء لمرة واحدة.
+
+Odd Estate ليست عن جداول البيانات، بل عن الناس: قراءتهم وفهمهم ومعرفة متى تضغط ومتى تدعهم يأتون إليك.
+
+keywords:
+عقارات,حوار,قصة,rpg,بكسل
+
+=== Romanian ===
+
+name:
+Odd Estate
+
+subtitle:
+Vinde în Istanbul
+
+Promotional Text:
+Urmează o cheie veche spre o casă nevăzută. Rezolvă povești prin oraș și află cine trăiește dincolo de ușa 55.
+
+Description:
+Ești Estetan: fără bani, nedovedit și la o singură lună proastă de a-ți pierde biroul. Pieței imobiliare din Istanbul nu-i pasă de CV-ul tău. Contează dacă poți citi o încăpere, observa o minciună și încheia înainte ca clientul să plece.
+
+Odd Estate este un joc de negociere condus de dialoguri, în care fiecare vizionare e un duel psihologic. Insistă prea mult și suspiciunea crește. Joacă prea prudent și un agent rival îți ia vânzarea. Fiecare replică schimbă echilibrul: citește clientul, gestionează tensiunea și încheie afacerea cât încă e pe masă.
+
+54 DE CASE, 54 DE POVEȘTI
+De la o garsonieră umedă cu un trecut trist la un penthouse al cărui proprietar ascunde clar ceva, fiecare proprietate are personaje, secrete și motive să pleci.
+
+POVEȘTI PRIN TOT ORAȘUL
+O clientă în vârstă îți dă o cheie cu o etichetă decolorată. Șeful tău tot amintește de o casă din copilăria lui. Muhtarul cartierului are un caiet plin de mici favoruri. Urmează aceste fire din casă în casă și vei deschide uși pe care anunțurile obișnuite nu le deschid.
+
+SECRETE CARE MERITĂ CĂUTATE
+Un apartament bântuit cu o explicație foarte banală. Un client de la miezul nopții care întreabă doar dacă draperiile opresc lumina. Un consiliu de șapte pisici. Fiecare ciudățenie ajunge în albumul tău, iar paginile goale îți lasă indicii. Unele secrete apar doar în zile speciale din calendarul real.
+
+DE LA STAGIAR LA PARTENER
+Fiecare comision te urcă pe scara din birou. Fiecare rang deblochează instrumente, influență și noi moduri de a încheia.
+
+CINCI RIVALI ÎN CALEA TA
+Alți agenți vor aceiași clienți. Depășește-i sau privește cum îți iau vânzarea.
+
+OAMENII ÎȘI AMINTESC DE TINE
+Clienții revin, prietenii sună, iar alegerile făcute cu luni în urmă reapar. Cinstit sau viclean, reputația te urmează.
+
+CUMPĂRĂ, RENOVEAZĂ, VINDE
+Deblochează piața de investiții: cumpără ieftin, renovează, vinde scump.
+
+STILUL TĂU
+Alege un trecut, dezvoltă un arbore de abilități și găsește-ți vocea: fermecător, sincer sau îndrăzneț. Mini-jocurile îți umplu zilele dintre vizionări.
+
+MULTE FINALURI
+Deschide-ți propriul birou, devino partenerul șefului sau fii concediat. Finalul carierei depinde de cum ai jucat.
+
+Încearcă primele case gratuit, apoi deblochează cariera completă printr-o singură achiziție.
+
+Odd Estate nu este despre foi de calcul. Este despre oameni: să-i citești, să-i înțelegi și să știi exact când să insiști și când să-i lași să vină spre tine.
+
+keywords:
+negociere,imobiliare,dialog,romanvizual,alegeri,poveste,narațiune,rpg,tycoon,simulator,pixel
+
+=== Spanish (Mexico) ===
+
+name:
+Odd Estate
+
+subtitle:
+Vende en Estambul
+
+Promotional Text:
+Sigue una vieja llave a una casa oculta. Resuelve historias y descubre quién vive tras la puerta 55.
+
+Description:
+[PENDIENTE: se necesita el texto completo aprobado de la descripción en inglés.]
+
+keywords:
+negociación,inmuebles,diálogo,novelavisual,decisiones,historia,rpg,tycoon,simulador,píxel
+
+=== Portuguese (Brazil) ===
+
+name:
+Odd Estate
+
+subtitle:
+Venda em Istambul
+
+Promotional Text:
+Siga uma chave antiga até uma casa oculta. Resolva histórias e descubra quem vive atrás da porta 55.
+
+Description:
+[PENDENTE: é necessário o texto integral aprovado da descrição em inglês.]
+
+keywords:
+negociação,corretor,diálogo,novelavisual,escolhas,história,rpg,tycoon,simulador,pixel
+
+=== Polish ===
+
+name:
+Odd Estate
+
+subtitle:
+Sprzedawaj w Stambule
+
+Promotional Text:
+Idź za starym kluczem do ukrytego domu. Rozwiązuj historie i odkryj, kto mieszka za 55. drzwiami.
+
+Description:
+[OCZEKUJE: potrzebny jest pełny, zatwierdzony angielski tekst opisu.]
+
+keywords:
+negocjacje,nieruchomości,dialog,powieśćwizualna,wybory,fabuła,rpg,tycoon,simulator,piksel
+
+=== Indonesian ===
+
+name:
+Odd Estate
+
+subtitle:
+Jual Properti di Istanbul
+
+Promotional Text:
+Ikuti kunci tua ke rumah tersembunyi. Pecahkan kisah kota dan cari tahu siapa di balik pintu ke-55.
+
+Description:
+[MENUNGGU: teks lengkap deskripsi bahasa Inggris yang disetujui diperlukan.]
+
+keywords:
+negosiasi,makelar,dialog,novel visual,pilihan,cerita,narasi,rpg,tycoon,simulator,agen,piksel
+
+=== Russian ===
+
+name:
+Odd Estate
+
+subtitle:
+Продавай в Стамбуле
+
+Promotional Text:
+Следуй за старым ключом к тайному дому. Раскрой истории города и узнай, кто живёт за 55-й дверью.
+
+Description:
+[ОЖИДАЕТСЯ: необходим полный утверждённый английский текст описания.]
+
+keywords:
+риелтор,диалоги,выборы,сюжет,rpg,пиксель
+
+=== Korean ===
+
+name:
+Odd Estate
+
+subtitle:
+이스탄불에서 말하고, 속이고, 팔아라
+
+Promotional Text:
+아무도 본 적 없는 집으로 이어지는 낡은 열쇠를 따라가세요. 도시 곳곳의 곁이야기를 풀고, 앨범에 기묘한 물건을 모으며, 55번째 문 뒤에 누가 정말 사는지 알아내세요.
+
+Description:
+[대기 중: 승인된 영문 설명 전문이 필요합니다.]
+
+keywords:
+협상,부동산,대화,비주얼노벨,선택,스토리,서사,rpg,경영,시뮬레이터,픽셀
+
+=== Spanish (Spain) ===
+
+name:
+Odd Estate
+
+subtitle:
+Vende en Estambul
+
+Promotional Text:
+Sigue una llave antigua a una casa oculta. Resuelve historias y descubre quién vive tras la puerta 55.
+
+Description:
+[PENDIENTE: se necesita el texto completo aprobado de la descripción en inglés.]
+
+keywords:
+negociación,inmobiliaria,diálogo,novelavisual,decisiones,historia,rpg,tycoon,simulador,píxel
+
+=== Japanese ===
+
+name:
+Odd Estate
+
+subtitle:
+イスタンブールで売れ
+
+Promotional Text:
+古い鍵を追って謎の家へ。街の物語を解き、55番目の扉の向こうに住む者を突き止めよう。
+
+Description:
+[保留中：承認済みの英語版説明文の全文が必要です。]
+
+keywords:
+不動産,会話,選択,物語,rpg,経営,ピクセル
+
+=== Ukrainian ===
+
+name:
+Odd Estate
+
+subtitle:
+Продавай у Стамбулі
+
+Promotional Text:
+Йди за старим ключем до таємного будинку. Розкрий історії міста й дізнайся, хто живе за 55-ми дверима.
+
+Description:
+[ОЧІКУЄТЬСЯ: потрібен повний затверджений англійський текст опису.]
+
+keywords:
+рієлтор,діалоги,вибір,сюжет,rpg,піксель
+
+=== German ===
+
+name:
+Odd Estate
+
+subtitle:
+Verkaufe in Istanbul
+
+Promotional Text:
+Folge einem alten Schlüssel zu einem geheimen Haus. Löse Stadtgeschichten und finde heraus, wer hinter Tür 55 lebt.
+
+Description:
+[AUSSTEHEND: Der vollständige freigegebene englische Beschreibungstext wird benötigt.]
+
+keywords:
+verhandlung,makler,dialog,visualnovel,entscheidungen,geschichte,rpg,tycoon,simulation,pixel
+
+=== French ===
+
+name:
+Odd Estate
+
+subtitle:
+Vendez à Istanbul
+
+Promotional Text:
+Suivez une vieille clé jusqu'à une maison secrète. Résolvez des histoires et découvrez qui vit derrière la porte 55.
+
+Description:
+[EN ATTENTE : le texte anglais intégral et approuvé de la description est nécessaire.]
+
+keywords:
+négociation,immobilier,dialogue,romanvisuel,choix,histoire,récit,rpg,tycoon,simulateur,pixel
+
+=== Italian ===
+
+name:
+Odd Estate
+
+subtitle:
+Vendi a Istanbul
+
+Promotional Text:
+Segui una vecchia chiave fino a una casa segreta. Risolvi storie e scopri chi vive dietro la porta 55.
+
+Description:
+[IN ATTESA: è necessario il testo completo approvato della descrizione in inglese.]
+
+keywords:
+negoziazione,immobiliare,dialogo,visualnovel,scelte,storia,narrazione,rpg,tycoon,simulatore,pixel
+
+=== Dutch ===
+
+name:
+Odd Estate
+
+subtitle:
+Verkoop in Istanbul
+
+Promotional Text:
+Volg een oude sleutel naar een geheim huis. Los stadsverhalen op en ontdek wie achter deur 55 woont.
+
+Description:
+[IN AFWACHTING: de volledige goedgekeurde Engelse beschrijvingstekst is nodig.]
+
+keywords:
+onderhandelen,makelaar,dialogen,visueleroman,keuzes,verhaal,rpg,tycoon,simulator,pixel

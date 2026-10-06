@@ -4,6 +4,7 @@
 //
 // Usage: BASE_URL=http://localhost:4173 node tests/smoke.mjs
 import { chromium } from "playwright";
+import { openEmlahTab } from "./helpers/emlah.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const errors = [];
@@ -102,13 +103,12 @@ await emlahBtn.first().click().catch(() => {});
 await page.waitForTimeout(400);
 assert((await page.locator(".emlah-menu").count()) > 0, "Emlah menu opens");
 
-for (const tabLabel of ["Portföy", "Kariyer", "Market"]) {
-  await page.locator(".emlah-tab-btn", { hasText: tabLabel }).click().catch(() => {});
+for (const tabLabel of ["Portföy", "Kariyer", "Alışveriş"]) {
+  await openEmlahTab(page, tabLabel).catch(() => {});
   await page.waitForTimeout(300);
 }
 
-const portfolioTab = page.locator(".emlah-tab-btn", { hasText: "Portföy" });
-await portfolioTab.click().catch(() => {});
+await openEmlahTab(page, "Portföy").catch(() => {});
 await page.waitForTimeout(300);
 const rowCount = await page.locator(".portfolio-row").count();
 assert(rowCount === 54, `Portföy tab lists 54 houses (got ${rowCount})`);

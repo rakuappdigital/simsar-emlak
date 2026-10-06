@@ -28,6 +28,7 @@ import {
   contradictionRankMultiplier,
 } from "../data/contradiction";
 import type { ContactedCustomer, SignificantMemory } from "../types";
+import { ClockIcon } from "./icons";
 
 const FUN_BONUS_THRESHOLD = 30;
 const TYPE_MS_PER_CHAR = 16;
@@ -159,6 +160,9 @@ interface DialogueSceneProps {
   ikramKind?: "seker" | "kahve" | null;
   /** Reports that the (available) ikram was actually offered, so App.tsx can decrement the matching consumable's stock. */
   onIkramUsed?: () => void;
+  /** Yan görev seçenekleri (hooks/useSideQuests.ts) — kapanış dışı ilk uygun düğümde, ziyaret başına birer kez. */
+  sideChoices?: { id: string; text: Localized; effects?: ChoiceEffects; reaction: DialogueLine[] }[];
+  onSideChoice?: (id: string) => void;
 }
 
 function speakerLabelFor(speaker: string): string {
@@ -198,6 +202,8 @@ export default function DialogueScene({
   rankTitleText,
   ikramKind = null,
   onIkramUsed,
+  sideChoices = [],
+  onSideChoice,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [dialogueStyle] = useState(getDialogueStyle);
@@ -216,6 +222,7 @@ export default function DialogueScene({
   // would let the player spam either choice for unlimited stat gain.
   const usedComplimentRef = useRef(false);
   const usedIkramRef = useRef(false);
+  const usedSideRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setNodeId(house.startNode);
@@ -223,6 +230,7 @@ export default function DialogueScene({
     heldFirmCountRef.current = 0;
     usedComplimentRef.current = false;
     usedIkramRef.current = false;
+    usedSideRef.current = new Set();
   }, [house]);
 
   const node = syntheticNode ?? house.nodes[nodeId];
@@ -445,7 +453,11 @@ export default function DialogueScene({
     if (complimentUnlocked) finalList = [...finalList, complimentChoice];
     if (ikramUnlocked) finalList = [...finalList, ikramChoice];
     if (isClosingNode && origin) finalList = [...finalList, origin.closingChoice];
-    return shuffle(finalList);
+    // Yan görev seçenekleri karıştırılmaz, sona eklenir — oyuncu kolayca fark etsin.
+    const sideList: Choice[] = isClosingNode
+      ? []
+      : sideChoices.filter((sc) => !usedSideRef.current.has(sc.id)).map((sc) => ({ id: sc.id, text: sc.text, next: nodeId, effects: sc.effects }));
+    return [...shuffle(finalList), ...sideList];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeId, bonusUnlocked, dealAlreadyWon, flirtUnlocked, pressureUnlocked, pressureChoice, complimentUnlocked, complimentChoice, ikramUnlocked, ikramChoice, origin]);
   // The synthetic flirt-exchange node carries its own single resolving
@@ -520,6 +532,17 @@ export default function DialogueScene({
     if (choice.effects) onChoiceEffects(choice.effects);
     if (choice.effects?.fun) onLineChosen?.(resolveText(choice.text), choice.effects.fun);
     if (choice.effects) onToneChoice?.(choice.effects);
+
+    const side = sideChoices.find((sc) => sc.id === choice.id);
+    if (side) {
+      usedSideRef.current.add(side.id);
+      onSideChoice?.(side.id);
+      // İltifat gibi: tepki satırları, ardından düğümün kalan seçenekleri geri gelir.
+      const remainingChoices = (choicesToShow ?? []).filter((c) => c.id !== choice.id);
+      setSyntheticNode({ id: `${side.id}-reaction`, lines: side.reaction, choices: remainingChoices });
+      setLineIndex(0);
+      return;
+    }
 
     if (choice.id === "compliment" || choice.id === "ikram-offer") {
       if (choice.id === "compliment") usedComplimentRef.current = true;
@@ -638,7 +661,7 @@ export default function DialogueScene({
         )}
         {isDuel && (
           <span className="duel-tag">
-            ⏱️ {t({ tr: `${duelRivalName ?? "Fırat Bey"} de bu evle ilgileniyor!`, en: `${duelRivalName ?? "Fırat Bey"} is also interested in this house!` })}
+            <ClockIcon size={12} className="icon-inline" /> {t({ tr: `${duelRivalName ?? "Fırat Bey"} de bu evle ilgileniyor!`, en: `${duelRivalName ?? "Fırat Bey"} is also interested in this house!` })}
           </span>
         )}
         {easterEgg && nodeId === house.startNode && <span className="easter-egg-tag">{resolveText(easterEgg.tag)}</span>}

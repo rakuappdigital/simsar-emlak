@@ -5,6 +5,7 @@
 //
 // Usage: BASE_URL=http://localhost:4173 node tests/mobile-viewport.mjs
 import { chromium, devices } from "playwright";
+import { openEmlahTab } from "./helpers/emlah.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const errors = [];
@@ -80,7 +81,7 @@ const viewportWidth = page.viewportSize().width;
 
 async function checkOverflow(label, tabLabel) {
   if (tabLabel) {
-    await page.locator(".emlah-tab-btn", { hasText: tabLabel }).first().click();
+    await openEmlahTab(page, tabLabel);
     await page.waitForTimeout(250);
   }
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);

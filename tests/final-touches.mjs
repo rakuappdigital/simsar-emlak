@@ -100,7 +100,7 @@ for (let i = 0; i < 15 && !(await page.locator(".office-messages-btn").first().i
 // Messages button), not the tabbed Emlah menu — see App.tsx's openMessagesOnly.
 await page.locator(".office-messages-btn").first().click({ timeout: 5000 }).catch(() => {});
 await page.waitForTimeout(600);
-await page.locator(".thread-row", { hasText: "Ecrin" }).first().click({ timeout: 5000 }).catch(() => {});
+await page.locator(".msg-row", { hasText: "Ecrin" }).first().click({ timeout: 5000 }).catch(() => {});
 await page.waitForTimeout(600);
 
 const helpBtn = page.locator("button", { hasText: "Yardım İste" });
@@ -122,9 +122,9 @@ if ((await helpBtn.count()) > 0) {
   assert((restored?.friendBondCounts?.ecrin ?? 0) === 6, "the bond deepens further after asking for help (5 -> 6)");
 
   // Asking again should no longer be possible — the button should disappear.
-  await page.locator(".thread-back").first().click({ timeout: 3000 }).catch(() => {});
+  await page.locator(".msg-back").first().click({ timeout: 3000 }).catch(() => {});
   await page.waitForTimeout(300);
-  await page.locator(".thread-row", { hasText: "Ecrin" }).first().click({ timeout: 5000 }).catch(() => {});
+  await page.locator(".msg-row", { hasText: "Ecrin" }).first().click({ timeout: 5000 }).catch(() => {});
   await page.waitForTimeout(300);
   assert((await page.locator("button", { hasText: "Yardım İste" }).count()) === 0, "the button is gone after being used once (one-time per friend)");
 }

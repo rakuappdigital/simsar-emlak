@@ -140,7 +140,7 @@ await page.close();
 // --- Normal purchase path ---
 page = await openWithSave({ index: 11, soldCount: 3, unlockedTiers: [1], ownedPerks: ["not-defteri"], jettons: 0, bonusEarnings: 300000 });
 assert(await gate(page).isVisible(), "gate shown before buying");
-await page.locator(".locked-preview button", { hasText: "Marketi Aç" }).click();
+await page.locator(".locked-preview button", { hasText: "Çarşıyı Aç" }).click();
 await page.waitForTimeout(600);
 await page.locator(".market-item", { hasText: "Orta Segment Evler" }).locator("button.pixel-btn.small:not([disabled])").first().click();
 await page.waitForTimeout(300);

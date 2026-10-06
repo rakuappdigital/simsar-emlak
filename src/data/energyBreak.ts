@@ -24,14 +24,14 @@ export const energyBreakActivities: EnergyBreakActivity[] = [
   {
     id: "anahtar",
     label: { tr: "Anahtar Bul", en: "Find the Key" },
-    icon: "🔑",
+    icon: "key",
     energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: { tr: "Doğru anahtarı hızlıca buldu, kafası dağıldı.", en: "Spotted the right key fast, cleared his head." },
   },
   {
     id: "yuruyus",
     label: { tr: "Kısa Yürüyüş", en: "Short Walk" },
-    icon: "🚶",
+    icon: "walk",
     energyGain: MINIGAME_ENERGY_GAIN,
     flavorLine: { tr: "Dışarıda birkaç tur attı, ferahladı.", en: "Took a few laps outside, refreshed." },
   },

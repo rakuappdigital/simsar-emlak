@@ -6,11 +6,11 @@ import { resolveText, type Localized } from "./language";
  * reusing the same toast pattern as the existing "Kaydedildi ✓" indicator.
  */
 const comments: Localized[] = [
-  { tr: "🔥 Efsane bir satış!", en: "🔥 Legendary sale!" },
-  { tr: "😍 Bu ev tam bana göreydi, tebrikler!", en: "😍 This house was just right for me, congrats!" },
-  { tr: "👏 Emlah gerçekten işinin ustası.", en: "👏 Estetan is truly a master of his craft." },
-  { tr: "💰 Bu fiyata mı, inanılmaz!", en: "💰 At this price, unbelievable!" },
-  { tr: "🙌 Muzaffer Bey bugün gurur duyar.", en: "🙌 Muzaffer Bey would be proud today." },
+  { tr: "Efsane bir satış!", en: "Legendary sale!" },
+  { tr: "Bu ev tam bana göreydi, tebrikler!", en: "This house was just right for me, congrats!" },
+  { tr: "Emlah gerçekten işinin ustası.", en: "Estetan is truly a master of his craft." },
+  { tr: "Bu fiyata mı, inanılmaz!", en: "At this price, unbelievable!" },
+  { tr: "Muzaffer Bey bugün gurur duyar.", en: "Muzaffer Bey would be proud today." },
 ];
 
 const commenters: Localized[] = [{ tr: "Bora", en: "Bora" }, { tr: "Cemil Abi", en: "Cemil Bro" }, { tr: "Kankam", en: "My Buddy" }, { tr: "Züleyha Teyze", en: "Aunt Züleyha" }, { tr: "bir takipçi", en: "a follower" }];

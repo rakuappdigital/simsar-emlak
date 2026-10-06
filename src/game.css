@@ -37,7 +37,7 @@
 }
 
 .game-header h1 {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 1.2rem;
   margin: 0;
   letter-spacing: 1px;
@@ -82,7 +82,7 @@
 
 .wallet-pill {
   background: var(--c-surface);
-  border: 2px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 999px;
   padding: 4px 12px;
   font-size: 0.8rem;
@@ -136,7 +136,7 @@
   align-items: center;
   gap: 8px;
   background: var(--c-surface);
-  border: 2px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   color: var(--c-text);
   font-size: 0.72rem;
   padding: 8px 14px;
@@ -176,7 +176,7 @@
   right: -6px;
   background: var(--c-danger);
   color: #fff;
-  font-size: 0.55rem;
+  font-size: var(--fs-xs);
   font-weight: bold;
   min-width: 15px;
   height: 15px;
@@ -187,7 +187,7 @@
   padding: 0 3px;
   animation:
     unread-pop 0.25s ease-out,
-    fun-pulse 1.2s ease-in-out 0.25s infinite;
+    fun-pulse 1.2s ease-in-out 0.25s 2;
 }
 
 @keyframes unread-pop {
@@ -515,7 +515,7 @@
 }
 
 .rankup-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--c-accent);
@@ -606,7 +606,7 @@
   position: absolute;
   bottom: 4px;
   right: 8px;
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   color: var(--c-text-dimmer);
 }
 
@@ -663,7 +663,7 @@
 
 .tutorial-tip {
   background: var(--c-surface-alt);
-  border: 2px dashed var(--c-accent);
+  border: 2px solid var(--c-select-border);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -711,7 +711,7 @@
 
 .stat-fill.fun-unlocked {
   box-shadow: 0 0 8px 1px var(--c-accent);
-  animation: fun-pulse 1.2s ease-in-out infinite;
+  animation: fun-pulse 1.2s ease-in-out 3;
 }
 
 @keyframes fun-pulse {
@@ -885,7 +885,7 @@
   top: 8px;
   right: 8px;
   background: rgba(0, 0, 0, 0.6);
-  border: 1px solid var(--c-accent);
+  border: 1px solid var(--c-frame);
   color: var(--c-accent);
   font-size: 0.62rem;
   padding: 3px 8px;
@@ -1128,7 +1128,7 @@
 
 .sale-stamp-text {
   display: block;
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -1191,7 +1191,7 @@
 }
 
 .work-task-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   line-height: 1.6;
   color: var(--c-accent);
@@ -1273,7 +1273,7 @@
 }
 
 .menu-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   line-height: 1.6;
   color: var(--c-accent);
@@ -1453,9 +1453,9 @@
 }
 
 .difficulty-btn.active {
-  background: var(--c-accent);
-  border-color: var(--c-accent);
-  color: var(--c-surface-dark);
+  background: var(--c-select-bg);
+  border-color: var(--c-select-border);
+  color: var(--c-text);
   font-weight: bold;
 }
 
@@ -1481,7 +1481,8 @@
   line-height: 1.6;
   border-radius: 8px;
   cursor: pointer;
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-ui);
+  font-weight: 700;
 }
 
 .menu-btn {
@@ -1610,7 +1611,7 @@
 
 /* ---------- Week goal + badges ---------- */
 .week-result-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   line-height: 1.6;
   color: var(--c-accent);
@@ -1819,7 +1820,7 @@
 
 .sale-intro-card {
   background: linear-gradient(180deg, var(--c-surface-dark, #0d0d1a) 0%, var(--c-bg) 100%);
-  border: 3px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 12px;
   padding: 0 22px 24px;
   max-width: 380px;
@@ -1859,13 +1860,13 @@
   min-width: 150px;
   height: auto;
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
-  animation: sale-intro-glow-pulse 3.2s ease-in-out infinite;
+  animation: sale-intro-glow-pulse 3.2s ease-in-out 2;
 }
 
 .sale-intro-tier {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.5rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   color: var(--c-bg, #1a1a2e);
   background: var(--c-accent);
@@ -1875,7 +1876,7 @@
 }
 
 .sale-intro-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 0.95rem;
   line-height: 1.5;
   margin: 4px 0 0;
@@ -1933,7 +1934,7 @@
 
 .purchase-confirm-modal {
   background: var(--c-bg);
-  border: 3px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 10px;
   padding: 24px 20px;
   max-width: 420px;
@@ -1973,7 +1974,7 @@
 
 .contract-modal {
   background: var(--c-bg);
-  border: 3px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 10px;
   padding: 20px;
   max-width: 480px;
@@ -2108,7 +2109,7 @@
 /* ---------- Market modal ---------- */
 .market-modal {
   background: var(--c-bg);
-  border: 3px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 10px;
   padding: 18px;
   max-width: 520px;
@@ -2130,7 +2131,7 @@
 }
 
 .market-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   color: var(--c-accent);
   margin: 0;
   font-size: 0.9rem;
@@ -2231,7 +2232,7 @@
   text-align: center;
   margin: 0 0 6px;
   padding: 6px;
-  border: 1px dashed var(--c-accent);
+  border: 1px solid var(--c-frame);
   border-radius: 6px;
 }
 
@@ -2384,7 +2385,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   overflow: hidden;
   background: var(--c-surface-dark);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
@@ -2436,16 +2437,16 @@
 .office-calendar-header {
   background: #d64545;
   color: #fff;
-  font-size: 0.5rem;
-  font-family: "Press Start 2P", monospace;
+  font-size: var(--fs-xs);
+  font-family: var(--font-ui);
+  font-weight: 700;
   text-align: center;
   padding: 3px 0 2px;
-  letter-spacing: 0.03em;
 }
 
 .office-calendar-day {
   text-align: center;
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 1.05rem;
   color: #2a2624;
   padding: 4px 0 2px;
@@ -2461,12 +2462,12 @@
 }
 
 .office-calendar-year {
-  font-size: 0.42rem;
+  font-size: var(--fs-xs);
   color: #6b6258;
 }
 
 .office-calendar-time {
-  font-size: 0.42rem;
+  font-size: var(--fs-xs);
   color: #6b6258;
 }
 
@@ -2516,7 +2517,7 @@
   left: 0;
   bottom: 28px;
   background: var(--c-surface);
-  border: 1px solid var(--c-accent);
+  border: 1px solid var(--c-frame);
   color: var(--c-text);
   font-size: 0.62rem;
   padding: 4px 8px;
@@ -2709,7 +2710,7 @@
   right: -28px;
   background: var(--c-accent);
   color: var(--c-bg);
-  font-size: 0.5rem;
+  font-size: var(--fs-xs);
   font-weight: bold;
   padding: 3px 30px;
   transform: rotate(35deg);
@@ -2774,18 +2775,18 @@
 
 /* Eye-catching state when there's an unread message waiting — solid accent fill + a gentle pulse, so it reads as "tap me" at a glance. */
 .office-messages-btn-alert {
-  background: var(--c-accent);
-  color: var(--c-bg);
-  border-color: var(--c-accent);
-  animation: messages-btn-pulse 1.6s ease-in-out infinite;
+  background: var(--c-surface-alt);
+  color: var(--c-text);
+  border-color: var(--c-danger);
+  animation: messages-btn-pulse 1.6s ease-in-out 2;
 }
 
 @keyframes messages-btn-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.55);
+    box-shadow: 0 0 0 0 rgba(239, 71, 111, 0.55);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(255, 209, 102, 0);
+    box-shadow: 0 0 0 6px rgba(239, 71, 111, 0);
   }
 }
 
@@ -3014,9 +3015,9 @@
 }
 
 .emlah-tab-btn.active {
-  background: var(--c-accent);
-  border-color: var(--c-accent);
-  color: var(--c-surface-dark);
+  background: var(--c-select-bg);
+  border-color: var(--c-select-border);
+  color: var(--c-text);
   font-weight: bold;
 }
 
@@ -3333,7 +3334,7 @@
 }
 
 .ending-sequence-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 1rem;
   line-height: 1.6;
   color: var(--c-text);
@@ -3390,7 +3391,7 @@
   gap: 8px;
   max-width: min(92vw, 420px);
   background: rgba(20, 20, 30, 0.92);
-  border: 2px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 8px;
   padding: 8px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -3729,7 +3730,7 @@
   width: 100%;
   max-width: 360px;
   background: var(--c-surface-alt);
-  border: 2px solid var(--c-accent);
+  border: 2px solid var(--c-frame);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -3741,7 +3742,8 @@
 .store-inline-title {
   margin: 0;
   font-size: 0.62rem;
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-ui);
+  font-weight: 700;
   color: var(--c-accent);
 }
 
@@ -3773,7 +3775,7 @@
 }
 
 .language-select-btn.active {
-  border-color: var(--c-accent);
+  border-color: var(--c-select-border);
 }
 
 .language-select-flag {
@@ -3824,7 +3826,7 @@
 }
 
 .locked-callback-tag {
-  font-size: 0.55rem;
+  font-size: var(--fs-xs);
   opacity: 0.7;
   white-space: nowrap;
 }
@@ -3837,7 +3839,7 @@
 }
 
 .locked-skip-balance {
-  font-size: 0.55rem;
+  font-size: var(--fs-xs);
   opacity: 0.7;
   margin-top: 6px;
 }
@@ -3932,7 +3934,7 @@
 }
 
 .isler-decision-cost {
-  font-size: 0.58rem;
+  font-size: var(--fs-xs);
   color: var(--c-text-dim);
   text-align: center;
   line-height: 1.35;
@@ -3997,7 +3999,8 @@
 }
 
 .activity-game-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-ui);
+  font-weight: 700;
   font-size: 0.62rem;
   color: var(--c-accent);
 }
@@ -4069,7 +4072,7 @@
 }
 
 .activity-game-result-title {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   margin: 0;
   color: var(--c-text-dim);
@@ -4084,7 +4087,8 @@
 }
 
 .activity-game-reward {
-  font-family: "Press Start 2P", monospace;
+  font-family: var(--font-ui);
+  font-weight: 700;
   font-size: 0.6rem;
   line-height: 1.7;
   color: var(--c-success);
@@ -4114,8 +4118,9 @@
   background: var(--c-surface);
   display: grid;
   place-items: center;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.5rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   color: var(--c-text-dim);
 }
 
@@ -4165,8 +4170,9 @@
 
 .tapu-rules-title {
   display: block;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.45rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   color: var(--c-accent);
   margin-bottom: 4px;
 }
@@ -4183,8 +4189,9 @@
   margin: 0;
   z-index: 5;
   text-align: center;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.55rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   pointer-events: none;
 }
 
@@ -4223,9 +4230,9 @@
 }
 
 .tapu-doc-title {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.45rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   margin: 0 0 6px;
 }
 
@@ -4257,8 +4264,9 @@
   border-radius: 50%;
   border: 3px double #b8323e;
   color: #b8323e;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.3rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   line-height: 1.4;
   display: grid;
   place-items: center;
@@ -4278,8 +4286,9 @@
 }
 
 .tapu-choice {
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.55rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--fs-xs);
   padding: 13px 4px;
   border-radius: 8px;
   border: 2px solid #000;
@@ -4306,4 +4315,1497 @@
   .tapu-doc {
     transition: none;
   }
+}
+
+/* Paywall — tam sürüm avantajları listesi. */
+.paywall-screen {
+  min-height: auto;
+  padding-top: 8px;
+}
+
+.paywall-features {
+  list-style: none;
+  margin: 0 auto 8px;
+  padding: 0;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paywall-feature {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--c-surface-alt);
+  border: 2px solid var(--c-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.paywall-feature-icon {
+  font-size: 1.3rem;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.paywall-feature-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.paywall-feature-title {
+  color: var(--c-accent);
+  font-size: 0.85rem;
+}
+
+.paywall-feature-text {
+  color: var(--c-text-dim);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.paywall-buy {
+  background: var(--c-accent);
+  color: var(--c-surface-dark);
+  border-color: var(--c-accent);
+}
+
+.paywall-once {
+  margin: -4px 0 4px;
+  text-align: center;
+  color: var(--c-text-dim);
+  font-size: 0.72rem;
+}
+
+.store-full-note {
+  margin: 0;
+  max-width: 360px;
+  align-self: center;
+  text-align: center;
+  color: var(--c-text-dim);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* ---------- Mesajlar: telefon içinde sohbet uygulaması ---------- */
+.msg-overlay {
+  align-items: center;
+}
+
+.msg-phone {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: min(86vh, 760px);
+  background: #000;
+  border-radius: 36px;
+  padding: 10px;
+  box-shadow:
+    0 0 0 2px var(--c-border-light),
+    0 20px 40px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+.msg-phone-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 18px 6px;
+}
+
+.msg-phone-notch {
+  width: 84px;
+  height: 18px;
+  background: #111;
+  border-radius: 999px;
+}
+
+.msg-app {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 26px 26px 18px 18px;
+  overflow: hidden;
+  color: #111;
+}
+
+.msg-appbar,
+.msg-chatbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  background: #f6f6f6;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.msg-appbar-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.msg-appbar-unread {
+  background: #25d366;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.msg-close {
+  margin-left: auto;
+  background: #e6e6e6;
+  border: none;
+  color: #444;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.msg-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.msg-empty {
+  color: #777;
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 40px 16px;
+}
+
+.msg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #efefef;
+  padding: 11px 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+}
+
+.msg-row:active {
+  background: #f2f2f2;
+}
+
+.msg-row-unread {
+  background: #f1fbf4;
+}
+
+.msg-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #128c7e;
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.msg-avatar-md {
+  width: 46px;
+  height: 46px;
+  font-size: 1.1rem;
+}
+
+.msg-avatar-sm {
+  width: 34px;
+  height: 34px;
+  font-size: 0.9rem;
+}
+
+.msg-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.msg-row-top,
+.msg-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.msg-row-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-row-day {
+  font-size: 0.68rem;
+  color: #8a8a8a;
+  flex-shrink: 0;
+}
+
+.msg-row-unread .msg-row-name {
+  font-weight: 800;
+}
+
+.msg-row-unread .msg-row-day {
+  color: #1faa52;
+  font-weight: 700;
+}
+
+.msg-row-preview {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: #777;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-row-unread .msg-row-preview {
+  color: #222;
+  font-weight: 600;
+}
+
+.msg-row-you {
+  color: #999;
+}
+
+.msg-row-count {
+  background: #25d366;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.msg-row-reply {
+  border: 1.5px solid #f0a020;
+  color: #b86e00;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.msg-pin {
+  font-size: 0.72rem;
+}
+
+.msg-back {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #1f7aec;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.msg-back-count {
+  background: #1f7aec;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.msg-chatbar-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background-color: #e5ddd5;
+  background-image: radial-gradient(#d9d0c5 1px, transparent 1px);
+  background-size: 14px 14px;
+  padding: 10px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.msg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.msg-day-chip {
+  align-self: center;
+  background: #dfeef7;
+  color: #4a5a66;
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 8px;
+  margin: 6px 0 2px;
+}
+
+.msg-unread-divider {
+  align-self: stretch;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.75);
+  color: #1faa52;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 0;
+  margin: 4px -10px;
+}
+
+.msg-bubble {
+  font-size: 0.86rem;
+  padding: 7px 10px;
+  animation: none;
+}
+
+.msg-bubble.incoming {
+  align-self: flex-start;
+}
+
+.msg-bubble-sender {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #128c7e;
+  margin-bottom: 2px;
+}
+
+.msg-replybar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 12px;
+  background: #f6f6f6;
+  border-top: 1px solid #e3e3e3;
+}
+
+.msg-replybar-note {
+  margin: 0;
+  color: #888;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.msg-phone .phone-home-indicator {
+  margin-top: 8px;
+}
+
+/* Başlıktaki yeni mesaj göstergesi — cüzdan butonundan ayrı. */
+.header-unread-pill {
+  background: var(--c-danger);
+  border-color: var(--c-danger);
+  color: #fff;
+  font-weight: bold;
+  animation: unread-pop 0.25s ease-out;
+}
+
+.office-messages-new {
+  background: var(--c-danger);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: bold;
+  border-radius: 999px;
+  padding: 2px 7px;
+  margin-left: 2px;
+  animation: unread-pop 0.25s ease-out;
+}
+
+/* ---------- S2: tek satırlık üst bar ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin: -16px -24px 0;
+  padding: 8px 16px 6px;
+  background: color-mix(in srgb, var(--c-bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--c-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.topbar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.topbar-loc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.topbar-loc strong {
+  color: var(--c-text);
+  font-weight: 700;
+}
+
+.topbar-rank {
+  color: var(--c-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--c-surface-alt);
+  border: 1px solid var(--c-divider);
+  color: var(--c-text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.topbar-chip .icon-inline {
+  color: var(--c-accent);
+}
+
+.topbar-chip-btn {
+  cursor: pointer;
+}
+
+.topbar-chip-btn:active {
+  transform: translateY(1px);
+}
+
+.topbar-unread {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--c-danger);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  animation: unread-pop 0.25s ease-out;
+}
+
+.topbar-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--c-divider);
+  color: var(--c-text-faint2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.topbar-icon:active {
+  background: var(--c-surface-alt);
+}
+
+/* G12 — kayıt göstergesi: rozet yerine üst barda bir an yanan disket. */
+.topbar-save {
+  display: inline-flex;
+  color: var(--c-success);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.topbar-save-on {
+  opacity: 1;
+}
+
+.topbar-quest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px dashed var(--c-divider);
+  padding: 5px 2px 1px;
+  text-align: left;
+  color: var(--c-text);
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
+.topbar-quest-label {
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.topbar-quest-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.topbar-quest-desc {
+  flex-basis: 100%;
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+  line-height: 1.4;
+}
+
+@media (max-width: 380px) {
+  .topbar-rank {
+    display: none;
+  }
+}
+
+/* ---------- S1: alt sekme çubuğu (yalnızca ofiste) ---------- */
+.game-root-with-nav {
+  padding-bottom: 170px;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 6px 6px max(8px, env(safe-area-inset-bottom));
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-divider);
+}
+
+.bottom-nav-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  color: var(--c-text-dim);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bottom-nav-active {
+  color: var(--c-text);
+}
+
+.bottom-nav-active::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 30%;
+  right: 30%;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--c-select-border);
+}
+
+.bottom-nav-badge {
+  position: absolute;
+  top: 0;
+  left: calc(50% + 6px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-danger);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: unread-pop 0.25s ease-out;
+}
+
+/* ---------- S9: ofis ---------- */
+.office-meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.office-meter {
+  background: var(--c-surface);
+  border: 1px solid var(--c-divider);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.office-meter-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-sm);
+  color: var(--c-text-faint2);
+}
+
+.office-meter-num {
+  margin-left: auto;
+  color: var(--c-text);
+  font-weight: 700;
+}
+
+.office-meter-low .office-meter-num {
+  color: var(--c-danger);
+}
+
+.office-meter .energy-ad-btn {
+  align-self: flex-start;
+}
+
+.office-section-label {
+  margin: 0 0 6px;
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.day-activity-strip {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.day-activity-strip .day-activity-card {
+  flex: 0 0 132px;
+  scroll-snap-align: start;
+  padding: 10px 8px;
+  gap: 4px;
+}
+
+.day-activity-strip .day-activity-icon {
+  color: var(--c-accent);
+}
+
+.office-actionbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(58px + max(8px, env(safe-area-inset-bottom)));
+  z-index: 39;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  background: linear-gradient(to top, var(--c-bg) 70%, transparent);
+}
+
+.office-actionbar .office-get-job-btn {
+  flex: 1;
+  min-height: 46px;
+  font-size: var(--fs-sm);
+}
+
+.office-actionbar .office-isler-btn {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.office-isler-alert {
+  border-color: var(--c-danger);
+}
+
+.office-actionbar .pixel-btn {
+  margin-top: 0;
+  align-self: stretch;
+}
+
+.office-actionbar .office-isler-btn.ghost {
+  color: var(--c-text-faint2);
+  border-color: var(--c-frame);
+  background: var(--c-surface);
+}
+
+/* ---------- G2: Emlah menüsü — 4 bölüm + bölüm içi sekmeler ---------- */
+.emlah-sections {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  background: var(--c-surface-dark);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.emlah-section-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 2px 6px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--c-text-dim);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.emlah-section-btn.active {
+  background: var(--c-select-bg);
+  border-color: var(--c-select-border);
+  color: var(--c-text);
+}
+
+.emlah-sections + .emlah-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border-bottom: none;
+  padding: 2px 0 0;
+}
+
+.emlah-sections + .emlah-tabs .emlah-tab-btn {
+  flex-shrink: 0;
+}
+
+/* ---------- S8 / G11: kilitli ve boş durum kartları ---------- */
+.locked-card {
+  background: var(--c-surface);
+  border: 1px dashed var(--c-frame);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.locked-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.locked-card-icon {
+  color: var(--c-text-dim);
+  display: inline-flex;
+}
+
+.locked-card-title {
+  font-size: var(--fs-md);
+  color: var(--c-text);
+}
+
+.locked-card-hint {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-dim);
+  line-height: 1.4;
+}
+
+.locked-card-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--c-surface-dark);
+  overflow: hidden;
+}
+
+.locked-card-bar i {
+  display: block;
+  height: 100%;
+  background: var(--c-select-border);
+  border-radius: 4px;
+}
+
+.locked-card-progress {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--c-text-faint2);
+}
+
+/* ---------- S5: iOS tarzı mesaj bildirimi ---------- */
+.ios-banner {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: min(calc(100vw - 16px), 400px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 11px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(246, 246, 248, 0.86);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  color: #111;
+  text-align: left;
+  font-family: -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
+  cursor: pointer;
+  animation: ios-banner-in 0.38s cubic-bezier(0.2, 0.9, 0.25, 1.15), ios-banner-out 0.3s ease-in 3.3s forwards;
+}
+
+@keyframes ios-banner-in {
+  from { transform: translate(-50%, -130%); }
+  to { transform: translate(-50%, 0); }
+}
+
+@keyframes ios-banner-out {
+  to { transform: translate(-50%, -130%); opacity: 0; }
+}
+
+.ios-banner-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b6b72;
+  letter-spacing: 0.02em;
+}
+
+.ios-banner-app {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.ios-banner-appname {
+  flex: 1;
+}
+
+.ios-banner-body {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ios-banner-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.ios-banner-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #128c7e;
+  color: #fff;
+  font-weight: 700;
+}
+
+.ios-banner-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.ios-banner-text strong {
+  font-weight: 650;
+}
+
+.ios-banner-text span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-banner {
+    animation: none;
+  }
+}
+
+/* ---------- S6 / G4: sonuç kartı ---------- */
+.result-card-screen {
+  align-items: center;
+}
+
+.result-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-frame);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.result-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-card-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  border: 2px solid var(--c-frame);
+}
+
+.result-card-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-surface-alt);
+  font-size: var(--fs-lg);
+}
+
+.result-card-who {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.result-card-verdict {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+.result-card-sold .result-card-verdict {
+  color: var(--c-success);
+}
+
+.result-card-thinking .result-card-verdict {
+  color: var(--c-accent-hi);
+}
+
+.result-card-lost .result-card-verdict {
+  color: var(--c-danger);
+}
+
+.result-card-sub {
+  font-size: var(--fs-sm);
+  color: var(--c-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-stat {
+  display: grid;
+  grid-template-columns: 96px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+
+.result-stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--c-text-faint2);
+}
+
+.result-stat-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--c-surface-dark);
+  overflow: hidden;
+}
+
+.result-stat-track i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.result-stat-bad .result-stat-track i {
+  background: var(--c-danger);
+}
+
+.result-stat-good .result-stat-track i {
+  background: var(--c-success);
+}
+
+.result-stat-num {
+  text-align: right;
+}
+
+.result-card-reason {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--c-select-border);
+  background: var(--c-surface-dark);
+  border-radius: 4px;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.result-money {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px dashed var(--c-divider);
+  padding-top: 8px;
+}
+
+.result-money-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  color: var(--c-text-faint2);
+}
+
+.result-money-total {
+  color: var(--c-success);
+  font-size: var(--fs-md);
+}
+
+.result-card-next,
+.result-card-note {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-text-dim);
+}
+
+.result-card-continue {
+  align-self: stretch;
+  margin-top: 4px;
+}
+
+/* ---------- S7 / G9: sözleşme segmentleri ---------- */
+.contract-intro {
+  margin: 0 0 4px;
+  font-size: var(--fs-sm);
+  color: var(--c-text-dim);
+  line-height: 1.4;
+}
+
+.contract-seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  background: var(--c-surface-dark);
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.contract-seg-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.contract-seg .contract-option-btn {
+  margin: 0;
+  width: 100%;
+  border: 1px solid transparent;
+  background: none;
+  border-radius: 7px;
+  padding: 8px 4px;
+  color: var(--c-text-faint2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+.contract-seg .contract-option-btn.selected {
+  background: var(--c-select-bg);
+  border-color: var(--c-select-border);
+  color: var(--c-text);
+}
+
+.contract-clause-effect {
+  margin: 4px 2px 0;
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+}
+
+.contract-submit {
+  align-self: stretch;
+}
+
+.contract-result-ok .icon-inline {
+  color: var(--c-success);
+}
+
+.contract-result-warn .icon-inline {
+  color: var(--c-accent);
+}
+
+.sale-stamp-inline {
+  position: relative;
+  top: auto;
+  left: auto;
+  align-self: flex-start;
+  transform: rotate(-6deg);
+  padding: 5px 12px;
+  animation: sale-stamp-slam-inline 0.5s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+}
+
+@keyframes sale-stamp-slam-inline {
+  0% {
+    transform: rotate(-6deg) scale(2);
+    opacity: 0;
+  }
+  60% {
+    transform: rotate(-6deg) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-6deg) scale(1);
+  }
+}
+
+/* Devre dışı birincil buton sarı kalmasın — "henüz basılamaz" net okunsun. */
+.pixel-btn:disabled {
+  background: var(--c-surface-alt);
+  color: var(--c-text-dim);
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ---------- Emoji temizliği: ikon durum renkleri ---------- */
+.req-met,
+.outcome-sold {
+  color: var(--c-success);
+}
+
+.outcome-thinking {
+  color: var(--c-accent-hi);
+}
+
+.outcome-lost {
+  color: var(--c-danger);
+}
+
+.req-box {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--c-text-dim);
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+.bond-pip-on {
+  color: var(--c-danger);
+  margin-right: 3px;
+}
+
+.bond-pip-off {
+  color: var(--c-surface-alt);
+  margin-right: 3px;
+}
+
+.market-item-icon,
+.energy-break-icon,
+.purchase-confirm-icon,
+.paywall-feature-icon,
+.isler-decision-icon,
+.ending-sequence-icon {
+  color: var(--c-accent);
+}
+
+.language-select-flag svg,
+.minigame-key-btn svg {
+  image-rendering: pixelated;
+}
+
+.minigame-key-gold {
+  color: var(--c-accent);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+}
+
+/* B6 — ofisteyken radyo dokunulabilir; alt çubuğun ve eylem şeridinin üstünde durur. */
+.radio-ticker-toast {
+  font-family: var(--font-ui);
+  color: var(--c-text);
+  text-align: left;
+}
+
+.radio-ticker-tappable {
+  pointer-events: auto;
+  cursor: pointer;
+  bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+.radio-ticker-secret {
+  border-color: var(--c-relation);
+  box-shadow: 0 0 18px rgba(192, 132, 252, 0.35);
+}
+
+/* ---------- Yan görevler: ofis ---------- */
+.office-special-day {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-frame);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: var(--fs-sm);
+  color: var(--c-text-faint2);
+}
+
+.office-special-day-festive {
+  padding-top: 20px;
+  border-color: var(--c-danger);
+}
+
+/* Flama dizisi — kırmızı/beyaz üçgenler, CSS ile çizilir (görsel yok). */
+.office-garland {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background:
+    linear-gradient(135deg, var(--c-danger) 50%, transparent 50%) 0 0 / 16px 12px repeat-x,
+    linear-gradient(225deg, #f5f5f5 50%, transparent 50%) 8px 0 / 16px 12px repeat-x;
+  opacity: 0.9;
+}
+
+.office-side-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.office-side-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--c-surface);
+  border: 1px solid var(--c-relation);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--c-text);
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
+.office-side-icon {
+  color: var(--c-relation);
+  display: inline-flex;
+}
+
+.office-side-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.office-side-text strong {
+  font-size: var(--fs-sm);
+  font-weight: 400;
+}
+
+.office-side-text span {
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+}
+
+/* ---------- Yan görev hikâye kartı ---------- */
+.side-story {
+  width: 100%;
+  max-width: 400px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-relation);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.side-story-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.side-story-title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--c-relation);
+}
+
+.side-story-line {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.side-story-btn {
+  align-self: stretch;
+}
+
+/* ---------- B1 Albüm ---------- */
+.album {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.album-reward {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+}
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.album-card {
+  background: var(--c-surface-dark);
+  border: 1px dashed var(--c-divider);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.album-card-open {
+  border-style: solid;
+  border-color: var(--c-relation);
+  background: var(--c-surface);
+}
+
+.album-card-icon {
+  color: var(--c-text-dim);
+  display: inline-flex;
+}
+
+.album-card-open .album-card-icon {
+  color: var(--c-accent);
+}
+
+.album-card-title {
+  font-size: var(--fs-sm);
+}
+
+.album-card-hint {
+  font-size: var(--fs-xs);
+  color: var(--c-text-dim);
+  line-height: 1.35;
+}
+
+.city-map-hint {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c-relation);
+  color: #1a1a2e;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.35);
+  pointer-events: none;
 }

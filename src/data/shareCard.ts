@@ -20,7 +20,7 @@ async function ensureFonts() {
     await Promise.all([
       document.fonts.load('28px "Press Start 2P"'),
       document.fonts.load('16px "Press Start 2P"'),
-      document.fonts.load('32px "VT323"'),
+      document.fonts.load('26px "Jersey 15"'),
     ]);
   } catch {
     // fonts unavailable — canvas falls back to the generic monospace below
@@ -92,7 +92,7 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
   const en = getLanguage() === "en";
   ctx.fillText("ODD ESTATE", WIDTH / 2, 230);
 
-  ctx.font = '20px "VT323", monospace';
+  ctx.font = '16px "Jersey 15", monospace';
   ctx.fillStyle = "#aaaaaa";
   ctx.fillText(en ? "Today's Summary" : "Bugünün Özeti", WIDTH / 2, 262);
 
@@ -125,7 +125,7 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
         ["Rozet Sayısı", String(data.badgeCount)],
       ];
 
-  ctx.font = '22px "VT323", monospace';
+  ctx.font = '18px "Jersey 15", monospace';
   ctx.textBaseline = "middle";
   const rowH = cardH / rows.length;
   rows.forEach(([label, value], i) => {
@@ -158,7 +158,7 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
     ey += 28;
   }
 
-  ctx.font = '20px "VT323", monospace';
+  ctx.font = '16px "Jersey 15", monospace';
   ctx.fillStyle = "#f0f0f0";
   const descLines = wrapText(ctx, data.endingDescription, cardW - 40);
   ey += 12;
@@ -168,7 +168,7 @@ export async function generateShareCard(data: ShareCardData): Promise<string> {
   }
 
   // Footer
-  ctx.font = '14px "VT323", monospace';
+  ctx.font = '12px "Jersey 15", monospace';
   ctx.fillStyle = "#888888";
   ctx.fillText(
     en ? "Odd Estate — Istanbul's most creative real estate agency" : "Odd Estate — İstanbul'un en yaratıcı emlakçısı",

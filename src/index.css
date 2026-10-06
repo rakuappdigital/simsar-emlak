@@ -1,3 +1,45 @@
+/* Yazı tipleri uygulamayla birlikte paketlenir — iOS'ta internet yokken de
+   aynı görünsün (eskiden Google Fonts'tan çekiliyordu, çevrimdışı açılışta
+   sistem fontuna düşüyordu). Gövde: Jersey 15 (karakterli ama okunaklı
+   piksel; rakamları net — Pixelify Sans'ta 5 ile S karışıyordu),
+   başlık/logo: Press Start 2P (yalnızca 16px ve üstü). Jersey dar/küçük
+   çizildiği için size-adjust ile büyütülüyor (iOS 17+; eski sürümde
+   yalnızca biraz küçük görünür). */
+@font-face {
+  font-family: "Jersey 15";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  size-adjust: 122%;
+  src: url("./assets/fonts/jersey15-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Jersey 15";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  size-adjust: 122%;
+  src: url("./assets/fonts/jersey15-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/pressstart-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/pressstart-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -31,12 +73,28 @@
   --c-text-faint: #888;
   --c-text-faint2: #ccc;
   --c-text-faint3: #ddd;
+
+  /* Renk rolleri (S4): sarı (--c-accent) yalnızca ekrandaki birincil eylem
+     ve kutlama anları. Çerçeveler nötr, seçimler lavanta, okunmamış/uyarı
+     kırmızı (--c-danger), kazanç yeşil (--c-success), ilişkiler mor. */
+  --c-frame: #4a4a7a;
+  --c-select-bg: #36366e;
+  --c-select-border: #8a8ad0;
+  --c-relation: #c084fc;
+
+  /* Tipografi (S3): iki yazı tipi, sabit ölçek. 1rem = 20px (aşağıdaki html kuralı). */
+  --font-display: "Press Start 2P", "Courier New", monospace;
+  --font-ui: "Jersey 15", "Courier New", monospace;
+  --fs-xs: 0.6rem;   /* 12px — alt sınır */
+  --fs-sm: 0.7rem;   /* 14px */
+  --fs-md: 0.85rem;  /* 17px */
+  --fs-lg: 1.1rem;   /* 22px */
 }
 
 html {
-  /* VT323 renders visually smaller than typical fonts at the same size —
-     bumping the root size scales every rem-based value in the app so text
-     stays legible instead of touching each component individually. */
+  /* Kök 20px — tüm rem tabanlı yerleşim buna göre kurulu (VT323 döneminden
+     kalma), bozmamak için korunuyor. Yazı boyutları --fs-* ölçeğine bağlı,
+     en küçüğü 12px. */
   font-size: 20px;
 }
 
@@ -51,5 +109,8 @@ body,
 body {
   background: #1a1a2e;
   color: #f0f0f0;
-  font-family: "VT323", "Courier New", monospace;
+  font-family: var(--font-ui);
+  font-synthesis: none;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
 }

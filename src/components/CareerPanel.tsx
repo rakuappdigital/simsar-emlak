@@ -5,6 +5,8 @@ import { rivalLadder, activeRivalFor } from "../data/rivalLadder";
 import { MedalIcon } from "./icons";
 import { resolveText, t } from "../data/language";
 import { showLeaderboard } from "../data/gameCenter";
+import { TrophyIcon, CheckIcon, LockIcon } from "./icons";
+import AlbumSection from "./AlbumSection";
 
 interface CareerPanelProps {
   rankTitleText: string;
@@ -50,7 +52,7 @@ export default function CareerPanel({
   return (
     <div className="career-panel">
       <button className="pixel-btn small" onClick={showLeaderboard}>
-        🏆 {t({ tr: "Liderlik Tablosu", en: "Leaderboard" })}
+        <TrophyIcon size={14} className="icon-inline" /> {t({ tr: "Liderlik Tablosu", en: "Leaderboard" })}
       </button>
       <div className="career-stat-row">
         <span className="career-stat-label">{t({ tr: "Kariyer Rütbesi", en: "Career Rank" })}</span>
@@ -106,7 +108,15 @@ export default function CareerPanel({
               {i + 1}. {rival.name} <span className="rival-ladder-title">— {resolveText(rival.title)}</span>
             </span>
             <span className="career-stat-value">
-              {defeated ? `✅ ${t({ tr: "Geçildi", en: "Passed" })}` : isActive ? `${soldCount}/${rival.threshold}` : "🔒"}
+              {defeated ? (
+                <>
+                  <CheckIcon size={12} className="icon-inline" /> {t({ tr: "Geçildi", en: "Passed" })}
+                </>
+              ) : isActive ? (
+                `${soldCount}/${rival.threshold}`
+              ) : (
+                <LockIcon size={12} />
+              )}
             </span>
           </div>
         );
@@ -132,6 +142,7 @@ export default function CareerPanel({
           ))}
         </div>
       )}
+      <AlbumSection />
     </div>
   );
 }

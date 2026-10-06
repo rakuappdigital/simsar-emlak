@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { t } from "../data/language";
 import type { PhoneMessage } from "../types";
-import { SignalIcon, BatteryIcon, ChatIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
+import { SignalIcon, BatteryIcon, VideoCamIcon, PhoneCallIcon, ChevronLeftIcon } from "./icons";
 import { playMessage } from "../data/sound";
-import { pickPhoneNotificationText } from "../data/phoneNotifications";
 
 interface PhoneScreenProps {
   messages: PhoneMessage[];
@@ -44,8 +43,6 @@ export default function PhoneScreen({
   statusTime = "14:47",
 }: PhoneScreenProps) {
   const [visibleCount, setVisibleCount] = useState(0);
-  const [banner] = useState(() => pickPhoneNotificationText());
-  const [showBanner, setShowBanner] = useState(true);
 
   // Deliberately no reset-on-`messages`-change here: when the same
   // conversation grows (e.g. a reply gets appended), we want to keep
@@ -53,11 +50,6 @@ export default function PhoneScreen({
   // message(s) — not replay the whole thread from scratch. A genuinely
   // new conversation gets a fresh `key` from the parent, which remounts
   // this component and naturally resets visibleCount to 0 via useState.
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowBanner(false), 2600);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     if (visibleCount >= messages.length + (thought ? 1 : 0)) return;
@@ -69,7 +61,16 @@ export default function PhoneScreen({
     return () => clearTimeout(timer);
   }, [visibleCount, messages, thought]);
 
-  const allShown = visibleCount >= messages.length + (thought ? 1 : 0);
+  const totalCount = messages.length + (thought ? 1 : 0);
+  const allShown = visibleCount >= totalCount;
+
+  /** G7 — sohbete dokunmak sıradaki mesajı beklemeden getirir. */
+  function revealNext() {
+    if (visibleCount >= totalCount) return;
+    const nextMessage = messages[visibleCount];
+    if (nextMessage && nextMessage.from !== "Emlah") playMessage();
+    setVisibleCount((c) => Math.min(totalCount, c + 1));
+  }
 
   return (
     <div className="phone-wrap">
@@ -86,19 +87,6 @@ export default function PhoneScreen({
           </span>
         </div>
 
-        {showBanner && (
-          <div className="wa-notification">
-            <span className="wa-notification-icon">
-              <ChatIcon size={13} />
-            </span>
-            <span className="wa-notification-body">
-              <span className="wa-notification-name">
-                {banner.icon} {banner.name}
-              </span>
-              <span className="wa-notification-text">{banner.text}</span>
-            </span>
-          </div>
-        )}
 
         <div className="whatsapp-header">
           <span className="wa-back">
@@ -130,7 +118,7 @@ export default function PhoneScreen({
           </span>
         </div>
 
-        <div className="whatsapp-body">
+        <div className="whatsapp-body" onClick={revealNext}>
           {messages.slice(0, visibleCount).map((m, i) => (
             <div className={`wa-bubble ${m.from === "Emlah" ? "outgoing" : "incoming"}`} key={i}>
               {m.text}

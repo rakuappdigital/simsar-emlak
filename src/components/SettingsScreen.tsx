@@ -3,7 +3,8 @@ import { getSfxVolume, getMusicVolume, setSfxVolume, setMusicVolume, startMusic,
 import { getDifficulty, setDifficulty, difficultyLabels, type Difficulty } from "../data/difficulty";
 import { setLanguage as persistLanguage, resolveText, type Language } from "../data/language";
 import oddEstateLogo from "../assets/branding/oddestate-logo.png";
-import { HeartIcon, CartIcon } from "./icons";
+import { HeartIcon, ShopBagIcon } from "./icons";
+import { FlagTrIcon, FlagGbIcon } from "./icons";
 
 interface SettingsScreenProps {
   language: Language;
@@ -17,8 +18,8 @@ interface SettingsScreenProps {
 }
 
 const languages: { id: Language; label: string }[] = [
-  { id: "en", label: "🇬🇧 English" },
-  { id: "tr", label: "🇹🇷 Türkçe" },
+  { id: "en", label: "English" },
+  { id: "tr", label: "Türkçe" },
 ];
 
 const difficulties: Difficulty[] = ["kolay", "normal", "zor"];
@@ -81,7 +82,7 @@ export default function SettingsScreen({
               onLanguageChange(l.id);
             }}
           >
-            {l.label}
+            {l.id === "tr" ? <FlagTrIcon size={16} className="icon-inline" /> : <FlagGbIcon size={16} className="icon-inline" />} {l.label}
           </button>
         ))}
       </div>
@@ -134,9 +135,9 @@ export default function SettingsScreen({
           : "Şüphenin ne kadar hızlı arttığını etkiler. Normal, oyunun her zamanki dengesidir."}
       </p>
 
-      <p className="settings-subsection-title">{language === "en" ? "Store" : "Market"}</p>
+      <p className="settings-subsection-title">{language === "en" ? "Store" : "Mağaza"}</p>
       <button className="menu-btn" onClick={onOpenStore}>
-        <CartIcon size={16} className="icon-inline" /> {language === "en" ? "Store" : "Market"}
+        <ShopBagIcon size={16} className="icon-inline" /> {language === "en" ? "Store" : "Mağaza"}
       </button>
 
       <button className={`about-toggle ${aboutOpen ? "open" : ""}`} onClick={() => setAboutOpen((o) => !o)} aria-expanded={aboutOpen}>

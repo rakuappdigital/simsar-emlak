@@ -1,4 +1,5 @@
 import type { SaveGame } from "../types";
+import { markThreadRead, migrateInboxReadFlags } from "./inbox";
 
 const SAVE_VERSION = 26;
 export const SAVE_SLOT_COUNT = 3;
@@ -11,6 +12,7 @@ export function loadSave(slot: number): SaveGame | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SaveGame;
     if (parsed.version !== SAVE_VERSION) return null;
+    parsed.inbox = migrateInboxReadFlags(parsed.inbox ?? []);
     return parsed;
   } catch {
     return null;
@@ -43,4 +45,24 @@ export function firstAvailableSlot(): number {
     if (!loadSave(i)) return i;
   }
   return 0;
+}
+
+/**
+ * Bir sohbet okununca kayıttaki gelen kutusunu sessizce günceller — tam bir
+ * persist() (ve "Kaydedildi" rozeti) tetiklemeden. Böylece uygulama kapanıp
+ * açılınca okunmuş mesajlar yeniden "okunmamış" görünmez.
+ */
+export function markSavedThreadRead(slot: number, threadId: string): void {
+  const save = loadSave(slot);
+  if (!save) return;
+  const next = markThreadRead(save.inbox, threadId);
+  if (next === save.inbox) return;
+  writeSave({ ...save, inbox: next }, slot);
+}
+
+/** Kaydın bazı alanlarını sessizce günceller (yan görev durumu gibi) — persist() ve "Kaydedildi" göstergesi tetiklenmez. */
+export function patchSave(slot: number, patch: Partial<SaveGame>): void {
+  const save = loadSave(slot);
+  if (!save) return;
+  writeSave({ ...save, ...patch }, slot);
 }

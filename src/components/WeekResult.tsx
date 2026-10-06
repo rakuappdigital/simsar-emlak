@@ -28,24 +28,24 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
       <p className="weekly-news">{weeklyNewsLine(outcome.weekIndex, dailyQuestResult?.def.id)}</p>
       <div className="sale-summary">
         <p>
-          {outcome.salesGoalMet ? "✅" : "❌"} {t({ tr: "Satış hedefi", en: "Sales goal" })}: {outcome.salesMade}/{outcome.salesTarget}
+          {outcome.salesGoalMet ? "" : ""} {t({ tr: "Satış hedefi", en: "Sales goal" })}: {outcome.salesMade}/{outcome.salesTarget}
         </p>
         <p className="rival-note">
           {t({ tr: `Fırat Bey bu hafta ${rivalSales} ev sattı`, en: `Fırat Bey sold ${rivalSales} houses this week` })} —{" "}
           {outcome.salesMade > rivalSales
-            ? t({ tr: "onu geçtin! 🏆", en: "you beat him! 🏆" })
+            ? t({ tr: "onu geçtin!", en: "you beat him!" })
             : outcome.salesMade === rivalSales
               ? t({ tr: "başa baştasınız.", en: "you're neck and neck." })
               : t({ tr: "bu hafta önde o.", en: "he's ahead this week." })}
         </p>
         <p>
-          {outcome.honestyGoalMet ? "✅" : "❌"} {t({ tr: "Dürüstlük hedefi", en: "Honesty goal" })}:{" "}
+          {outcome.honestyGoalMet ? "" : ""} {t({ tr: "Dürüstlük hedefi", en: "Honesty goal" })}:{" "}
           {t({ tr: "ortalama şüphe", en: "average suspicion" })} {outcome.avgSuspicion.toFixed(0)} (
           {t({ tr: "hedef", en: "goal" })}: %{outcome.maxAvgSuspicion} {t({ tr: "altı", en: "or below" })})
         </p>
         {dailyQuestResult && (
           <p>
-            {dailyQuestResult.completed ? "✅" : "❌"} {t({ tr: "Özel görev", en: "Special task" })} —{" "}
+            {dailyQuestResult.completed ? "" : ""} {t({ tr: "Özel görev", en: "Special task" })} —{" "}
             {resolveText(dailyQuestResult.def.title)}
             {dailyQuestResult.completed && ` (+${formatTL(dailyQuestResult.def.reward)})`}
           </p>
@@ -61,18 +61,18 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
 
       {outcome.bestLine && (
         <p className="best-line-quote">
-          <span className="best-line-label">🗣️ {t({ tr: "Haftanın cümlesi", en: "Line of the week" })}</span>
+          <span className="best-line-label"> {t({ tr: "Haftanın cümlesi", en: "Line of the week" })}</span>
           <span className="best-line-text">{outcome.bestLine}</span>
         </p>
       )}
 
       <p className="journal-entry">
-        <span className="journal-entry-label">📓 {t({ tr: "Emlah'ın Günlüğü", en: "Estetan's Journal" })}</span>
+        <span className="journal-entry-label"> {t({ tr: "Emlah'ın Günlüğü", en: "Estetan's Journal" })}</span>
         <span className="journal-entry-text">{generateWeekJournalEntry(outcome)}</span>
       </p>
 
       <p className="journal-entry dream-entry">
-        <span className="journal-entry-label">🌙 {t({ tr: "Emlah'ın Rüyası", en: "Estetan's Dream" })}</span>
+        <span className="journal-entry-label"> {t({ tr: "Emlah'ın Rüyası", en: "Estetan's Dream" })}</span>
         <span className="journal-entry-text">{dreamLine}</span>
       </p>
 
@@ -80,7 +80,7 @@ export default function WeekResult({ outcome, balance, dailyQuestResult, onOpenM
         {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)}
       </p>
       <button className="pixel-btn small" onClick={onOpenMarket}>
-        <CartIcon size={13} className="icon-inline" /> {t({ tr: "Ofis Marketini Aç", en: "Open Office Market" })}
+        <CartIcon size={13} className="icon-inline" /> {t({ tr: "Çarşıyı Aç", en: "Open the Bazaar" })}
       </button>
 
       <button className="pixel-btn" onClick={onContinue}>

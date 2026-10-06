@@ -1,3 +1,124 @@
+# ✅ Ekspertiz 2. tur + Yan Görev paketi — Build 12 (2026-10-06 akşam)
+Rapor (güncel, 3. sürüm): https://claude.ai/artifact/KJBCEjckGSns1G62N1q83B
+**Genel kural (kullanıcı):** Oyunda HİÇBİR YERDE emoji yok; tüm görseller bize ait (çizilen SVG/piksel ya da kullanıcı üretimi), stok yok.
+Build 11→12, CLI pipeline, "UPLOAD SUCCEEDED" (Delivery UUID `b39b3a16-4e33-469b-a41c-03bf7a250c6b`). İNCELEMEYE GÖNDERİLMEDİ. Ölçüm APP_ID (gerçek) build'de doğrulandı.
+Testler: `node tests/run-all.mjs` → 20/20 (yeni `tests/side-quests.mjs` dahil). Commit/push YOK.
+
+## ⏳ Kullanıcı kararı / onayı bekleyen
+- [ ] **G8** (diyalog ilk izlenim) — uygulanmadı; rapordaki G8-a (öğretici baloncuk) / G8-b (barlarda sayı+ikon) / G8-c (+8/−5 değişim sayısı) / G8-d (metin hızı ayarı) seçimini bekliyor.
+- [ ] **O0 ATT** — build 12'yi temiz kur, ekran kaydı al, App Review Notes + 2.1 yanıtı.
+- [ ] **Gizlilik sayfası** — privacy(-tr).html TelemetryDeck maddesi yayında değil; incelemeden ÖNCE App Store'daki gizlilik URL'sine yayınlanmalı (onayla).
+- [ ] **O2 TR fiyat** — ASC'de doğrulandı: full_unlock ₺39,99 = bundle_full_jetton30 ₺39,99 (USA $1.99/$2.99). Öneri: paket ₺59,99 ya da tam sürüm ₺29,99.
+- [ ] **O1** — remove_ads + 2 noads paketi READY_TO_SUBMIT (hiç satılmadı). SİLME; sürümü gönderirken IAP listesine ekleme.
+- [ ] **O4 yan not** — EN mağaza metni karaktere "Emlah" diyor, oyunun EN'inde "Estetan". Hangisi?
+- [ ] **O6** commit + push (onayla).
+- [x] O3 Game Center "Tam Destek" açıklaması → "Purchase the Full Version." (API ile güncellendi)
+- [x] O5 kararsız testler düzeltildi (energy-minigames durum bekliyor; fateful-moments araya giren iş görevini geçiyor)
+
+## ✅ Uygulananlar (rapordaki kodlar)
+- G3+S3: gövde fontu **Jersey 15** (Pixelify'da 5↔S karışıyordu), Press Start 2P yalnız ≥16px, min 12px; fontlar `src/assets/fonts`'ta paketli (Google CDN kalktı). Kök 20px korunuyor, ölçek `--fs-xs/sm/md/lg`.
+- G10+S4: renk rolleri (`--c-frame`, `--c-select-*`, `--c-relation`), devre dışı birincil buton gri. G14 nabızlar 2–3 tur.
+- S2+G5+G12: tek satır üst bar (`.topbar`), bakiye bilgi, jeton→Mağaza, dişli→Ayarlar, disket kayıt göstergesi; iş görevi sırasında "Ev 1" hatası düzeldi.
+- S1+S9+G6: ofiste alt sekme çubuğu (Ofis/Telefon/Emlah/Mağaza; DOM'da OfficeScene'den önce — `.office-messages-btn` ilk=Telefon, son=İşler testler için), sabit eylem şeridi, sayılı metreler, yatay aktiviteler.
+- G2+G13: Emlah menüsü 4 bölüm (Çarşı/İşim/İnsanlar/Ben); testler `tests/helpers/emlah.mjs` openEmlahTab ile bölüm açıyor. Oyun içi "Çarşı"/"Alışveriş", gerçek para "Mağaza".
+- G11+S8: `LockedCard` + `rankProgress()`.
+- S5: iOS bildirimi (`NotificationBanner`), yalnızca gerçek okunmamış mesajlar; ofiste dokununca sohbet açılır (`MessagesPanel initialThreadId`).
+- G7: sahte bildirim kalktı → `logFlavorMessage` (Telefon'da kozmetik okunmamış, en fazla 3 sohbet, bildirim yok); dokununca hızlanma; telefon sahnesinde üst bar gizli.
+- S6+G4: `ResultCard` (damga inline, 3 stat, neden, para dökümü, sonraki adım). S7+G9: sözleşme segmentleri + teslim etkisi + "N seçim kaldı".
+- Emoji temizliği: ~470 emoji; 40+ yeni piksel ikon (`icons.tsx`), veri ikonları anahtar → `GameIcon`; Vitrin Karesi sprite'ları canvas'ta piksel çizim; bayraklar vektör; Esprili tarzı metin ekleri.
+
+## ✅ Yan Görev & Easter Egg paketi (12/12)
+Kod: `src/data/sideQuests.ts` (durum+metin+kurallar), `src/hooks/useSideQuests.ts` (akış), `src/data/album.ts` (oyunlar arası), `src/data/specialDays.ts`, `src/data/secretHouses.ts` (yalı + 55. ev), bileşenler `SideStoryModal`, `AlbumSection`; DialogueScene `sideChoices`; kayıt `SaveGame.sideQuests` (persist + sessiz `patchSave`). 8 yeni rozet. Ayrıntılı tetikleme tablosu raporda.
+
+---
+
+
+# ✅ (UYGULANDI 2026-10-06, yukarıya bak) Yan Görevler & Easter Egg Paketi — orijinal tasarım notları
+
+Kullanıcı paketi beğendi, "bir sonraki session'da ele alalım" dedi. Önce hangilerinin seçileceğini kullanıcıyla netleştir, sonra detaylı tasarla + uygula.
+Temel içgörü: mevcut sürprizlerin hepsi pasif (zar tutunca oyuncunun başına geliyor: 6 Tuhaf An, ünlüler, gizli müşteri, düello, zaman yolcusu, konsol/tıklama sayacı). Oyuncunun PEŞİNE DÜŞEBİLECEĞİ / KEŞFEDEBİLECEĞİ bir şey yok.
+Efor: S küçük, M orta, L büyük.
+
+**Claude'un önerisi (ilk build):** B1 Albüm + A3 Muhtar'ın Defteri + B4 Gerçek Takvim Günleri. Sonraki büyük içerik: A1 + B7.
+
+## A. Yan Görevler (birden çok eve yayılan)
+- [ ] **A1. Nadide Hanım'ın Anahtarı (L)** — Satış sonrası yaşlı müşteri etiketli eski bir anahtar verir. Sonraki evlerde müşteri ağzından ipuçları ("Kuzguncuk'ta yeşil kapılı yalı…"), Şehir Haritası'nda "?" işaretli bölge. Doğru bölgedeki evde "(Anahtarı göster)" seçeneği (yanlış evde +şüphe). 3 ipucu → gizli yalı açılır: tek seferlik özel satış + kendine özgü final. Bağlantı: easterEggs satır enjeksiyonu, istanbulMap, friendHouses sahne altyapısı.
+- [ ] **A2. Muzaffer Bey'in Sırrı (M)** — Chitchat'e sızan detaylar ("çocukken oturduğum ev de bahçeliydi…") portföydeki belirli bir evi işaret eder. O evde "Muzaffer Bey'e haber ver" seçeneği → patron memnuniyeti kalıcı yükselir (düşüş yarıya iner) + yeni ending varyasyonu. Başkasına satılırsa sessiz, kırgın bir mesaj. Bağlantı: chitchat, bossMood, endings.
+- [ ] **A3. Muhtar'ın Defteri (M)** — Bekleyen "Esnafla Çay" fikrini mekaniğe çevirir: çay aktivitesi Muhtar Cemal'i tanıtır, haftalık küçük mahalle işleri verir ("Bu hafta Kadıköy'de sat", "İndirimsiz sat", "Kedili aileye ev bul"). Kontrol listesi; her iş → sonraki evde "yerel bilgi" diyalog seçeneği + küçük para. 10 iş → "Mahallenin Emlakçısı" unvanı (müşteriler tanıyarak başlar, −şüphe). Bağlantı: dayActivities, goals/haftalık hedefler, badges.
+- [ ] **A4. Bir Müşterinin Hayatı (M)** — Satılan müşteri aylar sonra döner: bebek → daha büyük ev; sonra yurt dışı → evini sat; en son düğün davetiyesi. 3 temaslı karakter hikâyesi; Rehber kartı büyür, her aşama satış fırsatı/referans. Bağlantı: callbacks, contactBook, echoNetwork.
+- [ ] **A5. Hayalet Ev Soruşturması (S-M)** — 👻 Tuhaf An görüldükten sonra ofiste "Soruşturmayı sürdür" iş kartı: 3 adım (eski gazete kupürü — Tapu Masası tarzı belge, bekçinin ifadesi — mesaj, gece ziyareti). Komik/sıradan sonuç (eski kalorifer tesisatı). Ödül: rozet + o tip evlerde "hayalet hikâyesini anlat" (+eğlence).
+
+## B. Easter Egg'ler (oyuncunun keşfettiği sırlar)
+- [ ] **B1. Tuhaf Anlar Albümü (M) — çarpan madde** — Ofiste "Albüm" sekmesi: görülen her easter egg / ünlü / gizli müşteri / sır bir kart; görülmeyenler "???" + 1 satırlık ipucu ("Gece yarısı ofiste biri var…"). 5 / 10 / tümü için jetton ödülleri. Mevcut `easterEggsSeenCount` altyapısı var.
+- [ ] **B2. Kedi Fotoğrafçısı (S)** — Vitrin Karesi'nde kediyi 3 karede de TEK BAŞINA yakalarsan gizli sonuç: ilan viral (mevcut socialReaction), Muzaffer "ilanı kedi sattı", rozet.
+- [ ] **B3. Tanıdık İmza (S)** — Tapu Masası'nda nadiren alıcı eski bir müşteri ya da Fırat Bey (sahte imza). Reddedince Fırat'tan sinirli mesaj + rakip merdiveninde küçük avantaj.
+- [ ] **B4. Gerçek Takvim Günleri (S)** — Cihaz tarihine bağlı: 1 Nisan (müşteriler saçma isteklerle gelir), 13'ü Cuma (her evde bir aksilik satırı), 29 Ekim / yılbaşı (ofis süsü + patron kutlaması), oyunun yıldönümü (geliştirici notu). seasonalTint + inbox altyapısıyla.
+- [ ] **B5. Gece Yarısı Müşterisi (S)** — Gerçek saat 00:00–04:00: ofis kararır, tek seferlik "gece kuşu" müşteri (ışık geçirmeyen pencereli ev arıyor, çok kibar). Satışı özel rozet.
+- [ ] **B6. Radyonun Gizli Frekansı (S)** — RadioTicker'a üst üste 5 dokunuş → gizli istasyon: Emlah'ın seçilen geçmişine (origin) göre yazılmış kısa, samimi anlatım.
+- [ ] **B7. 55. Ev: Emlah'ın Kendi Evi (L) — final sırrı** — Portföy 54'te biter; oyunu belirli bir koşulla (ör. hiç indirimsiz + dürüstlük ağır basarak) bitirenlere gizli 55. ev: Emlah'ın kendi evi. Alıcı genç, idealist bir emlakçı (Emlah'ın ilk günkü hali). Duygusal kapanış.
+
+---
+
+# 🍎 Apple reddi (ATT) + mesajlar + tam sürüm = reklamsız — Build 11 (2026-10-06)
+
+## ⏳ BEKLEYEN — İncelemeye göndermeden önce
+- [ ] **İncelemeye GÖNDERİLMEDİ.** Kullanıcı kararı: bugünkü eklemeler (yan görev paketi + web önerilerinden seçilenler) bitmeden review'e gönderilmeyecek. Build 11 sadece TestFlight testi için.
+- [ ] **Cihazda ATT testi + ekran kaydı:** uygulamayı silip TestFlight'tan temiz kur → açılışta ATT penceresi çıkmalı (Game Center girişinden ÖNCE) → izin ver/verme → oyun akışı. Bu kaydı App Review Information > Notes'a ekle ve 2.1 mesajına yanıt olarak gönder (Apple tam olarak bunu istedi).
+- [ ] **ASC:** `remove_ads`, `bundle_full_noads`, `bundle_full_noads_jetton30` → "Satıştan kaldır" (SİLME — eski alıcıların geri yüklemesi bunlara bağlı).
+- [ ] **ASC fiyat kontrolü:** TR'de Tam Sürüm ₺39,99 ile "Full + 30 Jetton" ₺39,99 aynı görünüyor (yurt dışı $1.99 / $2.99) — kod mu yanlış, ASC mi?
+- [ ] Game Center "Tam Destek" başarımı açıklaması + App Store metni "reklamsız paket" diyorsa güncelle.
+- [ ] Commit/push yapılmadı (35297fe, 52ec5bc dahil yerelde).
+- [ ] **ASC mağaza metni + 10 lokalizasyon (6 Ekim)** — `store/asc/en-US.txt` (ana metin, yan görev/albüm/özel günler dahil; EN'de kahraman adı Estetan) ve `store/asc/tr.txt` hazır. ASC'YE YÜKLENDİ (6 Ekim, geri okuma birebir): 17 dil — en-US, tr, ar-SA, ro, es-MX, pt-BR, pl, id, ru, ko, es-ES, ja, uk, de-DE, fr-FR, it, nl-NL. Dil dosyaları `store/asc/<locale>.txt` (13 dil `build_locales.py` ile: açıklama çeviri v3, sınırı aşan alt başlık/promo/kw v2'den; çeviri düzeltmeleri betikte). Yükleme: `python3 store/asc/upload.py "<locale>=<dosya>#<Bölüm>"` (denetim → oluştur/güncelle → geri oku).
+  Kullanıcı aynı formatta (name/subtitle/Promotional Text/Description/keywords) ~10 dil dosyası gönderecek → `store/asc/parse_check.py` ile denetle
+  (name/subtitle 30, promo 170, açıklama 4000 karakter; keywords 100 BAYT) → `store/asc/asc.py` (API) ile lokalizasyonları aç ve yapıştır → geri okuyup doğrula.
+  ASC: app 6814282702, sürüm 1.0 (d848afbd-…), appInfo f7be6adf-…. Ekran görüntüsü: TR hariç hepsi İngilizce; yeni lokalizasyonlar en-US görüntülerini otomatik devralır.
+  DİKKAT: açıklama yan görev paketini anlatıyor → incelemeye giden build bu paketi İÇERMELİ.
+- **Ölçüm (TelemetryDeck, 6 Ekim) — kod AÇIK** (App ID `04441313-DCAA-41B1-90E8-09568B546415`, test sinyali 200). `src/data/analytics.ts`
+  (Sadrazam'daki modülün kopyası). http://localhost'ta hep kapalı (testte açmak: `localStorage["simsar-emlak-an-test"]="1"`).
+  Sürüm/build vite.config.ts ile pbxproj'dan otomatik okunur.
+  - [x] Kod + App ID + test (Chromium/WebKit, ağ hatası, smoke)
+  - [x] ASC App Privacy: Usage Data → Product Interaction (Analytics, Not linked, No tracking) — kullanıcı elle ekledi
+  - [x] privacy.html / privacy-tr.html'e TelemetryDeck bölümü
+  - [ ] Sıradaki iOS build (build + cap sync) — ölçüm ancak bununla devreye girer; öncesinde APP_ID'nin yerinde olduğunu kontrol et
+  - [ ] Güncel privacy.html / -tr'yi canlı gizlilik adresine yayınla (incelemeye GÖNDERMEDEN önce, kullanıcı onayıyla)
+  - [ ] Yayından 1–2 hafta sonra panoyu incele: house_result ile ev zorluk dengesi, app_background ile oyuncunun bıraktığı yer, paywall → purchase dönüşümü
+  Olaylar: session_start, game_start, house_result (her ev), week_end, game_end, paywall_shown, store_open, purchase
+  (ok/cancelled/error, revenuecat.ts), ad_shown/ad_failed (ads.ts), app_background (bağlam: stage, houseNo → nerede bıraktı).
+  Kota Sadrazam ile ORTAK (ayda 50 bin; oyun başına ~70 olay).
+
+## ✅ TAMAMLANDI — Apple 2.1 reddi: ATT penceresi hiç görünmüyordu (build 10, iOS/iPadOS 27.2)
+Kök neden: `requestTrackingAuthorization` kodun HİÇBİR yerinde çağrılmıyordu (Info.plist'te açıklama + AdMob vardı, istek yoktu). Ek risk: açılıştaki Game Center girişi kendi penceresini açıyordu — iOS başka bir sistem penceresi açıkken yapılan ATT isteğini sessizce yutar (inceleme cihazları genelde Game Center'a girişsiz).
+- `ios/App/App/SceneDelegate.swift`: `sceneDidBecomeActive` → durum `notDetermined` ise 1 sn sonra, ana iş parçacığında, uygulama aktifse `ATTrackingManager.requestTrackingAuthorization`. Yutulursa sonraki aktif oluşta tekrar dener. (Uygulama scene tabanlı — AppDelegate.applicationDidBecomeActive çağrılmıyor.)
+- `src/data/tracking.ts` (yeni): `waitForTrackingDecision()` — ATT cevabını bekler (maks 45 sn).
+- Game Center girişi ve `AdMob.initialize` artık bu cevaptan SONRA başlıyor → izin öncesi veri toplanmıyor.
+- Arşivde doğrulandı: NSUserTrackingUsageDescription var, AppTrackingTransparency.framework bağlı, binary'de requestTrackingAuthorization var.
+- Build 10→11, CLI pipeline. "UPLOAD SUCCEEDED with no errors" (Delivery UUID `1b07af25-e681-47c9-b5e6-9ac4c1456f01`).
+
+## ✅ TAMAMLANDI — Mesajlar: okunmamış takibi + telefon görünümü
+Kök neden: tek bir global `seenInboxCount` sayacı vardı; sohbet bazında okunmamış bilgisi yoktu.
+- Her `InboxMessage`'a `read` bayrağı (kayıtla saklanır; eski kayıtlar yüklenirken okundu sayılır — `migrateInboxReadFlags`).
+- Sohbet açılınca sadece o sohbet okunur (`markThreadRead`), kayda sessizce yazılır (`markSavedThreadRead`, "Kaydedildi" rozeti çıkmadan).
+- Telefonda canlı görülen sohbetler (Muzaffer'in günlük mesajı, sohbet/arkadaş/geri arama/buluşma) otomatik okundu.
+- Düzeltilen gizli hatalar: cüzdan butonu (Market) tüm mesajları okundu yapıyordu; `pruneInbox` sayacı kaydırıyordu; yeniden açılışta okunmamışlar sıfırlanıyordu.
+- `MessagesPanel` yeniden: telefon çerçevesi + "Sohbetler" listesi (avatar, gün, okunmamışlar kalın + yeşil sayaç, "Yanıt bekliyor" etiketi, Muzaffer sabit) + sohbet ekranı (gün ayraçları, "Okunmamış mesajlar" çizgisi, aksiyonlar alttaki yanıt çubuğunda).
+- Başlıkta cüzdandan AYRI kırmızı 📱 göstergesi (ofisteyken Mesajlar'ı açar); ofis butonu "Mesajlar · N yeni".
+- Test güncellendi: `tests/final-touches.mjs` (.thread-row → .msg-row).
+
+## ✅ TAMAMLANDI — Tam sürüm = geçiş reklamı yok, "Reklamları Kaldır" kaldırıldı
+- `isAdsRemoved()` artık tam sürümü de kabul ediyor (eski reklamsız alıcılar korunuyor). Ödüllü reklamlar (Enerji Molası, İkinci Şans) aynen duruyor.
+- Market: "Reklamları Kaldır" kartı + iki reklamsız paket kaldırıldı; tek başlangıç paketi (Full + 30 Jetton) kaldı; Tam Sürüm altına reklam notu.
+- Paywall yeniden: 5 maddelik avantaj listesi (54+ ev, geçiş reklamı yok, ödüllü reklamlar isteğe bağlı, tüm sistemler, tek seferlik ödeme).
+- Hata düzeltmesi: geri yükleme sadece tekil ürünlere bakıyordu → paket alan oyuncu yeniden kurulumda tam sürümü kaybediyordu. Artık 3 paket de tam sürümü geri getiriyor.
+- "Tam Destek" başarımı tam sürümle açılıyor; karşılama teklifi metni güncellendi.
+
+## ✅ TAMAMLANDI — Arayüz ekspertiz raporu (web)
+https://claude.ai/artifact/KJBCEjckGSns1G62N1q83B — 14 bulgu (G1–G14), 9 sadeleştirme fikri (S1–S9), 7 diğer öneri (O1–O7), önerilen sıra. Kullanıcı maddeleri tek tek cevaplayacak.
+
+## Testler
+`node tests/run-all.mjs`: 19 testin 16'sı ilk koşuda geçti; `final-touches` seçici güncellemesiyle geçti; `energy-minigames` ve `energy-office-regen` tek başına 3/3 geçiyor (toplu koşuda zamanlamaya bağlı kararsız — sabit bekleme yerine waitFor'a çevrilmeli).
+
+---
+
 # Portföy kilidi, İşler kararları, aktivite düzeltmeleri (2026-09-26)
 
 ## ✅ TAMAMLANDI — Dil seçimi her açılışta

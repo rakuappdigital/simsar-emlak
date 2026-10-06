@@ -60,9 +60,16 @@ await page.waitForTimeout(500);
 // class, different handler until dayAdvanced flips true), second click is
 // the actual "Bugünün İşini Al" job attempt that hits the energy gate.
 await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(300);
-await page.locator(".office-get-job-btn").first().click({ timeout: 5000 }).catch(() => {});
-await page.waitForTimeout(500);
+// Sabit bekleme yerine: gün gerçekten ilerleyip buton "Bugünün İşini Al"a dönene kadar bekle
+// (toplu test koşusunda yük altında 300ms yetmiyordu). "Müşteri yok" çıkarsa tekrar dene.
+for (let i = 0; i < 20; i++) {
+  const label = (await page.locator(".office-get-job-btn").first().innerText().catch(() => "")) ?? "";
+  if (label.includes("Bugünün İşini Al")) break;
+  if (label.includes("Tekrar Dene") || label.includes("Yeni Güne Geç")) await page.locator(".office-get-job-btn").first().click().catch(() => {});
+  await page.waitForTimeout(250);
+}
+await page.locator(".office-get-job-btn", { hasText: "Bugünün İşini Al" }).first().click({ timeout: 5000 }).catch(() => {});
+await page.locator(".energy-break-modal").first().waitFor({ timeout: 4000 }).catch(() => {});
 
 assert((await page.locator(".energy-break-modal").count()) > 0, "low-energy save opens the Enerji Molası modal");
 assert((await page.locator(".energy-break-card").count()) === 4, "2 mini-game activities + rewarded-ad + jetton cards are offered");

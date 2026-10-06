@@ -4,6 +4,7 @@ import { formatTL } from "../data/economy";
 import { POSTPONE_SUSPICION_PENALTY, DECLINE_BOSS_MOOD_PENALTY } from "../data/jobDecisions";
 import { ENERGY_DEPLETION_PER_HOUSE } from "../data/energy";
 import type { HouseResult, HouseScene, PausedVisit } from "../types";
+import { DoorIcon, CalendarIcon, CrossIcon, CheckIcon, ClockIcon } from "./icons";
 
 interface IslerPanelProps {
   pausedVisit: PausedVisit | null;
@@ -66,11 +67,11 @@ export default function IslerPanel({
 
             <p className="isler-job-status">
               {pausedVisit.status === "scheduled"
-                ? `📅 ${t({
+                ? t({
                     tr: `Randevu: ${pausedVisit.daysRemaining ?? 1} gün sonra`,
                     en: `Appointment in ${pausedVisit.daysRemaining ?? 1} day(s)`,
-                  })}`
-                : `🕐 ${t({ tr: "Ofiste seni bekliyor", en: "Waiting for you at the office" })}`}
+                  })
+                : t({ tr: "Ofiste seni bekliyor", en: "Waiting for you at the office" })}
               {pausedVisit.postponed && pausedVisit.status === "office" && (
                 <span className="isler-job-note"> · {t({ tr: "bir kez ertelendi", en: "postponed once" })}</span>
               )}
@@ -79,7 +80,6 @@ export default function IslerPanel({
             {pausedVisitOffer ? (
               <div className="isler-job-offer">
                 <p className="isler-job-offer-text">
-                  💬{" "}
                   {t({
                     tr: `"Bugün olmazsa ${pausedVisitOffer.daysOffset} gün sonra uyar mı?"`,
                     en: `"If not today, would ${pausedVisitOffer.daysOffset} days from now work?"`,
@@ -115,7 +115,7 @@ export default function IslerPanel({
               <div className="isler-decisions">
                 {pausedVisit.status === "office" && (
                   <button className="isler-decision isler-decision-go" onClick={onGoNow}>
-                    <span className="isler-decision-icon">🚪</span>
+                    <span className="isler-decision-icon"><DoorIcon size={20} /></span>
                     <span className="isler-decision-label">{t({ tr: "Şimdi Git", en: "Go Now" })}</span>
                     <span className="isler-decision-cost">
                       −{ENERGY_DEPLETION_PER_HOUSE} {t({ tr: "Enerji", en: "Energy" })}
@@ -124,7 +124,7 @@ export default function IslerPanel({
                 )}
                 {pausedVisit.status === "office" && (
                   <button className="isler-decision" onClick={onPostpone} disabled={!!pausedVisit.postponed}>
-                    <span className="isler-decision-icon">📅</span>
+                    <span className="isler-decision-icon"><CalendarIcon size={20} /></span>
                     <span className="isler-decision-label">{t({ tr: "Ertele", en: "Postpone" })}</span>
                     <span className="isler-decision-cost">
                       {pausedVisit.postponed
@@ -134,7 +134,7 @@ export default function IslerPanel({
                   </button>
                 )}
                 <button className="isler-decision isler-decision-decline" onClick={() => setConfirmDecline(true)}>
-                  <span className="isler-decision-icon">✖</span>
+                  <span className="isler-decision-icon"><CrossIcon size={20} /></span>
                   <span className="isler-decision-label">{t({ tr: "Reddet", en: "Decline" })}</span>
                   <span className="isler-decision-cost">
                     {t({ tr: `Seri bozulur · Patron −${DECLINE_BOSS_MOOD_PENALTY}`, en: `Breaks streak · Boss −${DECLINE_BOSS_MOOD_PENALTY}` })}
@@ -157,13 +157,23 @@ export default function IslerPanel({
                 <div className="isler-card isler-card-compact" key={`${r.houseId}-${i}`}>
                   <span>{h ? resolveHouseTitle(h) : r.houseId}</span>
                   <span className={`isler-outcome isler-outcome-${r.outcome}`}>
-                    {r.outcome === "sold"
-                      ? `✅ ${r.sale ? formatTL(r.sale.finalPrice) : ""}`
-                      : r.declined
-                        ? `✖ ${t({ tr: "Reddedildi", en: "Declined" })}`
-                        : r.outcome === "thinking"
-                        ? `🤔 ${t({ tr: "Düşünüyor", en: "Thinking" })}`
-                        : `❌ ${t({ tr: "Kayıp", en: "Lost" })}`}
+                    {r.outcome === "sold" ? (
+                      <>
+                        <CheckIcon size={12} className="icon-inline" /> {r.sale ? formatTL(r.sale.finalPrice) : ""}
+                      </>
+                    ) : r.declined ? (
+                      <>
+                        <CrossIcon size={12} className="icon-inline" /> {t({ tr: "Reddedildi", en: "Declined" })}
+                      </>
+                    ) : r.outcome === "thinking" ? (
+                      <>
+                        <ClockIcon size={12} className="icon-inline" /> {t({ tr: "Düşünüyor", en: "Thinking" })}
+                      </>
+                    ) : (
+                      <>
+                        <CrossIcon size={12} className="icon-inline" /> {t({ tr: "Kayıp", en: "Lost" })}
+                      </>
+                    )}
                   </span>
                 </div>
               );

@@ -1,11 +1,15 @@
 import { useState } from "react";
 import type { DistrictPin } from "../data/istanbulMap";
-import { TOTAL_DISTRICT_COUNT } from "../data/istanbulMap";
+import { TOTAL_DISTRICT_COUNT, districtCoords } from "../data/istanbulMap";
 import istanbulMapImg from "../assets/istanbul-map.webp";
 import { resolveHouseTitle, t } from "../data/language";
+import type { ReactNode } from "react";
+import { CheckIcon, ClockIcon, CrossIcon, CrownIcon } from "./icons";
 
 interface CityMapPanelProps {
   pins: DistrictPin[];
+  /** A1 — anahtarın sıradaki semti, haritada soru işaretiyle. */
+  hintDistrict?: string | null;
 }
 
 function dominantClass(pin: DistrictPin): string {
@@ -15,9 +19,14 @@ function dominantClass(pin: DistrictPin): string {
   return "map-pin-lost";
 }
 
-const outcomeIcon: Record<string, string> = { sold: "✅", thinking: "🤔", lost: "❌" };
+const outcomeIcon: Record<string, ReactNode> = {
+  sold: <CheckIcon size={12} className="icon-inline outcome-sold" />,
+  thinking: <ClockIcon size={12} className="icon-inline outcome-thinking" />,
+  lost: <CrossIcon size={12} className="icon-inline outcome-lost" />,
+};
 
-export default function CityMapPanel({ pins }: CityMapPanelProps) {
+export default function CityMapPanel({ pins, hintDistrict = null }: CityMapPanelProps) {
+  const hint = hintDistrict ? districtCoords[hintDistrict] : undefined;
   const [selected, setSelected] = useState<string | null>(null);
   const selectedPin = pins.find((p) => p.district === selected) ?? null;
 
@@ -37,9 +46,14 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
             title={pin.district}
           >
             <span className="city-map-pin-dot" />
-            {pin.dominated && <span className="city-map-pin-crown">👑</span>}
+            {pin.dominated && <span className="city-map-pin-crown"><CrownIcon size={12} /></span>}
           </button>
         ))}
+        {hint && (
+          <span className="city-map-hint" style={{ left: `${hint.x}%`, top: `${hint.y}%` }} title={hintDistrict ?? ""}>
+            ?
+          </span>
+        )}
       </div>
 
       {selectedPin && (
@@ -47,11 +61,11 @@ export default function CityMapPanel({ pins }: CityMapPanelProps) {
           <p className="portfolio-row-title">
             {selectedPin.district}{" "}
             {selectedPin.dominated && (
-              <span className="rival-ladder-title">👑 {t({ tr: "Hakimiyetin var", en: "You dominate this district" })}</span>
+              <span className="rival-ladder-title"><CrownIcon size={12} className="icon-inline" /> {t({ tr: "Hakimiyetin var", en: "You dominate this district" })}</span>
             )}
           </p>
           <p className="portfolio-row-location">
-            ✅ {selectedPin.sold} · 🤔 {selectedPin.thinking} · ❌ {selectedPin.lost}
+            {outcomeIcon.sold} {selectedPin.sold} · {outcomeIcon.thinking} {selectedPin.thinking} · {outcomeIcon.lost} {selectedPin.lost}
           </p>
           {selectedPin.houses.map((h, i) => (
             <div className="city-map-detail-row" key={i}>

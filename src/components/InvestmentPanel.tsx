@@ -2,6 +2,10 @@ import type { ContactedCustomer, HouseResult, HouseScene, OwnedInvestmentHouse, 
 import { formatTL } from "../data/economy";
 import { conditionLabel, renovationOptions, renovationCost, type RenovationLevel } from "../data/renovation";
 import { resolveText, resolveHouseTitle, resolveHouseLocation, t } from "../data/language";
+import LockedCard from "./LockedCard";
+import { ChartUpIcon } from "./icons";
+import { rankProgress } from "../data/scoring";
+import { WrenchIcon, CheckIcon, WarnIcon } from "./icons";
 
 interface InvestmentPanelProps {
   balance: number;
@@ -15,12 +19,14 @@ interface InvestmentPanelProps {
   onRenovate: (houseId: string, level: RenovationLevel) => void;
   contactedCustomers: ContactedCustomer[];
   onPitchInvestment: (contact: ContactedCustomer, houseId: string) => void;
+  /** Toplam kazanç — kilitliyken ilerleme çubuğu için. */
+  earned: number;
 }
 
 function outcomeLabel(outcome: SceneOutcome): string {
-  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })} ✅`;
-  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })} 🤔`;
-  return `${t({ tr: "Kaybedildi", en: "Lost" })} ❌`;
+  if (outcome === "sold") return `${t({ tr: "Satıldı", en: "Sold" })}`;
+  if (outcome === "thinking") return `${t({ tr: "Düşünüyor", en: "Thinking" })}`;
+  return `${t({ tr: "Kaybedildi", en: "Lost" })}`;
 }
 
 export default function InvestmentPanel({
@@ -35,16 +41,21 @@ export default function InvestmentPanel({
   onRenovate,
   contactedCustomers,
   onPitchInvestment,
+  earned,
 }: InvestmentPanelProps) {
   if (!investmentUnlocked) {
+    const prog = rankProgress(earned, "Ofis Ortağı");
     return (
       <div className="portfolio-panel">
-        <p className="menu-empty">
-          {t({
-            tr: 'Bu bölüm "Ofis Ortağı" rütbesine ulaşınca açılır — kendi paranla ev alıp elinde tutmadan satabileceksin.',
-            en: 'This section unlocks once you reach "Office Partner" rank — you\'ll be able to buy houses with your own money and sell them for a profit.',
+        <LockedCard
+          icon={<ChartUpIcon size={16} />}
+          title={t({ tr: "Yatırım Evleri", en: "Investment Properties" })}
+          hint={t({
+            tr: "Ofis Ortağı rütbesinde açılır — kendi paranla ev alıp elinde tutmadan satabileceksin.",
+            en: "Unlocks at Office Partner rank — you'll be able to buy houses with your own money and sell them for a profit.",
           })}
-        </p>
+          progress={{ current: prog.current, target: prog.target, label: `${formatTL(prog.current)} / ${formatTL(prog.target)}` }}
+        />
       </div>
     );
   }
@@ -58,12 +69,12 @@ export default function InvestmentPanel({
         <p className={`market-campaign-banner ${currentNewsModifier > 0 ? "news-up" : "news-down"}`}>
           {currentNewsModifier > 0
             ? t({
-                tr: `📈 Piyasa yükselişte — fiyatlar %${Math.round(currentNewsModifier * 100)} yukarıda.`,
-                en: `📈 The market is up — prices are ${Math.round(currentNewsModifier * 100)}% higher.`,
+                tr: `Piyasa yükselişte — fiyatlar %${Math.round(currentNewsModifier * 100)} yukarıda.`,
+                en: `The market is up — prices are ${Math.round(currentNewsModifier * 100)}% higher.`,
               })
             : t({
-                tr: `📉 Piyasa düşüşte — fiyatlar %${Math.round(Math.abs(currentNewsModifier) * 100)} aşağıda, satışta pazarlık daha sert geçebilir.`,
-                en: `📉 The market is down — prices are ${Math.round(Math.abs(currentNewsModifier) * 100)}% lower, negotiating a sale may be tougher.`,
+                tr: `Piyasa düşüşte — fiyatlar %${Math.round(Math.abs(currentNewsModifier) * 100)} aşağıda, satışta pazarlık daha sert geçebilir.`,
+                en: `The market is down — prices are ${Math.round(Math.abs(currentNewsModifier) * 100)}% lower, negotiating a sale may be tougher.`,
               })}
         </p>
       )}
@@ -83,7 +94,7 @@ export default function InvestmentPanel({
               <p className="portfolio-row-location">
                 {t({ tr: "Alış", en: "Purchase" })}: {formatTL(owned.purchasePrice)}
               </p>
-              <p className={`condition-tag condition-${owned.condition}`}>🔧 {resolveText(conditionLabel[owned.condition])}</p>
+              <p className={`condition-tag condition-${owned.condition}`}><WrenchIcon size={12} className="icon-inline" /> {resolveText(conditionLabel[owned.condition])}</p>
               {owned.renovationLevel === "yok" ? (
                 <div className="renovation-options">
                   {renovationOptions.map((opt) => {
@@ -102,7 +113,7 @@ export default function InvestmentPanel({
                 </div>
               ) : (
                 <p className="renovation-done-tag">
-                  ✅{" "}
+                  <CheckIcon size={12} className="icon-inline" />{" "}
                   {t({
                     tr: `${resolveText(renovationOptions.find((o) => o.level === owned.renovationLevel)?.label ?? "")} yapıldı`,
                     en: `${resolveText(renovationOptions.find((o) => o.level === owned.renovationLevel)?.label ?? "")} done`,
@@ -155,7 +166,7 @@ export default function InvestmentPanel({
               </button>
               {discounted && (
                 <p className="market-item-discount">
-                  ⚠️ {t({ tr: "Fiyat düşük ama satarken zorlanabilirsin", en: "Price is low but you may struggle to sell later" })}
+                  <WarnIcon size={12} className="icon-inline" /> {t({ tr: "Fiyat düşük ama satarken zorlanabilirsin", en: "Price is low but you may struggle to sell later" })}
                 </p>
               )}
             </div>

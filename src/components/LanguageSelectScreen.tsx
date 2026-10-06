@@ -1,5 +1,7 @@
 import { LogoIcon } from "./icons";
 import { setLanguage, type Language } from "../data/language";
+import type { ReactNode } from "react";
+import { FlagTrIcon, FlagGbIcon } from "./icons";
 
 interface LanguageSelectScreenProps {
   /** The previously chosen language, highlighted so a returning player can just tap it again. Undefined on first install. */
@@ -7,9 +9,9 @@ interface LanguageSelectScreenProps {
   onChosen: (lang: Language) => void;
 }
 
-const options: { id: Language; flag: string; label: string }[] = [
-  { id: "tr", flag: "🇹🇷", label: "Türkçe" },
-  { id: "en", flag: "🇬🇧", label: "English" },
+const options: { id: Language; flag: ReactNode; label: string }[] = [
+  { id: "tr", flag: <FlagTrIcon size={40} />, label: "Türkçe" },
+  { id: "en", flag: <FlagGbIcon size={40} />, label: "English" },
 ];
 
 export default function LanguageSelectScreen({ current, onChosen }: LanguageSelectScreenProps) {

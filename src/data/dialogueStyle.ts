@@ -40,7 +40,8 @@ export function setDialogueStyle(style: DialogueStyle): void {
 }
 
 const ESPRILI_SUFFIX_CHANCE = 0.2;
-const espriliSuffixes = [{ tr: " 😄", en: "😄" }, { tr: " 😅", en: "😅" }, { tr: " 😉", en: "😉" }];
+// Emoji yerine kısa, oyuncu tonu metin ekleri (kullanıcı kuralı: oyunda emoji yok).
+const espriliSuffixes = [{ tr: " hehe", en: " heh" }, { tr: " (gülümseyerek)", en: " (smiling)" }, { tr: " (göz kırparak)", en: " (winking)" }];
 const RESMI_SUFFIX_CHANCE = 0.2;
 const resmiSuffixes = [{ tr: "!", en: "!" }];
 

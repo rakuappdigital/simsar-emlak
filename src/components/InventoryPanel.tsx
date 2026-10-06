@@ -3,6 +3,8 @@ import { inventoryItems } from "../data/inventory";
 import { formatTL } from "../data/economy";
 import { resolveText, t } from "../data/language";
 import PurchaseConfirmModal from "./PurchaseConfirmModal";
+import GameIcon from "./GameIcon";
+import { CoinIcon, ShieldIcon } from "./icons";
 
 interface InventoryPanelProps {
   balance: number;
@@ -19,11 +21,11 @@ export default function InventoryPanel({ balance, jettons, shieldHousesLeft, has
   return (
     <div className="market-panel">
       <p className="menu-empty">
-        {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)} · 🪙 {jettons}
+        {t({ tr: "Bakiye", en: "Balance" })}: {formatTL(balance)} · <CoinIcon size={12} className="icon-inline" /> {jettons}
       </p>
       {shieldHousesLeft > 0 && (
         <p className="market-item-discount">
-          🛡️ {t({ tr: "Şüphe Kalkanı aktif", en: "Suspicion Shield active" })} — {shieldHousesLeft}{" "}
+          <ShieldIcon size={12} className="icon-inline" /> {t({ tr: "Şüphe Kalkanı aktif", en: "Suspicion Shield active" })} — {shieldHousesLeft}{" "}
           {t({ tr: "ev kaldı", en: "houses left" })}
         </p>
       )}
@@ -36,11 +38,17 @@ export default function InventoryPanel({ balance, jettons, shieldHousesLeft, has
             <div className="market-item" key={item.id}>
               <div className="market-item-info">
                 <p className="market-item-title">
-                  {item.icon} {resolveText(item.name)}
+                  <GameIcon name={item.icon} size={14} className="icon-inline market-item-icon" /> {resolveText(item.name)}
                 </p>
               </div>
               <button className="pixel-btn small" disabled={disabled} onClick={() => setPendingItemId(item.id)}>
-                {item.currency === "jetton" ? `🪙 ${item.cost}` : formatTL(item.cost)}
+                {item.currency === "jetton" ? (
+                  <>
+                    <CoinIcon size={12} className="icon-inline" /> {item.cost}
+                  </>
+                ) : (
+                  formatTL(item.cost)
+                )}
               </button>
             </div>
           );
@@ -51,7 +59,7 @@ export default function InventoryPanel({ balance, jettons, shieldHousesLeft, has
           icon={pendingItem.icon}
           title={resolveText(pendingItem.name)}
           description={resolveText(pendingItem.description)}
-          priceLabel={pendingItem.currency === "jetton" ? `🪙 ${pendingItem.cost}` : formatTL(pendingItem.cost)}
+          priceLabel={pendingItem.currency === "jetton" ? `${pendingItem.cost} Jetton` : formatTL(pendingItem.cost)}
           onCancel={() => setPendingItemId(null)}
           onConfirm={() => {
             onBuy(pendingItem.id);

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import GameIcon from "./GameIcon";
+import { ClapperIcon, CoinIcon } from "./icons";
 import { energyBreakActivities } from "../data/energyBreak";
 import { resolveText, t } from "../data/language";
 import { showRewardedAd } from "../data/ads";
@@ -95,10 +97,10 @@ export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd
           })}
         </p>
 
-        <p className="market-category-title">🎬 {t({ tr: "Reklam", en: "Ad" })} / 🪙 {t({ tr: "Jetton", en: "Token" })}</p>
+        <p className="market-category-title">{t({ tr: "Reklam", en: "Ad" })} / {t({ tr: "Jetton", en: "Token" })}</p>
         <div className="energy-break-list">
           <button className="energy-break-card" onClick={handleWatchAd} disabled={watchingAd || !adAvailable}>
-            <span className="energy-break-icon">🎬</span>
+            <span className="energy-break-icon"><ClapperIcon size={22} /></span>
             <span className="energy-break-label">
               {watchingAd
                 ? t({ tr: "Reklam oynatılıyor…", en: "Playing ad…" })
@@ -111,7 +113,7 @@ export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd
             </span>
           </button>
           <button className="energy-break-card" onClick={onSpendJettons} disabled={jettons < JETTON_ENERGY_REFILL_COST}>
-            <span className="energy-break-icon">🪙</span>
+            <span className="energy-break-icon"><CoinIcon size={22} /></span>
             <span className="energy-break-label">
               {t({ tr: "Jetton Kullan", en: "Use Tokens" })} ({jettons})
             </span>
@@ -130,7 +132,7 @@ export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd
           </p>
         )}
 
-        <p className="market-category-title">🎮 {t({ tr: "Mini Oyunlar", en: "Mini Games" })}</p>
+        <p className="market-category-title">{t({ tr: "Mini Oyunlar", en: "Mini Games" })}</p>
         <div className="energy-break-list" key={scheduleTick}>
           {energyBreakActivities.map((a) => {
             const remaining = getPlaysRemaining(a.id);
@@ -143,7 +145,7 @@ export default function EnergyBreakScreen({ energy, jettons, onChoose, onWatchAd
                 onClick={() => !locked && setActiveActivityId(a.id)}
                 disabled={locked}
               >
-                <span className="energy-break-icon">{a.icon}</span>
+                <span className="energy-break-icon"><GameIcon name={a.icon} size={22} /></span>
                 <span className="energy-break-label">{resolveText(a.label)}</span>
                 <span className="energy-break-gain">
                   {locked

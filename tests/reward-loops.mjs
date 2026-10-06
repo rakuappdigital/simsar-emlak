@@ -7,6 +7,7 @@
 //
 // Usage: BASE_URL=http://localhost:4173 node tests/reward-loops.mjs
 import { chromium } from "playwright";
+import { openEmlahTab } from "./helpers/emlah.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const errors = [];
@@ -100,7 +101,7 @@ async function readJettons() {
     return m ? Number(m[1]) : null;
   }
   const bodyText = await page.locator("body").innerText();
-  const m = bodyText.match(/Your balance:\s*🪙\s*(\d+)/);
+  const m = bodyText.match(/Your balance:\s*(\d+)/);
   return m ? Number(m[1]) : null;
 }
 
@@ -161,7 +162,7 @@ await page.locator(".market-close").first().click({ timeout: 3000 }).catch(() =>
 await page.waitForTimeout(300);
 
 // ---------- 4) Jetton package purchase (mock purchase always succeeds off-native) ----------
-await page.locator(".jetton-pill").click({ timeout: 5000 });
+await page.locator(".jetton-pill").click({ timeout: 5000 }); // jeton çipi artık doğrudan Mağaza'yı açıyor
 await page.waitForTimeout(400);
 const jettonsBeforePurchase = await readJettons();
 await page.locator(".day-activity-card", { hasText: "20 Jetton" }).click({ timeout: 5000 });
@@ -177,7 +178,7 @@ await page.locator("button", { hasText: "Back" }).click({ timeout: 5000 });
 await page.waitForTimeout(400);
 await page.locator(".wallet-pill-btn").first().click({ timeout: 5000 });
 await page.waitForTimeout(400);
-await page.locator('.emlah-tab-btn:has-text("Inventory")').click({ timeout: 5000 });
+await openEmlahTab(page, "Inventory");
 await page.waitForTimeout(400);
 const jettonsBeforeShield = await readJettons();
 await page.locator(".market-item", { hasText: "Suspicion Shield" }).locator("button").click({ timeout: 5000 });

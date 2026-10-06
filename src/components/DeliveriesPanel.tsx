@@ -1,6 +1,7 @@
 import type { PendingDelivery } from "../types";
 import { t } from "../data/language";
 import { formatTL } from "../data/economy";
+import { ClockIcon } from "./icons";
 
 interface DeliveriesPanelProps {
   pendingDeliveries: PendingDelivery[];
@@ -31,7 +32,7 @@ export default function DeliveriesPanel({ pendingDeliveries, currentDateLabel }:
           </div>
           <div className="portfolio-row-meta">
             <span className="portfolio-row-status">
-              ⏳ {formatTL(d.deferredAmount)} {t({ tr: "bekliyor", en: "pending" })}
+              <ClockIcon size={12} className="icon-inline" /> {formatTL(d.deferredAmount)} {t({ tr: "bekliyor", en: "pending" })}
             </span>
           </div>
         </div>

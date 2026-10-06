@@ -213,3 +213,16 @@ export function computeFreshStats(
   }
   return stats;
 }
+
+const RANK_STEPS: { title: string; at: number }[] = [
+  { title: "Emlakçı", at: 300000 },
+  { title: "Kıdemli Emlakçı", at: 800000 },
+  { title: "Ofis Ortağı", at: 1500000 },
+];
+
+/** S8 — kilitli kartların ilerleme çubuğu: bir sonraki rütbe ve ona kalan kazanç. `toRank` verilirse o rütbeye göre. */
+export function rankProgress(earned: number, toRank?: string): { nextTitle: string | null; current: number; target: number } {
+  const step = toRank ? RANK_STEPS.find((r) => r.title === toRank) : RANK_STEPS.find((r) => earned < r.at);
+  if (!step) return { nextTitle: null, current: earned, target: earned };
+  return { nextTitle: step.title, current: Math.min(earned, step.at), target: step.at };
+}

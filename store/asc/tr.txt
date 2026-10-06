@@ -1,0 +1,49 @@
+name:
+Odd Estate
+
+subtitle:
+İstanbul'da Pazarlık Oyunu
+
+Promotional Text:
+Eski bir anahtarın peşine düş, kimsenin görmediği eve ulaş. Şehre yayılan yan hikâyeleri çöz, tuhaflıkları albümüne topla ve 55. kapının ardında kimin yaşadığını öğren.
+
+Description:
+Emlah'sın: parasız, kendini henüz kanıtlayamamış ve kötü bir aydan masanı kaybetmeye bir adım uzaktasın. İstanbul emlak piyasası özgeçmişinle ilgilenmiyor. Karşındakini okuyup okuyamadığınla, yalanı sezip sezemediğinle ve müşteri kapıdan çıkmadan işi bitirip bitiremediğinle ilgileniyor.
+
+Odd Estate, her ev gezdirmenin psikolojik bir düelloya dönüştüğü, diyalog tabanlı bir pazarlık oyunu. Fazla bastırırsan şüphe artar. Fazla temkinli davranırsan satışı rakip bir emlakçı kapar. Seçtiğin her replik dengeyi değiştirir: müşteriyi oku, gerilimi yönet, fırsat elindeyken kapat.
+
+54 EV, 54 HİKÂYE
+Hüzünlü bir geçmişi olan nemli bir stüdyodan, sahibinin sana her şeyi anlatmadığı belli olan bir çatı katına kadar her mülkün kendi karakterleri, sırları ve vazgeçme sebepleri var.
+
+ŞEHRE YAYILAN YAN HİKÂYELER
+Yaşlı bir müşteri eline etiketi solmuş bir anahtar tutuşturur. Patronun çocukluğunun geçtiği evle ilgili ipuçları verip durur. Mahallenin muhtarının küçük ricalarla dolu bir defteri vardır. Bu ipliklerin peşinden evden eve git; normal ilanların asla açmayacağı kapılar açılsın.
+
+PEŞİNE DÜŞÜLECEK SIRLAR
+Açıklaması gayet sıradan çıkan perili bir daire. Gece yarısı gelip yalnızca perdelerin ışık geçirip geçirmediğini soran bir müşteri. Yedi kediden oluşan bir kurul. Ortaya çıkardığın her tuhaflık albümüne girer; boş sayfalar sana bir ipucu bırakır. Bazı sırlar yalnızca gerçek takvimin özel günlerinde ortaya çıkar.
+
+STAJYERDEN ORTAĞA
+Her komisyon seni ofis hiyerarşisinde yukarı taşır. Her rütbe yeni araçlar, yeni kozlar ve yeni kapatma yolları açar.
+
+KARŞINDA BEŞ RAKİP EMLAKÇI
+Diğer emlakçılar da aynı müşterilerin peşinde. Onları alt et, yoksa satışını onlar kapar.
+
+İNSANLAR SENİ HATIRLAR
+Müşteriler geri döner, arkadaşların arar, aylar önce verdiğin kararlar yeniden karşına çıkar. Dürüst ya da kurnaz, ünün peşini bırakmaz.
+
+KÂR İÇİN ÇEVİR
+Yatırım piyasasının kilidini aç: ucuza al, tadilat yap, pahalıya sat.
+
+KENDİ TARZIN
+Bir geçmiş seç, yetenek ağacını geliştir ve sesini bul: eğlenceli, samimi ya da atılgan. Ev gezdirmelerin arasında günlerini küçük mini oyunlar doldurur.
+
+FARKLI SONLAR
+Kendi ofisini aç, patronunun ortağı ol ya da kovul. Kariyerinin nasıl biteceği nasıl oynadığına bağlı.
+
+İlk evleri ücretsiz dene, tüm kariyerin kilidini tek seferlik bir satın almayla aç.
+
+Türkçe ve İngilizce dil desteği.
+
+Odd Estate tablolarla ilgili değil. İnsanlarla ilgili: onları okumak, anlamak ve ne zaman bastırıp ne zaman kendi kendilerine gelmelerini bekleyeceğini bilmek.
+
+keywords:
+emlak,emlakçı,diyalog,hikaye,simülasyon,rpg,işletme,anlatı,seçim,görsel roman,ev,pixel

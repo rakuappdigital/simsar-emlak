@@ -5,20 +5,12 @@ import {
   FULL_UNLOCK_PRICE_TR,
   FULL_UNLOCK_PRICE_INTL,
   FULL_UNLOCK_DESCRIPTION,
-  REMOVE_ADS_PRICE_TR,
-  REMOVE_ADS_PRICE_INTL,
-  REMOVE_ADS_DESCRIPTION,
   BUNDLE_FULL_JETTON30_PRICE_INTL,
   BUNDLE_FULL_JETTON30_PRICE_TR,
   BUNDLE_FULL_JETTON30_DESCRIPTION,
-  BUNDLE_FULL_NOADS_PRICE_INTL,
-  BUNDLE_FULL_NOADS_PRICE_TR,
-  BUNDLE_FULL_NOADS_DESCRIPTION,
-  BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL,
-  BUNDLE_FULL_NOADS_JETTON30_PRICE_TR,
-  BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION,
 } from "../data/purchases";
-import { CoinIcon, UnlockIcon, NoAdsIcon, GiftBundleIcon } from "./icons";
+import { CoinIcon, UnlockIcon, GiftBundleIcon, CheckIcon } from "./icons";
+import GameIcon from "./GameIcon";
 /** A store card's details, opened under its row when tapped. */
 interface StoreItem {
   icon: string;
@@ -43,13 +35,9 @@ interface StoreScreenProps {
   language: Language;
   jettons: number;
   fullUnlocked: boolean;
-  adsRemoved: boolean;
   onBuyJetton: (pkg: JettonPackage) => Promise<void>;
   onBuyFullVersion: () => Promise<void>;
-  onBuyRemoveAds: () => Promise<void>;
   onBuyBundleFullJetton30: () => Promise<void>;
-  onBuyBundleFullNoAds: () => Promise<void>;
-  onBuyBundleFullNoAdsJetton30: () => Promise<void>;
   onRestorePurchases: () => Promise<void>;
   onBack: () => void;
 }
@@ -62,13 +50,9 @@ export default function StoreScreen({
   language,
   jettons,
   fullUnlocked,
-  adsRemoved,
   onBuyJetton,
   onBuyFullVersion,
-  onBuyRemoveAds,
   onBuyBundleFullJetton30,
-  onBuyBundleFullNoAds,
-  onBuyBundleFullNoAdsJetton30,
   onRestorePurchases,
   onBack,
 }: StoreScreenProps) {
@@ -95,12 +79,6 @@ export default function StoreScreen({
     setBuyingId(null);
   }
 
-  async function handleBuyRemoveAds() {
-    setBuyingId("remove-ads");
-    await onBuyRemoveAds();
-    setBuyingId(null);
-  }
-
   async function handleBuyBundle(id: string, action: () => Promise<void>) {
     setBuyingId(id);
     await action();
@@ -117,27 +95,6 @@ export default function StoreScreen({
       refComponents: { tr: [FULL_UNLOCK_PRICE_TR, jetton50.priceTR], en: [FULL_UNLOCK_PRICE_INTL, jetton50.priceIntl] },
       description: BUNDLE_FULL_JETTON30_DESCRIPTION,
       onBuy: onBuyBundleFullJetton30,
-      featured: false,
-    },
-    {
-      id: "bundle-noads",
-      name: { tr: "Full + Reklamsız", en: "Full + No Ads" },
-      price: { tr: BUNDLE_FULL_NOADS_PRICE_TR, en: BUNDLE_FULL_NOADS_PRICE_INTL },
-      refComponents: { tr: [FULL_UNLOCK_PRICE_TR, REMOVE_ADS_PRICE_TR], en: [FULL_UNLOCK_PRICE_INTL, REMOVE_ADS_PRICE_INTL] },
-      description: BUNDLE_FULL_NOADS_DESCRIPTION,
-      onBuy: onBuyBundleFullNoAds,
-      featured: false,
-    },
-    {
-      id: "bundle-noads-jetton30",
-      name: { tr: "Full + Reklamsız + 30 Jetton", en: "Full + No Ads + 30 Jetton" },
-      price: { tr: BUNDLE_FULL_NOADS_JETTON30_PRICE_TR, en: BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL },
-      refComponents: {
-        tr: [FULL_UNLOCK_PRICE_TR, REMOVE_ADS_PRICE_TR, jetton50.priceTR],
-        en: [FULL_UNLOCK_PRICE_INTL, REMOVE_ADS_PRICE_INTL, jetton50.priceIntl],
-      },
-      description: BUNDLE_FULL_NOADS_JETTON30_DESCRIPTION,
-      onBuy: onBuyBundleFullNoAdsJetton30,
       featured: true,
     },
   ];
@@ -149,7 +106,7 @@ export default function StoreScreen({
   const jettonItems = JETTON_PACKAGES.map((pkg) => ({
     id: pkg.id,
     item: {
-      icon: "🪙",
+      icon: "coin",
       title: `${pkg.amount} Jetton`,
       description: JETTON_DESCRIPTION[language],
       priceLabel: language === "en" ? pkg.priceIntl : pkg.priceTR,
@@ -160,28 +117,18 @@ export default function StoreScreen({
     {
       id: "full-unlock",
       item: {
-        icon: "🔓",
+        icon: "unlock",
         title: language === "en" ? "Full Version" : "Tam Sürüm",
         description: FULL_UNLOCK_DESCRIPTION[language],
         priceLabel: language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR,
         run: handleBuyFullVersion,
       },
     },
-    {
-      id: "remove-ads",
-      item: {
-        icon: "🚫",
-        title: language === "en" ? "Remove Ads" : "Reklamları Kaldır",
-        description: REMOVE_ADS_DESCRIPTION[language],
-        priceLabel: language === "en" ? REMOVE_ADS_PRICE_INTL : REMOVE_ADS_PRICE_TR,
-        run: handleBuyRemoveAds,
-      },
-    },
   ];
   const bundleItems = bundles.map((bundle) => ({
     id: bundle.id,
     item: {
-      icon: "🎁",
+      icon: "gift",
       title: bundle.name[language],
       description: bundle.description[language],
       priceLabel: bundle.price[language],
@@ -195,7 +142,7 @@ export default function StoreScreen({
     if (!hit) return null;
     return (
       <div className="store-inline-detail">
-        <p className="store-inline-title">{hit.item.icon} {hit.item.title}</p>
+        <p className="store-inline-title"><GameIcon name={hit.item.icon} size={14} className="icon-inline" /> {hit.item.title}</p>
         <p className="store-inline-desc">{hit.item.description}</p>
         <button
           className="pixel-btn purchase-confirm-buy"
@@ -216,10 +163,10 @@ export default function StoreScreen({
 
   return (
     <div className="menu-screen">
-      <h2 className="menu-section-title">{language === "en" ? "Store" : "Market"}</h2>
+      <h2 className="menu-section-title">{language === "en" ? "Store" : "Mağaza"}</h2>
 
       <p className="menu-empty">
-        {language === "en" ? "Your balance" : "Bakiyen"}: <strong>🪙 {jettons}</strong>
+        {language === "en" ? "Your balance" : "Bakiyen"}: <strong><CoinIcon size={14} className="icon-inline" /> {jettons}</strong>
       </p>
       <p className="menu-empty">
         {language === "en" ? "Tap an item to see what it includes." : "İçeriğini görmek için bir pakete dokun."}
@@ -251,27 +198,23 @@ export default function StoreScreen({
           <span className="day-activity-icon"><UnlockIcon size={20} /></span>
           <span className="day-activity-label">{language === "en" ? "Full Version" : "Tam Sürüm"}</span>
           <span className="day-activity-gain">
-            {fullUnlocked ? "✅" : buyingId === "full-unlock" ? "…" : language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR}
-          </span>
-        </button>
-        <button
-          className={cardClass("day-activity-card", "remove-ads")}
-          onClick={() => toggleItem("remove-ads")}
-          disabled={buyingId !== null || adsRemoved}
-        >
-          <span className="day-activity-icon"><NoAdsIcon size={20} /></span>
-          <span className="day-activity-label">{language === "en" ? "Remove Ads" : "Reklamları Kaldır"}</span>
-          <span className="day-activity-gain">
-            {adsRemoved ? "✅" : buyingId === "remove-ads" ? "…" : language === "en" ? REMOVE_ADS_PRICE_INTL : REMOVE_ADS_PRICE_TR}
+            {fullUnlocked ? <CheckIcon size={14} /> : buyingId === "full-unlock" ? "…" : language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR}
           </span>
         </button>
       </div>
+      {!fullUnlocked && (
+        <p className="store-full-note">
+          {language === "en"
+            ? "Full Version also removes the interstitial ads between days. Rewarded ads stay optional."
+            : "Tam Sürüm, gün geçişlerindeki geçiş reklamlarını da kaldırır. Ödüllü reklamlar isteğe bağlı kalır."}
+        </p>
+      )}
       {inlineDetail(unlockItems)}
 
       {!fullUnlocked && (
         <>
           <p className="settings-subsection-title">
-            <GiftBundleIcon size={14} className="icon-inline" /> {language === "en" ? "Starter Bundles" : "Başlangıç Paketleri"}
+            <GiftBundleIcon size={14} className="icon-inline" /> {language === "en" ? "Starter Bundle" : "Başlangıç Paketi"}
           </p>
           <div className="bundle-grid">
             {bundles.map((bundle, i) => {

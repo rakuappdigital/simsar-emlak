@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# App Store Connect yardımcı betikleri — Issuer/Key kimlikleri içerir, açık repoya girmez
+store/asc/*.py

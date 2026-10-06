@@ -15,6 +15,8 @@
  */
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { AdMob, RewardAdPluginEvents, InterstitialAdPluginEvents } from "@capacitor-community/admob";
+import { waitForTrackingDecision } from "./tracking";
+import { track } from "./analytics";
 
 const REWARDED_AD_UNIT_ID = "ca-app-pub-7882143822556333/4879734614";
 const INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-7882143822556333/8627407931";
@@ -41,7 +43,8 @@ let initPromise: Promise<void> | null = null;
 
 function ensureInitialized(): Promise<void> {
   if (!initPromise) {
-    initPromise = AdMob.initialize({ initializeForTesting: USE_TEST_ADS });
+    // ATT cevabı gelmeden SDK başlatılmaz — bkz. data/tracking.ts.
+    initPromise = waitForTrackingDecision().then(() => AdMob.initialize({ initializeForTesting: USE_TEST_ADS }));
   }
   return initPromise;
 }
@@ -72,9 +75,11 @@ export async function showRewardedAd(): Promise<boolean> {
     await AdMob.showRewardVideoAd();
     const result = await withTimeout(resultPromise, 15_000, false);
     await Promise.all(handles.map((h) => h.remove()));
+    track("ad_shown", { kind: "rewarded", rewarded: result ? 1 : 0 });
     return result;
   } catch (e) {
     console.error("AdMob rewarded ad failed:", e);
+    track("ad_failed", { kind: "rewarded" });
     return false;
   }
 }
@@ -101,7 +106,9 @@ export async function showInterstitialAd(): Promise<void> {
     await AdMob.showInterstitial();
     await withTimeout(resultPromise, 15_000, undefined);
     await Promise.all(handles.map((h) => h.remove()));
+    track("ad_shown", { kind: "interstitial" });
   } catch (e) {
     console.error("AdMob interstitial ad failed:", e);
+    track("ad_failed", { kind: "interstitial" });
   }
 }

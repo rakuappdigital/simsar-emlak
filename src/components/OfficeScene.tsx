@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { formatTL } from "../data/economy";
 import { officeTierForOwnedPerks, peekOfficeImage, loadOfficeImage } from "../data/officeImages";
 import { ENERGY_MAX, ENERGY_LOW_THRESHOLD, ENERGY_WORK_MIN_THRESHOLD } from "../data/energy";
 import { BOSS_MOOD_MAX, BOSS_MOOD_RAISE_THRESHOLD } from "../data/bossMood";
@@ -7,15 +6,22 @@ import { emlahMoodFor, emlahMoodLabel, emlahMoodPortrait } from "../data/emlahMo
 import { rankTitleDisplay } from "../data/scoring";
 import { resolveText, t, getLanguage } from "../data/language";
 import { dayActivities } from "../data/dayActivities";
-import { WalletIcon, PhoneDeviceIcon } from "./icons";
+import { CupIcon, BoltIcon, TieIcon, ClapperIcon, FolderIcon, MagnifierIcon, MegaphoneIcon, BriefcaseIcon, ClockIcon, TrophyIcon } from "./icons";
+import type { ComponentType } from "react";
+
+const activityIcon: Record<string, ComponentType<{ size?: number }>> = {
+  research: MagnifierIcon,
+  marketing: MegaphoneIcon,
+  "office-work": FolderIcon,
+  tea: CupIcon,
+};
 import MemoryWall from "./MemoryWall";
+import GameIcon from "./GameIcon";
 import type { Badge, PausedVisit, SignificantMemory } from "../types";
 
 interface OfficeSceneProps {
   rankTitleText: string;
   ownedPerks: string[];
-  balance: number;
-  unreadCount: number;
   energy: number;
   bossMood: number;
   currentDateLabel: string;
@@ -31,7 +37,6 @@ interface OfficeSceneProps {
   onAdvanceDay: () => void;
   onDoActivity: (activityId: string) => void;
   onGetJob: () => void;
-  onOpenMessages: () => void;
   onOpenIsler: () => void;
   onOpenEnergyBreak: () => void;
   /** Gizli Dokunuş Menüsü — called on every tap of the office title. See App.tsx's handleOfficeTitleTap. */
@@ -39,6 +44,13 @@ interface OfficeSceneProps {
   badges: string[];
   allBadges: Record<string, Badge>;
   significantMemories: SignificantMemory[];
+  /** Yan görevler — "Peşindekiler" kartları (hooks/useSideQuests.ts). */
+  sideCards?: { id: string; title: string; subtitle: string; icon: string; onClick: () => void }[];
+  /** B4 — gerçek takvim günü şeridi. */
+  specialDayBanner?: string | null;
+  festive?: boolean;
+  /** B5 — gerçek saat 00:00–04:00: ofis kararır. */
+  night?: boolean;
 }
 
 /**
@@ -46,15 +58,11 @@ interface OfficeSceneProps {
  * always-on phone screen. Its art tier follows what's actually been bought
  * from the "Ofis Ekipmanı" market category (see officeTierForOwnedPerks) —
  * furnishing the office is a direct result of shopping, not just rank.
- * Messaging still exists (see PhoneScreen/MessagesPanel) but is now
- * something the player opts into from here, either to fetch today's job
- * or to browse past threads.
+ * Mesajlar alt çubuktaki Telefon sekmesinden açılır (App.tsx, S1).
  */
 export default function OfficeScene({
   rankTitleText,
   ownedPerks,
-  balance,
-  unreadCount,
   energy,
   bossMood,
   currentDateLabel,
@@ -67,13 +75,16 @@ export default function OfficeScene({
   onAdvanceDay,
   onDoActivity,
   onGetJob,
-  onOpenMessages,
   onOpenIsler,
   onOpenEnergyBreak,
   onTitleTap,
   badges,
   allBadges,
   significantMemories,
+  sideCards = [],
+  specialDayBanner = null,
+  festive = false,
+  night = false,
 }: OfficeSceneProps) {
   const tier = officeTierForOwnedPerks(ownedPerks);
   const [image, setImage] = useState<string | undefined>(() => peekOfficeImage(tier));
@@ -102,7 +113,7 @@ export default function OfficeScene({
   const moodFilter = `brightness(${(0.72 + moodT * 0.43).toFixed(2)}) saturate(${(0.6 + moodT * 0.6).toFixed(2)}) hue-rotate(${(-8 + moodT * 8).toFixed(1)}deg)`;
   // CSS only takes one `filter` value per element, so the mood tint and the
   // seasonal tint are combined into a single string here.
-  const combinedFilter = `${moodFilter} ${seasonalFilter}`;
+  const combinedFilter = `${moodFilter} ${seasonalFilter}${night ? " brightness(0.62) saturate(0.8) hue-rotate(12deg)" : ""}`;
   const emlahMood = emlahMoodFor(energy, bossMood);
 
   return (
@@ -117,7 +128,12 @@ export default function OfficeScene({
           <span>{t({ tr: "Emlah'ın Ofisi", en: "Estetan's Office" })}</span>
           <span className="office-rank-tag">
             {rankTitleDisplay(rankTitleText)}
-            {prestigeTitle && <span className="office-prestige-tag"> 🏆 {prestigeTitle}</span>}
+            {prestigeTitle && (
+              <span className="office-prestige-tag">
+                {" "}
+                <TrophyIcon size={10} className="icon-inline" /> {prestigeTitle}
+              </span>
+            )}
           </span>
         </div>
         <div
@@ -144,7 +160,11 @@ export default function OfficeScene({
               <div className="office-calendar-day">{day}</div>
               <div className="office-calendar-footer">
                 {year && <span className="office-calendar-year">{year}</span>}
-                {timePart && <span className="office-calendar-time">🕐 {timePart}</span>}
+                {timePart && (
+                  <span className="office-calendar-time">
+                    <ClockIcon size={8} className="icon-inline" /> {timePart}
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -152,43 +172,53 @@ export default function OfficeScene({
         <MemoryWall badges={badges} allBadges={allBadges} significantMemories={significantMemories} />
       </div>
 
-      <div className="energy-bar">
-        <span className="energy-bar-label">
-          ⚡ {t({ tr: "Enerji", en: "Energy" })}{" "}
-          {energy < ENERGY_LOW_THRESHOLD && <span className="energy-bar-low">({t({ tr: "düşük", en: "low" })})</span>}
-        </span>
-        <div className="stat-track">
-          <div
-            className={`stat-fill energy-fill ${energy < ENERGY_LOW_THRESHOLD ? "energy-fill-low" : ""}`}
-            style={{ width: `${Math.min(100, (energy / ENERGY_MAX) * 100)}%` }}
-          />
+      {specialDayBanner && (
+        <div className={`office-special-day ${festive ? "office-special-day-festive" : ""}`}>
+          {festive && <span className="office-garland" aria-hidden />}
+          <span>{specialDayBanner}</span>
         </div>
-        {energy < ENERGY_WORK_MIN_THRESHOLD && (
-          <button className="pixel-btn small energy-ad-btn" onClick={onOpenEnergyBreak}>
-            🎬 {t({ tr: "Enerji Molası", en: "Energy Break" })}
-          </button>
-        )}
-      </div>
+      )}
 
-      <div className="energy-bar">
-        <span className="energy-bar-label">
-          😊 {t({ tr: "Patron Memnuniyeti", en: "Boss Mood" })}{" "}
-          {bossMood < BOSS_MOOD_RAISE_THRESHOLD && <span className="energy-bar-low">({t({ tr: "düşük", en: "low" })})</span>}
-        </span>
-        <div className="stat-track">
-          <div
-            className={`stat-fill boss-mood-fill ${bossMood < BOSS_MOOD_RAISE_THRESHOLD ? "energy-fill-low" : ""}`}
-            style={{ width: `${Math.min(100, (bossMood / BOSS_MOOD_MAX) * 100)}%` }}
-          />
+      {/* S9 — iki durum yan yana, sayılı. */}
+      <div className="office-meters">
+        <div className={`office-meter ${energy < ENERGY_LOW_THRESHOLD ? "office-meter-low" : ""}`}>
+          <span className="office-meter-head">
+            <BoltIcon size={12} className="icon-inline" /> {t({ tr: "Enerji", en: "Energy" })}
+            <strong className="office-meter-num">{Math.round(energy)}</strong>
+          </span>
+          <div className="stat-track">
+            <div
+              className={`stat-fill energy-fill ${energy < ENERGY_LOW_THRESHOLD ? "energy-fill-low" : ""}`}
+              style={{ width: `${Math.min(100, (energy / ENERGY_MAX) * 100)}%` }}
+            />
+          </div>
+          {energy < ENERGY_WORK_MIN_THRESHOLD && (
+            <button className="pixel-btn small ghost energy-ad-btn" onClick={onOpenEnergyBreak}>
+              <ClapperIcon size={12} className="icon-inline" /> {t({ tr: "Enerji Molası", en: "Energy Break" })}
+            </button>
+          )}
+        </div>
+        <div className={`office-meter ${bossMood < BOSS_MOOD_RAISE_THRESHOLD ? "office-meter-low" : ""}`}>
+          <span className="office-meter-head">
+            <TieIcon size={12} className="icon-inline" /> {t({ tr: "Patron", en: "Boss" })}
+            <strong className="office-meter-num">{Math.round(bossMood)}</strong>
+          </span>
+          <div className="stat-track">
+            <div
+              className={`stat-fill boss-mood-fill ${bossMood < BOSS_MOOD_RAISE_THRESHOLD ? "energy-fill-low" : ""}`}
+              style={{ width: `${Math.min(100, (bossMood / BOSS_MOOD_MAX) * 100)}%` }}
+            />
+          </div>
         </div>
       </div>
 
       {dayAdvanced && (
         <div className="day-activities">
-          <p className="market-category-title">📋 {t({ tr: "Bugünün Aktiviteleri", en: "Today's Activities" })}</p>
-          <div className="day-activity-list">
+          <p className="office-section-label">{t({ tr: "Bugünün aktiviteleri", en: "Today's activities" })}</p>
+          <div className="day-activity-list day-activity-strip">
             {dayActivities.map((a) => {
               const done = dayActivitiesDone.includes(a.id);
+              const Icon = activityIcon[a.id] ?? FolderIcon;
               return (
                 <button
                   key={a.id}
@@ -196,10 +226,12 @@ export default function OfficeScene({
                   onClick={() => onDoActivity(a.id)}
                   disabled={done}
                 >
-                  <span className="day-activity-icon">{a.icon}</span>
+                  <span className="day-activity-icon"><Icon size={22} /></span>
                   <span className="day-activity-label">{resolveText(a.label)}</span>
                   <span className="day-activity-effect">{resolveText(a.effect)}</span>
-                  <span className="day-activity-gain">{done ? "✅" : `-${a.energyCost} ${t({ tr: "Enerji", en: "Energy" })}`}</span>
+                  <span className="day-activity-gain">
+                    {done ? t({ tr: "Yapıldı", en: "Done" }) : `-${a.energyCost} ${t({ tr: "Enerji", en: "Energy" })}`}
+                  </span>
                 </button>
               );
             })}
@@ -207,18 +239,41 @@ export default function OfficeScene({
         </div>
       )}
 
-      <div className="office-panel">
-        <span className="office-balance">
-          <WalletIcon size={14} className="icon-inline" /> {formatTL(balance)}
-        </span>
+      {sideCards.length > 0 && (
+        <div className="office-side">
+          <p className="office-section-label">{t({ tr: "Peşindekiler", en: "On your trail" })}</p>
+          <div className="office-side-list">
+            {sideCards.map((c) => (
+              <button key={c.id} className="office-side-card" onClick={c.onClick}>
+                <span className="office-side-icon">
+                  <GameIcon name={c.icon} size={20} />
+                </span>
+                <span className="office-side-text">
+                  <strong>{c.title}</strong>
+                  <span>{c.subtitle}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* S9 — tek birincil eylem altta sabit; İşler yanında ikincil. Mesajlar alt çubukta (Telefon). */}
+      <div className="office-actionbar">
+        <button
+          className={`pixel-btn small ghost office-messages-btn office-isler-btn ${pausedVisit?.status === "office" ? "office-isler-alert" : ""}`}
+          onClick={onOpenIsler}
+        >
+          <BriefcaseIcon size={14} className="icon-inline" /> {t({ tr: "İşler", en: "Jobs" })}
+          {pausedVisit?.status === "office" && <span className="office-messages-new">1</span>}
+        </button>
         {pausedVisit?.status === "office" ? (
-          <button className="pixel-btn office-get-job-btn ghost" onClick={onOpenIsler}>
+          <button className="pixel-btn office-get-job-btn" onClick={onOpenIsler}>
             {t({ tr: "Bugünün müşterisi İşler'de bekliyor", en: "Today's customer is waiting in Jobs" })}
           </button>
         ) : pausedVisit?.status === "scheduled" ? (
           // Randevu verilmiş müşteri — geri sayım yalnızca "Yeni Güne Geç" ile ilerler, bu yüzden buton burada şart.
           <button className="pixel-btn office-get-job-btn" onClick={onAdvanceDay}>
-            📅{" "}
             {t({
               tr: `Yeni Güne Geç — randevuya ${pausedVisit.daysRemaining ?? 1} gün`,
               en: `Advance to New Day — ${pausedVisit.daysRemaining ?? 1} day(s) to appointment`,
@@ -230,30 +285,11 @@ export default function OfficeScene({
           </button>
         ) : (
           <button className="pixel-btn office-get-job-btn" onClick={onAdvanceDay}>
-            📅{" "}
             {dayAdvanced
               ? t({ tr: "Müşteri yok — Tekrar Dene", en: "No customer — Try Again" })
               : t({ tr: "Yeni Güne Geç", en: "Advance to New Day" })}
           </button>
         )}
-        <button
-          className={`pixel-btn small office-messages-btn ${unreadCount > 0 ? "office-messages-btn-alert" : "ghost"}`}
-          onClick={onOpenMessages}
-        >
-          <PhoneDeviceIcon size={16} className="icon-inline office-messages-icon" /> {t({ tr: "Mesajlar", en: "Messages" })}
-          {unreadCount > 0 && (
-            <span className="unread-dot" key={unreadCount}>
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
-        </button>
-        <button
-          className={`pixel-btn small office-messages-btn ${pausedVisit?.status === "office" ? "office-messages-btn-alert" : "ghost"}`}
-          onClick={onOpenIsler}
-        >
-          {t({ tr: "İşler", en: "Jobs" })}
-          {pausedVisit?.status === "office" && <span className="unread-dot">1</span>}
-        </button>
       </div>
     </div>
   );

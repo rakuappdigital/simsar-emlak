@@ -349,7 +349,7 @@ export const friendHouses: HouseScene[] = [
       },
       price: {
         id: "price",
-        lines: [{ speaker: "customer1", name: "Bengisu", text: { tr: "Fiyatta biraz oynayabiliriz, ama sen de beni etiketlersin değil mi? 😄", en: "We can play around with the price, but you'll tag me too, won't you? 😄" } }],
+        lines: [{ speaker: "customer1", name: "Bengisu", text: { tr: "Fiyatta biraz oynayabiliriz, ama sen de beni etiketlersin değil mi?", en: "We can play around with the price, but you'll tag me too, won't you?" } }],
         choices: [
           { id: "a", text: { tr: "\"Tabii ki, %6 indirimle anlaşalım.\"", en: "\"Of course, let's agree with a 6% discount.\"" }, next: "closing_sold", effects: { closingBias: 26, suspicion: -4, discountPercent: 6, fun: 6 } },
           { id: "b", text: { tr: "\"Bir gün daha düşünmem lazım.\"", en: "\"I need to think another day.\"" }, next: "closing_thinking", effects: { closingBias: 0 } },
@@ -428,7 +428,7 @@ export const friendHouses: HouseScene[] = [
       },
       closing_sold: {
         id: "closing_sold",
-        lines: [{ speaker: "customer1", name: "Bengisu", text: { tr: "Harika! Taşınma gününü de çekim yapayım mı senden izinle 😄", en: "Awesome! Can I shoot your moving day with your permission 😄" } }],
+        lines: [{ speaker: "customer1", name: "Bengisu", text: { tr: "Harika! Taşınma gününü de çekim yapayım mı senden izinle", en: "Awesome! Can I shoot your moving day with your permission" } }],
         end: "sold",
       },
       closing_thinking: {
@@ -464,7 +464,7 @@ export const friendHouses: HouseScene[] = [
         choices: [
           { id: "a", text: { tr: "\"Girişimcilikte cesaret önemli, yardımcı olayım.\"", en: "\"Courage is important in entrepreneurship, let me help.\"" }, next: "enter", effects: { interest: 10 } },
           { id: "b", text: { tr: "\"Nakit lazım demek biraz aceleye getiriyorsun gibi.\"", en: "\"Needing cash sounds like you're rushing things.\"" }, next: "enter", effects: { suspicion: 8 } },
-          { id: "c", text: { tr: "\"Yine yeni bir proje mi, seni hiç durdurmuyorlar 😄\"", en: "\"Another new project, they never stop you 😄\"" }, next: "enter", effects: { fun: 10 } },
+          { id: "c", text: { tr: "\"Yine yeni bir proje mi, seni hiç durdurmuyorlar \"", en: "\"Another new project, they never stop you \"" }, next: "enter", effects: { fun: 10 } },
         ],
       },
       enter: {
@@ -534,7 +534,7 @@ export const friendHouses: HouseScene[] = [
         choices: [
           { id: "a", text: { tr: "\"Sayılarla konuşan bir teklif her zaman ikna edicidir.\"", en: "\"An offer speaking with numbers is always convincing.\"" }, next: "enter", effects: { interest: 10 } },
           { id: "b", text: { tr: "\"Sayıları sen mi hazırladın, biraz iyimser olabilir.\"", en: "\"Did you prepare the numbers yourself, it might be a bit optimistic.\"" }, next: "enter", effects: { suspicion: 8 } },
-          { id: "c", text: { tr: "\"Sen de yüzde alıyorsun herhalde bu işten 😄\"", en: "\"You take a percentage from this deal too, I bet 😄\"" }, next: "enter", effects: { fun: 10 } },
+          { id: "c", text: { tr: "\"Sen de yüzde alıyorsun herhalde bu işten \"", en: "\"You take a percentage from this deal too, I bet \"" }, next: "enter", effects: { fun: 10 } },
         ],
       },
       enter: {
@@ -674,7 +674,7 @@ export const friendHouses: HouseScene[] = [
         choices: [
           { id: "a", text: { tr: "\"Doğayla iç içe evler her zaman kıymetlidir.\"", en: "\"Homes intertwined with nature are always precious.\"" }, next: "enter", effects: { interest: 10 } },
           { id: "b", text: { tr: "\"Orman sınırı demek ulaşım biraz zor olabilir.\"", en: "\"Forest border means transportation might be a bit difficult.\"" }, next: "enter", effects: { suspicion: 6 } },
-          { id: "c", text: { tr: "\"Siz hemşireler hep birbirinize ev mi buluyorsunuz 😄\"", en: "\"Do you nurses always find houses for each other 😄\"" }, next: "enter", effects: { fun: 10 } },
+          { id: "c", text: { tr: "\"Siz hemşireler hep birbirinize ev mi buluyorsunuz \"", en: "\"Do you nurses always find houses for each other \"" }, next: "enter", effects: { fun: 10 } },
         ],
       },
       enter: {

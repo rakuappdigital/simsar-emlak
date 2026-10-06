@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import { openEmlahTab } from "./helpers/emlah.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const browser = await chromium.launch();
@@ -61,7 +62,7 @@ await page.screenshot({ path: "/tmp/market-confirm-modal.png" });
 
 await page.locator(".purchase-confirm-cancel").click({ timeout: 3000 }).catch(() => {});
 await page.waitForTimeout(300);
-await page.locator('.emlah-tab-btn:has-text("Inventory")').click({ timeout: 5000 });
+await openEmlahTab(page, "Inventory");
 await page.waitForTimeout(500);
 const firstInvBuyBtn = page.locator(".market-item button:not([disabled])").first();
 await firstInvBuyBtn.click({ timeout: 5000 });
