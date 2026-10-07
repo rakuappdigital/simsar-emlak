@@ -79,7 +79,7 @@ import type { EmlahTab } from "./components/EmlahMenu";
 const EmlahMenu = lazy(() => import("./components/EmlahMenu"));
 const MessagesPanel = lazy(() => import("./components/MessagesPanel"));
 const IslerPanel = lazy(() => import("./components/IslerPanel"));
-import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon, GearIcon, PhoneDeviceIcon, DiskIcon, CoinIcon, IdCardIcon, OfficeIcon, ShopBagIcon, GiftBundleIcon, TrophyIcon, LockIcon, CheckIcon, PhoneCallIcon, HeartIcon } from "./components/icons";
+import { WalletIcon, StarIcon, MedalIcon, ChalkboardIcon, KeyRingIcon, BriefcaseIcon, CompassIcon, GearIcon, PhoneDeviceIcon, DiskIcon, CoinIcon, IdCardIcon, OfficeIcon, ShopBagIcon, GiftBundleIcon, TrophyIcon, LockIcon, CheckIcon, PhoneCallIcon, HeartIcon, CloseIcon } from "./components/icons";
 import { playClick, playSale, playLost, playReward, playThinking, playPurchase, playDayAdvance, startMusic, getMusicVolume, startSaleMusic, stopSaleMusic } from "./data/sound";
 import SaleIntroModal from "./components/SaleIntroModal";
 import { houseIntros, defaultIntro, welcomeIntro } from "./data/intro";
@@ -404,6 +404,9 @@ interface PendingHouseEntry {
   castAssignmentParam: Record<string, string[]>;
   dailyQuestParam: DailyQuestDef | null;
 }
+
+/** S5 — oyuna girdikten sonra bu süre boyunca yeni mesajlar bildirim göstermez (açılışta biriken mesajlar). */
+const BANNER_QUIET_AFTER_ENTER_MS = 2500;
 
 /** Kilit ekranı gereklilik işareti — emoji yerine kendi ikonumuz. */
 function ReqMark({ met }: { met: boolean }) {
@@ -3873,11 +3876,18 @@ function App() {
   // böylece eski mesajlar bildirim olarak patlamaz.
   const liveThreadIdRef = useRef<string | null>(null);
   liveThreadIdRef.current = liveThreadId;
+  // Oyuna giriş anı (yeni oyun / kayıt yükleme) — açılışta biriken mesajlar bildirim olarak patlamasın, Telefon rozeti yeter.
+  const gameEnteredAtRef = useRef(0);
   useEffect(() => {
     const known = knownMessageIdsRef.current;
     const inGame = stage !== "menu" && stage !== "saved" && stage !== "setup" && stage !== "origin";
     if (known === null || !inGame) {
       knownMessageIdsRef.current = new Set(inbox.map((m) => m.id));
+      gameEnteredAtRef.current = Date.now();
+      return;
+    }
+    if (Date.now() - gameEnteredAtRef.current < BANNER_QUIET_AFTER_ENTER_MS) {
+      for (const m of inbox) known.add(m.id);
       return;
     }
     const fresh = inbox.filter((m) => !known.has(m.id));
@@ -4789,22 +4799,24 @@ function App() {
         <>
           <StatsBar stats={stats} />
           {index === 0 && !tutorialDismissed && (
-            <div className="tutorial-tip">
+            // G8-a — yalnızca ilk oyunun ilk evinde: barların hemen altında küçük bir baloncuk.
+            // İlk seçimde (ya da kapatınca) kapanır ve cihazda "görüldü" olarak kalır; sonraki oyunlarda çıkmaz.
+            <div className="tutorial-tip tutorial-bubble" role="note">
               <p>
                 {getLanguage() === "en" ? (
                   <>
-                    Rising <strong>Suspicion</strong> makes the sale harder. <strong>Interest</strong> and <strong>Fun</strong> make it
-                    easier — try to balance the three with your answers.
+                    Rising <strong>Suspicion</strong> makes the sale harder; <strong>Interest</strong> and <strong>Fun</strong> make it easier.
+                    Balance the three with your answers.
                   </>
                 ) : (
                   <>
-                    <strong>Şüphe</strong> yükseldikçe satış zorlaşır. <strong>İlgi</strong> ve <strong>Eğlence</strong> ise satışı
-                    kolaylaştırır — cevaplarınla bu üçünü dengelemeye çalış.
+                    <strong>Şüphe</strong> yükselirse satış zorlaşır; <strong>İlgi</strong> ve <strong>Eğlence</strong> kolaylaştırır. Cevaplarınla
+                    üçünü dengele.
                   </>
                 )}
               </p>
-              <button className="pixel-btn small" onClick={dismissTutorial}>
-                {t({ tr: "Anladım", en: "Got it" })}
+              <button className="tutorial-bubble-close" onClick={dismissTutorial} aria-label={t({ tr: "Anladım", en: "Got it" })}>
+                <CloseIcon size={10} />
               </button>
             </div>
           )}
@@ -4835,6 +4847,7 @@ function App() {
             onIkramUsed={handleIkramUsed}
             sideChoices={sideDialogue.choices}
             onSideChoice={(id) => sq.onSideChoice(id, house, index)}
+            onAnyChoice={!tutorialDismissed ? dismissTutorial : undefined}
           />
         </>
       )}

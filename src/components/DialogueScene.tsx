@@ -19,6 +19,7 @@ import { firatPortraits, type FiratMoodDef } from "../data/rivalCharacter";
 import { pickMemoryReferenceLine } from "../data/significantMemory";
 import { ORIGIN_RECOGNITION_CHANCE, pickOriginRecognitionLine } from "../data/originRecognition";
 import { getDialogueStyle, styleEmlahLine } from "../data/dialogueStyle";
+import { getTextSpeed, textSpeedMsPerChar } from "../data/textSpeed";
 import { resolveText, resolveHouseTitle, resolveHouseLocation, t, type Localized, type LocalizedText } from "../data/language";
 import {
   isHeldFirmChoice,
@@ -31,7 +32,6 @@ import type { ContactedCustomer, SignificantMemory } from "../types";
 import { ClockIcon } from "./icons";
 
 const FUN_BONUS_THRESHOLD = 30;
-const TYPE_MS_PER_CHAR = 16;
 
 const bonusChoice: Choice = {
   id: "bonus-fun",
@@ -163,6 +163,8 @@ interface DialogueSceneProps {
   /** Yan görev seçenekleri (hooks/useSideQuests.ts) — kapanış dışı ilk uygun düğümde, ziyaret başına birer kez. */
   sideChoices?: { id: string; text: Localized; effects?: ChoiceEffects; reaction: DialogueLine[] }[];
   onSideChoice?: (id: string) => void;
+  /** Her seçimde (etkisi olsun olmasın) — ilk oyunun öğretici baloncuğu ilk seçimde kapanır (G8-a). */
+  onAnyChoice?: () => void;
 }
 
 function speakerLabelFor(speaker: string): string {
@@ -204,9 +206,12 @@ export default function DialogueScene({
   onIkramUsed,
   sideChoices = [],
   onSideChoice,
+  onAnyChoice,
 }: DialogueSceneProps) {
   const resolvedNames = useMemo(() => resolveCustomerNames(house, castAssignment), [house, castAssignment]);
   const [dialogueStyle] = useState(getDialogueStyle);
+  // G8-d — Ayarlar > Metin Hızı (sahne başına bir kez okunur; varsayılan "normal" = 16 ms/harf).
+  const [typeMsPerChar] = useState(() => textSpeedMsPerChar[getTextSpeed()]);
   const [nodeId, setNodeId] = useState(house.startNode);
   const [lineIndex, setLineIndex] = useState(0);
   const [typedLength, setTypedLength] = useState(0);
@@ -372,9 +377,13 @@ export default function DialogueScene({
 
   useEffect(() => {
     if (typedLength >= currentText.length) return;
-    const timer = setTimeout(() => setTypedLength((n) => n + 1), TYPE_MS_PER_CHAR);
+    if (typeMsPerChar === 0) {
+      setTypedLength(currentText.length);
+      return;
+    }
+    const timer = setTimeout(() => setTypedLength((n) => n + 1), typeMsPerChar);
     return () => clearTimeout(timer);
-  }, [typedLength, currentText.length]);
+  }, [typedLength, currentText.length, typeMsPerChar]);
 
   const bonusUnlocked = isClosingNode && stats.fun >= FUN_BONUS_THRESHOLD;
 
@@ -501,6 +510,7 @@ export default function DialogueScene({
   }, [isTyping, atLastLine, currentText, choicesToShow]);
 
   function pickChoice(choice: Choice) {
+    onAnyChoice?.();
     // "Çelişki Motoru" — checked BEFORE the choice's own effects apply, off
     // the SAME onChoiceEffects channel everything else uses (just a much
     // sharper one-off penalty), so a held-firm-then-big-discount about-face

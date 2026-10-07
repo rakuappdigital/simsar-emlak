@@ -68,8 +68,9 @@ await page.keyboard.press("Escape").catch(() => {});
 // Finish the current day so the office offers today's job again. Continuing a
 // save can roll an office-task detour first, so keep clearing whatever is on
 // screen (and pressing "Yeni Güne Geç" once the office shows) until the job is offered.
-for (let i = 0; i < 15 && !(await page.locator(".office-get-job-btn", { hasText: "Bugünün İşini Al" }).isVisible().catch(() => false)); i++) {
-  const advance = page.locator(".office-get-job-btn", { hasText: "Yeni Güne Geç" });
+// "Müşteri yok — Tekrar Dene" de rastgele çıkabilir — onu da tıklayıp yeniden dene.
+for (let i = 0; i < 30 && !(await page.locator(".office-get-job-btn", { hasText: "Bugünün İşini Al" }).isVisible().catch(() => false)); i++) {
+  const advance = page.locator(".office-get-job-btn", { hasText: /Yeni Güne Geç|Tekrar Dene/ });
   if (await advance.isVisible().catch(() => false)) await advance.click({ timeout: 800 }).catch(() => {});
   else await page.locator("button.phone-continue, .work-task-screen .choice-btn, .quick-call-screen .choice-btn, .choice-btn").first().click({ timeout: 800 }).catch(() => {});
   await page.keyboard.press("Escape").catch(() => {});

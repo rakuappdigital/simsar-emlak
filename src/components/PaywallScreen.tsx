@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { LogoIcon } from "./icons";
 import GameIcon from "./GameIcon";
-import { FULL_UNLOCK_PRICE_TR, FULL_UNLOCK_PRICE_INTL, FULL_UNLOCK_FEATURES, purchaseFullUnlock } from "../data/purchases";
+import { FULL_UNLOCK_PRICE_TR, FULL_UNLOCK_PRICE_INTL, FULL_UNLOCK_FEATURES, FULL_UNLOCK_PRODUCT_ID, purchaseFullUnlock } from "../data/purchases";
+import { useLivePrices } from "../data/livePrices";
 import type { Language } from "../data/language";
 
 interface PaywallScreenProps {
@@ -23,7 +24,9 @@ const strings = {
 
 export default function PaywallScreen({ language, onUnlocked, onBack }: PaywallScreenProps) {
   const [buying, setBuying] = useState(false);
-  const price = language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR;
+  // App Store'daki gerçek fiyat (bkz. data/livePrices.ts); gelemezse sabit.
+  const live = useLivePrices([FULL_UNLOCK_PRODUCT_ID]);
+  const price = live[FULL_UNLOCK_PRODUCT_ID]?.label ?? (language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR);
 
   async function handleBuy() {
     setBuying(true);

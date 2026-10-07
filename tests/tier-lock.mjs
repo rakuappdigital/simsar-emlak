@@ -94,7 +94,7 @@ assert(await page.locator("text=ufak bir yardımla bu kısmı atlayabilirsin").i
 // Callback → negotiate → back to the gate.
 await callbacks.first().click();
 await page.waitForTimeout(1500);
-for (let i = 0; i < 20 && !(await gate(page).isVisible().catch(() => false)); i++) {
+for (let i = 0; i < 40 && !(await gate(page).isVisible().catch(() => false)); i++) {
   (await page.locator(".contract-modal button.pixel-btn:not([disabled])").first().click({ timeout: 400 }).then(() => true).catch(() => false)) ||
     (await page.evaluate(() => {
       // One option per clause that has nothing selected yet.

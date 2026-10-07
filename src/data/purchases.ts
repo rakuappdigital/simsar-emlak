@@ -124,7 +124,7 @@ export const BUNDLE_FULL_NOADS_JETTON30_PRICE_INTL = "$4.99";
 // were shown the raw "$" price on these three buttons regardless of
 // language. See the comment above FULL_UNLOCK_PRICE_TR for why these must
 // match ASC's actual price schedule exactly.
-export const BUNDLE_FULL_JETTON30_PRICE_TR = "₺49,99";
+export const BUNDLE_FULL_JETTON30_PRICE_TR = "₺45,99";
 export const BUNDLE_FULL_NOADS_PRICE_TR = "₺99,99";
 export const BUNDLE_FULL_NOADS_JETTON30_PRICE_TR = "₺119,99";
 

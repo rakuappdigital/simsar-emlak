@@ -8,7 +8,10 @@ import {
   BUNDLE_FULL_JETTON30_PRICE_INTL,
   BUNDLE_FULL_JETTON30_PRICE_TR,
   BUNDLE_FULL_JETTON30_DESCRIPTION,
+  BUNDLE_FULL_JETTON30_PRODUCT_ID,
+  FULL_UNLOCK_PRODUCT_ID,
 } from "../data/purchases";
+import { useLivePrices, formatInCurrency } from "../data/livePrices";
 import { CoinIcon, UnlockIcon, GiftBundleIcon, CheckIcon } from "./icons";
 import GameIcon from "./GameIcon";
 /** A store card's details, opened under its row when tapped. */
@@ -86,13 +89,21 @@ export default function StoreScreen({
   }
 
   const jetton50 = JETTON_PACKAGES.find((p) => p.id === "jetton-medium")!;
+  // App Store'daki gerçek fiyatlar; gelemezse sabitler (bkz. data/livePrices.ts).
+  const live = useLivePrices([FULL_UNLOCK_PRODUCT_ID, BUNDLE_FULL_JETTON30_PRODUCT_ID, ...JETTON_PACKAGES.map((p) => p.productId)]);
+  const priceOf = (productId: string, fallback: string) => live[productId]?.label ?? fallback;
+  const valueOf = (productId: string, fallback: string) => live[productId]?.value ?? parsePrice(fallback);
+  const fullPrice = priceOf(FULL_UNLOCK_PRODUCT_ID, language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR);
+  const jettonPrice = (pkg: JettonPackage) => priceOf(pkg.productId, language === "en" ? pkg.priceIntl : pkg.priceTR);
 
   const bundles = [
     {
       id: "bundle-jetton30",
       name: { tr: "Full + 30 Jetton", en: "Full + 30 Jetton" },
+      productId: BUNDLE_FULL_JETTON30_PRODUCT_ID,
       price: { tr: BUNDLE_FULL_JETTON30_PRICE_TR, en: BUNDLE_FULL_JETTON30_PRICE_INTL },
       refComponents: { tr: [FULL_UNLOCK_PRICE_TR, jetton50.priceTR], en: [FULL_UNLOCK_PRICE_INTL, jetton50.priceIntl] },
+      refProductIds: [FULL_UNLOCK_PRODUCT_ID, jetton50.productId],
       description: BUNDLE_FULL_JETTON30_DESCRIPTION,
       onBuy: onBuyBundleFullJetton30,
       featured: true,
@@ -109,7 +120,7 @@ export default function StoreScreen({
       icon: "coin",
       title: `${pkg.amount} Jetton`,
       description: JETTON_DESCRIPTION[language],
-      priceLabel: language === "en" ? pkg.priceIntl : pkg.priceTR,
+      priceLabel: jettonPrice(pkg),
       run: () => handleBuyJetton(pkg),
     },
   }));
@@ -120,7 +131,7 @@ export default function StoreScreen({
         icon: "unlock",
         title: language === "en" ? "Full Version" : "Tam Sürüm",
         description: FULL_UNLOCK_DESCRIPTION[language],
-        priceLabel: language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR,
+        priceLabel: fullPrice,
         run: handleBuyFullVersion,
       },
     },
@@ -131,7 +142,7 @@ export default function StoreScreen({
       icon: "gift",
       title: bundle.name[language],
       description: bundle.description[language],
-      priceLabel: bundle.price[language],
+      priceLabel: priceOf(bundle.productId, bundle.price[language]),
       run: () => handleBuyBundle(bundle.id, bundle.onBuy),
     },
   }));
@@ -182,14 +193,14 @@ export default function StoreScreen({
             <span className="day-activity-icon"><CoinIcon size={20} /></span>
             <span className="day-activity-label">{pkg.amount} Jetton</span>
             <span className="day-activity-gain">
-              {buyingId === pkg.id ? "…" : language === "en" ? pkg.priceIntl : pkg.priceTR}
+              {buyingId === pkg.id ? "…" : jettonPrice(pkg)}
             </span>
           </button>
         ))}
       </div>
       {inlineDetail(jettonItems)}
 
-      <div className="day-activity-list">
+      <div className="day-activity-list store-center-row">
         <button
           className={cardClass("day-activity-card", "full-unlock")}
           onClick={() => toggleItem("full-unlock")}
@@ -198,11 +209,11 @@ export default function StoreScreen({
           <span className="day-activity-icon"><UnlockIcon size={20} /></span>
           <span className="day-activity-label">{language === "en" ? "Full Version" : "Tam Sürüm"}</span>
           <span className="day-activity-gain">
-            {fullUnlocked ? <CheckIcon size={14} /> : buyingId === "full-unlock" ? "…" : language === "en" ? FULL_UNLOCK_PRICE_INTL : FULL_UNLOCK_PRICE_TR}
+            {fullUnlocked ? <CheckIcon size={14} /> : buyingId === "full-unlock" ? "…" : fullPrice}
           </span>
         </button>
       </div>
-      {!fullUnlocked && (
+      {!fullUnlocked && selectedId !== "full-unlock" && (
         <p className="store-full-note">
           {language === "en"
             ? "Full Version also removes the interstitial ads between days. Rewarded ads stay optional."
@@ -217,10 +228,11 @@ export default function StoreScreen({
             <GiftBundleIcon size={14} className="icon-inline" /> {language === "en" ? "Starter Bundle" : "Başlangıç Paketi"}
           </p>
           <div className="bundle-grid">
-            {bundles.map((bundle, i) => {
-              const refTotal = bundle.refComponents[language].reduce((sum, p) => sum + parsePrice(p), 0);
-              const price = bundle.price[language];
-              const savingsPct = Math.round((1 - parsePrice(price) / refTotal) * 100);
+            {bundles.map((bundle) => {
+              const refTotal = bundle.refProductIds.reduce((sum, id, k) => sum + valueOf(id, bundle.refComponents[language][k]), 0);
+              const price = priceOf(bundle.productId, bundle.price[language]);
+              const savingsPct = Math.round((1 - valueOf(bundle.productId, bundle.price[language]) / refTotal) * 100);
+              const currency = live[bundle.productId]?.currencyCode;
               return (
                 <div key={bundle.id} className="store-bundle-slot">
                   <button
@@ -233,17 +245,18 @@ export default function StoreScreen({
                     )}
                     <span className="bundle-icon"><GiftBundleIcon size={32} /></span>
                     <span className="bundle-name">{bundle.name[language]}</span>
-                    <span className="bundle-old">{formatPrice(refTotal, language)}</span>
+                    <span className="bundle-old">{currency ? formatInCurrency(refTotal, currency, language) : formatPrice(refTotal, language)}</span>
                     <span className="bundle-new">{buyingId === bundle.id ? "…" : price}</span>
                     <span className="bundle-save">
                       {language === "en" ? `${savingsPct}% off` : `%${savingsPct} tasarruf`}
                     </span>
                   </button>
-                  {inlineDetail([bundleItems[i]])}
                 </div>
               );
             })}
           </div>
+          {/* Açıklama kartın dar yuvasında değil, ızgaranın altında tam genişlikte açılır (diğer gruplar gibi). */}
+          {inlineDetail(bundleItems)}
         </>
       )}
 

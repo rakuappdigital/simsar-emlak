@@ -5809,3 +5809,81 @@
   box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.35);
   pointer-events: none;
 }
+
+/* Başlangıç paketleri ortalı — tek paket de olsa, paket eklendikçe de satır ortada kalır. */
+.bundle-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.bundle-grid .store-bundle-slot {
+  flex: 0 1 calc((100% - 20px) / 3);
+  min-width: 120px;
+  max-width: 180px;
+}
+
+/* G8-a — ilk oyunun öğretici baloncuğu: barların hemen altında, oku barlara bakar. */
+.tutorial-bubble {
+  position: relative;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: -6px;
+  padding: 8px 10px 8px 12px;
+  border-width: 1px;
+  background: var(--c-select-bg);
+}
+
+.tutorial-bubble::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 28px;
+  border: 7px solid transparent;
+  border-top: 0;
+  border-bottom-color: var(--c-select-border);
+}
+
+.tutorial-bubble p {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.tutorial-bubble-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--c-select-border);
+  background: transparent;
+  color: var(--c-text);
+  cursor: pointer;
+}
+
+/* Tam Sürüm kartı da tekken ortada dursun (başlangıç paketiyle aynı kural). */
+.store-center-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.store-center-row .day-activity-card {
+  flex: 0 1 140px;
+}
+
+/* Mağaza açıklama kutusu: kompakt yazı — küçük ekranda gereğinden uzun olmasın. */
+.store-inline-desc {
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.store-inline-detail {
+  align-self: center;
+}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getSfxVolume, getMusicVolume, setSfxVolume, setMusicVolume, startMusic, stopMusic, playClick } from "../data/sound";
 import { getDifficulty, setDifficulty, difficultyLabels, type Difficulty } from "../data/difficulty";
+import { getTextSpeed, setTextSpeed, textSpeedLabels, type TextSpeed } from "../data/textSpeed";
 import { setLanguage as persistLanguage, resolveText, type Language } from "../data/language";
 import oddEstateLogo from "../assets/branding/oddestate-logo.png";
 import { HeartIcon, ShopBagIcon } from "./icons";
@@ -23,6 +24,7 @@ const languages: { id: Language; label: string }[] = [
 ];
 
 const difficulties: Difficulty[] = ["kolay", "normal", "zor"];
+const textSpeeds: TextSpeed[] = ["normal", "hizli", "aninda"];
 
 const aboutText = {
   tr: "Odd Estate büyük bir stüdyo değil — tek bir bağımsız geliştirici tarafından, boş zamanlarda ve sevgiyle yapılıyor. Oyunu beğendiysen, desteğin (bir yorum ya da mağazadaki bir paket) bu projenin büyümesine gerçekten yardımcı oluyor. Her güncelleme sizin geri bildirimlerinizle şekilleniyor.",
@@ -44,6 +46,7 @@ export default function SettingsScreen({
   const [music, setMusic] = useState(getMusicVolume);
   const [sfx, setSfx] = useState(getSfxVolume);
   const [difficulty, setDifficultyState] = useState(getDifficulty);
+  const [textSpeed, setTextSpeedState] = useState(getTextSpeed);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
 
@@ -133,6 +136,27 @@ export default function SettingsScreen({
         {language === "en"
           ? "Affects how quickly suspicion rises. Normal is the game's usual balance."
           : "Şüphenin ne kadar hızlı arttığını etkiler. Normal, oyunun her zamanki dengesidir."}
+      </p>
+
+      <p className="settings-subsection-title">{language === "en" ? "Text Speed" : "Metin Hızı"}</p>
+      <div className="difficulty-row">
+        {textSpeeds.map((sp) => (
+          <button
+            key={sp}
+            className={`difficulty-btn text-speed-btn ${textSpeed === sp ? "active" : ""}`}
+            onClick={() => {
+              setTextSpeedState(sp);
+              setTextSpeed(sp);
+            }}
+          >
+            {resolveText(textSpeedLabels[sp])}
+          </button>
+        ))}
+      </div>
+      <p className="menu-empty">
+        {language === "en"
+          ? "How fast dialogue lines are typed out. Tapping the screen always completes a line."
+          : "Diyalog satırlarının yazılma hızı. Ekrana dokunmak her zaman satırı hemen tamamlar."}
       </p>
 
       <p className="settings-subsection-title">{language === "en" ? "Store" : "Mağaza"}</p>

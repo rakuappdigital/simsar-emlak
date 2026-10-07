@@ -1,3 +1,21 @@
+# ✅ Build 14 — mağaza açıklama kutusu düzeltmesi (2026-10-07)
+Build 13→14, "UPLOAD SUCCEEDED" (Delivery UUID `868fb584-2371-453f-8e18-8ba201c6b242`), ASC'de işlendi: VALID. En güncel kod bu build'de. İncelemeye gönderilmedi; build 13 + 14 değişiklikleri COMMIT EDİLMEDİ.
+- Hata (kullanıcı TestFlight'ta buldu): build 13'te paketi ortalarken yuvayı 180px'e sabitledim → karta dokununca açılan açıklama o dar yuvada açılıp aşağı uzuyordu. Açıklama artık ızgaranın altında tam genişlikte (diğer gruplar gibi), yazı bir boy küçük, Tam Sürüm açıkken tekrar eden reklam notu gizli.
+- Doğrulama: 320 ve 390px'te her mağaza kartı (jeton, Tam Sürüm, paket) + günün görevi, Muhtar kartı, envanter satın alma onayı tek tek açıldı; yatay taşma 0. Testler 20/20.
+
+# ✅ Build 13 — canlı fiyatlar, ortalı paket, G8-a + G8-d (2026-10-07)
+Build 12→13, "UPLOAD SUCCEEDED" (Delivery UUID `3e0757b5-5147-432a-9383-c31764537337`). İncelemeye GÖNDERİLMEDİ. Bu değişiklikler henüz COMMIT EDİLMEDİ (kullanıcıya soruldu).
+- Fiyat: TestFlight build 12'de Tam Sürüm kartı "₺39,99" yazıp ₺29,99 çekiyordu. Artık Mağaza + Paywall fiyatları App Store'dan canlı okunuyor (`src/data/livePrices.ts`, RevenueCat getProducts → priceString/price/currency); sabitler yalnızca yedek. Sabitler de güncel: Tam Sürüm ₺29,99, Full + 30 Jetton ₺45,99.
+- ASC: bundle_full_jetton30 TR fiyatı ₺45,99 (API ile, USA $2.99 korundu, geri okunarak doğrulandı).
+- Mağaza: başlangıç paketi ve Tam Sürüm kartı ortalı (flex, paket eklendikçe ortada kalır).
+- G8-d: Ayarlar > Metin Hızı (Normal 16ms / Hızlı 6ms / Anında), `src/data/textSpeed.ts`; varsayılan Normal = eski davranış.
+- G8-a: öğretici büyük kutu → barların altında küçük baloncuk; ilk seçimde (DialogueScene `onAnyChoice`) ya da kapatınca kapanır, cihazda "görüldü" kalır → yalnızca ilk oyunda.
+- S5 düzeltmesi: oyuna giriş/kayıt yüklemeden sonraki 2,5 sn bildirim yok (açılışta biriken mesaj bildirimi üst barı kapatıyordu).
+- Testler 20/20; kararsızlıklar: tier-lock geri arama döngüsü 40 tur, energy-office-regen "Müşteri yok — Tekrar Dene"yi de tıklıyor.
+- [x] G8-b / G8-c: kullanıcı kararı — UYGULANMAYACAK (2026-10-07).
+
+---
+
 # ✅ Ekspertiz 2. tur + Yan Görev paketi — Build 12 (2026-10-06 akşam)
 Rapor (güncel, 3. sürüm): https://claude.ai/artifact/KJBCEjckGSns1G62N1q83B
 **Genel kural (kullanıcı):** Oyunda HİÇBİR YERDE emoji yok; tüm görseller bize ait (çizilen SVG/piksel ya da kullanıcı üretimi), stok yok.
